@@ -96,8 +96,7 @@ class Pyprland:
             async with self.server:
                 await self.server.serve_forever()
         finally:
-            for plugin in self.plugins.values():
-                await plugin.exit()
+            await asyncio.gather(*(plugin.exit() for plugin in self.plugins.values()))
 
     async def run(self):
         await asyncio.gather(
