@@ -1,4 +1,5 @@
 import subprocess
+from typing import Any
 import asyncio
 from ..ipc import (
     hyprctl,
@@ -77,7 +78,7 @@ class Scratch:
         self.just_created = True
         self.clientInfo = {}
 
-    def isAlive(self):
+    def isAlive(self) -> bool:
         path = f"/proc/{self.pid}"
         if os.path.exists(path):
             for line in open(os.path.join(path, "status"), "r").readlines():
@@ -86,7 +87,7 @@ class Scratch:
                     return state in "RSDTt"  # not "Z (zombie)"or "X (dead)"
         return False
 
-    def reset(self, pid: int):
+    def reset(self, pid: int) -> None:
         self.pid = pid
         self.visible = False
         self.just_created = True
@@ -96,7 +97,7 @@ class Scratch:
     def address(self) -> str:
         return str(self.clientInfo.get("address", ""))[2:]
 
-    async def updateClientInfo(self, clientInfo=None):
+    async def updateClientInfo(self, clientInfo=None) -> None:
         if clientInfo is None:
             clientInfo = await get_client_props_by_pid(self.pid)
         assert isinstance(clientInfo, dict)
@@ -104,7 +105,7 @@ class Scratch:
 
 
 class Extension(Plugin):
-    async def init(self):
+    async def init(self) -> None:
         self.procs: dict[str, subprocess.Popen] = {}
         self.scratches: dict[str, Scratch] = {}
         self.transitioning_scratches: set[str] = set()
@@ -112,7 +113,7 @@ class Extension(Plugin):
         self.scratches_by_address: dict[str, Scratch] = {}
         self.scratches_by_pid: dict[int, Scratch] = {}
 
-    async def exit(self):
+    async def exit(self) -> None:
         async def die_in_piece(scratch: Scratch):
             proc = self.procs[scratch.uid]
             proc.terminate()
@@ -128,26 +129,24 @@ class Extension(Plugin):
             *(die_in_piece(scratch) for scratch in self.scratches.values())
         )
 
-    async def load_config(self, config):
-        config = config["scratchpads"]
+    async def load_config(self, config) -> None:
+        config: dict[str, dict[str, Any]] = config["scratchpads"]
         scratches = {k: Scratch(k, v) for k, v in config.items()}
 
-        is_updating = bool(self.scratches)
+        new_scratches = set()
 
         for name in scratches:
             if name not in self.scratches:
                 self.scratches[name] = scratches[name]
+                new_scratches.add(name)
             else:
                 self.scratches[name].conf = scratches[name].conf
 
-        if is_updating:
-            await self.exit()
-
         # not known yet
-        for name in self.scratches:
+        for name in new_scratches:
             self.start_scratch_command(name)
 
-    def start_scratch_command(self, name: str):
+    def start_scratch_command(self, name: str) -> None:
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
@@ -165,7 +164,7 @@ class Extension(Plugin):
             del self.scratches_by_pid[old_pid]
 
     # Events
-    async def event_activewindowv2(self, addr):
+    async def event_activewindowv2(self, addr) -> None:
         addr = addr.strip()
         scratch = self.scratches_by_address.get(addr)
         if scratch:
@@ -182,7 +181,7 @@ class Extension(Plugin):
                     ):
                         await self.run_hide(uid)
 
-    async def event_openwindow(self, params):
+    async def event_openwindow(self, params) -> None:
         addr, wrkspc, kls, title = params.split(",", 3)
         if wrkspc.startswith("special"):
             item = self.scratches_by_address.get(addr)
@@ -194,7 +193,7 @@ class Extension(Plugin):
                 await self.run_hide(item.uid, force=True)
                 item.just_created = False
 
-    async def run_toggle(self, uid: str):
+    async def run_toggle(self, uid: str) -> None:
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
@@ -205,7 +204,7 @@ class Extension(Plugin):
         else:
             await self.run_show(uid)
 
-    async def updateScratchInfo(self, scratch: Scratch | None = None):
+    async def updateScratchInfo(self, scratch: Scratch | None = None) -> None:
         if scratch is None:
             for client in await hyprctlJSON("clients"):
                 assert isinstance(client, dict)
@@ -225,7 +224,7 @@ class Extension(Plugin):
             if add_to_address_book:
                 self.scratches_by_address[scratch.clientInfo["address"][2:]] = scratch
 
-    async def run_hide(self, uid: str, force=False):
+    async def run_hide(self, uid: str, force=False) -> None:
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
@@ -236,7 +235,7 @@ class Extension(Plugin):
             return
         item.visible = False
         pid = "pid:%d" % item.pid
-        animation_type = item.conf.get("animation", "").lower()
+        animation_type: str = item.conf.get("animation", "").lower()
         if animation_type:
             offset = item.conf.get("offset")
             if offset is None:
@@ -260,7 +259,7 @@ class Extension(Plugin):
         if uid not in self.transitioning_scratches:
             await hyprctl(f"movetoworkspacesilent special:scratch,{pid}")
 
-    async def run_show(self, uid, force=False):
+    async def run_show(self, uid, force=False) -> None:
         uid = uid.strip()
         item = self.scratches.get(uid)
 
