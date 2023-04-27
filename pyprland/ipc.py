@@ -46,10 +46,6 @@ async def hyprctl(command):
     return resp == b"ok"
 
 
-async def get_workspaces() -> list[dict[str, Any]]:
-    return await hyprctlJSON("workspaces")
-
-
 async def get_focused_monitor_props():
     for monitor in await hyprctlJSON("monitors"):
         assert isinstance(monitor, dict)

@@ -1,6 +1,6 @@
 from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl, get_workspaces
+from ..ipc import hyprctlJSON, hyprctl
 
 
 class Extension(Plugin):
@@ -41,7 +41,7 @@ class Extension(Plugin):
             m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]
         )
         # get workspaces info
-        workspaces = await get_workspaces()
+        workspaces = await hyprctlJSON("workspaces")
         assert isinstance(workspaces, list)
         workspaces.sort(key=lambda x: x["id"])
         cur_workspace = monitor["activeWorkspace"]["id"]
