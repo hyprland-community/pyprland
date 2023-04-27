@@ -24,19 +24,21 @@ async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     resp = await ctl_reader.read()
     ctl_writer.close()
     await ctl_writer.wait_closed()
-    return json.loads(resp)
+    ret = json.loads(resp)
+    assert isinstance(ret, (list, dict))
+    return ret
 
 
-async def hyprctl(command):
+async def hyprctl(command, base_command="dispatch"):
     if DEBUG:
         print(">>>", command)
     ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     if isinstance(command, list):
         ctl_writer.write(
-            f"[[BATCH]] {' ; '.join('dispatch ' + c for c in command)}".encode()
+            f"[[BATCH]] {' ; '.join(f'{base_command} ' + c for c in command)}".encode()
         )
     else:
-        ctl_writer.write(f"/dispatch {command}".encode())
+        ctl_writer.write(f"/{base_command} {command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read(100)
     ctl_writer.close()
@@ -54,3 +56,4 @@ async def get_focused_monitor_props():
         assert isinstance(monitor, dict)
         if monitor.get("focused") == True:
             return monitor
+    raise RuntimeError("no focused monitor")
