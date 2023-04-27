@@ -16,6 +16,7 @@ async def get_event_stream():
 
 
 async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
+    """Run an IPC command and return the JSON output."""
     if DEBUG:
         print("(JS)>>>", command)
     ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -29,7 +30,8 @@ async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     return ret
 
 
-async def hyprctl(command, base_command="dispatch"):
+async def hyprctl(command, base_command="dispatch") -> bool:
+    """Run an IPC command. Returns success value."""
     if DEBUG:
         print(">>>", command)
     ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -45,13 +47,13 @@ async def hyprctl(command, base_command="dispatch"):
     await ctl_writer.wait_closed()
     if DEBUG:
         print("<<<", resp)
-    r = resp == b"ok" * (len(resp) // 2)
+    r: bool = resp == b"ok" * (len(resp) // 2)
     if DEBUG and not r:
         print(f"FAILED {resp}")
     return r
 
 
-async def get_focused_monitor_props():
+async def get_focused_monitor_props() -> dict[str, Any]:
     for monitor in await hyprctlJSON("monitors"):
         assert isinstance(monitor, dict)
         if monitor.get("focused") == True:

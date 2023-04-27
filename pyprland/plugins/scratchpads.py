@@ -14,8 +14,58 @@ DEFAULT_MARGIN = 60
 
 async def get_client_props_by_pid(pid: int):
     for client in await hyprctlJSON("clients"):
+        assert isinstance(client, dict)
         if client.get("pid") == pid:
             return client
+
+
+class Animations:
+    @classmethod
+    async def fromtop(cls, monitor, client, client_uid, margin):
+        mon_x = monitor["x"]
+        mon_y = monitor["y"]
+        mon_width = monitor["width"]
+
+        client_width = client["size"][0]
+        margin_x = int((mon_width - client_width) / 2) + mon_x
+        await hyprctl(f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}")
+
+    @classmethod
+    async def frombottom(cls, monitor, client, client_uid, margin):
+        mon_x = monitor["x"]
+        mon_y = monitor["y"]
+        mon_width = monitor["width"]
+        mon_height = monitor["height"]
+
+        client_width = client["size"][0]
+        client_height = client["size"][1]
+        margin_x = int((mon_width - client_width) / 2) + mon_x
+        await hyprctl(
+            f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
+        )
+
+    @classmethod
+    async def fromleft(cls, monitor, client, client_uid, margin):
+        mon_y = monitor["y"]
+        mon_height = monitor["height"]
+
+        client_height = client["size"][1]
+        margin_y = int((mon_height - client_height) / 2) + mon_y
+
+        await hyprctl(f"movewindowpixel exact {margin} {margin_y},{client_uid}")
+
+    @classmethod
+    async def fromright(cls, monitor, client, client_uid, margin):
+        mon_y = monitor["y"]
+        mon_width = monitor["width"]
+        mon_height = monitor["height"]
+
+        client_width = client["size"][0]
+        client_height = client["size"][1]
+        margin_y = int((mon_height - client_height) / 2) + mon_y
+        await hyprctl(
+            f"movewindowpixel exact {mon_width - client_width - margin} {margin_y},{client_uid}"
+        )
 
 
 class Scratch:
@@ -210,49 +260,6 @@ class Extension(Plugin):
         if uid not in self.transitioning_scratches:
             await hyprctl(f"movetoworkspacesilent special:scratch,{pid}")
 
-    async def _animation_fromtop(self, monitor, client, client_uid, margin):
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_width = monitor["width"]
-
-        client_width = client["size"][0]
-        margin_x = int((mon_width - client_width) / 2) + mon_x
-        await hyprctl(f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}")
-
-    async def _animation_frombottom(self, monitor, client, client_uid, margin):
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_width = monitor["width"]
-        mon_height = monitor["height"]
-
-        client_width = client["size"][0]
-        client_height = client["size"][1]
-        margin_x = int((mon_width - client_width) / 2) + mon_x
-        await hyprctl(
-            f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
-        )
-
-    async def _animation_fromleft(self, monitor, client, client_uid, margin):
-        mon_y = monitor["y"]
-        mon_height = monitor["height"]
-
-        client_height = client["size"][1]
-        margin_y = int((mon_height - client_height) / 2) + mon_y
-
-        await hyprctl(f"movewindowpixel exact {margin} {margin_y},{client_uid}")
-
-    async def _animation_fromright(self, monitor, client, client_uid, margin):
-        mon_y = monitor["y"]
-        mon_width = monitor["width"]
-        mon_height = monitor["height"]
-
-        client_width = client["size"][0]
-        client_height = client["size"][1]
-        margin_y = int((mon_height - client_height) / 2) + mon_y
-        await hyprctl(
-            f"movewindowpixel exact {mon_width - client_width - margin} {margin_y},{client_uid}"
-        )
-
     async def run_show(self, uid, force=False):
         uid = uid.strip()
         item = self.scratches.get(uid)
@@ -287,7 +294,7 @@ class Extension(Plugin):
         await hyprctl(f"movetoworkspacesilent {wrkspc},{pid}")
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
-            fn = getattr(self, "_animation_%s" % animation_type)
+            fn = getattr(Animations, animation_type)
             await fn(monitor, item.clientInfo, pid, margin)
 
         await hyprctl(f"focuswindow {pid}")

@@ -65,7 +65,7 @@ class Pyprland:
                 print(f"EVT {full_name}({params.strip()})")
             await self._callHandler(full_name, params)
 
-    async def read_command(self, reader, writer):
+    async def read_command(self, reader, writer) -> None:
         data = (await reader.readline()).decode()
         if not data:
             print("Server starved")
