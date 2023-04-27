@@ -4,13 +4,18 @@ from ..ipc import (
     hyprctl,
     hyprctlJSON,
     get_focused_monitor_props,
-    get_client_props_by_pid,
 )
 import os
 
 from .interface import Plugin
 
 DEFAULT_MARGIN = 60
+
+
+async def get_client_props_by_pid(pid: int):
+    for client in await hyprctlJSON("clients"):
+        if client.get("pid") == pid:
+            return client
 
 
 class Scratch:

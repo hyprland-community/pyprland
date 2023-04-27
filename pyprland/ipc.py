@@ -51,9 +51,3 @@ async def get_focused_monitor_props():
         assert isinstance(monitor, dict)
         if monitor.get("focused") == True:
             return monitor
-
-
-async def get_client_props_by_pid(pid: int):
-    for client in await hyprctlJSON("clients"):
-        if client.get("pid") == pid:
-            return client
