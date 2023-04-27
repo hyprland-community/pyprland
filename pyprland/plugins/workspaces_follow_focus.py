@@ -11,7 +11,7 @@ class Extension(Plugin):
     async def event_focusedmon(self, screenid_index):
         monitor_id, workspace_id = screenid_index.split(",")
         workspace_id = int(workspace_id)
-        # move every free wokrspace to the currently focused desktop
+        # move every free workspace to the currently focused desktop
         busy_workspaces = set(
             mon["activeWorkspace"]["id"]
             for mon in await hyprctlJSON("monitors")
