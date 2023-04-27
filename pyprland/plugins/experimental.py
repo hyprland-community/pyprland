@@ -1,10 +1,7 @@
 from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl, get_workspaces
+from ..ipc import hyprctlJSON, hyprctl
 
 
-class Experimental(Plugin):
+class Extension(Plugin):
     pass
-
-
-Exported = Experimental

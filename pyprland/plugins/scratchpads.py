@@ -48,7 +48,7 @@ class Scratch:
         self.clientInfo.update(clientInfo)
 
 
-class ScratchpadManager(Plugin):
+class Extension(Plugin):
     async def init(self):
         self.procs: dict[str, subprocess.Popen] = {}
         self.scratches: dict[str, Scratch] = {}
@@ -288,6 +288,3 @@ class ScratchpadManager(Plugin):
         await hyprctl(f"focuswindow {pid}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)
-
-
-Exported = ScratchpadManager

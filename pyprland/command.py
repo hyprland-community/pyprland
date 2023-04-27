@@ -33,7 +33,7 @@ class Pyprland:
             if name not in self.plugins:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
                 try:
-                    plug = importlib.import_module(modname).Exported(name)
+                    plug = importlib.import_module(modname).Extension(name)
                     await plug.init()
                     self.plugins[name] = plug
                 except Exception as e:

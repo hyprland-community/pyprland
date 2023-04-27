@@ -54,6 +54,3 @@ class Extension(Plugin):
         ]
         await hyprctl(f"moveworkspacetomonitor {next_workspace},{monitor['name']}")
         await hyprctl(f"workspace {next_workspace}")
-
-
-Exported = Extension

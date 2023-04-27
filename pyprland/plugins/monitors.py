@@ -5,7 +5,7 @@ import subprocess
 from ..ipc import hyprctlJSON
 
 
-class MonitorLayout(Plugin):
+class Extension(Plugin):
     async def event_monitoradded(self, screenid):
         screenid = screenid.strip()
 
@@ -43,6 +43,3 @@ class MonitorLayout(Plugin):
                         subprocess.call(
                             ["wlr-randr", "--output", screenid, "--pos", f"{x},{y}"]
                         )
-
-
-Exported = MonitorLayout
