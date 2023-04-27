@@ -26,6 +26,12 @@ Built-in plugins are:
 pip install pyprland
 ```
 
+Don't forget to start the process, for instance:
+
+```
+exec-once = pypr
+```
+
 ## Getting started
 
 Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of plugins, each plugin may have its own configuration needs, eg:
