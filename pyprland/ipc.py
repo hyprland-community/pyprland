@@ -31,7 +31,12 @@ async def hyprctl(command):
     if DEBUG:
         print(">>>", command)
     ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
-    ctl_writer.write(f"/dispatch {command}".encode())
+    if isinstance(command, list):
+        ctl_writer.write(
+            f"[[BATCH]] {' ; '.join('dispatch ' + c for c in command)}".encode()
+        )
+    else:
+        ctl_writer.write(f"/dispatch {command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read(100)
     ctl_writer.close()

@@ -17,12 +17,16 @@ class Extension(Plugin):
             for mon in await hyprctlJSON("monitors")
             if mon["name"] != monitor_id
         )
+        workspaces = [w["id"] for w in await hyprctlJSON("workspaces") if w["id"] > 0]
 
-        for n in self.workspace_list:
+        batch: list[str] = []
+        for n in workspaces:
             if n in busy_workspaces or n == workspace_id:
                 continue
-            await hyprctl(f"moveworkspacetomonitor {n} {monitor_id}")
-        await hyprctl(f"workspace {workspace_id}")
+            batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
+        batch.append(f"workspace {workspace_id}")
+
+        await hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
         increment = int(direction)
