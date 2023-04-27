@@ -48,13 +48,11 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
   "scratchpads": {
     "term": {
       "command": "kitty --class kitty-dropterm",
-      "class": "kitty-dropterm",
       "animation": "fromTop",
       "unfocus": "hide"
     },
     "volume": {
       "command": "pavucontrol",
-      "class": "pavucontrol",
       "unfocus": "hide",
       "animation": "fromRight"
     }
