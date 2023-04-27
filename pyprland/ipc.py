@@ -43,7 +43,7 @@ async def hyprctl(command):
     await ctl_writer.wait_closed()
     if DEBUG:
         print("<<<", resp)
-    return resp == b"ok"
+    return resp == b"ok" * (len(resp) // 2)
 
 
 async def get_focused_monitor_props():
