@@ -47,16 +47,18 @@ class Animations:
 
     @classmethod
     async def fromleft(cls, monitor, client, client_uid, margin):
+        mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_height = monitor["height"]
 
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
 
-        await hyprctl(f"movewindowpixel exact {margin} {margin_y},{client_uid}")
+        await hyprctl(f"movewindowpixel exact {margin + mon_x} {margin_y},{client_uid}")
 
     @classmethod
     async def fromright(cls, monitor, client, client_uid, margin):
+        mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width = monitor["width"]
         mon_height = monitor["height"]
@@ -65,7 +67,7 @@ class Animations:
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
         await hyprctl(
-            f"movewindowpixel exact {mon_width - client_width - margin} {margin_y},{client_uid}"
+            f"movewindowpixel exact {mon_width - client_width - margin + mon_x } {margin_y},{client_uid}"
         )
 
 
