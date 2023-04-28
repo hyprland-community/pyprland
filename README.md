@@ -27,7 +27,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 
 - `scratchpad` implements dropdowns & togglable poppups
 - `monitors` allows relative placement of monitors depending on the model
-- `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups
+- `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups. If you think the multi-screen behavior of hyprland is not usable or broken/unexpected, this is probably for you.
 
 ## Installation
 
@@ -76,6 +76,7 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
         "topOf": "eDP-1"
       }
     }
+    "unknown": "wlrlui"
   }
 }
 ```
@@ -90,12 +91,20 @@ Allows relative placement of monitors depending on the model ("description" retu
 
 ### Configuration
 
+#### `placement`
+
 Supported placements are:
 
 - leftOf
 - topOf
 - rightOf
 - bottomOf
+
+#### `unknown`
+
+If set, runs the associated command for screens which aren't matching any of the provided placements (pattern isn't found in monitor description).
+
+**Note** this is supposed to be a short lived command which will block the rest of the process until closed. In other words no plugin will be processed while this command remains open.
 
 ## `workspaces_follow_focus` plugin
 

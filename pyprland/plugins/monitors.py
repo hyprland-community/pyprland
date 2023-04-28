@@ -71,6 +71,6 @@ class Extension(Plugin):
 
                         configure_monitors(monitors, screenid, x, y)
                         return
-        default_command = self.config.get("noplacement")
+        default_command = self.config.get("unknown")
         if default_command:
             subprocess.call(default_command, shell=True)
