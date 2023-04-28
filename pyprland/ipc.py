@@ -30,6 +30,14 @@ async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     return ret
 
 
+def _format_command(command_list, default_base_command):
+    for command in command_list:
+        if isinstance(command, str):
+            yield f"{default_base_command} {command}"
+        else:
+            yield f"{command[1]} {command[0]}"
+
+
 async def hyprctl(command, base_command="dispatch") -> bool:
     """Run an IPC command. Returns success value."""
     if DEBUG:
@@ -37,7 +45,7 @@ async def hyprctl(command, base_command="dispatch") -> bool:
     ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     if isinstance(command, list):
         ctl_writer.write(
-            f"[[BATCH]] {' ; '.join(f'{base_command} ' + c for c in command)}".encode()
+            f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode()
         )
     else:
         ctl_writer.write(f"/{base_command} {command}".encode())
