@@ -1,3 +1,4 @@
+import asyncio
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON, hyprctl
@@ -19,14 +20,15 @@ class Extension(Plugin):
         )
         workspaces = [w["id"] for w in await hyprctlJSON("workspaces") if w["id"] > 0]
 
-        batch: list[str] = []
+        batch: list[str | list[str]] = [["animations:enabled false", "keyword"]]
         for n in workspaces:
             if n in busy_workspaces or n == workspace_id:
                 continue
             batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
         batch.append(f"workspace {workspace_id}")
-
         await hyprctl(batch)
+        await asyncio.sleep(0.05)
+        await hyprctl("animations:enabled true", base_command="keyword")
 
     async def run_change_workspace(self, direction: str):
         increment = int(direction)
