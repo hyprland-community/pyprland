@@ -291,7 +291,9 @@ class Extension(Plugin):
         animation_type = item.conf.get("animation", "").lower()
 
         wrkspc = monitor["activeWorkspace"]["id"]
+
         self.transitioning_scratches.add(uid)
+        await hyprctl(f"moveworkspacetomonitor special:scratch {monitor['name']}")
         await hyprctl(f"movetoworkspacesilent {wrkspc},{pid}")
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
