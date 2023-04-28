@@ -1,6 +1,15 @@
-# Extensions & tweaks for hyprland
+# Pyprland
+
+## Scratchpads, smart monitor placement and other tweaks for hyprland
 
 Host process for multiple Hyprland plugins.
+
+- **tool**: `pypr`
+- **config file**: `~/.config/hypr/pyprland.json`
+
+The `pypr` tool only have one built-in command: `reload`, which reads the configuration file and attempt to apply the changes. Other commands are added by adding plugins.
+
+
 A single config file `~/.config/hypr/pyprland.json` is used, using the following syntax:
 
 ```json
@@ -14,7 +23,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 }
 ```
 
-Built-in plugins are:
+## Built-in plugins
 
 - `scratchpad` implements dropdowns & togglable poppups
 - `monitors` allows relative placement of monitors depending on the model
@@ -22,11 +31,15 @@ Built-in plugins are:
 
 ## Installation
 
+Use the python package manager:
+
 ```
 pip install pyprland
 ```
 
-Don't forget to start the process, for instance:
+If you run archlinux, you can also find it on AUR: `yay -S pyprland`
+
+Don't forget to start the process with hyprland, adding to `hyprland.conf`:
 
 ```
 exec-once = pypr
@@ -69,7 +82,7 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 # Configuring plugins
 
-## `monitors`
+## `monitors` plugin
 
 Requires `wlr-randr`.
 
@@ -84,7 +97,7 @@ Supported placements are:
 - rightOf
 - bottomOf
 
-## `workspaces_follow_focus`
+## `workspaces_follow_focus` plugin
 
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces wile preserving the current monitor assignments: 
@@ -104,7 +117,7 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 You can set the `max_workspaces` property, defaults to `10`.
 
-## `scratchpads`
+## `scratchpads` plugin
 
 Check [hpr-scratcher](https://github.com/hyprland-community/hpr-scratcher), it's fully compatible, just put the configuration under "scratchpads".
 
@@ -151,7 +164,6 @@ And you'll be able to toggle pavucontrol with MOD + V.
 
 ### Command-line options
 
-- `reload` : reloads the configuration file
 - `toggle <scratchpad name>` : toggle the given scratchpad
 - `show <scratchpad name>` : show the given scratchpad
 - `hide <scratchpad name>` : hide the given scratchpad
@@ -186,3 +198,33 @@ allow to hide the window when the focus is lost when set to "hide"
 #### margin (optional)
 
 number of pixels separating the scratchpad from the screen border
+
+# Writing plugins
+
+You can start enabling a plugin called "experimental" and add code to `plugins/experimental.py`.
+A better way is to copy this as a starting point and make your own python module.
+Plugins can be loaded with full python module path, eg: `"mymodule.pyprlandplugin"`, the loaded module must provide an `Extension` interface.
+
+Check the `interface.py` file to know the base methods, also have a look at the other plugins for working examples.
+
+## Creating a command
+
+Just add a method called `run_<name of your command>`, eg with "togglezoom" command:
+
+```python
+async def init(self):
+  self.zommed = False
+
+async def run_togglezoom(self, args):
+  if self.zoomed:
+    await hyprctl('misc:cursor_zoom_factor 1', 'keyword')
+  else:
+    await hyprctl('misc:cursor_zoom_factor 2', 'keyword')
+  self.zoomed = not self.zoomed
+```
+
+## Reacting to an event
+
+Similar as a command, implement some `event_<the event you are interested in>` method.
+
+
