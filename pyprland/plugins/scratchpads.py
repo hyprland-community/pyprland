@@ -196,6 +196,7 @@ class Extension(Plugin):
                 item.just_created = False
 
     async def run_toggle(self, uid: str) -> None:
+        """<name> toggles visibility of scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
@@ -227,6 +228,7 @@ class Extension(Plugin):
                 self.scratches_by_address[scratch.clientInfo["address"][2:]] = scratch
 
     async def run_hide(self, uid: str, force=False) -> None:
+        """<name> hides scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
@@ -262,6 +264,7 @@ class Extension(Plugin):
             await hyprctl(f"movetoworkspacesilent special:scratch,{pid}")
 
     async def run_show(self, uid, force=False) -> None:
+        """<name> shows scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
 

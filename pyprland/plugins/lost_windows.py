@@ -19,6 +19,7 @@ def contains(monitor, window):
 
 class Extension(Plugin):
     async def run_attract_lost(self, *args):
+        """Brings lost floating windows to the current workspace"""
         monitors = await hyprctlJSON("monitors")
         windows = await hyprctlJSON("clients")
         lost = [

@@ -28,6 +28,7 @@ class Extension(Plugin):
         await hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
+        """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces"""
         increment = int(direction)
         # get focused screen info
         monitors = await hyprctlJSON("monitors")

@@ -137,7 +137,7 @@ async def run_daemon():
 
 
 async def run_client():
-    if sys.argv[1] == "--help":
+    if sys.argv[1] in ("--help", "-h"):
         manager = Pyprland()
         await manager.load_config(init=False)
         print(
@@ -147,12 +147,16 @@ If command is ommited, runs the daemon which will start every configured command
 
 Commands:
 
- reload"""
+ reload               Reloads the config file (only supports adding or updating plugins)"""
         )
         for plug in manager.plugins.values():
             for name in dir(plug):
-                if name.startswith("run_") and callable(getattr(plug, name)):
-                    print(f" {name[4:]:20} (from {plug.name})")
+                if name.startswith("run_"):
+                    fn = getattr(plug, name)
+                    if callable(fn):
+                        print(
+                            f" {name[4:]:20} {fn.__doc__.strip() if fn.__doc__ else 'N/A'} (from {plug.name})"
+                        )
 
         return
 

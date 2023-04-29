@@ -8,6 +8,7 @@ class Extension(Plugin):
         self.zoomed = False
 
     async def run_zoom(self, *args):
+        """[factor] zooms to "factor" or toggles zoom level ommited"""
         if args:
             value = int(args[0])
             await hyprctl(f"misc:cursor_zoom_factor {value}", "keyword")
