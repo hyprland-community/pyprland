@@ -25,7 +25,6 @@ class Extension(Plugin):
             if n in busy_workspaces or n == workspace_id:
                 continue
             batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
-        batch.append(f"workspace {workspace_id}")
         await hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
