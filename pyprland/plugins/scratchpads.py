@@ -182,7 +182,7 @@ class Extension(Plugin):
                         and scratch.conf.get("unfocus") == "hide"
                         and scratch.uid not in self.transitioning_scratches
                     ):
-                        await self.run_hide(uid)
+                        await self.run_hide(uid, autohide=True)
 
     async def event_openwindow(self, params) -> None:
         addr, wrkspc, kls, title = params.split(",", 3)
@@ -228,7 +228,7 @@ class Extension(Plugin):
             if add_to_address_book:
                 self.scratches_by_address[scratch.clientInfo["address"][2:]] = scratch
 
-    async def run_hide(self, uid: str, force=False) -> None:
+    async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
@@ -268,9 +268,10 @@ class Extension(Plugin):
         if (
             animation_type and uid in self.focused_window_tracking
         ):  # focus got lost when animating
-            await hyprctl(
-                f"focuswindow address:{self.focused_window_tracking[uid]['address']}"
-            )
+            if not autohide:
+                await hyprctl(
+                    f"focuswindow address:{self.focused_window_tracking[uid]['address']}"
+                )
 
     async def run_show(self, uid, force=False) -> None:
         """<name> shows scratchpad "name" """
