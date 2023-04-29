@@ -114,6 +114,7 @@ class Extension(Plugin):
         self._respawned_scratches: set[str] = set()
         self.scratches_by_address: dict[str, Scratch] = {}
         self.scratches_by_pid: dict[int, Scratch] = {}
+        self.focused_window_tracking = dict()
 
     async def exit(self) -> None:
         async def die_in_piece(scratch: Scratch):
@@ -260,13 +261,21 @@ class Extension(Plugin):
             if uid in self.transitioning_scratches:
                 return  # abort sequence
             await asyncio.sleep(0.2)  # await for animation to finish
+
         if uid not in self.transitioning_scratches:
             await hyprctl(f"movetoworkspacesilent special:scratch,{pid}")
+
+        if (
+            animation_type and uid in self.focused_window_tracking
+        ):  # focus got lost when animating
+            await hyprctl(f"focuswindow pid:{self.focused_window_tracking[uid]['pid']}")
 
     async def run_show(self, uid, force=False) -> None:
         """<name> shows scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
+
+        self.focused_window_tracking[uid] = await hyprctlJSON("activewindow")
 
         if not item:
             print(f"{uid} is not configured")
