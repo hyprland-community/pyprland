@@ -34,6 +34,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 - `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups. If you think the multi-screen behavior of hyprland is not usable or broken/unexpected, this is probably for you.
 - `lost_windows` brings lost floating windows to the current workspace
 - `toggle_dpms` toggles the DPMS status of every plugged monitor
+- `magnify` toggles zooming of viewport or sets a specific scaling factor
 
 ## Installation
 
@@ -88,6 +89,19 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 ```
 
 # Configuring plugins
+
+## `magnify` plugin
+
+### Command
+
+- `zoom [value]`: if no value, toggles magnification. If an integer is provided, it will set as scaling factor.
+
+### Configuration
+
+
+#### `factor`
+
+Scaling factor to be used when no value is provided.
 
 ## `toggle_dpms` plugin
 
@@ -242,7 +256,7 @@ Just add a method called `run_<name of your command>`, eg with "togglezoom" comm
 
 ```python
 async def init(self):
-  self.zommed = False
+  self.zoomed = False
 
 async def run_togglezoom(self, args):
   if self.zoomed:
