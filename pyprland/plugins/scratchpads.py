@@ -263,7 +263,7 @@ class Extension(Plugin):
             await asyncio.sleep(0.2)  # await for animation to finish
 
         if uid not in self.transitioning_scratches:
-            await hyprctl(f"movetoworkspacesilent special:scratch,{pid}")
+            await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{pid}")
 
         if (
             animation_type and uid in self.focused_window_tracking
@@ -305,7 +305,7 @@ class Extension(Plugin):
         wrkspc = monitor["activeWorkspace"]["id"]
 
         self.transitioning_scratches.add(uid)
-        await hyprctl(f"moveworkspacetomonitor special:scratch {monitor['name']}")
+        await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
         await hyprctl(f"movetoworkspacesilent {wrkspc},{pid}")
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
