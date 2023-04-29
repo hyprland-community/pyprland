@@ -7,8 +7,12 @@ Host process for multiple Hyprland plugins.
 - **tool**: `pypr`
 - **config file**: `~/.config/hypr/pyprland.json`
 
-The `pypr` tool only have one built-in command: `reload`, which reads the configuration file and attempt to apply the changes. Other commands are added by adding plugins.
+The `pypr` tool only have two built-in commands:
 
+- `reload` reads the configuration file and attempt to apply the changes
+- `--help` lists available commands (including plugins commands)
+-
+Other commands are added by adding plugins.
 
 A single config file `~/.config/hypr/pyprland.json` is used, using the following syntax:
 
