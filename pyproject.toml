@@ -6,7 +6,7 @@ authors = ["fdev31 <fdev31@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "pyprland"}]
-homepage = "https://github.com/fdev31/pyprland/"
+homepage = "https://github.com/hyprland-community/pyprland/"
 
 [tool.poetry.scripts]
 pypr = "pyprland.command:main"
