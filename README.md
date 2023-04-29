@@ -88,8 +88,6 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 }
 ```
 
-# Configuring plugins
-
 # Plugin: `magnify`
 
 ### Command
@@ -99,11 +97,11 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 ### Configuration
 
 
-#### `factor`
+#### `factor` (optional, defaults to 2)
 
 Scaling factor to be used when no value is provided.
 
-## PLugin: `toggle_dpms`
+## Plugin: `toggle_dpms`
 
 ### Command
 
@@ -124,7 +122,8 @@ Syntax:
   "placement": {
     "<partial model description>": {
       "placement type": "<monitor name/output>"
-    }
+    },
+    "unknown": "<command to run for unknown monitors>"
   }
 }
 ```
@@ -132,8 +131,11 @@ Syntax:
 Example:
 ```json
 "monitors": {
-  "Medion": {
-    "placement": "HDMI-1"
+  "unknown": "notify-send 'Unknown monitor'",
+  "placement": {
+    "Sony": {
+      "topOf": "HDMI-1"
+    }
   }
 }
 ```
@@ -154,7 +156,7 @@ Supported placements are:
 - rightOf
 - bottomOf
 
-#### `unknown`
+#### `unknown` (optional)
 
 If set, runs the associated command for screens which aren't matching any of the provided placements (pattern isn't found in monitor description).
 
@@ -164,6 +166,13 @@ If set, runs the associated command for screens which aren't matching any of the
 
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces wile preserving the current monitor assignments: 
+
+Syntax:
+```json
+"workspaces_follow_focus": {
+  "max_workspaces": <number of workspaces>
+}
+```
 
 ### Command
 
@@ -182,12 +191,37 @@ You can set the `max_workspaces` property, defaults to `10`.
 
 # Plugin: `scratchpads`
 
-Check [hpr-scratcher](https://github.com/hyprland-community/hpr-scratcher), it's fully compatible, just put the configuration under "scratchpads".
+Defines commands that should run in dropdowns. Successor of [hpr-scratcher](https://github.com/hyprland-community/hpr-scratcher), it's fully compatible, just put the configuration under "scratchpads".
+
+Syntax:
+```json
+"scratchpads": {
+  "scratchpad name": {
+    "command": "command to run"
+  }
+}
+```
 
 As an example, defining two scratchpads:
 
 - _term_ which would be a kitty terminal on upper part of the screen
 - _volume_ which would be a pavucontrol window on the right part of the screen
+
+Example:
+```json
+"scratchpads": {
+  "term": {
+    "command": "kitty --class kitty-dropterm",
+    "animation": "fromTop",
+    "margin": 50,
+    "unfocus": "hide"
+  },
+  "volume": {
+    "command": "pavucontrol",
+    "animation": "fromRight"
+  }
+}
+```
 
 In your `hyprland.conf` add something like this:
 
@@ -206,23 +240,6 @@ windowrule = workspace special silent,$dropterm
 windowrule = size 75% 60%,$dropterm
 ```
 
-Then in the configuration file, add something like this:
-
-```json
-"scratchpads": {
-  "term": {
-    "command": "kitty --class kitty-dropterm",
-    "animation": "fromTop",
-    "margin": 50,
-    "unfocus": "hide"
-  },
-  "volume": {
-    "command": "pavucontrol",
-    "animation": "fromRight"
-  }
-}
-```
-
 And you'll be able to toggle pavucontrol with MOD + V.
 
 ### Commands
@@ -233,57 +250,34 @@ And you'll be able to toggle pavucontrol with MOD + V.
 
 Note: with no argument it runs the daemon (doesn't fork in the background)
 
-### Scratchpad Options
-
-Syntax:
-```json
-"scratchpads": {
-  "<scratchpad name>": {
-    "command": "command to execute"
-  }
-}
-```
-
-Example: 
-```json
-"scratchpads": {
-  "term": {
-    "command": "kitty --class kitty-dropterm",
-    "animation": "fromTop",
-    "margin": 50,
-    "unfocus": "hide"
-  },
-  "volume": {
-    "command": "pavucontrol",
-    "animation": "fromRight"
-  }
-```
 
 
-#### command
+### Configuration
+
+#### `command`
 
 This is the command you wish to run in the scratchpad.
 For a nice startup you need to be able to identify this window in `hyprland.conf`, using `--class` is often a good idea.
 
-#### animation
+#### `animation` (optional)
 
 Type of animation to use
 
-- `null` / `""` / not defined
-- "fromTop"
-- "fromBottom"
-- "fromLeft"
-- "fromRight"
+- `null` / `""` / not defined (no animation)
+- "fromTop" (stays close to top screen border)
+- "fromBottom" (stays close to bottom screen border)
+- "fromLeft" (stays close to left screen border)
+- "fromRight" (stays close to right screen border)
 
-#### offset (optional)
+#### `offset` (optional)
 
 number of pixels for the animation.
 
-#### unfocus (optional)
+#### `unfocus` (optional)
 
 allow to hide the window when the focus is lost when set to "hide"
 
-#### margin (optional)
+#### `margin` (optional)
 
 number of pixels separating the scratchpad from the screen border
 
@@ -294,6 +288,8 @@ A better way is to copy this as a starting point and make your own python module
 Plugins can be loaded with full python module path, eg: `"mymodule.pyprlandplugin"`, the loaded module must provide an `Extension` interface.
 
 Check the `interface.py` file to know the base methods, also have a look at the other plugins for working examples.
+
+To get more details when an error is occurring, `export DEBUG=1` in your shell before running.
 
 ## Creating a command
 
@@ -314,5 +310,4 @@ async def run_togglezoom(self, args):
 ## Reacting to an event
 
 Similar as a command, implement some `event_<the event you are interested in>` method.
-
 
