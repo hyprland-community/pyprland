@@ -28,6 +28,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 - `scratchpad` implements dropdowns & togglable poppups
 - `monitors` allows relative placement of monitors depending on the model
 - `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups. If you think the multi-screen behavior of hyprland is not usable or broken/unexpected, this is probably for you.
+- `lost_windows` brings lost floating windows to the current workspace
 
 ## Installation
 
@@ -83,6 +84,12 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 # Configuring plugins
 
+## `lost_windows` plugin
+
+### Command
+
+- `attract_lost`: brings the lost windows to the current screen / workspace
+
 ## `monitors` plugin
 
 Requires `wlr-randr`.
@@ -90,6 +97,7 @@ Requires `wlr-randr`.
 Allows relative placement of monitors depending on the model ("description" returned by `hyprctl monitors`).
 
 ### Configuration
+
 
 #### `placement`
 
@@ -111,7 +119,7 @@ If set, runs the associated command for screens which aren't matching any of the
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces wile preserving the current monitor assignments: 
 
-### Commands
+### Command
 
 - `change_workspace` `<direction>`: changes the workspace of the focused monitor
 
@@ -171,7 +179,7 @@ Then in the configuration file, add something like this:
 
 And you'll be able to toggle pavucontrol with MOD + V.
 
-### Command-line options
+### Commands
 
 - `toggle <scratchpad name>` : toggle the given scratchpad
 - `show <scratchpad name>` : show the given scratchpad
