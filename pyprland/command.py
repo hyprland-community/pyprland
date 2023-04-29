@@ -25,7 +25,7 @@ class Pyprland:
     def __init__(self):
         self.plugins: dict[str, Plugin] = {}
 
-    async def load_config(self):
+    async def load_config(self, init=True):
         self.config = json.loads(
             open(os.path.expanduser(CONFIG_FILE), encoding="utf-8").read()
         )
@@ -34,13 +34,15 @@ class Pyprland:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
                 try:
                     plug = importlib.import_module(modname).Extension(name)
-                    await plug.init()
+                    if init:
+                        await plug.init()
                     self.plugins[name] = plug
                 except Exception as e:
                     print(f"Error loading plugin {name}: {e}")
                     if DEBUG:
                         traceback.print_exc()
-            await self.plugins[name].load_config(self.config)
+            if init:
+                await self.plugins[name].load_config(self.config)
 
     async def _callHandler(self, full_name, *params):
         for plugin in [self] + list(self.plugins.values()):
@@ -136,16 +138,22 @@ async def run_daemon():
 
 async def run_client():
     if sys.argv[1] == "--help":
+        manager = Pyprland()
+        await manager.load_config(init=False)
         print(
-            """Commands:
-  reload
-  show   <scratchpad name>
-  hide   <scratchpad name>
-  toggle <scratchpad name>
+            """Syntax: pypr [command]
 
-If arguments are ommited, runs the daemon which will start every configured command.
-"""
+If command is ommited, runs the daemon which will start every configured command.
+
+Commands:
+
+ reload"""
         )
+        for plug in manager.plugins.values():
+            for name in dir(plug):
+                if name.startswith("run_") and callable(getattr(plug, name)):
+                    print(f" {name[4:]:20} (from {plug.name})")
+
         return
 
     _, writer = await asyncio.open_unix_connection(CONTROL)
