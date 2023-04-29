@@ -90,7 +90,7 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 # Configuring plugins
 
-## Plugin: `magnify`
+# Plugin: `magnify`
 
 ### Command
 
@@ -110,13 +110,13 @@ Scaling factor to be used when no value is provided.
 - `toggle_dpms`: if any screen is powered on, turn them all off, else turn them all on
 
 
-## Plugin: `lost_windows`
+# Plugin: `lost_windows`
 
 ### Command
 
 - `attract_lost`: brings the lost windows to the current screen / workspace
 
-## Plugin: `monitors`
+# Plugin: `monitors`
 
 Syntax:
 ```json
@@ -160,7 +160,7 @@ If set, runs the associated command for screens which aren't matching any of the
 
 **Note** this is supposed to be a short lived command which will block the rest of the process until closed. In other words no plugin will be processed while this command remains open.
 
-## Plugin: `workspaces_follow_focus`
+# Plugin: `workspaces_follow_focus`
 
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces wile preserving the current monitor assignments: 
@@ -180,7 +180,7 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 You can set the `max_workspaces` property, defaults to `10`.
 
-## Plugin: `scratchpads`
+# Plugin: `scratchpads`
 
 Check [hpr-scratcher](https://github.com/hyprland-community/hpr-scratcher), it's fully compatible, just put the configuration under "scratchpads".
 
