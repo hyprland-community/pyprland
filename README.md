@@ -29,7 +29,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 
 ## Built-in plugins
 
-- `scratchpad` implements dropdowns & togglable poppups
+- `scratchpads` implements dropdowns & togglable poppups
 - `monitors` allows relative placement of monitors depending on the model
 - `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups. If you think the multi-screen behavior of hyprland is not usable or broken/unexpected, this is probably for you.
 - `lost_windows` brings lost floating windows to the current workspace
@@ -90,7 +90,7 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 # Configuring plugins
 
-## `magnify` plugin
+## Plugin: `magnify`
 
 ### Command
 
@@ -103,20 +103,40 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 Scaling factor to be used when no value is provided.
 
-## `toggle_dpms` plugin
+## PLugin: `toggle_dpms`
 
 ### Command
 
 - `toggle_dpms`: if any screen is powered on, turn them all off, else turn them all on
 
 
-## `lost_windows` plugin
+## Plugin: `lost_windows`
 
 ### Command
 
 - `attract_lost`: brings the lost windows to the current screen / workspace
 
-## `monitors` plugin
+## Plugin: `monitors`
+
+Syntax:
+```json
+"monitors": {
+  "placement": {
+    "<partial model description>": {
+      "placement type": "<monitor name/output>"
+    }
+  }
+}
+```
+
+Example:
+```json
+"monitors": {
+  "Medion": {
+    "placement": "HDMI-1"
+  }
+}
+```
 
 Requires `wlr-randr`.
 
@@ -140,7 +160,7 @@ If set, runs the associated command for screens which aren't matching any of the
 
 **Note** this is supposed to be a short lived command which will block the rest of the process until closed. In other words no plugin will be processed while this command remains open.
 
-## `workspaces_follow_focus` plugin
+## Plugin: `workspaces_follow_focus`
 
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces wile preserving the current monitor assignments: 
@@ -160,7 +180,7 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 You can set the `max_workspaces` property, defaults to `10`.
 
-## `scratchpads` plugin
+## Plugin: `scratchpads`
 
 Check [hpr-scratcher](https://github.com/hyprland-community/hpr-scratcher), it's fully compatible, just put the configuration under "scratchpads".
 
@@ -214,6 +234,31 @@ And you'll be able to toggle pavucontrol with MOD + V.
 Note: with no argument it runs the daemon (doesn't fork in the background)
 
 ### Scratchpad Options
+
+Syntax:
+```json
+"scratchpads": {
+  "<scratchpad name>": {
+    "command": "command to execute"
+  }
+}
+```
+
+Example: 
+```json
+"scratchpads": {
+  "term": {
+    "command": "kitty --class kitty-dropterm",
+    "animation": "fromTop",
+    "margin": 50,
+    "unfocus": "hide"
+  },
+  "volume": {
+    "command": "pavucontrol",
+    "animation": "fromRight"
+  }
+```
+
 
 #### command
 
