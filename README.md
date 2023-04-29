@@ -101,7 +101,7 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
 
 Scaling factor to be used when no value is provided.
 
-## Plugin: `toggle_dpms`
+# Plugin: `toggle_dpms`
 
 ### Command
 
