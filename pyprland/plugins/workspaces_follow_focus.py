@@ -7,7 +7,7 @@ from ..ipc import hyprctlJSON, hyprctl
 class Extension(Plugin):
     async def load_config(self, config):
         await super().load_config(config)
-        self.workspace_list = list(range(1, self.config.get("max_workspaces", 10)))
+        self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
     async def event_focusedmon(self, screenid_index):
         monitor_id, workspace_id = screenid_index.split(",")
