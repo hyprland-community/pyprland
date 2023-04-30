@@ -13,10 +13,10 @@ from .interface import Plugin
 DEFAULT_MARGIN = 60
 
 
-async def get_client_props_by_pid(pid: int):
+async def get_client_props_by_address(addr: str):
     for client in await hyprctlJSON("clients"):
         assert isinstance(client, dict)
-        if client.get("pid") == pid:
+        if client.get("address") == addr:
             return client
 
 
@@ -101,7 +101,7 @@ class Scratch:
 
     async def updateClientInfo(self, clientInfo=None) -> None:
         if clientInfo is None:
-            clientInfo = await get_client_props_by_pid(self.pid)
+            clientInfo = await get_client_props_by_address("0x" + self.address)
         assert isinstance(clientInfo, dict)
         self.clientInfo.update(clientInfo)
 
@@ -163,7 +163,7 @@ class Extension(Plugin):
         pid = self.procs[name].pid
         self.scratches[name].reset(pid)
         self.scratches_by_pid[self.procs[name].pid] = scratch
-        if old_pid:
+        if old_pid and old_pid in self.scratches_by_pid:
             del self.scratches_by_pid[old_pid]
 
     # Events
@@ -212,14 +212,13 @@ class Extension(Plugin):
         if scratch is None:
             for client in await hyprctlJSON("clients"):
                 assert isinstance(client, dict)
-                pid = client["pid"]
-                assert isinstance(pid, int)
-                scratch = self.scratches_by_pid.get(pid)
+                scratch = self.scratches_by_address.get(client["address"][2:])
+                if not scratch:
+                    scratch = self.scratches_by_pid.get(client["pid"])
+                    if scratch:
+                        self.scratches_by_address[client["address"][2:]] = scratch
                 if scratch:
                     await scratch.updateClientInfo(client)
-                    self.scratches_by_address[
-                        scratch.clientInfo["address"][2:]
-                    ] = scratch
         else:
             add_to_address_book = ("address" not in scratch.clientInfo) or (
                 scratch.address not in self.scratches_by_address
@@ -239,7 +238,7 @@ class Extension(Plugin):
             print(f"{uid} is already hidden")
             return
         item.visible = False
-        pid = "pid:%d" % item.pid
+        addr = "address:0x" + item.address
         animation_type: str = item.conf.get("animation", "").lower()
         if animation_type:
             offset = item.conf.get("offset")
@@ -250,20 +249,20 @@ class Extension(Plugin):
                 offset = int(1.3 * item.clientInfo["size"][1])
 
             if animation_type == "fromtop":
-                await hyprctl(f"movewindowpixel 0 -{offset},{pid}")
+                await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
             elif animation_type == "frombottom":
-                await hyprctl(f"movewindowpixel 0 {offset},{pid}")
+                await hyprctl(f"movewindowpixel 0 {offset},{addr}")
             elif animation_type == "fromleft":
-                await hyprctl(f"movewindowpixel -{offset} 0,{pid}")
+                await hyprctl(f"movewindowpixel -{offset} 0,{addr}")
             elif animation_type == "fromright":
-                await hyprctl(f"movewindowpixel {offset} 0,{pid}")
+                await hyprctl(f"movewindowpixel {offset} 0,{addr}")
 
             if uid in self.transitioning_scratches:
                 return  # abort sequence
             await asyncio.sleep(0.2)  # await for animation to finish
 
         if uid not in self.transitioning_scratches:
-            await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{pid}")
+            await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{addr}")
 
         if (
             animation_type and uid in self.focused_window_tracking
@@ -291,6 +290,8 @@ class Extension(Plugin):
         if not item.isAlive():
             print(f"{uid} is not running, restarting...")
             self.procs[uid].kill()
+            del self.scratches_by_pid[self.procs[uid].pid]
+            del self.scratches_by_address[item.address]
             self.start_scratch_command(uid)
             while uid in self._respawned_scratches:
                 await asyncio.sleep(0.05)
@@ -301,7 +302,7 @@ class Extension(Plugin):
 
         await self.updateScratchInfo(item)
 
-        pid = "pid:%d" % item.pid
+        addr = "address:0x" + item.address
 
         animation_type = item.conf.get("animation", "").lower()
 
@@ -309,12 +310,12 @@ class Extension(Plugin):
 
         self.transitioning_scratches.add(uid)
         await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
-        await hyprctl(f"movetoworkspacesilent {wrkspc},{pid}")
+        await hyprctl(f"movetoworkspacesilent {wrkspc},{addr}")
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
-            await fn(monitor, item.clientInfo, pid, margin)
+            await fn(monitor, item.clientInfo, addr, margin)
 
-        await hyprctl(f"focuswindow {pid}")
+        await hyprctl(f"focuswindow {addr}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)

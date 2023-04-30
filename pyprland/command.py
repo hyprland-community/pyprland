@@ -51,8 +51,7 @@ class Pyprland:
                     await getattr(plugin, full_name)(*params)
                 except Exception as e:
                     print(f"{plugin.name}::{full_name}({params}) failed:")
-                    if DEBUG:
-                        traceback.print_exc()
+                    traceback.print_exc()
 
     async def read_events_loop(self):
         while not self.stopped:
