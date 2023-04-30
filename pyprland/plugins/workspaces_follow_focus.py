@@ -47,7 +47,7 @@ class Extension(Plugin):
         try:
             idx = available_workspaces.index(cur_workspace)
         except ValueError:
-            next_workspace = available_workspaces[0]
+            next_workspace = available_workspaces[0 if increment > 0 else -1]
         else:
             next_workspace = available_workspaces[
                 (idx + increment) % len(available_workspaces)

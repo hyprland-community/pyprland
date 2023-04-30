@@ -290,8 +290,10 @@ class Extension(Plugin):
         if not item.isAlive():
             print(f"{uid} is not running, restarting...")
             self.procs[uid].kill()
-            del self.scratches_by_pid[self.procs[uid].pid]
-            del self.scratches_by_address[item.address]
+            if item.pid in self.scratches_by_pid:
+                del self.scratches_by_pid[item.pid]
+            if item.address in self.scratches_by_address:
+                del self.scratches_by_address[item.address]
             self.start_scratch_command(uid)
             while uid in self._respawned_scratches:
                 await asyncio.sleep(0.05)
