@@ -267,10 +267,11 @@ class Extension(Plugin):
         if (
             animation_type and uid in self.focused_window_tracking
         ):  # focus got lost when animating
-            if not autohide:
+            if not autohide and "address" in self.focused_window_tracking[uid]:
                 await hyprctl(
                     f"focuswindow address:{self.focused_window_tracking[uid]['address']}"
                 )
+                del self.focused_window_tracking[uid]
 
     async def run_show(self, uid, force=False) -> None:
         """<name> shows scratchpad "name" """
