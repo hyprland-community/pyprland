@@ -40,17 +40,17 @@ class Extension(Plugin):
         busy_workspaces = set(
             m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]
         )
-        # get workspaces info
-        workspaces = await hyprctlJSON("workspaces")
-        assert isinstance(workspaces, list)
-        workspaces.sort(key=lambda x: x["id"])
         cur_workspace = monitor["activeWorkspace"]["id"]
         available_workspaces = [
             i for i in self.workspace_list if i not in busy_workspaces
         ]
-        idx = available_workspaces.index(cur_workspace)
-        next_workspace = available_workspaces[
-            (idx + increment) % len(available_workspaces)
-        ]
+        try:
+            idx = available_workspaces.index(cur_workspace)
+        except ValueError:
+            next_workspace = available_workspaces[0]
+        else:
+            next_workspace = available_workspaces[
+                (idx + increment) % len(available_workspaces)
+            ]
         await hyprctl(f"moveworkspacetomonitor {next_workspace},{monitor['name']}")
         await hyprctl(f"workspace {next_workspace}")
