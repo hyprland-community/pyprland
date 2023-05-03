@@ -96,7 +96,13 @@ Note the behavior can be hard to predict if you have more than 2 monitors, sugge
 
 ### Command
 
-- `shift_monitors <direction>`: swaps every monitor in the given direction
+- `shift_monitors <direction>`: swaps every monitor's workspace in the given direction
+
+Example usage in `hyprland.conf`:
+
+```
+bind = $mainMod SHIFT, O, exec, pypr shift_monitors +1
+ ```
 
 # Plugin: `magnify`
 
