@@ -35,6 +35,7 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 - `lost_windows` brings lost floating windows to the current workspace
 - `toggle_dpms` toggles the DPMS status of every plugged monitor
 - `magnify` toggles zooming of viewport or sets a specific scaling factor
+- `shift_monitors` adds a self-configured "swapactiveworkspaces" command
 
 ## Installation
 
@@ -87,6 +88,15 @@ Create a configuration file in `~/.config/hypr/pyprland.json` enabling a list of
   }
 }
 ```
+
+# Plugin: `shift_monitors`
+
+Swaps the workspaces of every screen in the given direction.
+Note the behavior can be hard to predict if you have more than 2 monitors, suggestions are welcome.
+
+### Command
+
+- `shift_monitors <direction>`: swaps every monitor in the given direction
 
 # Plugin: `magnify`
 
