@@ -8,6 +8,7 @@ class Extension(Plugin):
         self.monitors = [mon["name"] for mon in await hyprctlJSON("monitors")]
 
     async def run_shift_monitors(self, arg: str):
+        """Swaps monitors' workspaces in the given direction"""
         direction: int = int(arg)
         if direction > 0:
             mon_list = self.monitors[:-1]
