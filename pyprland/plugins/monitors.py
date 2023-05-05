@@ -34,10 +34,22 @@ def configure_monitors(monitors, screenid: str, x: int, y: int) -> None:
 
 
 class Extension(Plugin):
-    async def event_monitoradded(self, screenid):
+    async def load_config(self, config) -> None:
+        await super().load_config(config)
+        monitors = await hyprctlJSON("monitors")
+        for monitor in monitors:
+            await self.event_monitoradded(
+                monitor["name"], noDefault=True, monitors=monitors
+            )
+
+    async def event_monitoradded(
+        self, screenid, noDefault=False, monitors: list | None = None
+    ) -> None:
         screenid = screenid.strip()
 
-        monitors: list[dict[str, Any]] = await hyprctlJSON("monitors")
+        if not monitors:
+            monitors: list[dict[str, Any]] = await hyprctlJSON("monitors")
+
         for mon in monitors:
             if mon["name"].startswith(screenid):
                 mon_name = mon["description"]
@@ -71,6 +83,7 @@ class Extension(Plugin):
 
                         configure_monitors(monitors, screenid, x, y)
                         return
-        default_command = self.config.get("unknown")
-        if default_command:
-            subprocess.call(default_command, shell=True)
+        if not noDefault:
+            default_command = self.config.get("unknown")
+            if default_command:
+                subprocess.call(default_command, shell=True)
