@@ -31,7 +31,8 @@ A single config file `~/.config/hypr/pyprland.json` is used, using the following
 
 - `scratchpads` implements dropdowns & togglable poppups
 - `monitors` allows relative placement of monitors depending on the model
-- `expose` easily switch between scratchpads and active workspace
+- `expose` easily switch between scratchpads and active workspace :
+    [![demo video](https://img.youtube.com/vi/dxH8R2d01o8/0.jpg)](https://www.youtube.com/watch?v=dxH8R2d01o8)
 - `workspaces_follow_focus` provides commands and handlers allowing a more flexible workspaces usage on multi-monitor setups. If you think the multi-screen behavior of hyprland is not usable or broken/unexpected, this is probably for you.
 - `lost_windows` brings lost floating windows to the current workspace
 - `toggle_dpms` toggles the DPMS status of every plugged monitor

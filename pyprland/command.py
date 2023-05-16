@@ -86,6 +86,9 @@ class Pyprland:
             args = args[1:]
 
         full_name = f"run_{cmd}"
+        # Demos:
+        # run mako for notifications & uncomment this
+        # os.system(f"notify-send '{data}'")
 
         if DEBUG:
             print(f"CMD: {full_name}({args})")
