@@ -271,14 +271,14 @@ Example:
 In your `hyprland.conf` add something like this:
 
 ```ini
-exec-once = hpr-scratcher
+exec-once = pypr
 
 # Repeat this for each scratchpad you need
-bind = $mainMod,V,exec,hpr-scratcher toggle volume
+bind = $mainMod,V,exec,pypr toggle volume
 windowrule = float,^(pavucontrol)$
 windowrule = workspace special silent,^(pavucontrol)$
 
-bind = $mainMod,A,exec,hpr-scratcher toggle term
+bind = $mainMod,A,exec,pypr toggle term
 $dropterm  = ^(kitty-dropterm)$
 windowrule = float,$dropterm
 windowrule = workspace special silent,$dropterm
