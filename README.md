@@ -320,11 +320,15 @@ number of pixels for the animation.
 
 #### `unfocus` (optional)
 
-allow to hide the window when the focus is lost when set to "hide"
+when set to `true`, allow to hide the window when the focus is lost when set to "hide"
 
 #### `margin` (optional)
 
 number of pixels separating the scratchpad from the screen border
+
+#### `lazy` (optional)
+
+when set to `true`, prevents the command from being started when pypr starts, it will be started when the scratchpad is first used instead.
 
 # Changelog
 

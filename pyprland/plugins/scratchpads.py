@@ -147,7 +147,8 @@ class Extension(Plugin):
 
         # not known yet
         for name in new_scratches:
-            self.start_scratch_command(name)
+            if not self.scratches[name].conf.get("lazy", False):
+                self.start_scratch_command(name)
 
     def start_scratch_command(self, name: str) -> None:
         self._respawned_scratches.add(name)
@@ -290,7 +291,8 @@ class Extension(Plugin):
 
         if not item.isAlive():
             print(f"{uid} is not running, restarting...")
-            self.procs[uid].kill()
+            if uid in self.procs:
+                self.procs[uid].kill()
             if item.pid in self.scratches_by_pid:
                 del self.scratches_by_pid[item.pid]
             if item.address in self.scratches_by_address:
