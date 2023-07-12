@@ -333,6 +333,7 @@ when set to `true`, prevents the command from being started when pypr starts, it
 # Changelog
 
 - Add `expose` addon
+- scratchpad: add "lazy" option
 
 ## 1.3.1
 
