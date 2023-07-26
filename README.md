@@ -334,6 +334,7 @@ when set to `true`, prevents the command from being started when pypr starts, it
 
 - Add `expose` addon
 - scratchpad: add "lazy" option
+- fix `scratchpads`'s position on monitors using scaling
 
 ## 1.3.1
 
