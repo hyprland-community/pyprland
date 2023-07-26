@@ -23,20 +23,23 @@ async def get_client_props_by_address(addr: str):
 class Animations:
     @classmethod
     async def fromtop(cls, monitor, client, client_uid, margin):
+        scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
-        mon_width = monitor["width"]
+        mon_width = int(monitor["width"] / scale)
 
         client_width = client["size"][0]
         margin_x = int((mon_width - client_width) / 2) + mon_x
+
         await hyprctl(f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}")
 
     @classmethod
     async def frombottom(cls, monitor, client, client_uid, margin):
+        scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
-        mon_width = monitor["width"]
-        mon_height = monitor["height"]
+        mon_width = int(monitor["width"] / scale)
+        mon_height = int(monitor["height"] / scale)
 
         client_width = client["size"][0]
         client_height = client["size"][1]
@@ -47,9 +50,10 @@ class Animations:
 
     @classmethod
     async def fromleft(cls, monitor, client, client_uid, margin):
+        scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
-        mon_height = monitor["height"]
+        mon_height = int(monitor["height"] / scale)
 
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
@@ -58,10 +62,11 @@ class Animations:
 
     @classmethod
     async def fromright(cls, monitor, client, client_uid, margin):
+        scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
-        mon_width = monitor["width"]
-        mon_height = monitor["height"]
+        mon_width = int(monitor["width"] / scale)
+        mon_height = int(monitor["height"] / scale)
 
         client_width = client["size"][0]
         client_height = client["size"][1]
