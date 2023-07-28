@@ -4,6 +4,7 @@ import json
 import sys
 import os
 import importlib
+import itertools
 import traceback
 
 
@@ -113,8 +114,16 @@ class Pyprland:
 
 async def run_daemon():
     manager = Pyprland()
+    err_count = itertools.count()
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
-    events_reader, events_writer = await get_event_stream()
+    try:
+        events_reader, events_writer = await get_event_stream()
+    except Exception as e:
+        print("Failed to get event stream: %s" % e)
+        if next(err_count) > 10:
+            raise
+        await asyncio.sleep(1)
+
     manager.event_reader = events_reader
 
     try:
