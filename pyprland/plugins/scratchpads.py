@@ -224,7 +224,7 @@ class Extension(Plugin):
         if wrkspc.startswith("special"):
             item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
-                # XXX: hack for windows which aren't related to the process
+                # hack for windows which aren't related to the process (see #8)
                 class_lookup_hack = [
                     self.scratches[name]
                     for name in self._respawned_scratches
