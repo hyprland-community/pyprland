@@ -29,14 +29,14 @@ class Extension(Plugin):
         ]
         focused = [mon for mon in monitors if mon["focused"]][0]
         interval = focused["width"] / (1 + len(lost))
-        intervalY = focused["height"] / (1 + len(lost))
+        interval_y = focused["height"] / (1 + len(lost))
         batch = []
         workspace: int = focused["activeWorkspace"]["id"]
         margin = interval // 2
-        marginY = intervalY // 2
+        margin_y = interval_y // 2
         for i, window in enumerate(lost):
             batch.append(f'movetoworkspacesilent {workspace},pid:{window["pid"]}')
             batch.append(
-                f'movewindowpixel exact {int(margin + focused["x"] + i*interval)} {int(marginY + focused["y"] + i*intervalY)},pid:{window["pid"]}'
+                f'movewindowpixel exact {int(margin + focused["x"] + i*interval)} {int(margin_y + focused["y"] + i*interval_y)},pid:{window["pid"]}'
             )
         await hyprctl(batch)

@@ -6,13 +6,13 @@ from .interface import Plugin
 from ..ipc import hyprctlJSON
 
 
-def configure_monitors(monitors, screenid: str, x: int, y: int) -> None:
+def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
     "Apply the configuration change"
-    x_offset = -x if x < 0 else 0
-    y_offset = -y if y < 0 else 0
+    x_offset = -pos_x if pos_x < 0 else 0
+    y_offset = -pos_y if pos_y < 0 else 0
 
-    min_x = x
-    min_y = y
+    min_x = pos_x
+    min_y = pos_y
 
     command = ["wlr-randr"]
     other_monitors = [mon for mon in monitors if mon["name"] != screenid]
@@ -31,7 +31,9 @@ def configure_monitors(monitors, screenid: str, x: int, y: int) -> None:
             ]
         )
 
-    command.extend(["--output", screenid, "--pos", f"{x+x_offset},{y+y_offset}"])
+    command.extend(
+        ["--output", screenid, "--pos", f"{pos_x+x_offset},{pos_y+y_offset}"]
+    )
     subprocess.call(command)
 
 

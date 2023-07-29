@@ -119,12 +119,12 @@ class Scratch:
         "Returns the client address"
         return str(self.client_info.get("address", ""))[2:]
 
-    async def updateClientInfo(self, clientInfo=None) -> None:
+    async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
-        if clientInfo is None:
-            clientInfo = await get_client_props_by_address("0x" + self.address)
-        assert isinstance(clientInfo, dict)
-        self.client_info.update(clientInfo)
+        if client_info is None:
+            client_info = await get_client_props_by_address("0x" + self.address)
+        assert isinstance(client_info, dict)
+        self.client_info.update(client_info)
 
     def __str__(self):
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
