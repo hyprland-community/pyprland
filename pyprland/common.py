@@ -26,9 +26,9 @@ def init_logger(filename=None, force_debug=False):
     class ScreenLogFormatter(logging.Formatter):
         "A custom formatter, adding colors"
         LOG_FORMAT = (
-            r"%(levelname)s:%(name)s - %(message)s // %(filename)s:%(lineno)d"
+            r"%(name)25s - %(message)s // %(filename)s:%(lineno)d"
             if DEBUG
-            else r"%(levelname)s: %(message)s"
+            else r"%(message)s"
         )
         RESET_ANSI = "\x1b[0m"
 
@@ -67,5 +67,5 @@ def get_logger(name="pypr", level=None):
     logger.propagate = False
     for handler in LogObjects.handlers:
         logger.addHandler(handler)
-    logger.debug("Logger initialized for %s", name)
+    logger.info("Logger initialized for %s", name)
     return logger
