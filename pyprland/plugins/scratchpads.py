@@ -134,6 +134,7 @@ class Extension(Plugin):
     procs: dict[str, subprocess.Popen] = {}
     scratches: dict[str, Scratch] = {}
     transitioning_scratches: set[str] = set()
+    _new_scratches: set[str] = set()
     _respawned_scratches: set[str] = set()
     scratches_by_address: dict[str, Scratch] = {}
     scratches_by_pid: dict[int, Scratch] = {}
@@ -174,10 +175,12 @@ class Extension(Plugin):
         # not known yet
         for name in new_scratches:
             if not self.scratches[name].conf.get("lazy", False):
-                await self.start_scratch_command(name)
+                await self.start_scratch_command(name, is_new=True)
 
-    async def start_scratch_command(self, name: str) -> None:
+    async def start_scratch_command(self, name: str, is_new=False) -> None:
         "spawns a given scratchpad's process"
+        if is_new:
+            self._new_scratches.add(name)
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
@@ -240,8 +243,10 @@ class Extension(Plugin):
                     await self.updateScratchInfo()
                 item = self.scratches_by_address.get(addr)
             if item and item.just_created:
+                if item.uid in self._new_scratches:
+                    await self.run_hide(item.uid, force=True)
+                self._new_scratches.discard(item.uid)
                 self._respawned_scratches.discard(item.uid)
-                await self.run_hide(item.uid, force=True)
                 item.just_created = False
 
     async def run_toggle(self, uid: str) -> None:
