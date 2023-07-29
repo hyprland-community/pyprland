@@ -156,9 +156,9 @@ class Extension(Plugin):
         # not known yet
         for name in new_scratches:
             if not self.scratches[name].conf.get("lazy", False):
-                self.start_scratch_command(name)
+                await self.start_scratch_command(name)
 
-    def start_scratch_command(self, name: str) -> None:
+    async def start_scratch_command(self, name: str) -> None:
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
@@ -198,7 +198,25 @@ class Extension(Plugin):
         if wrkspc.startswith("special"):
             item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
-                await self.updateScratchInfo()
+                # XXX: hack for windows which aren't related to the process
+                class_lookup_hack = [
+                    self.scratches[name]
+                    for name in self._respawned_scratches
+                    if self.scratches[name].conf.get("class")
+                ]
+                if class_lookup_hack:
+                    self.log.debug("Lookup hack triggered")
+                    for client in await hyprctlJSON("clients"):
+                        assert isinstance(client, dict)
+                        for pending_scratch in class_lookup_hack:
+                            if pending_scratch.conf["class"] == client["class"]:
+                                self.scratches_by_address[
+                                    client["address"][2:]
+                                ] = pending_scratch
+                                self.log.debug(f"client class found: {client}")
+                                await pending_scratch.updateClientInfo(client)
+                else:
+                    await self.updateScratchInfo()
                 item = self.scratches_by_address.get(addr)
             if item and item.just_created:
                 self._respawned_scratches.discard(item.uid)
@@ -308,7 +326,7 @@ class Extension(Plugin):
                 del self.scratches_by_pid[item.pid]
             if item.address in self.scratches_by_address:
                 del self.scratches_by_address[item.address]
-            self.start_scratch_command(uid)
+            await self.start_scratch_command(uid)
             while uid in self._respawned_scratches:
                 await asyncio.sleep(0.05)
 
