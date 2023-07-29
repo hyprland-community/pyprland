@@ -65,9 +65,9 @@ class Pyprland:
     async def _callHandler(self, full_name, *params):
         "Call an event handler with params"
 
-        have_listeners = False
         for plugin in [self] + list(self.plugins.values()):
             if hasattr(plugin, full_name):
+                self.log.debug("%s.%s%s", plugin.name, full_name, params)
                 try:
                     await getattr(plugin, full_name)(*params)
                 except Exception as e:  # pylint: disable=W0718
@@ -75,10 +75,6 @@ class Pyprland:
                         "%s::%s(%s) failed:", plugin.name, full_name, params
                     )
                     self.log.exception(e)
-                else:
-                    have_listeners = True
-        if have_listeners:
-            self.log.debug("%s%s", full_name, params)
 
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"

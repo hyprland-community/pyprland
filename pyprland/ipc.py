@@ -21,7 +21,7 @@ async def get_event_stream():
 
 async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
-    log.debug("JS>> %s", command)
+    log.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
@@ -48,7 +48,7 @@ def _format_command(command_list, default_base_command):
 
 async def hyprctl(command, base_command="dispatch") -> bool:
     """Run an IPC command. Returns success value."""
-    log.debug("JS>> %s", command)
+    log.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
@@ -65,7 +65,6 @@ async def hyprctl(command, base_command="dispatch") -> bool:
     resp = await ctl_reader.read(100)
     ctl_writer.close()
     await ctl_writer.wait_closed()
-    log.debug("<<JS %s", resp)
     r: bool = resp == b"ok" * (len(resp) // 2)
     if not r:
         log.error("FAILED %s", resp)
