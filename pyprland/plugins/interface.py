@@ -1,9 +1,11 @@
 from typing import Any
+from ..common import get_logger
 
 
 class Plugin:
     def __init__(self, name: str):
         self.name = name
+        self.log = get_logger(name)
 
     async def init(self):
         pass

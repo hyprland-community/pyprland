@@ -1,11 +1,13 @@
 #!/bin/env python
 import asyncio
+from logging import Logger
 from typing import Any
 import json
 import os
 
-from .common import DEBUG
+from .common import get_logger, PyprError
 
+log: Logger = None
 
 HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
 EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
@@ -17,9 +19,12 @@ async def get_event_stream():
 
 async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
-    if DEBUG:
-        print("(JS)>>>", command)
-    ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+    log.debug(f"JS>> {command}")
+    try:
+        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+    except FileNotFoundError:
+        log.critical("hyprctl socket not found! is it running ?")
+        raise PyprError()
     ctl_writer.write(f"-j/{command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read()
@@ -40,9 +45,13 @@ def _format_command(command_list, default_base_command):
 
 async def hyprctl(command, base_command="dispatch") -> bool:
     """Run an IPC command. Returns success value."""
-    if DEBUG:
-        print(">>>", command)
-    ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+    log.debug(f"JS>> {command}")
+    try:
+        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+    except FileNotFoundError:
+        log.critical("hyprctl socket not found! is it running ?")
+        raise PyprError()
+
     if isinstance(command, list):
         ctl_writer.write(
             f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode()
@@ -53,11 +62,10 @@ async def hyprctl(command, base_command="dispatch") -> bool:
     resp = await ctl_reader.read(100)
     ctl_writer.close()
     await ctl_writer.wait_closed()
-    if DEBUG:
-        print("<<<", resp)
+    log.debug(f"<<JS {resp}")
     r: bool = resp == b"ok" * (len(resp) // 2)
-    if DEBUG and not r:
-        print(f"FAILED {resp}")
+    if not r:
+        log.error(f"FAILED {resp}")
     return r
 
 
@@ -67,3 +75,8 @@ async def get_focused_monitor_props() -> dict[str, Any]:
         if monitor.get("focused") == True:
             return monitor
     raise RuntimeError("no focused monitor")
+
+
+def init():
+    global log
+    log = get_logger("ipc")

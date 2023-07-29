@@ -55,7 +55,7 @@ class Extension(Plugin):
                 mon_name = mon["description"]
                 break
         else:
-            print(f"Monitor {screenid} not found")
+            self.log.info(f"Monitor {screenid} not found")
             return
 
         mon_by_name = {m["name"]: m for m in monitors}

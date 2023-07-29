@@ -11,6 +11,7 @@ Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more i
 - Add `expose` addon
 - scratchpad: add "lazy" option
 - fix `scratchpads`'s position on monitors using scaling
+- improve error handling & logging, enable debug logs with `--debug <filename>`
 
 ## 1.3.1
 

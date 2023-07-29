@@ -207,7 +207,7 @@ class Extension(Plugin):
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
-            print(f"{uid} is not configured")
+            self.log.warn(f"{uid} is not configured")
             return
         if item.visible:
             await self.run_hide(uid)
@@ -238,10 +238,10 @@ class Extension(Plugin):
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
-            print(f"{uid} is not configured")
+            self.log.warn(f"{uid} is not configured")
             return
         if not item.visible and not force:
-            print(f"{uid} is already hidden")
+            self.log.warn(f"{uid} is already hidden")
             return
         item.visible = False
         addr = "address:0x" + item.address
@@ -287,15 +287,15 @@ class Extension(Plugin):
         self.focused_window_tracking[uid] = await hyprctlJSON("activewindow")
 
         if not item:
-            print(f"{uid} is not configured")
+            self.log.warn(f"{uid} is not configured")
             return
 
         if item.visible and not force:
-            print(f"{uid} is already visible")
+            self.log.warn(f"{uid} is already visible")
             return
 
         if not item.isAlive():
-            print(f"{uid} is not running, restarting...")
+            self.log.info(f"{uid} is not running, restarting...")
             if uid in self.procs:
                 self.procs[uid].kill()
             if item.pid in self.scratches_by_pid:
