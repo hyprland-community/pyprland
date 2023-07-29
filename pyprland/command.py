@@ -64,6 +64,8 @@ class Pyprland:
 
     async def _callHandler(self, full_name, *params):
         "Call an event handler with params"
+
+        have_listeners = False
         for plugin in [self] + list(self.plugins.values()):
             if hasattr(plugin, full_name):
                 try:
@@ -73,6 +75,10 @@ class Pyprland:
                         "%s::%s(%s) failed:", plugin.name, full_name, params
                     )
                     self.log.exception(e)
+                else:
+                    have_listeners = True
+        if have_listeners:
+            self.log.debug("%s%s", full_name, params)
 
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"
@@ -84,7 +90,6 @@ class Pyprland:
             cmd, params = data.split(">>")
             full_name = f"event_{cmd}"
 
-            self.log.debug("EVT %s(%s)", full_name, params.strip())
             await self._callHandler(full_name, params)
 
     async def read_command(self, reader, writer) -> None:
