@@ -1,4 +1,5 @@
 #!/bin/env python
+""" Interact with hyprland using sockets """
 import asyncio
 from logging import Logger
 from typing import Any
@@ -14,17 +15,18 @@ EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock
 
 
 async def get_event_stream():
+    "Returns a new event socket connection"
     return await asyncio.open_unix_connection(EVENTS)
 
 
 async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
-    log.debug(f"JS>> {command}")
+    log.debug("JS>> %s", command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         log.critical("hyprctl socket not found! is it running ?")
-        raise PyprError()
+        raise PyprError() from e
     ctl_writer.write(f"-j/{command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read()
@@ -36,6 +38,7 @@ async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
 
 
 def _format_command(command_list, default_base_command):
+    "helper function to format BATCH commands"
     for command in command_list:
         if isinstance(command, str):
             yield f"{default_base_command} {command}"
@@ -45,12 +48,12 @@ def _format_command(command_list, default_base_command):
 
 async def hyprctl(command, base_command="dispatch") -> bool:
     """Run an IPC command. Returns success value."""
-    log.debug(f"JS>> {command}")
+    log.debug("JS>> %s", command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         log.critical("hyprctl socket not found! is it running ?")
-        raise PyprError()
+        raise PyprError() from e
 
     if isinstance(command, list):
         ctl_writer.write(
@@ -62,21 +65,23 @@ async def hyprctl(command, base_command="dispatch") -> bool:
     resp = await ctl_reader.read(100)
     ctl_writer.close()
     await ctl_writer.wait_closed()
-    log.debug(f"<<JS {resp}")
+    log.debug("<<JS %s", resp)
     r: bool = resp == b"ok" * (len(resp) // 2)
     if not r:
-        log.error(f"FAILED {resp}")
+        log.error("FAILED %s", resp)
     return r
 
 
 async def get_focused_monitor_props() -> dict[str, Any]:
+    "Returns focused monitor data"
     for monitor in await hyprctlJSON("monitors"):
         assert isinstance(monitor, dict)
-        if monitor.get("focused") == True:
+        if monitor.get("focused"):
             return monitor
     raise RuntimeError("no focused monitor")
 
 
 def init():
+    "initialize logging"
     global log
     log = get_logger("ipc")

@@ -1,4 +1,5 @@
 #!/bin/env python
+" Pyprland - an Hyprland companion app "
 import asyncio
 import json
 import sys
@@ -17,25 +18,29 @@ CONFIG_FILE = "~/.config/hypr/pyprland.json"
 
 
 class Pyprland:
+    "Main app object"
     server: asyncio.Server
     event_reader: asyncio.StreamReader
     stopped = False
     name = "builtin"
+    config: dict[str, dict] = None
 
     def __init__(self):
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
 
     async def load_config(self, init=True):
+        """Loads the configuration
+
+        if `init` is true, also initializes the plugins"""
         try:
-            self.config = json.loads(
-                open(os.path.expanduser(CONFIG_FILE), encoding="utf-8").read()
-            )
+            with open(os.path.expanduser(CONFIG_FILE), encoding="utf-8") as f:
+                self.config = json.loads(f.read())
         except FileNotFoundError as e:
             self.log.critical(
                 "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
             )
-            raise PyprError()
+            raise PyprError() from e
 
         for name in self.config["pyprland"]["plugins"]:
             if name not in self.plugins:
@@ -46,27 +51,31 @@ class Pyprland:
                         await plug.init()
                     self.plugins[name] = plug
                 except Exception as e:
-                    self.log.error(f"Error loading plugin {name}:", exc_info=True)
-                    raise PyprError()
+                    self.log.error("Error loading plugin %s:", name, exc_info=True)
+                    raise PyprError() from e
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)
                 except PyprError:
                     raise
                 except Exception as e:
-                    self.log.error(f"Error initializing plugin {name}:", exc_info=True)
-                    raise PyprError()
+                    self.log.error("Error initializing plugin %s:", name, exc_info=True)
+                    raise PyprError() from e
 
     async def _callHandler(self, full_name, *params):
+        "Call an event handler with params"
         for plugin in [self] + list(self.plugins.values()):
             if hasattr(plugin, full_name):
                 try:
                     await getattr(plugin, full_name)(*params)
-                except Exception as e:
-                    self.log.warn(f"{plugin.name}::{full_name}({params}) failed:")
+                except Exception as e:  # pylint: disable=W0718
+                    self.log.warning(
+                        "%s::%s(%s) failed:", plugin.name, full_name, params
+                    )
                     self.log.exception(e)
 
     async def read_events_loop(self):
+        "Consumes the event loop and calls corresponding handlers"
         while not self.stopped:
             data = (await self.event_reader.readline()).decode()
             if not data:
@@ -75,10 +84,11 @@ class Pyprland:
             cmd, params = data.split(">>")
             full_name = f"event_{cmd}"
 
-            self.log.debug(f"EVT {full_name}({params.strip()})")
+            self.log.debug("EVT %s(%s)", full_name, params.strip())
             await self._callHandler(full_name, params)
 
     async def read_command(self, reader, writer) -> None:
+        "Receives a socket command"
         data = (await reader.readline()).decode()
         if not data:
             self.log.critical("Server starved")
@@ -102,11 +112,12 @@ class Pyprland:
         # run mako for notifications & uncomment this
         # os.system(f"notify-send '{data}'")
 
-        self.log.debug(f"CMD: {full_name}({args})")
+        self.log.debug("CMD: %s(%s)", full_name, args)
 
         await self._callHandler(full_name, *args)
 
     async def serve(self):
+        "Runs the server"
         try:
             async with self.server:
                 await self.server.serve_forever()
@@ -114,6 +125,7 @@ class Pyprland:
             await asyncio.gather(*(plugin.exit() for plugin in self.plugins.values()))
 
     async def run(self):
+        "Runs the server and the event listener"
         await asyncio.gather(
             asyncio.create_task(self.serve()),
             asyncio.create_task(self.read_events_loop()),
@@ -123,6 +135,7 @@ class Pyprland:
 
 
 async def run_daemon():
+    "Runs the server / daemon"
     manager = Pyprland()
     err_count = itertools.count()
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
@@ -131,14 +144,13 @@ async def run_daemon():
         attempt = next(err_count)
         try:
             events_reader, events_writer = await get_event_stream()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             if attempt > max_retry:
-                manager.log.critical(f"Failed to open hyprland event stream: {e}.")
-                raise PyprError()
-            else:
-                manager.log.warn(
-                    f"Failed to get event stream: {e}, retry {attempt}/{max_retry}..."
-                )
+                manager.log.critical("Failed to open hyprland event stream: %s.", e)
+                raise PyprError() from e
+            manager.log.warning(
+                "Failed to get event stream: %s}, retry %s/%s...", e, attempt, max_retry
+            )
             await asyncio.sleep(1)
         else:
             break
@@ -147,11 +159,11 @@ async def run_daemon():
 
     try:
         await manager.load_config()  # ensure sockets are connected first
-    except PyprError:
-        raise SystemExit(1)
+    except PyprError as e:
+        raise SystemExit(1) from e
     except Exception as e:
-        manager.log.critical(f"Failed to load config.")
-        raise SystemExit(1)
+        manager.log.critical("Failed to load config.")
+        raise SystemExit(1) from e
 
     try:
         await manager.run()
@@ -167,6 +179,7 @@ async def run_daemon():
 
 
 async def run_client():
+    "Runs the client (CLI)"
     manager = Pyprland()
     if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
@@ -192,17 +205,18 @@ Commands:
 
     try:
         _, writer = await asyncio.open_unix_connection(CONTROL)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
-        raise PyprError()
-    else:
-        writer.write((" ".join(sys.argv[1:])).encode())
-        await writer.drain()
-        writer.close()
-        await writer.wait_closed()
+        raise PyprError() from e
+
+    writer.write((" ".join(sys.argv[1:])).encode())
+    await writer.drain()
+    writer.close()
+    await writer.wait_closed()
 
 
 def main():
+    "runs the command"
     if "--debug" in sys.argv:
         i = sys.argv.index("--debug")
         init_logger(filename=sys.argv[i + 1], force_debug=True)
@@ -215,11 +229,11 @@ def main():
         asyncio.run(run_daemon() if len(sys.argv) <= 1 else run_client())
     except KeyboardInterrupt:
         pass
-    except PyprError as e:
-        log.critical(f"Command failed.")
+    except PyprError:
+        log.critical("Command failed.")
     except json.decoder.JSONDecodeError as e:
-        log.critical(f"Invalid JSON syntax in the config file: {e.args[0]}")
-    except Exception as e:
+        log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
+    except Exception:  # pylint: disable=W0718
         log.critical("Unhandled exception:", exc_info=True)
 
 

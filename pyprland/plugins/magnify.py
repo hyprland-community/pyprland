@@ -1,11 +1,10 @@
 from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl
+from ..ipc import hyprctl
 
 
 class Extension(Plugin):
-    async def init(self):
-        self.zoomed = False
+    zoomed = False
 
     async def run_zoom(self, *args):
         """[factor] zooms to "factor" or toggles zoom level ommited"""

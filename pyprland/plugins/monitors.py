@@ -1,11 +1,13 @@
+" The monitors plugin "
+import subprocess
 from typing import Any
 from .interface import Plugin
-import subprocess
 
 from ..ipc import hyprctlJSON
 
 
 def configure_monitors(monitors, screenid: str, x: int, y: int) -> None:
+    "Apply the configuration change"
     x_offset = -x if x < 0 else 0
     y_offset = -y if y < 0 else 0
 
@@ -33,18 +35,19 @@ def configure_monitors(monitors, screenid: str, x: int, y: int) -> None:
     subprocess.call(command)
 
 
-class Extension(Plugin):
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def load_config(self, config) -> None:
         await super().load_config(config)
         monitors = await hyprctlJSON("monitors")
         for monitor in monitors:
             await self.event_monitoradded(
-                monitor["name"], noDefault=True, monitors=monitors
+                monitor["name"], no_default=True, monitors=monitors
             )
 
     async def event_monitoradded(
-        self, screenid, noDefault=False, monitors: list | None = None
+        self, screenid, no_default=False, monitors: list | None = None
     ) -> None:
+        "Triggers when a monitor is plugged"
         screenid = screenid.strip()
 
         if not monitors:
@@ -55,7 +58,7 @@ class Extension(Plugin):
                 mon_name = mon["description"]
                 break
         else:
-            self.log.info(f"Monitor {screenid} not found")
+            self.log.info("Monitor %s not found", screenid)
             return
 
         mon_by_name = {m["name"]: m for m in monitors}
@@ -83,7 +86,7 @@ class Extension(Plugin):
 
                         configure_monitors(monitors, screenid, x, y)
                         return
-        if not noDefault:
+        if not no_default:
             default_command = self.config.get("unknown")
             if default_command:
                 subprocess.call(default_command, shell=True)

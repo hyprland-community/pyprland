@@ -1,12 +1,14 @@
+" Scratchpads addon "
+import os
+import asyncio
 import subprocess
 from typing import Any
-import asyncio
+
 from ..ipc import (
     hyprctl,
     hyprctlJSON,
     get_focused_monitor_props,
 )
-import os
 
 from .interface import Plugin
 
@@ -14,6 +16,7 @@ DEFAULT_MARGIN = 60
 
 
 async def get_client_props_by_address(addr: str):
+    "Returns client properties given its address"
     for client in await hyprctlJSON("clients"):
         assert isinstance(client, dict)
         if client.get("address") == addr:
@@ -21,8 +24,11 @@ async def get_client_props_by_address(addr: str):
 
 
 class Animations:
+    "Animation store"
+
     @classmethod
     async def fromtop(cls, monitor, client, client_uid, margin):
+        "Slide from/to top"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -35,6 +41,7 @@ class Animations:
 
     @classmethod
     async def frombottom(cls, monitor, client, client_uid, margin):
+        "Slide from/to bottom"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -50,6 +57,7 @@ class Animations:
 
     @classmethod
     async def fromleft(cls, monitor, client, client_uid, margin):
+        "Slide from/to left"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -62,6 +70,7 @@ class Animations:
 
     @classmethod
     async def fromright(cls, monitor, client, client_uid, margin):
+        "Slide from/to right"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -77,54 +86,62 @@ class Animations:
 
 
 class Scratch:
+    "A scratchpad state including configuration & client state"
+
     def __init__(self, uid, opts):
         self.uid = uid
         self.pid = 0
         self.conf = opts
         self.visible = False
         self.just_created = True
-        self.clientInfo = {}
+        self.client_info = {}
 
     def isAlive(self) -> bool:
+        "is the process running ?"
         path = f"/proc/{self.pid}"
         if os.path.exists(path):
-            for line in open(os.path.join(path, "status"), "r").readlines():
-                if line.startswith("State"):
-                    state = line.split()[1]
-                    return state in "RSDTt"  # not "Z (zombie)"or "X (dead)"
+            with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
+                for line in f.readlines():
+                    if line.startswith("State"):
+                        state = line.split()[1]
+                        return state in "RSDTt"  # not "Z (zombie)"or "X (dead)"
         return False
 
     def reset(self, pid: int) -> None:
+        "clear the object"
         self.pid = pid
         self.visible = False
         self.just_created = True
-        self.clientInfo = {}
+        self.client_info = {}
 
     @property
     def address(self) -> str:
-        return str(self.clientInfo.get("address", ""))[2:]
+        "Returns the client address"
+        return str(self.client_info.get("address", ""))[2:]
 
     async def updateClientInfo(self, clientInfo=None) -> None:
+        "update the internal client info property, if not provided, refresh based on the current address"
         if clientInfo is None:
             clientInfo = await get_client_props_by_address("0x" + self.address)
         assert isinstance(clientInfo, dict)
-        self.clientInfo.update(clientInfo)
+        self.client_info.update(clientInfo)
 
     def __str__(self):
-        return f"{self.uid} {self.address} : {self.clientInfo} / {self.conf}"
+        return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 
 
 class Extension(Plugin):
-    async def init(self) -> None:
-        self.procs: dict[str, subprocess.Popen] = {}
-        self.scratches: dict[str, Scratch] = {}
-        self.transitioning_scratches: set[str] = set()
-        self._respawned_scratches: set[str] = set()
-        self.scratches_by_address: dict[str, Scratch] = {}
-        self.scratches_by_pid: dict[int, Scratch] = {}
-        self.focused_window_tracking = dict()
+    procs: dict[str, subprocess.Popen] = {}
+    scratches: dict[str, Scratch] = {}
+    transitioning_scratches: set[str] = set()
+    _respawned_scratches: set[str] = set()
+    scratches_by_address: dict[str, Scratch] = {}
+    scratches_by_pid: dict[int, Scratch] = {}
+    focused_window_tracking: dict[str, dict] = {}
 
     async def exit(self) -> None:
+        "exit hook"
+
         async def die_in_piece(scratch: Scratch):
             proc = self.procs[scratch.uid]
             proc.terminate()
@@ -141,6 +158,7 @@ class Extension(Plugin):
         )
 
     async def load_config(self, config) -> None:
+        "config loader"
         config: dict[str, dict[str, Any]] = config["scratchpads"]
         scratches = {k: Scratch(k, v) for k, v in config.items()}
 
@@ -159,6 +177,7 @@ class Extension(Plugin):
                 await self.start_scratch_command(name)
 
     async def start_scratch_command(self, name: str) -> None:
+        "spawns a given scratchpad's process"
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
@@ -177,6 +196,7 @@ class Extension(Plugin):
 
     # Events
     async def event_activewindowv2(self, addr) -> None:
+        "active windows hook"
         addr = addr.strip()
         scratch = self.scratches_by_address.get(addr)
         if scratch:
@@ -185,7 +205,7 @@ class Extension(Plugin):
                 scratch.just_created = False
         else:
             for uid, scratch in self.scratches.items():
-                if scratch.clientInfo and scratch.address != addr:
+                if scratch.client_info and scratch.address != addr:
                     if (
                         scratch.visible
                         and scratch.conf.get("unfocus") == "hide"
@@ -194,7 +214,8 @@ class Extension(Plugin):
                         await self.run_hide(uid, autohide=True)
 
     async def event_openwindow(self, params) -> None:
-        addr, wrkspc, kls, title = params.split(",", 3)
+        "open windows hook"
+        addr, wrkspc, _kls, _title = params.split(",", 3)
         if wrkspc.startswith("special"):
             item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
@@ -213,7 +234,7 @@ class Extension(Plugin):
                                 self.scratches_by_address[
                                     client["address"][2:]
                                 ] = pending_scratch
-                                self.log.debug(f"client class found: {client}")
+                                self.log.debug("client class found: %s", client)
                                 await pending_scratch.updateClientInfo(client)
                 else:
                     await self.updateScratchInfo()
@@ -228,7 +249,7 @@ class Extension(Plugin):
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
-            self.log.warn(f"{uid} is not configured")
+            self.log.warning("%s is not configured", uid)
             return
         if item.visible:
             await self.run_hide(uid)
@@ -236,6 +257,8 @@ class Extension(Plugin):
             await self.run_show(uid)
 
     async def updateScratchInfo(self, scratch: Scratch | None = None) -> None:
+        """Update every scratchpads information if no `scratch` given,
+        else update a specific scratchpad info"""
         if scratch is None:
             for client in await hyprctlJSON("clients"):
                 assert isinstance(client, dict)
@@ -247,34 +270,34 @@ class Extension(Plugin):
                 if scratch:
                     await scratch.updateClientInfo(client)
         else:
-            add_to_address_book = ("address" not in scratch.clientInfo) or (
+            add_to_address_book = ("address" not in scratch.client_info) or (
                 scratch.address not in self.scratches_by_address
             )
             await scratch.updateClientInfo()
             if add_to_address_book:
-                self.scratches_by_address[scratch.clientInfo["address"][2:]] = scratch
+                self.scratches_by_address[scratch.client_info["address"][2:]] = scratch
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
         if not item:
-            self.log.warn(f"{uid} is not configured")
+            self.log.warning("%s is not configured", uid)
             return
         if not item.visible and not force:
-            self.log.warn(f"{uid} is already hidden")
+            self.log.warning("%s is already hidden", uid)
             return
-        self.log.info(f"Hiding {uid}")
+        self.log.info("Hiding %s", uid)
         item.visible = False
         addr = "address:0x" + item.address
         animation_type: str = item.conf.get("animation", "").lower()
         if animation_type:
             offset = item.conf.get("offset")
             if offset is None:
-                if "size" not in item.clientInfo:
+                if "size" not in item.client_info:
                     await self.updateScratchInfo(item)
 
-                offset = int(1.3 * item.clientInfo["size"][1])
+                offset = int(1.3 * item.client_info["size"][1])
 
             if animation_type == "fromtop":
                 await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
@@ -309,17 +332,17 @@ class Extension(Plugin):
         self.focused_window_tracking[uid] = await hyprctlJSON("activewindow")
 
         if not item:
-            self.log.warn(f"{uid} is not configured")
+            self.log.warning("%s is not configured", uid)
             return
 
         if item.visible and not force:
-            self.log.warn(f"{uid} is already visible")
+            self.log.warning("%s is already visible", uid)
             return
 
-        self.log.info(f"Showing {uid}")
+        self.log.info("Showing %s", uid)
 
         if not item.isAlive():
-            self.log.info(f"{uid} is not running, restarting...")
+            self.log.info("%s is not running, restarting...", uid)
             if uid in self.procs:
                 self.procs[uid].kill()
             if item.pid in self.scratches_by_pid:
@@ -348,7 +371,7 @@ class Extension(Plugin):
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
-            await fn(monitor, item.clientInfo, addr, margin)
+            await fn(monitor, item.client_info, addr, margin)
 
         await hyprctl(f"focuswindow {addr}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate

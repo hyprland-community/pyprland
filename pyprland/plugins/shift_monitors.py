@@ -4,6 +4,8 @@ from ..ipc import hyprctlJSON, hyprctl
 
 
 class Extension(Plugin):
+    monitors: list[str] = []
+
     async def init(self):
         self.monitors = [mon["name"] for mon in await hyprctlJSON("monitors")]
 

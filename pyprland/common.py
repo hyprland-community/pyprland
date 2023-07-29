@@ -1,3 +1,4 @@
+""" Shared utilities: logging """
 import os
 import logging
 
@@ -7,19 +8,23 @@ DEBUG = os.environ.get("DEBUG", False)
 
 
 class PyprError(Exception):
-    pass
+    """Used for errors which already triggered logging"""
 
 
 class LogObjects:
+    """Reusable objects for loggers"""
+
     handlers: list[logging.Handler] = []
 
 
 def init_logger(filename=None, force_debug=False):
+    """initializes the logging system"""
     global DEBUG
     if force_debug:
         DEBUG = True
 
     class ScreenLogFormatter(logging.Formatter):
+        "A custom formatter, adding colors"
         LOG_FORMAT = (
             r"%(levelname)s:%(name)s - %(message)s // %(filename)s:%(lineno)d"
             if DEBUG
@@ -53,6 +58,7 @@ def init_logger(filename=None, force_debug=False):
 
 
 def get_logger(name="pypr", level=None):
+    "Returns a logger for `name`"
     logger = logging.getLogger(name)
     if level is None:
         logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
@@ -61,5 +67,5 @@ def get_logger(name="pypr", level=None):
     logger.propagate = False
     for handler in LogObjects.handlers:
         logger.addHandler(handler)
-    logger.debug(f"Logger initialized for {name}")
+    logger.debug("Logger initialized for %s", name)
     return logger

@@ -5,8 +5,7 @@ from ..ipc import hyprctlJSON, hyprctl
 
 
 class Extension(Plugin):
-    async def init(self) -> None:
-        self.exposed = False
+    exposed = False
 
     async def run_toggle_minimized(self, special_workspace="minimized"):
         """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)"""
@@ -30,7 +29,7 @@ class Extension(Plugin):
         else:
             return [c for c in self.exposed if c["workspace"]["id"] > 0]
 
-    async def run_expose(self, arg=""):
+    async def run_expose(self):
         """Expose every client on the active workspace. If expose is active restores everything and move to the focused window"""
         if self.exposed:
             aw: dict[str, Any] = await hyprctlJSON("activewindow")

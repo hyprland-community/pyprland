@@ -1,7 +1,8 @@
+" Plugin template "
 from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl
+# from ..ipc import hyprctlJSON, hyprctl
 
 
 class Extension(Plugin):
-    pass
+    "Sample plugin template"

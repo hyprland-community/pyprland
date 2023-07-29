@@ -1,15 +1,19 @@
-import asyncio
+""" Force workspaces to follow the focus / mouse """
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON, hyprctl
 
 
-class Extension(Plugin):
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
+    workspace_list: list[int] = []
+
     async def load_config(self, config):
+        "loads the config"
         await super().load_config(config)
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
     async def event_focusedmon(self, screenid_index):
+        "reacts to monitor changes"
         monitor_id, workspace_id = screenid_index.split(",")
         workspace_id = int(workspace_id)
         # move every free workspace to the currently focused desktop
