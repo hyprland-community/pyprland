@@ -204,6 +204,7 @@ class Extension(Plugin):
         scratch = self.scratches_by_address.get(addr)
         if scratch:
             if scratch.just_created:
+                self.log.debug("Hiding just created scratch %s", scratch.uid)
                 await self.run_hide(scratch.uid, force=True)
                 scratch.just_created = False
         else:
@@ -214,6 +215,7 @@ class Extension(Plugin):
                         and scratch.conf.get("unfocus") == "hide"
                         and scratch.uid not in self.transitioning_scratches
                     ):
+                        self.log.debug("hide %s because another client is active", uid)
                         await self.run_hide(uid, autohide=True)
 
     async def event_openwindow(self, params) -> None:
@@ -256,6 +258,7 @@ class Extension(Plugin):
         if not item:
             self.log.warning("%s is not configured", uid)
             return
+        self.log.debug("%s is visible = %s", uid, item.visible)
         if item.visible:
             await self.run_hide(uid)
         else:
