@@ -61,7 +61,7 @@ def get_logger(name="pypr", level=None):
     "Returns a logger for `name`"
     logger = logging.getLogger(name)
     if level is None:
-        logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+        logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
     else:
         logger.setLevel(level)
     logger.propagate = False
