@@ -61,4 +61,5 @@ def get_logger(name="pypr", level=None):
     logger.propagate = False
     for handler in LogObjects.handlers:
         logger.addHandler(handler)
+    logger.debug(f"Logger initialized for {name}")
     return logger

@@ -110,6 +110,9 @@ class Scratch:
         assert isinstance(clientInfo, dict)
         self.clientInfo.update(clientInfo)
 
+    def __str__(self):
+        return f"{self.uid} {self.address} : {self.clientInfo} / {self.conf}"
+
 
 class Extension(Plugin):
     async def init(self) -> None:
@@ -125,7 +128,7 @@ class Extension(Plugin):
         async def die_in_piece(scratch: Scratch):
             proc = self.procs[scratch.uid]
             proc.terminate()
-            for n in range(10):
+            for _ in range(10):
                 if not scratch.isAlive():
                     break
                 await asyncio.sleep(0.1)
@@ -243,6 +246,7 @@ class Extension(Plugin):
         if not item.visible and not force:
             self.log.warn(f"{uid} is already hidden")
             return
+        self.log.info(f"Hiding {uid}")
         item.visible = False
         addr = "address:0x" + item.address
         animation_type: str = item.conf.get("animation", "").lower()
@@ -293,6 +297,8 @@ class Extension(Plugin):
         if item.visible and not force:
             self.log.warn(f"{uid} is already visible")
             return
+
+        self.log.info(f"Showing {uid}")
 
         if not item.isAlive():
             self.log.info(f"{uid} is not running, restarting...")
