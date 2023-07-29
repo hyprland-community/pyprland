@@ -26,8 +26,7 @@ class Extension(Plugin):
     def exposed_clients(self):
         if self.config.get("include_special", False):
             return self.exposed
-        else:
-            return [c for c in self.exposed if c["workspace"]["id"] > 0]
+        return [c for c in self.exposed if c["workspace"]["id"] > 0]
 
     async def run_expose(self):
         """Expose every client on the active workspace. If expose is active restores everything and move to the focused window"""
