@@ -26,8 +26,8 @@ async def get_client_props_by_address(addr: str):
 class Animations:
     "Animation store"
 
-    @classmethod
-    async def fromtop(cls, monitor, client, client_uid, margin):
+    @staticmethod
+    async def fromtop(monitor, client, client_uid, margin):
         "Slide from/to top"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -39,8 +39,8 @@ class Animations:
 
         await hyprctl(f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}")
 
-    @classmethod
-    async def frombottom(cls, monitor, client, client_uid, margin):
+    @staticmethod
+    async def frombottom(monitor, client, client_uid, margin):
         "Slide from/to bottom"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -55,8 +55,8 @@ class Animations:
             f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
         )
 
-    @classmethod
-    async def fromleft(cls, monitor, client, client_uid, margin):
+    @staticmethod
+    async def fromleft(monitor, client, client_uid, margin):
         "Slide from/to left"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -68,8 +68,8 @@ class Animations:
 
         await hyprctl(f"movewindowpixel exact {margin + mon_x} {margin_y},{client_uid}")
 
-    @classmethod
-    async def fromright(cls, monitor, client, client_uid, margin):
+    @staticmethod
+    async def fromright(monitor, client, client_uid, margin):
         "Slide from/to right"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -130,7 +130,7 @@ class Scratch:
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 
 
-class Extension(Plugin):
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     procs: dict[str, subprocess.Popen] = {}
     scratches: dict[str, Scratch] = {}
     transitioning_scratches: set[str] = set()
@@ -184,16 +184,18 @@ class Extension(Plugin):
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
-        self.procs[name] = subprocess.Popen(
+        proc = subprocess.Popen(
             scratch.conf["command"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             shell=True,
         )
-        pid = self.procs[name].pid
+        self.procs[name] = proc
+        pid = proc.pid
         self.scratches[name].reset(pid)
-        self.scratches_by_pid[self.procs[name].pid] = scratch
+        self.scratches_by_pid[proc.pid] = scratch
+
         if old_pid and old_pid in self.scratches_by_pid:
             del self.scratches_by_pid[old_pid]
 
@@ -218,6 +220,25 @@ class Extension(Plugin):
                         self.log.debug("hide %s because another client is active", uid)
                         await self.run_hide(uid, autohide=True)
 
+    async def _alternative_lookup(self):
+        "if class attribute is defined, use class matching and return True"
+        class_lookup_hack = [
+            self.scratches[name]
+            for name in self._respawned_scratches
+            if self.scratches[name].conf.get("class")
+        ]
+        if not class_lookup_hack:
+            return False
+        self.log.debug("Lookup hack triggered")
+        for client in await hyprctlJSON("clients"):
+            assert isinstance(client, dict)
+            for pending_scratch in class_lookup_hack:
+                if pending_scratch.conf["class"] == client["class"]:
+                    self.scratches_by_address[client["address"][2:]] = pending_scratch
+                    self.log.debug("client class found: %s", client)
+                    await pending_scratch.updateClientInfo(client)
+        return True
+
     async def event_openwindow(self, params) -> None:
         "open windows hook"
         addr, wrkspc, _kls, _title = params.split(",", 3)
@@ -225,23 +246,7 @@ class Extension(Plugin):
             item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
                 # hack for windows which aren't related to the process (see #8)
-                class_lookup_hack = [
-                    self.scratches[name]
-                    for name in self._respawned_scratches
-                    if self.scratches[name].conf.get("class")
-                ]
-                if class_lookup_hack:
-                    self.log.debug("Lookup hack triggered")
-                    for client in await hyprctlJSON("clients"):
-                        assert isinstance(client, dict)
-                        for pending_scratch in class_lookup_hack:
-                            if pending_scratch.conf["class"] == client["class"]:
-                                self.scratches_by_address[
-                                    client["address"][2:]
-                                ] = pending_scratch
-                                self.log.debug("client class found: %s", client)
-                                await pending_scratch.updateClientInfo(client)
-                else:
+                if not await self._alternative_lookup():
                     await self.updateScratchInfo()
                 item = self.scratches_by_address.get(addr)
             if item and item.just_created:
@@ -263,6 +268,29 @@ class Extension(Plugin):
             await self.run_hide(uid)
         else:
             await self.run_show(uid)
+
+    async def _anim_hide(self, animation_type, scratch):
+        "animate hiding a scratchpad"
+        addr = "address:0x" + scratch.address
+        offset = scratch.conf.get("offset")
+        if offset is None:
+            if "size" not in scratch.client_info:
+                await self.updateScratchInfo(scratch)
+
+            offset = int(1.3 * scratch.client_info["size"][1])
+
+        if animation_type == "fromtop":
+            await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
+        elif animation_type == "frombottom":
+            await hyprctl(f"movewindowpixel 0 {offset},{addr}")
+        elif animation_type == "fromleft":
+            await hyprctl(f"movewindowpixel -{offset} 0,{addr}")
+        elif animation_type == "fromright":
+            await hyprctl(f"movewindowpixel {offset} 0,{addr}")
+
+        if scratch.uid in self.transitioning_scratches:
+            return  # abort sequence
+        await asyncio.sleep(0.2)  # await for animation to finish
 
     async def updateScratchInfo(self, scratch: Scratch | None = None) -> None:
         """Update every scratchpads information if no `scratch` given,
@@ -288,37 +316,19 @@ class Extension(Plugin):
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name" """
         uid = uid.strip()
-        item = self.scratches.get(uid)
-        if not item:
+        scratch = self.scratches.get(uid)
+        if not scratch:
             self.log.warning("%s is not configured", uid)
             return
-        if not item.visible and not force:
+        if not scratch.visible and not force:
             self.log.warning("%s is already hidden", uid)
             return
         self.log.info("Hiding %s", uid)
-        item.visible = False
-        addr = "address:0x" + item.address
-        animation_type: str = item.conf.get("animation", "").lower()
+        scratch.visible = False
+        addr = "address:0x" + scratch.address
+        animation_type: str = scratch.conf.get("animation", "").lower()
         if animation_type:
-            offset = item.conf.get("offset")
-            if offset is None:
-                if "size" not in item.client_info:
-                    await self.updateScratchInfo(item)
-
-                offset = int(1.3 * item.client_info["size"][1])
-
-            if animation_type == "fromtop":
-                await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
-            elif animation_type == "frombottom":
-                await hyprctl(f"movewindowpixel 0 {offset},{addr}")
-            elif animation_type == "fromleft":
-                await hyprctl(f"movewindowpixel -{offset} 0,{addr}")
-            elif animation_type == "fromright":
-                await hyprctl(f"movewindowpixel {offset} 0,{addr}")
-
-            if uid in self.transitioning_scratches:
-                return  # abort sequence
-            await asyncio.sleep(0.2)  # await for animation to finish
+            await self._anim_hide(animation_type, scratch)
 
         if uid not in self.transitioning_scratches:
             await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{addr}")

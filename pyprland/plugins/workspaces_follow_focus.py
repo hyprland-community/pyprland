@@ -40,6 +40,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for monitor in monitors:
             if monitor["focused"]:
                 break
+        else:
+            self.log.error("Can not find a focused monitor")
+            return
         assert isinstance(monitor, dict)
         busy_workspaces = set(
             m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]

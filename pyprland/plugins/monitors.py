@@ -47,30 +47,42 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             )
 
     async def event_monitoradded(
-        self, screenid, no_default=False, monitors: list | None = None
+        self, monitor_name, no_default=False, monitors: list | None = None
     ) -> None:
         "Triggers when a monitor is plugged"
-        screenid = screenid.strip()
+        monitor_name = monitor_name.strip()
 
         if not monitors:
-            monitors: list[dict[str, Any]] = await hyprctlJSON("monitors")
+            monitors = await hyprctlJSON("monitors")
+
+        assert monitors
 
         for mon in monitors:
-            if mon["name"].startswith(screenid):
-                mon_name = mon["description"]
+            if mon["name"].startswith(monitor_name):
+                mon_description = mon["description"]
                 break
         else:
-            self.log.info("Monitor %s not found", screenid)
+            self.log.info("Monitor %s not found", monitor_name)
             return
 
+        if self._place_monitors(monitor_name, mon_description, monitors):
+            return
+
+        if not no_default:
+            default_command = self.config.get("unknown")
+            if default_command:
+                subprocess.call(default_command, shell=True)
+
+    def _place_monitors(
+        self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]
+    ):
+        "place a given monitor according to config"
         mon_by_name = {m["name"]: m for m in monitors}
-
-        newmon = mon_by_name[screenid]
-
+        newmon = mon_by_name[monitor_name]
         for mon_pattern, conf in self.config["placement"].items():
-            if mon_pattern in mon_name:
-                for placement, mon_name in conf.items():
-                    ref = mon_by_name[mon_name]
+            if mon_pattern in mon_description:
+                for placement, other_mon_description in conf.items():
+                    ref = mon_by_name[other_mon_description]
                     if ref:
                         place = placement.lower()
                         if place == "topof":
@@ -86,9 +98,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             x: int = ref["x"] + ref["width"]
                             y: int = ref["y"]
 
-                        configure_monitors(monitors, screenid, x, y)
-                        return
-        if not no_default:
-            default_command = self.config.get("unknown")
-            if default_command:
-                subprocess.call(default_command, shell=True)
+                        configure_monitors(monitors, monitor_name, x, y)
+                        return True
+        return False

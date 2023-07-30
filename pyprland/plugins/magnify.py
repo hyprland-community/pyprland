@@ -1,9 +1,10 @@
+" Toggles workspace zooming "
 from .interface import Plugin
 
 from ..ipc import hyprctl
 
 
-class Extension(Plugin):
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     zoomed = False
 
     async def run_zoom(self, *args):

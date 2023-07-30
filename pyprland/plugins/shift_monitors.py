@@ -1,9 +1,10 @@
+" shift workspaces across monitors "
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON, hyprctl
 
 
-class Extension(Plugin):
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     monitors: list[str] = []
 
     async def init(self):
@@ -21,7 +22,9 @@ class Extension(Plugin):
             await hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i+direction]}")
 
     async def event_monitoradded(self, monitor):
+        "keep track of monitors"
         self.monitors.append(monitor.strip())
 
     async def event_monitorremoved(self, monitor):
+        "keep track of monitors"
         self.monitors.remove(monitor.strip())

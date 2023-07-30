@@ -45,16 +45,16 @@ def init_logger(filename=None, force_debug=False):
 
     logging.basicConfig()
     if filename:
-        handler = logging.FileHandler(filename)
-        handler.setFormatter(
+        file_handler = logging.FileHandler(filename)
+        file_handler.setFormatter(
             logging.Formatter(
                 fmt=r"%(asctime)s [%(levelname)s] %(name)s :: %(message)s :: %(filename)s:%(lineno)d"
             )
         )
-        LogObjects.handlers.append(handler)
-    handler = logging.StreamHandler()
-    handler.setFormatter(ScreenLogFormatter())
-    LogObjects.handlers.append(handler)
+        LogObjects.handlers.append(file_handler)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(ScreenLogFormatter())
+    LogObjects.handlers.append(stream_handler)
 
 
 def get_logger(name="pypr", level=None):

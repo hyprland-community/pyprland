@@ -8,7 +8,7 @@ import os
 
 from .common import get_logger, PyprError
 
-log: Logger = None
+log: Logger | None = None
 
 HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
 EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
@@ -21,6 +21,7 @@ async def get_event_stream():
 
 async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
+    assert log
     log.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -48,6 +49,7 @@ def _format_command(command_list, default_base_command):
 
 async def hyprctl(command, base_command="dispatch") -> bool:
     """Run an IPC command. Returns success value."""
+    assert log
     log.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
