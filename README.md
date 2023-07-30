@@ -8,8 +8,8 @@ Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more i
 
 # Changelog
 
-- Add `expose` addon
-- scratchpad: add "lazy" option
+- Add [expose](https://github.com/hyprland-community/pyprland/wiki/Plugins#expose) addon
+- scratchpad: add [lazy](https://github.com/hyprland-community/pyprland/wiki/Plugins#lazy-optional) option
 - fix `scratchpads`'s position on monitors using scaling
 - improve error handling & logging, enable debug logs with `--debug <filename>`
 
