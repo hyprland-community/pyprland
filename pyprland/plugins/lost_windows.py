@@ -1,5 +1,5 @@
 " Moves unreachable client windows to the currently focused workspace"
-from typing import Any
+from typing import Any, cast
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON, hyprctl
@@ -23,8 +23,8 @@ def contains(monitor, window):
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def run_attract_lost(self):
         """Brings lost floating windows to the current workspace"""
-        monitors: list[dict[str, Any]] = await hyprctlJSON("monitors")
-        windows = await hyprctlJSON("clients")
+        monitors = cast(list, await hyprctlJSON("monitors"))
+        windows = cast(list, await hyprctlJSON("clients"))
         lost = [
             win
             for win in windows

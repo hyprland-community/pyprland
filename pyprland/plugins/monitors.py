@@ -1,6 +1,6 @@
 " The monitors plugin "
 import subprocess
-from typing import Any
+from typing import Any, cast
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON
@@ -40,7 +40,7 @@ def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def load_config(self, config) -> None:
         await super().load_config(config)
-        monitors = await hyprctlJSON("monitors")
+        monitors = cast(list[dict], await hyprctlJSON("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(
                 monitor["name"], no_default=True, monitors=monitors
@@ -53,7 +53,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitor_name = monitor_name.strip()
 
         if not monitors:
-            monitors = await hyprctlJSON("monitors")
+            monitors = cast(list, await hyprctlJSON("monitors"))
 
         assert monitors
 
@@ -85,18 +85,20 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     ref = mon_by_name[other_mon_description]
                     if ref:
                         place = placement.lower()
+                        x: int = 0
+                        y: int = 0
                         if place == "topof":
-                            x: int = ref["x"]
-                            y: int = ref["y"] - newmon["height"]
+                            x = ref["x"]
+                            y = ref["y"] - newmon["height"]
                         elif place == "bottomof":
-                            x: int = ref["x"]
-                            y: int = ref["y"] + ref["height"]
+                            x = ref["x"]
+                            y = ref["y"] + ref["height"]
                         elif place == "leftof":
-                            x: int = ref["x"] - newmon["width"]
-                            y: int = ref["y"]
+                            x = ref["x"] - newmon["width"]
+                            y = ref["y"]
                         else:  # rightof
-                            x: int = ref["x"] + ref["width"]
-                            y: int = ref["y"]
+                            x = ref["x"] + ref["width"]
+                            y = ref["y"]
 
                         configure_monitors(monitors, monitor_name, x, y)
                         return True

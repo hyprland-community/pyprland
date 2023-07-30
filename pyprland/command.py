@@ -1,6 +1,7 @@
 #!/bin/env python
 " Pyprland - an Hyprland companion app "
 import asyncio
+from typing import cast
 import json
 import sys
 import os
@@ -23,7 +24,7 @@ class Pyprland:
     event_reader: asyncio.StreamReader
     stopped = False
     name = "builtin"
-    config: dict[str, dict] = None
+    config: None | dict[str, dict] = None
 
     def __init__(self):
         self.plugins: dict[str, Plugin] = {}
@@ -33,6 +34,7 @@ class Pyprland:
         """Loads the configuration
 
         if `init` is true, also initializes the plugins"""
+        assert isinstance(self.config, dict)
         try:
             with open(os.path.expanduser(CONFIG_FILE), encoding="utf-8") as f:
                 self.config = json.loads(f.read())
@@ -42,7 +44,9 @@ class Pyprland:
             )
             raise PyprError() from e
 
-        for name in self.config["pyprland"]["plugins"]:
+        assert self.config
+
+        for name in cast(dict, self.config["pyprland"]["plugins"]):
             if name not in self.plugins:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
                 try:

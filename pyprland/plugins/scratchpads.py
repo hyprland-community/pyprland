@@ -2,7 +2,7 @@
 import os
 import asyncio
 import subprocess
-from typing import Any
+from typing import Any, cast
 
 from ..ipc import (
     hyprctl,
@@ -158,10 +158,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             *(die_in_piece(scratch) for scratch in self.scratches.values())
         )
 
-    async def load_config(self, config) -> None:
+    async def load_config(self, config: dict[str, Any]) -> None:
         "config loader"
-        config: dict[str, dict[str, Any]] = config["scratchpads"]
-        scratches = {k: Scratch(k, v) for k, v in config.items()}
+        my_config: dict[str, dict[str, Any]] = config["scratchpads"]
+        scratches = {k: Scratch(k, v) for k, v in my_config.items()}
 
         new_scratches = set()
 
@@ -347,7 +347,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         uid = uid.strip()
         item = self.scratches.get(uid)
 
-        self.focused_window_tracking[uid] = await hyprctlJSON("activewindow")
+        self.focused_window_tracking[uid] = cast(
+            dict[str, Any], await hyprctlJSON("activewindow")
+        )
 
         if not item:
             self.log.warning("%s is not configured", uid)

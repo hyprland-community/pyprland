@@ -1,4 +1,5 @@
 """ Force workspaces to follow the focus / mouse """
+from typing import cast
 from .interface import Plugin
 
 from ..ipc import hyprctlJSON, hyprctl
@@ -19,10 +20,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         # move every free workspace to the currently focused desktop
         busy_workspaces = set(
             mon["activeWorkspace"]["id"]
-            for mon in await hyprctlJSON("monitors")
+            for mon in cast(list[dict], await hyprctlJSON("monitors"))
             if mon["name"] != monitor_id
         )
-        workspaces = [w["id"] for w in await hyprctlJSON("workspaces") if w["id"] > 0]
+        workspaces = [
+            w["id"]
+            for w in cast(list[dict], await hyprctlJSON("workspaces"))
+            if w["id"] > 0
+        ]
 
         batch: list[str | list[str]] = []
         for n in workspaces:
