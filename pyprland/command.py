@@ -34,7 +34,6 @@ class Pyprland:
         """Loads the configuration
 
         if `init` is true, also initializes the plugins"""
-        assert isinstance(self.config, dict)
         try:
             with open(os.path.expanduser(CONFIG_FILE), encoding="utf-8") as f:
                 self.config = json.loads(f.read())
@@ -167,7 +166,7 @@ async def run_daemon():
     except PyprError as e:
         raise SystemExit(1) from e
     except Exception as e:
-        manager.log.critical("Failed to load config.")
+        manager.log.critical("Failed to load config.", exc_info=True)
         raise SystemExit(1) from e
 
     try:
