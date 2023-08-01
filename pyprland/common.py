@@ -1,6 +1,6 @@
 """ Shared utilities: logging """
-import os
 import logging
+import os
 
 __all__ = ["DEBUG", "get_logger", "init_logger"]
 

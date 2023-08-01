@@ -1,8 +1,8 @@
 """ Force workspaces to follow the focus / mouse """
 from typing import cast
-from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl
+from ..ipc import hyprctl, hyprctlJSON
+from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring

@@ -1,9 +1,9 @@
 " The monitors plugin "
 import subprocess
 from typing import Any, cast
-from .interface import Plugin
 
 from ..ipc import hyprctlJSON
+from .interface import Plugin
 
 
 def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:

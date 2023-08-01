@@ -1,12 +1,12 @@
 #!/bin/env python
 """ Interact with hyprland using sockets """
 import asyncio
-from logging import Logger
-from typing import Any
 import json
 import os
+from logging import Logger
+from typing import Any
 
-from .common import get_logger, PyprError
+from .common import PyprError, get_logger
 
 log: Logger | None = None
 

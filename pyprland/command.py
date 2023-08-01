@@ -1,16 +1,15 @@
 #!/bin/env python
-" Pyprland - an Hyprland companion app "
 import asyncio
-from typing import cast
-import json
-import sys
-import os
 import importlib
 import itertools
+import json
+import os
+import sys
+from typing import cast
 
-
-from .ipc import get_event_stream, init as ipc_init
-from .common import init_logger, get_logger, PyprError
+from .common import PyprError, get_logger, init_logger
+from .ipc import get_event_stream
+from .ipc import init as ipc_init
 from .plugins.interface import Plugin
 
 CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'

@@ -1,8 +1,8 @@
 " Moves unreachable client windows to the currently focused workspace"
 from typing import Any, cast
-from .interface import Plugin
 
-from ..ipc import hyprctlJSON, hyprctl
+from ..ipc import hyprctl, hyprctlJSON
+from .interface import Plugin
 
 
 def contains(monitor, window):

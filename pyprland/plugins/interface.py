@@ -1,5 +1,6 @@
 " Common plugin interface "
 from typing import Any
+
 from ..common import get_logger
 
 

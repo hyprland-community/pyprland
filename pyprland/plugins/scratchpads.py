@@ -1,15 +1,10 @@
 " Scratchpads addon "
-import os
 import asyncio
+import os
 import subprocess
 from typing import Any, cast
 
-from ..ipc import (
-    hyprctl,
-    hyprctlJSON,
-    get_focused_monitor_props,
-)
-
+from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from .interface import Plugin
 
 DEFAULT_MARGIN = 60
@@ -230,6 +225,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
+        # hack to update the client info from the provided class
         for client in await hyprctlJSON("clients"):
             assert isinstance(client, dict)
             for pending_scratch in class_lookup_hack:

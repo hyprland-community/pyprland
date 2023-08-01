@@ -1,7 +1,6 @@
 " Toggles workspace zooming "
-from .interface import Plugin
-
 from ..ipc import hyprctl
+from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
