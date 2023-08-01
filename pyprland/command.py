@@ -1,4 +1,5 @@
 #!/bin/env python
+""" Pyprland - an Hyprland companion app (cli client & daemon) """
 import asyncio
 import importlib
 import itertools
