@@ -6,7 +6,7 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
-# Changelog
+# 1.4.0
 
 - Add [expose](https://github.com/hyprland-community/pyprland/wiki/Plugins#expose) addon
 - scratchpad: add [lazy](https://github.com/hyprland-community/pyprland/wiki/Plugins#lazy-optional) option
