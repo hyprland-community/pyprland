@@ -381,6 +381,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         wrkspc = monitor["activeWorkspace"]["id"]
 
+        size = item.conf.get("size")
+        position = item.conf.get("position")
+
         self.transitioning_scratches.add(uid)
         await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
         await hyprctl(f"movetoworkspacesilent {wrkspc},{addr}")
@@ -390,5 +393,23 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await fn(monitor, item.client_info, addr, margin)
 
         await hyprctl(f"focuswindow {addr}")
+
+        if size:
+            # NOTE: Format for size is "X_SIZE Y_SIZE"
+            # X_SIZE, Y_SIZE is percentage of monitor size
+            x_size_p, y_size_p = map(int, size.split())
+            x_size, y_size = int(monitor["width"] * x_size_p / 100), int(monitor["height"] * y_size_p / 100)
+
+            await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
+
+        if position:
+            # NOTE: Format for position is "X_POS Y_POS"
+            # X_POS, Y_POS is percentage of monitor size from top left corner
+            x_pos_p, y_pos_p = map(int, position.split())
+            x_pos, y_pos = int(monitor["width"] * x_pos_p / 100), int(monitor["height"] * y_pos_p / 100)
+            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
+
+            await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
+
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)
