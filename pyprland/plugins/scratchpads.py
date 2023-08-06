@@ -381,9 +381,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         wrkspc = monitor["activeWorkspace"]["id"]
 
-        size = item.conf.get("size")
-        position = item.conf.get("position")
-
         self.transitioning_scratches.add(uid)
         await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
         await hyprctl(f"movetoworkspacesilent {wrkspc},{addr}")
@@ -394,22 +391,46 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         await hyprctl(f"focuswindow {addr}")
 
+        size = self._convert_coords(item.conf.get("size"), monitor)
         if size:
-            # NOTE: Format for size is "X_SIZE Y_SIZE"
-            # X_SIZE, Y_SIZE is percentage of monitor size
-            x_size_p, y_size_p = map(int, size.split())
-            x_size, y_size = int(monitor["width"] * x_size_p / 100), int(monitor["height"] * y_size_p / 100)
-
+            x_size, y_size = size
             await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
 
+        position = self._convert_coords(item.conf.get("position"), monitor)
         if position:
-            # NOTE: Format for position is "X_POS Y_POS"
-            # X_POS, Y_POS is percentage of monitor size from top left corner
-            x_pos_p, y_pos_p = map(int, position.split())
-            x_pos, y_pos = int(monitor["width"] * x_pos_p / 100), int(monitor["height"] * y_pos_p / 100)
+            x_pos, y_pos = position
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-
             await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
 
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)
+
+    def _convert_coords(self, coords, monitor):
+        """
+        Converts a string like "X Y" to coordinates relative to monitor
+        Supported formats for X, Y:
+        - Percentage: "V%". V in [0; 100]
+
+        Example:
+        "10% 20%", monitor 800x600 => 80, 120
+        """
+
+        if not coords:
+            return None
+
+        def convert(s, dim):
+            if s[-1] == "%":
+                p = int(s[:-1])
+                if p < 0 or p > 100:
+                    raise Exception(f"Percentage must be in range [0; 100], got {p}")
+                return int(monitor[dim] * p / 100)
+            else:
+                raise Exception(f"Unsupported format for dimension {dim} size, got {s}")
+
+        try:
+            x_str, y_str = coords.split()
+
+            return convert(x_str, "width"), convert(y_str, "height")
+        except Exception as e:
+            self.log.error(f"Failed to read coordinates: {e}")
+            return None
