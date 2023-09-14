@@ -3,6 +3,7 @@ import asyncio
 import os
 import subprocess
 from typing import Any, cast
+import logging
 
 from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from .interface import Plugin
@@ -82,6 +83,7 @@ class Animations:
 
 class Scratch:
     "A scratchpad state including configuration & client state"
+    log = logging.getLogger("scratch")
 
     def __init__(self, uid, opts):
         self.uid = uid
@@ -118,7 +120,14 @@ class Scratch:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
             client_info = await get_client_props_by_address("0x" + self.address)
-        assert isinstance(client_info, dict)
+        try:
+            assert isinstance(client_info, dict)
+        except AssertionError as e:
+            self.log.error(
+                f"client_info of {self.address} must be a dict: {client_info}"
+            )
+            raise AssertionError(e) from e
+
         self.client_info.update(client_info)
 
     def __str__(self):
