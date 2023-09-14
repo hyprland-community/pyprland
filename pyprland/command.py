@@ -82,11 +82,15 @@ class Pyprland:
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"
         while not self.stopped:
-            data = (await self.event_reader.readline()).decode()
+            try:
+                data = (await self.event_reader.readline()).decode()
+            except UnicodeDecodeError:
+                self.log.error("Invalid unicode while reading events")
+                continue
             if not data:
                 self.log.critical("Reader starved")
                 return
-            cmd, params = data.split(">>")
+            cmd, params = data.split(">>", 1)
             full_name = f"event_{cmd}"
 
             await self._callHandler(full_name, params)
