@@ -6,6 +6,10 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# 1.4.1
+
+- minor bugfixes
+
 # 1.4.0
 
 - Add [expose](https://github.com/hyprland-community/pyprland/wiki/Plugins#expose) addon
