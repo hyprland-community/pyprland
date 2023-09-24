@@ -423,7 +423,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 p = int(s[:-1])
                 if p < 0 or p > 100:
                     raise Exception(f"Percentage must be in range [0; 100], got {p}")
-                return int(monitor[dim] * p / 100)
+                scale = float(monitor["scale"])
+                return int(monitor[dim] / scale * p / 100)
             else:
                 raise Exception(f"Unsupported format for dimension {dim} size, got {s}")
 
