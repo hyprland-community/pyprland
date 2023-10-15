@@ -13,6 +13,7 @@ DEFAULT_MARGIN = 60
 
 async def get_client_props_by_address(addr: str):
     "Returns client properties given its address"
+    assert len(addr) > 2, "Client address is invalid"
     for client in await hyprctlJSON("clients"):
         assert isinstance(client, dict)
         if client.get("address") == addr:
