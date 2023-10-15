@@ -248,7 +248,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def event_openwindow(self, params) -> None:
         "open windows hook"
         addr, wrkspc, _kls, _title = params.split(",", 3)
-        if wrkspc.startswith("special"):
+        if self._respawned_scratches:
             item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
                 # hack for windows which aren't related to the process (see #8)
