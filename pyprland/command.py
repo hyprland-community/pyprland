@@ -73,6 +73,11 @@ class Pyprland:
                 self.log.debug("%s.%s%s", plugin.name, full_name, params)
                 try:
                     await getattr(plugin, full_name)(*params)
+                except AssertionError as e:
+                    self.log.error(
+                        "Bug detected, please report on https://github.com/fdev31/pyprland/issues"
+                    )
+                    self.log.exception(e)
                 except Exception as e:  # pylint: disable=W0718
                     self.log.warning(
                         "%s::%s(%s) failed:", plugin.name, full_name, params

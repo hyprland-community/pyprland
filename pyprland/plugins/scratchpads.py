@@ -102,7 +102,7 @@ class Scratch:
                 for line in f.readlines():
                     if line.startswith("State"):
                         state = line.split()[1]
-                        return state in "RSDTt"  # not "Z (zombie)"or "X (dead)"
+                        return state not in "ZX"  # not "Z (zombie)"or "X (dead)"
         return False
 
     def reset(self, pid: int) -> None:
@@ -199,7 +199,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         self.procs[name] = proc
         pid = proc.pid
         self.scratches[name].reset(pid)
-        self.scratches_by_pid[proc.pid] = scratch
+        self.scratches_by_pid[pid] = scratch
+        self.log.info(f"scratch {scratch.uid} has pid {pid}")
 
         if old_pid and old_pid in self.scratches_by_pid:
             del self.scratches_by_pid[old_pid]
@@ -375,15 +376,21 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 del self.scratches_by_pid[item.pid]
             if item.address in self.scratches_by_address:
                 del self.scratches_by_address[item.address]
+            self.log.info(f"starting {uid}")
             await self.start_scratch_command(uid)
+            self.log.info(f"{uid} started")
+            self.log.info("==> Wait for spawning")
             while uid in self._respawned_scratches:
                 await asyncio.sleep(0.05)
+            self.log.info("<== spawned!")
 
         item.visible = True
         monitor = await get_focused_monitor_props()
         assert monitor
 
         await self.updateScratchInfo(item)
+
+        assert item.address, "No address !"
 
         addr = "address:0x" + item.address
 
