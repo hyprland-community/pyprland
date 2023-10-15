@@ -82,7 +82,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for mon_pattern, conf in self.config["placement"].items():
             if mon_pattern in mon_description:
                 for placement, other_mon_description in conf.items():
-                    ref = mon_by_name[other_mon_description]
+                    try:
+                        ref = mon_by_name[other_mon_description]
+                    except KeyError:
+                        continue
                     if ref:
                         place = placement.lower()
                         x: int = 0
