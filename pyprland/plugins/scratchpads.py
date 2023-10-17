@@ -391,14 +391,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         await hyprctl(f"focuswindow {addr}")
 
-        size = self._convert_coords(item.conf.get("size"), monitor)
+        size = item.conf.get("size")
         if size:
-            x_size, y_size = size
+            x_size, y_size = self._convert_coords(size, monitor)
             await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
 
-        position = self._convert_coords(item.conf.get("position"), monitor)
+        position = item.conf.get("position")
         if position:
-            x_pos, y_pos = position
+            x_pos, y_pos = self._convert_coords(position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
             await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
 
@@ -415,8 +415,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "10% 20%", monitor 800x600 => 80, 120
         """
 
-        if not coords:
-            return None
+        assert coords, "coords must be non null"
 
         def convert(s, dim):
             if s[-1] == "%":
@@ -434,4 +433,4 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             return convert(x_str, "width"), convert(y_str, "height")
         except Exception as e:
             self.log.error(f"Failed to read coordinates: {e}")
-            return None
+            raise e
