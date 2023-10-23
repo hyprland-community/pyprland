@@ -40,6 +40,9 @@ def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def load_config(self, config) -> None:
         await super().load_config(config)
+        await self.run_relayout()
+
+    async def run_relayout(self):
         monitors = cast(list[dict], await hyprctlJSON("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(
