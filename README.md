@@ -6,6 +6,11 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# 1.4.2 (WIP)
+
+- [two new options](https://github.com/hyprland-community/pyprland/wiki/Plugins#size-optional) for scratchpads: `position` and `size`
+- bugfixes
+
 # 1.4.1
 
 - minor bugfixes
