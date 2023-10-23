@@ -382,7 +382,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.info("==> Wait for spawning")
             while uid in self._respawned_scratches:
                 await asyncio.sleep(0.05)
-            self.log.info("<== spawned!")
+            self.log.info(f"=> spawned {uid} as proc {item.pid}")
 
         item.visible = True
         monitor = await get_focused_monitor_props()
