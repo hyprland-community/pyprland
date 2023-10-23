@@ -8,7 +8,7 @@ Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more i
 
 # 1.4.2 (WIP)
 
-- [two new options](https://github.com/hyprland-community/pyprland/wiki/Plugins#size-optional) for scratchpads: `position` and `size`
+- [two new options](https://github.com/hyprland-community/pyprland/wiki/Plugins#size-optional) for scratchpads: `position` and `size` - from @iliayar
 - bugfixes
 
 # 1.4.1
