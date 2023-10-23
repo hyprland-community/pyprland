@@ -303,6 +303,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """Update every scratchpads information if no `scratch` given,
         else update a specific scratchpad info"""
         if scratch is None:
+            self.log.info("update from None")
             for client in await hyprctlJSON("clients"):
                 assert isinstance(client, dict)
                 scratch = self.scratches_by_address.get(client["address"][2:])
@@ -316,6 +317,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             add_to_address_book = ("address" not in scratch.client_info) or (
                 scratch.address not in self.scratches_by_address
             )
+            self.log.info(f"update from something, adding: {add_to_address_book}")
             await scratch.updateClientInfo()
             if add_to_address_book:
                 self.scratches_by_address[scratch.client_info["address"][2:]] = scratch
