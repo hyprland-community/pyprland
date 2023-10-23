@@ -407,5 +407,47 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await fn(monitor, item.client_info, addr, margin)
 
         await hyprctl(f"focuswindow {addr}")
+
+        size = item.conf.get("size")
+        if size:
+            x_size, y_size = self._convert_coords(size, monitor)
+            await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
+
+        position = item.conf.get("position")
+        if position:
+            x_pos, y_pos = self._convert_coords(position, monitor)
+            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
+            await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
+
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)
+
+    def _convert_coords(self, coords, monitor):
+        """
+        Converts a string like "X Y" to coordinates relative to monitor
+        Supported formats for X, Y:
+        - Percentage: "V%". V in [0; 100]
+
+        Example:
+        "10% 20%", monitor 800x600 => 80, 120
+        """
+
+        assert coords, "coords must be non null"
+
+        def convert(s, dim):
+            if s[-1] == "%":
+                p = int(s[:-1])
+                if p < 0 or p > 100:
+                    raise Exception(f"Percentage must be in range [0; 100], got {p}")
+                scale = float(monitor["scale"])
+                return int(monitor[dim] / scale * p / 100)
+            else:
+                raise Exception(f"Unsupported format for dimension {dim} size, got {s}")
+
+        try:
+            x_str, y_str = coords.split()
+
+            return convert(x_str, "width"), convert(y_str, "height")
+        except Exception as e:
+            self.log.error(f"Failed to read coordinates: {e}")
+            raise e
