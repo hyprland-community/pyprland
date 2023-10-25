@@ -12,12 +12,18 @@ from .interface import Plugin
 DEFAULT_MARGIN = 60
 
 
-async def get_client_props_by_address(addr: str):
+async def get_client_props(addr: str | None = None, pid: int | None = None):
     "Returns client properties given its address"
-    assert len(addr) > 2, "Client address is invalid"
+    assert addr or pid
+    if addr:
+        assert len(addr) > 2, "Client address is invalid"
+    if pid:
+        assert pid, "Client pid is invalid"
+    prop_name = "address" if addr else "pid"
+    prop_value = addr if addr else pid
     for client in await hyprctlJSON("clients"):
         assert isinstance(client, dict)
-        if client.get("address") == addr:
+        if client.get(prop_name) == prop_value:
             return client
 
 
@@ -92,7 +98,6 @@ class Scratch:
         self.pid = 0
         self.conf = opts
         self.visible = False
-        self.just_created = True
         self.client_info = {}
 
     def isAlive(self) -> bool:
@@ -110,7 +115,6 @@ class Scratch:
         "clear the object"
         self.pid = pid
         self.visible = False
-        self.just_created = True
         self.client_info = {}
 
     @property
@@ -121,7 +125,7 @@ class Scratch:
     async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
-            client_info = await get_client_props_by_address("0x" + self.address)
+            client_info = await get_client_props(addr="0x" + self.address)
         try:
             assert isinstance(client_info, dict)
         except AssertionError as e:
@@ -140,7 +144,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     procs: dict[str, subprocess.Popen] = {}
     scratches: dict[str, Scratch] = {}
     transitioning_scratches: set[str] = set()
-    _new_scratches: set[str] = set()
     _respawned_scratches: set[str] = set()
     scratches_by_address: dict[str, Scratch] = {}
     scratches_by_pid: dict[int, Scratch] = {}
@@ -169,24 +172,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         my_config: dict[str, dict[str, Any]] = config["scratchpads"]
         scratches = {k: Scratch(k, v) for k, v in my_config.items()}
 
-        new_scratches = set()
-
         for name in scratches:
             if name not in self.scratches:
                 self.scratches[name] = scratches[name]
-                new_scratches.add(name)
             else:
                 self.scratches[name].conf = scratches[name].conf
 
-        # not known yet
-        for name in new_scratches:
-            if not self.scratches[name].conf.get("lazy", False):
-                await self.start_scratch_command(name, is_new=True)
-
-    async def start_scratch_command(self, name: str, is_new=False) -> None:
+    async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
-        if is_new:
-            self._new_scratches.add(name)
         self._respawned_scratches.add(name)
         scratch = self.scratches[name]
         old_pid = self.procs[name].pid if name in self.procs else 0
@@ -211,14 +204,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "active windows hook"
         addr = addr.strip()
         scratch = self.scratches_by_address.get(addr)
-        if scratch:
-            if scratch.just_created:
-                self.log.debug("Hiding just created scratch %s", scratch.uid)
-                await self.run_hide(scratch.uid, force=True)
-                scratch.just_created = False
-        else:
+        if not scratch:
             for uid, scratch in self.scratches.items():
-                self.log.info((scratch.address, addr))
                 if scratch.client_info and scratch.address != addr:
                     if (
                         scratch.visible
@@ -256,14 +243,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if not item and self._respawned_scratches:
                 # hack for windows which aren't related to the process (see #8)
                 if not await self._alternative_lookup():
+                    self.log.info("Updating Scratch info")
                     await self.updateScratchInfo()
                 item = self.scratches_by_address.get(addr)
-            if item and item.just_created:
-                if item.uid in self._new_scratches:
-                    await self.run_hide(item.uid, force=True)
-                self._new_scratches.discard(item.uid)
-                self._respawned_scratches.discard(item.uid)
-                item.just_created = False
 
     async def run_toggle(self, uid: str) -> None:
         """<name> toggles visibility of scratchpad "name" """
@@ -273,7 +255,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.warning("%s is not configured", uid)
             return
         self.log.debug("%s is visible = %s", uid, item.visible)
-        if item.visible:
+        if item.visible and item.isAlive():
             await self.run_hide(uid)
         else:
             await self.run_show(uid)
@@ -312,10 +294,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             scratch = self.scratches_by_address.get(client["address"][2:])
             if not scratch:
                 scratch = self.scratches_by_pid.get(client["pid"])
-                if scratch:
-                    self.scratches_by_address[client["address"][2:]] = scratch
             if scratch:
+                self.scratches_by_address[client["address"][2:]] = scratch
                 await scratch.updateClientInfo(client)
+            break
+        else:
+            self.log.info("Didn't update scratch info %s" % self)
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name" """
@@ -328,9 +312,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.warning("%s is already hidden", uid)
             return
         scratch.visible = False
-        if not scratch.isAlive():
-            await self.run_show(uid, force=True)
-            return
         self.log.info("Hiding %s", uid)
         addr = "address:0x" + scratch.address
         animation_type: str = scratch.conf.get("animation", "").lower()
@@ -366,11 +347,18 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.info(f"{uid} started")
             self.log.info("==> Wait for spawning")
             loop_count = count()
-            while uid in self._respawned_scratches and next(loop_count) < 10:
-                await asyncio.sleep(0.05)
+            while next(loop_count) < 10:
+                await asyncio.sleep(0.1)
+                info = await get_client_props(pid=item.pid)
+                if info:
+                    item.updateClientInfo(info)
+                    break
             self.log.info(f"=> spawned {uid} as proc {item.pid}")
 
-    async def run_show(self, uid, force=False) -> None:
+            await hyprctl(f"movewindowpixel exact {0} {-100},{item.address}")
+            # await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{item.address}")
+
+    async def run_show(self, uid) -> None:
         """<name> shows scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
@@ -381,10 +369,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         if not item:
             self.log.warning("%s is not configured", uid)
-            return
-
-        if item.visible and not force:
-            self.log.warning("%s is already visible", uid)
             return
 
         self.log.info("Showing %s", uid)
