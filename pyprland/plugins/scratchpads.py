@@ -139,6 +139,31 @@ class Scratch:  # {{{
         self.visible = False
         self.client_info = {}
         self.should_hide = False
+        self.initialized = False
+
+    async def initialize(self):
+        if self.initialized:
+            return
+        self.initialized = True
+        await self.updateClientInfo()
+        await hyprctl(
+            f"movetoworkspacesilent special:scratch_{self.uid},address:0x{self.address}"
+        )
+
+        size = self.conf.get("size")
+        position = self.conf.get("position")
+        monitor = await get_focused_monitor_props()
+        if position:
+            x_pos, y_pos = convert_coords(self.log, position, monitor)
+            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
+            await hyprctl(
+                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:0x{self.address}"
+            )
+        if size:
+            x_size, y_size = convert_coords(self.log, size, monitor)
+            await hyprctl(
+                f"resizewindowpixel exact {x_size} {y_size},address:0x{self.address}"
+            )
 
     def isAlive(self) -> bool:
         "is the process running ?"
@@ -156,6 +181,7 @@ class Scratch:  # {{{
         self.pid = pid
         self.visible = False
         self.client_info = {}
+        self.initialized = False
 
     @property
     def address(self) -> str:
@@ -253,9 +279,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     self.log.info(f"=> {uid} info received on time")
                     await item.updateClientInfo(info)
                     self._respawned_scratches.discard(uid)
-                    await hyprctl(
-                        f"movetoworkspacesilent special:scratch_{uid},address:0x{item.address}"
-                    )
                     break
             self.log.info(f"=> spawned {uid} as proc {item.pid}")
 
@@ -337,8 +360,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def event_openwindow(self, params) -> None:
         "open windows hook"
         addr, wrkspc, _kls, _title = params.split(",", 3)
+        item = self.scratches_by_address.get(addr)
         if self._respawned_scratches:
-            item = self.scratches_by_address.get(addr)
             if not item and self._respawned_scratches:
                 # hack for windows which aren't related to the process (see #8)
                 if not await self._alternative_lookup():
@@ -347,6 +370,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 item = self.scratches_by_address.get(addr)
                 if item and item.should_hide:
                     await self.run_hide(item.uid, force=True)
+        if item:
+            await item.initialize()
 
     # }}}
     # Commands {{{
@@ -401,6 +426,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         self.log.info("Showing %s", uid)
         await self.ensure_alive(uid, item)
+        await item.initialize()
 
         item.visible = True
         monitor = await get_focused_monitor_props()
@@ -423,17 +449,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             await fn(monitor, item.client_info, addr, margin)
 
         await hyprctl(f"focuswindow {addr}")
-
-        size = item.conf.get("size")
-        if size:
-            x_size, y_size = convert_coords(self.log, size, monitor)
-            await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
-
-        position = item.conf.get("position")
-        if position:
-            x_pos, y_pos = convert_coords(self.log, position, monitor)
-            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
 
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.transitioning_scratches.discard(uid)
