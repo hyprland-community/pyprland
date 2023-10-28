@@ -426,6 +426,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         self.log.info("Showing %s", uid)
         await self.ensure_alive(uid, item)
+        await item.updateClientInfo()
         await item.initialize()
 
         item.visible = True
