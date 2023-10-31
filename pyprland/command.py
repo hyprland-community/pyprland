@@ -96,6 +96,7 @@ class Pyprland:
                 self.log.critical("Reader starved")
                 return
             cmd, params = data.split(">>", 1)
+            self.log.info(f"EVT: {cmd}({params.strip()})")
             full_name = f"event_{cmd}"
 
             await self._callHandler(full_name, params)

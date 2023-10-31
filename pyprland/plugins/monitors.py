@@ -105,6 +105,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             x = ref["x"] + ref["width"]
                             y = ref["y"]
 
+                        self.log.info(f"Will place {monitor_name} @ {x},{y}")
                         configure_monitors(monitors, monitor_name, x, y)
                         return True
         return False
