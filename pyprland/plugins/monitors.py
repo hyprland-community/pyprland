@@ -85,9 +85,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for mon_pattern, conf in self.config["placement"].items():
             if mon_pattern in mon_description:
                 for placement, other_mon_description in conf.items():
-                    try:
-                        ref = mon_by_name[other_mon_description]
-                    except KeyError:
+                    ref = mon_by_name.get(other_mon_description)
+                    if ref is None or monitor_name == other_mon_description:
                         continue
                     if ref:
                         place = placement.lower()
