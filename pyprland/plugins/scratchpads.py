@@ -191,8 +191,6 @@ class Scratch:  # {{{
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
             client_info = await get_client_props(addr="0x" + self.address)
-        if client_info is None:
-            client_info = await get_client_props(pid=self.pid)
         try:
             assert isinstance(client_info, dict)
         except AssertionError as e:
