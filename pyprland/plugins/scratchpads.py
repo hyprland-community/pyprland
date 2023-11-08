@@ -250,10 +250,10 @@ class ScratchDB:
         if name is not None:
             d = self._by_name
             v = name
-        if pid is not None:
+        elif pid is not None:
             d = self._by_pid
             v = pid
-        if addr is not None:
+        elif addr is not None:
             d = self._by_addr
             v = addr
         d[v] = scratch
