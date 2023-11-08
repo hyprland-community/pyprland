@@ -246,7 +246,7 @@ class ScratchDB:
 
     def register(self, scratch: Scratch, name=None, pid=None, addr=None):
         "set the Scratch index by name, pid or address"
-        assert any((name, pid, addr))
+        assert 1 == len(list(filter((lambda x: bool(x)), (name, pid, addr))))
         if name is not None:
             d = self._by_name
             v = name
