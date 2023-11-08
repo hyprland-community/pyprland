@@ -1,9 +1,10 @@
 " Scratchpads addon "
-import asyncio
 import os
+import logging
+import asyncio
 import subprocess
 from typing import Any, cast
-import logging
+from collections import defaultdict
 
 from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from .interface import Plugin
@@ -214,6 +215,19 @@ class ScratchDB:
     _by_addr: dict[str, Scratch] = {}
     _by_pid: dict[int, Scratch] = {}
     _by_name: dict[str, Scratch] = {}
+    _states: defaultdict[str, set[Scratch]] = defaultdict(lambda: set())
+
+    def getByState(self, state: str):
+        return self._states[state]
+
+    def hasState(self, scratch: Scratch, state: str):
+        return scratch in self._states[state]
+
+    def setState(self, scratch: Scratch, state: str):
+        self._states[state].add(scratch)
+
+    def clearState(self, scratch: Scratch, state: str):
+        self._states[state].remove(scratch)
 
     def __iter__(self):
         "return all Scratch name"
@@ -275,8 +289,6 @@ class ScratchDB:
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, subprocess.Popen] = {}
-    transitioning_scratches: set[str] = set()
-    _respawned_scratches: set[str] = set()
     scratches = ScratchDB()
 
     focused_window_tracking: dict[str, dict] = {}
@@ -339,7 +351,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 if info:
                     self.log.info(f"=> {uid} info received on time")
                     await item.updateClientInfo(info)
-                    self._respawned_scratches.discard(uid)
+                    self.scratches.clearState(item, "respawned")
                     self.log.info(f"=> spawned {uid} as proc {item.pid}")
                     return True
             self.log.error(f"=> Failed spawning {uid} as proc {item.pid}")
@@ -348,8 +360,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
-        self._respawned_scratches.add(name)
         scratch = self.scratches.get(name)
+        self.scratches.setState(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
         proc = subprocess.Popen(
             scratch.conf["command"],
@@ -397,7 +409,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     if (
                         scratch.visible
                         and scratch.conf.get("unfocus") == "hide"
-                        and scratch.uid not in self.transitioning_scratches
+                        and not self.scratches.hasState(scratch, "transition")
                     ):
                         self.log.debug("hide %s because another client is active", uid)
                         await self.run_hide(uid, autohide=True)
@@ -405,9 +417,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def _alternative_lookup(self):
         "if class attribute is defined, use class matching and return True"
         class_lookup_hack = [
-            self.scratches.get(name)
-            for name in self._respawned_scratches
-            if self.scratches.get(name).conf.get("class")
+            s for s in self.scratches.getByState("respawned") if s.conf.get("class")
         ]
         if not class_lookup_hack:
             return False
@@ -426,15 +436,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         "open windows hook"
         addr, wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
-        if self._respawned_scratches:
-            if not item and self._respawned_scratches:
-                # hack for windows which aren't related to the process (see #8)
-                if not await self._alternative_lookup():
-                    self.log.info("Updating Scratch info")
-                    await self.updateScratchInfo()
-                item = self.scratches.get(addr=addr)
-                if item and item.should_hide:
-                    await self.run_hide(item.uid, force=True)
+        rs = list(self.scratches.getByState("respawned"))
+        if rs and not item:
+            # hack for windows which aren't related to the process (see #8)
+            if not await self._alternative_lookup():
+                self.log.info("Updating Scratch info")
+                await self.updateScratchInfo()
+            item = self.scratches.get(addr=addr)
+            if item and item.should_hide:
+                await self.run_hide(item.uid, force=True)
         if item:
             await item.initialize()
 
@@ -472,7 +482,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         elif animation_type == "fromright":
             await hyprctl(f"movewindowpixel {offset} 0,{addr}")
 
-        if scratch.uid in self.transitioning_scratches:
+        if self.scratches.hasState(scratch, "transition"):
             return  # abort sequence
         await asyncio.sleep(0.2)  # await for animation to finish
 
@@ -508,7 +518,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         wrkspc = monitor["activeWorkspace"]["id"]
 
-        self.transitioning_scratches.add(uid)
+        self.scratches.setState(item, "transition")
         await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
         await hyprctl(f"movetoworkspacesilent {wrkspc},{addr}")
         if animation_type:
@@ -519,7 +529,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         await hyprctl(f"focuswindow {addr}")
 
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
-        self.transitioning_scratches.discard(uid)
+        self.scratches.clearState(item, "transition")
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name" """
@@ -538,7 +548,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if animation_type:
             await self._anim_hide(animation_type, scratch)
 
-        if uid not in self.transitioning_scratches:
+        if not self.scratches.hasState(scratch, "transition"):
             await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{addr}")
 
         if (
