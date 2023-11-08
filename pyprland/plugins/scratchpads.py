@@ -208,13 +208,77 @@ class Scratch:  # {{{
 # }}}
 
 
+class ScratchDB:
+    """Single storage for every Scratch allowing a boring lookup & update API"""
+
+    _by_addr: dict[str, Scratch] = {}
+    _by_pid: dict[int, Scratch] = {}
+    _by_name: dict[str, Scratch] = {}
+
+    def __iter__(self):
+        "return all Scratch name"
+        return self._by_name.keys()
+
+    def values(self):
+        "returns every Scratch"
+        return self._by_name.values()
+
+    def items(self):
+        "return an iterable list of (name, Scratch)"
+        return self._by_name.items()
+
+    def reset(self, scratch: Scratch):
+        "clears registered address & pid"
+        if scratch.address in self._by_addr:
+            del self._by_addr[scratch.address]
+        if scratch.pid in self._by_pid:
+            del self._by_pid[scratch.pid]
+
+    def clear(self, name=None, pid=None, addr=None):
+        "clears the index by name, pid or address"
+        assert any((name, pid, addr))
+        if name is not None and name in self._by_name:
+            del self._by_name[name]
+        if pid is not None and pid in self._by_pid:
+            del self._by_pid[pid]
+        if addr is not None and addr in self._by_addr:
+            del self._by_addr[addr]
+
+    def set(self, scratch: Scratch, name=None, pid=None, addr=None):
+        "set the Scratch index by name, pid or address"
+        assert any((name, pid, addr))
+        if name is not None:
+            d = self._by_name
+            v = name
+        if pid is not None:
+            d = self._by_pid
+            v = pid
+        if addr is not None:
+            d = self._by_addr
+            v = addr
+        d[v] = scratch
+
+    def get(self, name=None, pid=None, addr=None) -> Scratch:
+        "return the Scratch matching given name, pid or address"
+        assert 1 == len(list(filter((lambda x: bool(x)), (name, pid, addr))))
+        if name is not None:
+            d = self._by_name
+            v = name
+        elif pid is not None:
+            d = self._by_pid
+            v = pid
+        elif addr is not None:
+            d = self._by_addr
+            v = addr
+        return d.get(v)
+
+
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, subprocess.Popen] = {}
-    scratches: dict[str, Scratch] = {}
     transitioning_scratches: set[str] = set()
     _respawned_scratches: set[str] = set()
-    scratches_by_address: dict[str, Scratch] = {}
-    scratches_by_pid: dict[int, Scratch] = {}
+    scratches = ScratchDB()
+
     focused_window_tracking: dict[str, dict] = {}
 
     async def exit(self) -> None:
@@ -242,33 +306,30 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         scratches_to_spawn = set()
         for name in scratches:
-            if name not in self.scratches:
-                self.scratches[name] = scratches[name]
+            if not self.scratches.get(name):
+                self.scratches.set(scratches[name], name)
                 is_lazy = scratches[name].conf.get("lazy", False)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
             else:
-                self.scratches[name].conf = scratches[name].conf
+                self.scratches.get(name).conf = scratches[name].conf
 
         self.log.info(scratches_to_spawn)
         for name in scratches_to_spawn:
             if await self.ensure_alive(name):
-                self.scratches[name].should_hide = True
+                self.scratches.get(name).should_hide = True
             else:
                 self.log.error(f"Failure starting {name}")
 
     async def ensure_alive(self, uid, item=None):
         if item is None:
-            item = self.scratches.get(uid)
+            item = self.scratches.get(name=uid)
 
         if not item.isAlive():
             self.log.info("%s is not running, restarting...", uid)
             if uid in self.procs:
                 self.procs[uid].kill()
-            if item.pid in self.scratches_by_pid:
-                del self.scratches_by_pid[item.pid]
-            if item.address in self.scratches_by_address:
-                del self.scratches_by_address[item.address]
+            self.scratches.reset(item)
             self.log.info(f"starting {uid}")
             await self.start_scratch_command(uid)
             self.log.info(f"==> Wait for {uid} spawning")
@@ -288,7 +349,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
         self._respawned_scratches.add(name)
-        scratch = self.scratches[name]
+        scratch = self.scratches.get(name)
         old_pid = self.procs[name].pid if name in self.procs else 0
         proc = subprocess.Popen(
             scratch.conf["command"],
@@ -299,12 +360,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         )
         self.procs[name] = proc
         pid = proc.pid
-        self.scratches[name].reset(pid)
-        self.scratches_by_pid[pid] = scratch
+        scratch.reset(pid)
+        self.scratches.set(scratch, pid=pid)
         self.log.info(f"scratch {scratch.uid} has pid {pid}")
-
-        if old_pid and old_pid in self.scratches_by_pid:
-            del self.scratches_by_pid[old_pid]
+        if old_pid:
+            self.scratches.clear(pid=old_pid)
 
     async def updateScratchInfo(self, orig_scratch: Scratch | None = None) -> None:
         """Update every scratchpads information if no `scratch` given,
@@ -314,11 +374,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             assert isinstance(client, dict)
             if pid and pid != client["pid"]:
                 continue
-            scratch = self.scratches_by_address.get(client["address"][2:])
+            # if no address registered, register it
+            # + update client info in any case
+            scratch = self.scratches.get(addr=client["address"][2:])
             if not scratch:
-                scratch = self.scratches_by_pid.get(client["pid"])
+                scratch = self.scratches.get(pid=client["pid"])
             if scratch:
-                self.scratches_by_address[client["address"][2:]] = scratch
+                self.scratches.set(scratch, addr=client["address"][2:])
                 await scratch.updateClientInfo(client)
             break
         else:
@@ -328,7 +390,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
         addr = addr.strip()
-        scratch = self.scratches_by_address.get(addr)
+        scratch = self.scratches.get(addr=addr)
         if not scratch:
             for uid, scratch in self.scratches.items():
                 if scratch.client_info and scratch.address != addr:
@@ -343,9 +405,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def _alternative_lookup(self):
         "if class attribute is defined, use class matching and return True"
         class_lookup_hack = [
-            self.scratches[name]
+            self.scratches.get(name)
             for name in self._respawned_scratches
-            if self.scratches[name].conf.get("class")
+            if self.scratches.get(name).conf.get("class")
         ]
         if not class_lookup_hack:
             return False
@@ -355,7 +417,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             assert isinstance(client, dict)
             for pending_scratch in class_lookup_hack:
                 if pending_scratch.conf["class"] == client["class"]:
-                    self.scratches_by_address[client["address"][2:]] = pending_scratch
+                    self.scratches.set(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.updateClientInfo(client)
         return True
@@ -363,14 +425,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def event_openwindow(self, params) -> None:
         "open windows hook"
         addr, wrkspc, _kls, _title = params.split(",", 3)
-        item = self.scratches_by_address.get(addr)
+        item = self.scratches.get(addr=addr)
         if self._respawned_scratches:
             if not item and self._respawned_scratches:
                 # hack for windows which aren't related to the process (see #8)
                 if not await self._alternative_lookup():
                     self.log.info("Updating Scratch info")
                     await self.updateScratchInfo()
-                item = self.scratches_by_address.get(addr)
+                item = self.scratches.get(addr=addr)
                 if item and item.should_hide:
                     await self.run_hide(item.uid, force=True)
         if item:
