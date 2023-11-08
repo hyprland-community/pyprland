@@ -252,8 +252,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         self.log.info(scratches_to_spawn)
         for name in scratches_to_spawn:
-            await self.ensure_alive(name)
-            self.scratches[name].should_hide = True
+            if await self.ensure_alive(name):
+                self.scratches[name].should_hide = True
+            else:
+                self.log.error(f"Failure starting {name}")
 
     async def ensure_alive(self, uid, item=None):
         if item is None:
@@ -277,8 +279,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     self.log.info(f"=> {uid} info received on time")
                     await item.updateClientInfo(info)
                     self._respawned_scratches.discard(uid)
-                    break
-            self.log.info(f"=> spawned {uid} as proc {item.pid}")
+                    self.log.info(f"=> spawned {uid} as proc {item.pid}")
+                    return True
+            self.log.error(f"=> Failed spawning {uid} as proc {item.pid}")
+            return False
+        return True
 
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
@@ -423,7 +428,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return
 
         self.log.info("Showing %s", uid)
-        await self.ensure_alive(uid, item)
+        if not await self.ensure_alive(uid, item):
+            self.log.error(f"Failed to show {uid}, aborting.")
+            return
         await item.updateClientInfo()
         await item.initialize()
 
