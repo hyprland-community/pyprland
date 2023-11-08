@@ -244,7 +244,7 @@ class ScratchDB:
         if addr is not None and addr in self._by_addr:
             del self._by_addr[addr]
 
-    def set(self, scratch: Scratch, name=None, pid=None, addr=None):
+    def register(self, scratch: Scratch, name=None, pid=None, addr=None):
         "set the Scratch index by name, pid or address"
         assert any((name, pid, addr))
         if name is not None:
@@ -307,7 +307,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         scratches_to_spawn = set()
         for name in scratches:
             if not self.scratches.get(name):
-                self.scratches.set(scratches[name], name)
+                self.scratches.register(scratches[name], name)
                 is_lazy = scratches[name].conf.get("lazy", False)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
@@ -361,7 +361,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.procs[name] = proc
         pid = proc.pid
         scratch.reset(pid)
-        self.scratches.set(scratch, pid=pid)
+        self.scratches.register(scratch, pid=pid)
         self.log.info(f"scratch {scratch.uid} has pid {pid}")
         if old_pid:
             self.scratches.clear(pid=old_pid)
@@ -380,7 +380,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if not scratch:
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
-                self.scratches.set(scratch, addr=client["address"][2:])
+                self.scratches.register(scratch, addr=client["address"][2:])
                 await scratch.updateClientInfo(client)
             break
         else:
@@ -417,7 +417,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             assert isinstance(client, dict)
             for pending_scratch in class_lookup_hack:
                 if pending_scratch.conf["class"] == client["class"]:
-                    self.scratches.set(pending_scratch, addr=client["address"][2:])
+                    self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.updateClientInfo(client)
         return True
