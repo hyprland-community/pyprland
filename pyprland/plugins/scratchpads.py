@@ -1,7 +1,6 @@
 " Scratchpads addon "
 import asyncio
 import os
-from itertools import count
 import subprocess
 from typing import Any, cast
 import logging
@@ -273,9 +272,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.info(f"starting {uid}")
             await self.start_scratch_command(uid)
             self.log.info(f"==> Wait for {uid} spawning")
-            loop_count = count()
-            while next(loop_count) < 10:
-                await asyncio.sleep(0.1)
+            for loop_count in range(1, 8):
+                await asyncio.sleep(loop_count**2 / 10.0)
                 info = await get_client_props(pid=item.pid)
                 if info:
                     self.log.info(f"=> {uid} info received on time")
