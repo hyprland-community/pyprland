@@ -6,7 +6,7 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
-# 1.4.3 (WIP)
+# 1.4.3
 
 - more resilient to slowly starting scratchpads
 
