@@ -507,6 +507,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if not await self.ensure_alive(uid, item):
             self.log.error(f"Failed to show {uid}, aborting.")
             return
+
+        excluded = item.conf.get("excludes", [])
+        if excluded == "*":
+            excluded = [
+                scratch.uid for scratch in self.scratches.values() if scratch.uid != uid
+            ]
+        for tbh_scratch in excluded:
+            self.log.info("hidding ")
+            await self.run_hide(tbh_scratch, autohide=True)
         await item.updateClientInfo()
         await item.initialize()
 
