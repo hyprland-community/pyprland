@@ -219,7 +219,7 @@ Commands:
 
     try:
         _, writer = await asyncio.open_unix_connection(CONTROL)
-    except FileNotFoundError as e:
+    except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
         raise PyprError() from e
 
