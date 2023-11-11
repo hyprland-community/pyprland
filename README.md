@@ -6,6 +6,11 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# 1.4.4 (WIP)
+
+- add an [excludes](https://github.com/hyprland-community/pyprland/wiki/Plugins#excludes-optional) option to scratchpads
+- fix random problem showing scratches
+
 # 1.4.3
 
 - more resilient to slowly starting scratchpads
