@@ -274,7 +274,11 @@ class ScratchDB:
 
     def get(self, name=None, pid=None, addr=None) -> Scratch:
         "return the Scratch matching given name, pid or address"
-        assert 1 == len(list(filter((lambda x: bool(x)), (name, pid, addr))))
+        assert 1 == len(list(filter((lambda x: bool(x)), (name, pid, addr)))), (
+            name,
+            pid,
+            addr,
+        )
         if name is not None:
             d = self._by_name
             v = name
@@ -389,12 +393,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             # if no address registered, register it
             # + update client info in any case
             scratch = self.scratches.get(addr=client["address"][2:])
-            if not scratch:
+            if not scratch and client["pid"]:
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
                 self.scratches.register(scratch, addr=client["address"][2:])
                 await scratch.updateClientInfo(client)
-            break
+                break
         else:
             self.log.info("Didn't update scratch info %s" % self)
 
@@ -532,7 +536,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.scratches.clearState(item, "transition")
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
-        """<name> hides scratchpad "name" """
+        """<name> hides scratchpad "name"
+        if `autohide` is True, skips focus tracking
+        `force` ignores the visibility check"""
         uid = uid.strip()
         scratch = self.scratches.get(uid)
         if not scratch:
