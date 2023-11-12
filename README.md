@@ -3,7 +3,7 @@
 ## Tweaks & extensions for Hyprland
 
 Host process for multiple Hyprland plugins, such as:
-- scratchpads
+- scratchpads (aka "dropdowns")
 - monitor placement
 - multi-monitor friendly behavior
 
