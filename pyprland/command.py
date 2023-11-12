@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from typing import cast
+from collections import defaultdict
 
 from .common import PyprError, get_logger, init_logger
 from .ipc import get_event_stream
@@ -93,6 +94,7 @@ class Pyprland:
 
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"
+        last_cmd_args: dict[str, None | str] = defaultdict(lambda: None)
         while not self.stopped:
             try:
                 data = (await self.event_reader.readline()).decode()
@@ -103,10 +105,13 @@ class Pyprland:
                 self.log.critical("Reader starved")
                 return
             cmd, params = data.split(">>", 1)
-            full_name = f"event_{cmd}"
+            last_args = last_cmd_args.get(cmd)
+            if params != last_args:
+                full_name = f"event_{cmd}"
 
-            # self.log.debug("[%s] %s", cmd, params.strip())
-            await self._callHandler(full_name, params)
+                # self.log.debug("[%s] %s", cmd, params.strip())
+                await self._callHandler(full_name, params)
+            last_cmd_args[cmd] = params
 
     async def read_command(self, reader, writer) -> None:
         "Receives a socket command"
