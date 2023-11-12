@@ -6,6 +6,11 @@ Host process for multiple Hyprland plugins.
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# 1.5.0
+
+- Add support for a [TOML](https://toml.io/) configuration file, will be used if found (instead of JSON)
+  - JSON format will probably stay supported but is more error prone, examples will migrate to TOML
+
 # 1.4.5
 
 - fix some regression using `size` & `position` in scratchpads

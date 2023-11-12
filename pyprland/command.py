@@ -3,6 +3,7 @@
 import asyncio
 import importlib
 import itertools
+import tomllib
 import json
 import os
 import sys
@@ -16,7 +17,8 @@ from .plugins.interface import Plugin
 
 CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
 
-CONFIG_FILE = "~/.config/hypr/pyprland.json"
+OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
+CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
 
 class Pyprland:
@@ -35,14 +37,33 @@ class Pyprland:
         """Loads the configuration
 
         if `init` is true, also initializes the plugins"""
-        try:
-            with open(os.path.expanduser(CONFIG_FILE), encoding="utf-8") as f:
-                self.config = json.loads(f.read())
-        except FileNotFoundError as e:
-            self.log.critical(
-                "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
-            )
-            raise PyprError() from e
+        if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
+            self.log.warning("Consider changing your configuration to TOML format.")
+
+        fname = os.path.expanduser(CONFIG_FILE)
+        if os.path.exists(fname):
+            self.log.info("Loading %s", fname)
+            try:
+                with open(fname, "rb") as f:
+                    self.config = tomllib.load(f)
+            except FileNotFoundError as e:
+                self.log.critical(
+                    "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
+                )
+                raise PyprError() from e
+        elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
+            self.log.info("Loading %s", OLD_CONFIG_FILE)
+            try:
+                with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
+                    self.config = json.loads(f.read())
+            except FileNotFoundError as e:
+                self.log.critical(
+                    "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
+                )
+                raise PyprError() from e
+        else:
+            self.log.critical("No Config file found ! Please create %s" % CONFIG_FILE)
+            raise PyprError()
 
         assert self.config
 
@@ -74,7 +95,7 @@ class Pyprland:
 
         for plugin in [self] + list(self.plugins.values()):
             if hasattr(plugin, full_name):
-                self.log.info("%s.%s%s", plugin.name, full_name, params)
+                self.log.debug("%s.%s%s", plugin.name, full_name, params)
                 try:
                     await getattr(plugin, full_name)(*params)
                 except AssertionError as e:
