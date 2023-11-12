@@ -8,6 +8,8 @@ Host process for multiple Hyprland plugins, such as:
 - multi-monitor friendly behavior (placement, focus, ...)
 - shortcut / togglers for hyprctl commands
 - miscelaneous obscure commands for specific usages
+- temporary workarounds
+- anything you can imagine using [Hyprland API](https://wiki.hyprland.org/Configuring/Dispatchers/) and [events](https://wiki.hyprland.org/Plugins/Development/Event-list/)!
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
 
