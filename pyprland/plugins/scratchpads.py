@@ -26,15 +26,15 @@ def convert_coords(logger, coords, monitor):
 
     assert coords, "coords must be non null"
 
-    def convert(s, dim):
-        if s[-1] == "%":
-            p = int(s[:-1])
+    def convert(size, dim):
+        if size[-1] == "%":
+            p = int(size[:-1])
             if p < 0 or p > 100:
                 raise Exception(f"Percentage must be in range [0; 100], got {p}")
             scale = float(monitor["scale"])
             return int(monitor[dim] / scale * p / 100)
         else:
-            raise Exception(f"Unsupported format for dimension {dim} size, got {s}")
+            raise Exception(f"Unsupported format for dimension {dim} size, got {size}")
 
     try:
         x_str, y_str = coords.split()
@@ -534,14 +534,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if position:
             x_pos, y_pos = convert_coords(self.log, position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await hyprctl(
-                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}"
-            )
+            await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
         if size:
             x_size, y_size = convert_coords(self.log, size, monitor)
-            await hyprctl(
-                f"resizewindowpixel exact {x_size} {y_size},{addr}"
-            )
+            await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"

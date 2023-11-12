@@ -43,6 +43,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await self.run_relayout()
 
     async def run_relayout(self):
+        "Recompute & apply every monitors's layout"
         monitors = cast(list[dict], await hyprctlJSON("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(
@@ -105,7 +106,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             x = ref["x"] + ref["width"]
                             y = ref["y"]
 
-                        self.log.info(f"Will place {monitor_name} @ {x},{y}")
+                        self.log.info("Will place %s @ %s,%s", monitor_name, x, y)
                         configure_monitors(monitors, monitor_name, x, y)
                         return True
         return False
