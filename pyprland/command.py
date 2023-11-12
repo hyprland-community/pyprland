@@ -73,7 +73,7 @@ class Pyprland:
 
         for plugin in [self] + list(self.plugins.values()):
             if hasattr(plugin, full_name):
-                self.log.debug("%s.%s%s", plugin.name, full_name, params)
+                self.log.info("%s.%s%s", plugin.name, full_name, params)
                 try:
                     await getattr(plugin, full_name)(*params)
                 except AssertionError as e:
@@ -86,6 +86,10 @@ class Pyprland:
                         "%s::%s(%s) failed:", plugin.name, full_name, params
                     )
                     self.log.exception(e)
+                break
+        else:
+            return False
+        return True
 
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"
@@ -99,9 +103,9 @@ class Pyprland:
                 self.log.critical("Reader starved")
                 return
             cmd, params = data.split(">>", 1)
-            self.log.info("EVT: %s:%s)", cmd, params.strip())
             full_name = f"event_{cmd}"
 
+            # self.log.debug("[%s] %s", cmd, params.strip())
             await self._callHandler(full_name, params)
 
     async def read_command(self, reader, writer) -> None:
@@ -129,9 +133,8 @@ class Pyprland:
         # run mako for notifications & uncomment this
         # os.system(f"notify-send '{data}'")
 
-        self.log.debug("CMD: %s(%s)", full_name, args)
-
-        await self._callHandler(full_name, *args)
+        if not await self._callHandler(full_name, *args):
+            self.log.warning("No such command: %s", cmd)
 
     async def serve(self):
         "Runs the server"
