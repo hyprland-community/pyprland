@@ -3,9 +3,11 @@
 ## Tweaks & extensions for Hyprland
 
 Host process for multiple Hyprland plugins, such as:
+
 - scratchpads (aka "dropdowns")
-- monitor placement
-- multi-monitor friendly behavior
+- multi-monitor friendly behavior (placement, focus, ...)
+- shortcut / togglers for hyprctl commands
+- miscelaneous obscure commands for specific usages
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
 
