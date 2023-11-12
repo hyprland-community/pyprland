@@ -1,8 +1,13 @@
 # Pyprland
 
-## Scratchpads, smart monitor placement and other tweaks for hyprland
+## Tweaks & extensions for Hyprland
 
-Host process for multiple Hyprland plugins.
+Host process for multiple Hyprland plugins, such as:
+- scratchpads
+- monitor placement
+- multi-monitor friendly behavior
+
+Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
 
 Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
