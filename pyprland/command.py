@@ -53,6 +53,9 @@ class Pyprland:
                     if init:
                         await plug.init()
                     self.plugins[name] = plug
+                except ModuleNotFoundError:
+                    self.log.error("Unable to locate plugin called '%s'", name)
+                    continue
                 except Exception as e:
                     self.log.error("Error loading plugin %s:", name, exc_info=True)
                     raise PyprError() from e

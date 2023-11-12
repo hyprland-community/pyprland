@@ -30,11 +30,10 @@ def convert_coords(logger, coords, monitor):
         if size[-1] == "%":
             p = int(size[:-1])
             if p < 0 or p > 100:
-                raise Exception(f"Percentage must be in range [0; 100], got {p}")
+                raise ValueError(f"Percentage must be in range [0; 100], got {p}")
             scale = float(monitor["scale"])
             return int(monitor[dim] / scale * p / 100)
-        else:
-            raise Exception(f"Unsupported format for dimension {dim} size, got {size}")
+        raise ValueError(f"Unsupported format for dimension {dim} size, got {size}")
 
     try:
         x_str, y_str = coords.split()
@@ -142,6 +141,7 @@ class Scratch:  # {{{
         self.initialized = False
 
     async def initialize(self):
+        "Initialize the scratchpad"
         if self.initialized:
             return
         self.initialized = True
@@ -173,6 +173,11 @@ class Scratch:  # {{{
         "Returns the client address"
         return str(self.client_info.get("address", ""))[2:]
 
+    @property
+    def full_address(self) -> str:
+        "Returns the client address"
+        return self.client_info.get("address", "")
+
     async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
@@ -181,7 +186,7 @@ class Scratch:  # {{{
             assert isinstance(client_info, dict)
         except AssertionError as e:
             self.log.error(
-                f"client_info of {self.address} must be a dict: {client_info}"
+                "client_info of %s must be a dict: %s", self.address, client_info
             )
             raise AssertionError(e) from e
 
@@ -200,23 +205,27 @@ class ScratchDB:
     _by_addr: dict[str, Scratch] = {}
     _by_pid: dict[int, Scratch] = {}
     _by_name: dict[str, Scratch] = {}
-    _states: defaultdict[str, set[Scratch]] = defaultdict(lambda: set())
+    _states: defaultdict[str, set[Scratch]] = defaultdict(set)
 
     def getByState(self, state: str):
+        "get a set of `Scratch` being in `state`"
         return self._states[state]
 
     def hasState(self, scratch: Scratch, state: str):
+        "Returns true if `scratch` has state `state`"
         return scratch in self._states[state]
 
     def setState(self, scratch: Scratch, state: str):
+        "Sets `scratch` in the provided state"
         self._states[state].add(scratch)
 
     def clearState(self, scratch: Scratch, state: str):
+        "Unsets the the provided state from the scratch"
         self._states[state].remove(scratch)
 
     def __iter__(self):
         "return all Scratch name"
-        return self._by_name.keys()
+        return iter(self._by_name.keys())
 
     def values(self):
         "returns every Scratch"
@@ -259,7 +268,7 @@ class ScratchDB:
 
     def get(self, name=None, pid=None, addr=None) -> Scratch:
         "return the Scratch matching given name, pid or address"
-        assert 1 == len(list(filter((lambda x: bool(x)), (name, pid, addr)))), (
+        assert 1 == len(list(filter(bool, (name, pid, addr)))), (
             name,
             pid,
             addr,
@@ -320,30 +329,32 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if await self.ensure_alive(name):
                 self.scratches.get(name).should_hide = True
             else:
-                self.log.error(f"Failure starting {name}")
+                self.log.error("Failure starting %s", name)
 
-    async def ensure_alive(self, uid, item=None):
-        if item is None:
-            item = self.scratches.get(name=uid)
+    async def ensure_alive(self, uid):
+        """Ensure the scratchpad is started
+        Returns true if started
+        """
+        item = self.scratches.get(name=uid)
 
         if not item.isAlive():
             self.log.info("%s is not running, restarting...", uid)
             if uid in self.procs:
                 self.procs[uid].kill()
             self.scratches.reset(item)
-            self.log.info(f"starting {uid}")
+            self.log.info("starting %s", uid)
             await self.start_scratch_command(uid)
-            self.log.info(f"==> Wait for {uid} spawning")
+            self.log.info("==> Wait for %s spawning", uid)
             for loop_count in range(1, 8):
                 await asyncio.sleep(loop_count**2 / 10.0)
                 info = await get_client_props(pid=item.pid)
                 if info:
-                    self.log.info(f"=> {uid} info received on time")
+                    self.log.info("=> %s info received on time", uid)
                     await item.updateClientInfo(info)
                     self.scratches.clearState(item, "respawned")
-                    self.log.info(f"=> spawned {uid} as proc {item.pid}")
+                    self.log.info("=> spawned %s as proc %s", uid, item.pid)
                     return True
-            self.log.error(f"=> Failed spawning {uid} as proc {item.pid}")
+            self.log.error("=> Failed spawning %s as proc %s", uid, item.pid)
             return False
         return True
 
@@ -363,7 +374,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         pid = proc.pid
         scratch.reset(pid)
         self.scratches.register(scratch, pid=pid)
-        self.log.info(f"scratch {scratch.uid} has pid {pid}")
+        self.log.info("scratch %s has pid %s", scratch.uid, pid)
         if old_pid:
             self.scratches.clear(pid=old_pid)
 
@@ -385,7 +396,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 await scratch.updateClientInfo(client)
                 break
         else:
-            self.log.info("Didn't update scratch info %s" % self)
+            self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
     async def event_activewindowv2(self, addr) -> None:
@@ -423,7 +434,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def event_openwindow(self, params) -> None:
         "open windows hook"
-        addr, wrkspc, _kls, _title = params.split(",", 3)
+        addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
         rs = list(self.scratches.getByState("respawned"))
         if rs and not item:
@@ -489,8 +500,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return
 
         self.log.info("Showing %s", uid)
-        if not await self.ensure_alive(uid, item):
-            self.log.error(f"Failed to show {uid}, aborting.")
+        if not await self.ensure_alive(uid):
+            self.log.error("Failed to show %s, aborting.", uid)
             return
 
         excluded = item.conf.get("excludes", [])
@@ -507,37 +518,42 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         item.visible = True
         monitor = await get_focused_monitor_props()
         assert monitor
-
-        assert item.address, "No address !"
-
-        addr = "address:0x" + item.address
+        assert item.full_address, "No address !"
 
         animation_type = item.conf.get("animation", "").lower()
-
         wrkspc = monitor["activeWorkspace"]["id"]
 
         self.scratches.setState(item, "transition")
+        # Start the transition
         await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
-        await hyprctl(f"movetoworkspacesilent {wrkspc},{addr}")
+        await hyprctl(f"movetoworkspacesilent {wrkspc},address:{item.full_address}")
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
-            await fn(monitor, item.client_info, addr, margin)
+            await fn(monitor, item.client_info, "address:" + item.full_address, margin)
 
-        await hyprctl(f"focuswindow {addr}")
-
+        await hyprctl(f"focuswindow address:{item.full_address}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
+        # Transition ended
         self.scratches.clearState(item, "transition")
+        await self._fix_size_and_position(item, monitor)
+
+    async def _fix_size_and_position(self, item, monitor):
+        "fixes the size and position of the scratchpad"
 
         size = item.conf.get("size")
         position = item.conf.get("position")
         if position:
             x_pos, y_pos = convert_coords(self.log, position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}")
+            await hyprctl(
+                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
+            )
         if size:
             x_size, y_size = convert_coords(self.log, size, monitor)
-            await hyprctl(f"resizewindowpixel exact {x_size} {y_size},{addr}")
+            await hyprctl(
+                f"resizewindowpixel exact {x_size} {y_size},address:{item.full_address}"
+            )
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"
