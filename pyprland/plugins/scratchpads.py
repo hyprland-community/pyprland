@@ -150,21 +150,6 @@ class Scratch:  # {{{
             f"movetoworkspacesilent special:scratch_{self.uid},address:0x{self.address}"
         )
 
-        size = self.conf.get("size")
-        position = self.conf.get("position")
-        monitor = await get_focused_monitor_props()
-        if position:
-            x_pos, y_pos = convert_coords(self.log, position, monitor)
-            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await hyprctl(
-                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:0x{self.address}"
-            )
-        if size:
-            x_size, y_size = convert_coords(self.log, size, monitor)
-            await hyprctl(
-                f"resizewindowpixel exact {x_size} {y_size},address:0x{self.address}"
-            )
-
     def isAlive(self) -> bool:
         "is the process running ?"
         path = f"/proc/{self.pid}"
@@ -543,6 +528,20 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         self.scratches.clearState(item, "transition")
+
+        size = item.conf.get("size")
+        position = item.conf.get("position")
+        if position:
+            x_pos, y_pos = convert_coords(self.log, position, monitor)
+            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
+            await hyprctl(
+                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},{addr}"
+            )
+        if size:
+            x_size, y_size = convert_coords(self.log, size, monitor)
+            await hyprctl(
+                f"resizewindowpixel exact {x_size} {y_size},{addr}"
+            )
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"
