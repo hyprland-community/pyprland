@@ -262,19 +262,23 @@ class ScratchDB:  # {{{
         # }}}
 
     def register(self, scratch: Scratch, name=None, pid=None, addr=None):
-        "set the Scratch index by name, pid or address"
+        "set the Scratch index by name, pid or address, or update every index of only `scratch` is provided"
         # {{{
-        assert 1 == len(list(filter(bool, (name, pid, addr))))
-        if name is not None:
-            d = self._by_name
-            v = name
-        elif pid is not None:
-            d = self._by_pid
-            v = pid
-        elif addr is not None:
-            d = self._by_addr
-            v = addr
-        d[v] = scratch
+        if not any((name, pid, addr)):
+            self._by_name[scratch.uid] = scratch
+            self._by_pid[scratch.pid] = scratch
+            self._by_addr[scratch.address] = scratch
+        else:
+            if name is not None:
+                d = self._by_name
+                v = name
+            elif pid is not None:
+                d = self._by_pid
+                v = pid
+            elif addr is not None:
+                d = self._by_addr
+                v = addr
+            d[v] = scratch
         # }}}
 
     def get(self, name=None, pid=None, addr=None) -> Scratch:
@@ -365,10 +369,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 await asyncio.sleep(loop_count**2 / 10.0)
                 info = await get_client_props(pid=item.pid)
                 if info:
-                    self.log.info("=> %s info received on time", uid)
                     await item.updateClientInfo(info)
+                    self.log.info(
+                        "=> %s client (proc:%s, addr:%s) received on time",
+                        uid,
+                        item.pid,
+                        item.full_address,
+                    )
+                    self.scratches.register(item)
                     self.scratches.clearState(item, "respawned")
-                    self.log.info("=> spawned %s as proc %s", uid, item.pid)
                     return True
             self.log.error("=> Failed spawning %s as proc %s", uid, item.pid)
             return False
