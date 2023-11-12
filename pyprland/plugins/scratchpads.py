@@ -199,7 +199,7 @@ class Scratch:  # {{{
 # }}}
 
 
-class ScratchDB:
+class ScratchDB:  # {{{
     """Single storage for every Scratch allowing a boring lookup & update API"""
 
     _by_addr: dict[str, Scratch] = {}
@@ -207,6 +207,7 @@ class ScratchDB:
     _by_name: dict[str, Scratch] = {}
     _states: defaultdict[str, set[Scratch]] = defaultdict(set)
 
+    # State management {{{
     def getByState(self, state: str):
         "get a set of `Scratch` being in `state`"
         return self._states[state]
@@ -223,6 +224,9 @@ class ScratchDB:
         "Unsets the the provided state from the scratch"
         self._states[state].remove(scratch)
 
+    # }}}
+
+    # dict-like {{{
     def __iter__(self):
         "return all Scratch name"
         return iter(self._by_name.keys())
@@ -235,6 +239,8 @@ class ScratchDB:
         "return an iterable list of (name, Scratch)"
         return self._by_name.items()
 
+    # }}}
+
     def reset(self, scratch: Scratch):
         "clears registered address & pid"
         if scratch.address in self._by_addr:
@@ -244,6 +250,8 @@ class ScratchDB:
 
     def clear(self, name=None, pid=None, addr=None):
         "clears the index by name, pid or address"
+        # {{{
+
         assert any((name, pid, addr))
         if name is not None and name in self._by_name:
             del self._by_name[name]
@@ -251,9 +259,11 @@ class ScratchDB:
             del self._by_pid[pid]
         if addr is not None and addr in self._by_addr:
             del self._by_addr[addr]
+        # }}}
 
     def register(self, scratch: Scratch, name=None, pid=None, addr=None):
         "set the Scratch index by name, pid or address"
+        # {{{
         assert 1 == len(list(filter(bool, (name, pid, addr))))
         if name is not None:
             d = self._by_name
@@ -265,9 +275,11 @@ class ScratchDB:
             d = self._by_addr
             v = addr
         d[v] = scratch
+        # }}}
 
     def get(self, name=None, pid=None, addr=None) -> Scratch:
         "return the Scratch matching given name, pid or address"
+        # {{{
         assert 1 == len(list(filter(bool, (name, pid, addr)))), (
             name,
             pid,
@@ -283,6 +295,10 @@ class ScratchDB:
             d = self._by_addr
             v = addr
         return d.get(v)
+        # }}}
+
+
+# }}}
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
