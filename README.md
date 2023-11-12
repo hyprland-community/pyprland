@@ -9,7 +9,8 @@ Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more i
 # 1.5.0
 
 - Add support for a [TOML](https://toml.io/) configuration file, will be used if found (instead of JSON)
-  - JSON format will probably stay supported but is more error prone, examples will migrate to TOML
+  - JSON format will probably stay supported but is more error prone
+- Wiki uses TOML as a reference
 
 # 1.4.5
 
