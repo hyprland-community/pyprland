@@ -11,9 +11,7 @@ Host process for multiple Hyprland plugins, such as:
 - temporary workarounds
 - anything you can imagine using [Hyprland API](https://wiki.hyprland.org/Configuring/Dispatchers/) and [events](https://wiki.hyprland.org/Plugins/Development/Event-list/)!
 
-Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
-
-Check the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
+Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins), finally browse the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
 # 1.5.0
 
