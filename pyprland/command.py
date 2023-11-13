@@ -11,7 +11,7 @@ from typing import cast
 from collections import defaultdict
 
 from .common import PyprError, get_logger, init_logger
-from .ipc import get_event_stream
+from .ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from .ipc import init as ipc_init
 from .plugins.interface import Plugin
 
@@ -77,8 +77,12 @@ class Pyprland:
                     self.plugins[name] = plug
                 except ModuleNotFoundError:
                     self.log.error("Unable to locate plugin called '%s'", name)
+                    await notify_info(
+                        f'Config requires plugin "{name}" but pypr can\'t find it'
+                    )
                     continue
                 except Exception as e:
+                    await notify_info(f"Error loading plugin {name}: {e}")
                     self.log.error("Error loading plugin %s:", name, exc_info=True)
                     raise PyprError() from e
             if init:
@@ -87,6 +91,7 @@ class Pyprland:
                 except PyprError:
                     raise
                 except Exception as e:
+                    await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.error("Error initializing plugin %s:", name, exc_info=True)
                     raise PyprError() from e
 
@@ -103,11 +108,15 @@ class Pyprland:
                         "Bug detected, please report on https://github.com/fdev31/pyprland/issues"
                     )
                     self.log.exception(e)
+                    await notify_error(
+                        f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}"
+                    )
                 except Exception as e:  # pylint: disable=W0718
                     self.log.warning(
                         "%s::%s(%s) failed:", plugin.name, full_name, params
                     )
                     self.log.exception(e)
+                    await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
                 break
         else:
             return False
@@ -206,9 +215,15 @@ async def run_daemon():
     try:
         await manager.load_config()  # ensure sockets are connected first
     except PyprError as e:
+        if bool(str(e)):
+            await notify_fatal(f"Pypr failed to start: {e}")
+        else:
+            await notify_fatal("Pypr failed to start!")
+
         raise SystemExit(1) from e
     except Exception as e:
         manager.log.critical("Failed to load config.", exc_info=True)
+        await notify_fatal(f"Pypr couldn't load config: {e}")
         raise SystemExit(1) from e
 
     try:
@@ -253,6 +268,7 @@ Commands:
         _, writer = await asyncio.open_unix_connection(CONTROL)
     except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
+        await notify_error("Pypr can't connect, is daemon running ?")
         raise PyprError() from e
 
     writer.write((" ".join(sys.argv[1:])).encode())

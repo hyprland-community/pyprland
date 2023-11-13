@@ -13,6 +13,10 @@ Host process for multiple Hyprland plugins, such as:
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins), finally browse the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# WIP
+
+- Using hyprland's notifications in case of serious errors
+
 # 1.5.0
 
 - Add support for a [TOML](https://toml.io/) configuration file, will be used if found (instead of JSON)

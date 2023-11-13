@@ -3,8 +3,9 @@
 import asyncio
 import json
 import os
-from logging import Logger
 from typing import Any
+from logging import Logger
+from functools import partial
 
 from .common import PyprError, get_logger
 
@@ -12,6 +13,16 @@ log: Logger | None = None
 
 HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
 EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
+
+
+async def notify(text, duration=3, color="ff1010", icon=-1):
+    "Uses hyprland notification system"
+    await hyprctl(f"{icon} {int(duration*1000)} rgb({color})  {text}", "notify")
+
+
+notify_fatal = partial(notify, icon=3, duration=10)
+notify_error = partial(notify, icon=1, duration=5)
+notify_info = partial(notify, icon=2, duration=5)
 
 
 async def get_event_stream():
