@@ -69,16 +69,18 @@ async def hyprctl(command, base_command="dispatch") -> bool:
         raise PyprError() from e
 
     if isinstance(command, list):
+        nb_cmds = len(command)
         ctl_writer.write(
             f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode()
         )
     else:
+        nb_cmds = 1
         ctl_writer.write(f"/{base_command} {command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read(100)
     ctl_writer.close()
     await ctl_writer.wait_closed()
-    r: bool = resp == b"ok" * (len(resp) // 2)
+    r: bool = resp == b"ok" * nb_cmds
     if not r:
         log.error("FAILED %s", resp)
     return r
