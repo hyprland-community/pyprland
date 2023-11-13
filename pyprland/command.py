@@ -62,7 +62,7 @@ class Pyprland:
                 )
                 raise PyprError() from e
         else:
-            self.log.critical("No Config file found ! Please create %s" % CONFIG_FILE)
+            self.log.critical("No Config file found ! Please create %s", CONFIG_FILE)
             raise PyprError()
 
         assert self.config
