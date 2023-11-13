@@ -147,7 +147,7 @@ class Scratch:  # {{{
         self.initialized = True
         await self.updateClientInfo()
         await hyprctl(
-            f"movetoworkspacesilent special:scratch_{self.uid},address:0x{self.address}"
+            f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
         )
 
     def isAlive(self) -> bool:
@@ -181,7 +181,7 @@ class Scratch:  # {{{
     async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
-            client_info = await get_client_props(addr="0x" + self.address)
+            client_info = await get_client_props(addr=self.full_address)
         try:
             assert isinstance(client_info, dict)
         except AssertionError as e:
@@ -490,7 +490,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def _anim_hide(self, animation_type, scratch):
         "animate hiding a scratchpad"
-        addr = "address:0x" + scratch.address
         offset = scratch.conf.get("offset")
         if offset is None:
             if "size" not in scratch.client_info:
@@ -498,6 +497,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
             offset = int(1.3 * scratch.client_info["size"][1])
 
+        addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
             await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
         elif animation_type == "frombottom":
@@ -594,13 +594,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return
         scratch.visible = False
         self.log.info("Hiding %s", uid)
-        addr = "address:0x" + scratch.address
         animation_type: str = scratch.conf.get("animation", "").lower()
         if animation_type:
             await self._anim_hide(animation_type, scratch)
 
         if not self.scratches.hasState(scratch, "transition"):
-            await hyprctl(f"movetoworkspacesilent special:scratch_{uid},{addr}")
+            await hyprctl(
+                f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
+            )
 
         if (
             animation_type and uid in self.focused_window_tracking
