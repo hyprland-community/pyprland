@@ -21,8 +21,8 @@ async def notify(text, duration=3, color="ff1010", icon=-1):
 
 
 notify_fatal = partial(notify, icon=3, duration=10)
-notify_error = partial(notify, icon=1, duration=5)
-notify_info = partial(notify, icon=2, duration=5)
+notify_error = partial(notify, icon=0, duration=5)
+notify_info = partial(notify, icon=1, duration=5)
 
 
 async def get_event_stream():
