@@ -182,13 +182,11 @@ class Scratch:  # {{{
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
             client_info = await get_client_props(addr=self.full_address)
-        try:
-            assert isinstance(client_info, dict)
-        except AssertionError as e:
+        if not isinstance(client_info, dict):
             self.log.error(
                 "client_info of %s must be a dict: %s", self.address, client_info
             )
-            raise AssertionError(e) from e
+            raise AssertionError(f"Not a dict: {client_info}")
 
         self.client_info.update(client_info)
 
