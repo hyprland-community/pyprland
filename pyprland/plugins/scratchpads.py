@@ -330,7 +330,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def load_config(self, config: dict[str, Any]) -> None:
         "config loader"
         my_config: dict[str, dict[str, Any]] = config["scratchpads"]
-        scratches = {k: Scratch(k, v) for k, v in my_config.items()}
+        scratches = {
+            name: Scratch(name, options) for name, options in my_config.items()
+        }
 
         scratches_to_spawn = set()
         for name in scratches:
