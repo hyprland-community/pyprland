@@ -33,10 +33,8 @@ class Pyprland:
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
 
-    async def load_config(self, init=True):
-        """Loads the configuration
-
-        if `init` is true, also initializes the plugins"""
+    async def __open_config(self):
+        """Loads config file as self.config"""
         if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
             self.log.warning("Consider changing your configuration to TOML format.")
 
@@ -65,8 +63,10 @@ class Pyprland:
             self.log.critical("No Config file found ! Please create %s", CONFIG_FILE)
             raise PyprError()
 
-        assert self.config
-
+    async def __load_plugins_config(self, init=True):
+        """Loads the plugins mentioned in the config.
+        If init is `True`, call the `init()` method on each plugin.
+        """
         for name in cast(dict, self.config["pyprland"]["plugins"]):
             if name not in self.plugins:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
@@ -94,6 +94,15 @@ class Pyprland:
                     await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.error("Error initializing plugin %s:", name, exc_info=True)
                     raise PyprError() from e
+
+    async def load_config(self, init=True):
+        """Loads the configuration
+
+        if `init` is true, also initializes the plugins"""
+
+        await self.__open_config()
+        assert self.config
+        await self.__load_plugins_config(init=init)
 
     async def _callHandler(self, full_name, *params):
         "Call an event handler with params"
