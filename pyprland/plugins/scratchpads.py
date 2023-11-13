@@ -344,7 +344,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             else:
                 self.scratches.get(name).conf = scratches[name].conf
 
-        self.log.info(scratches_to_spawn)
         for name in scratches_to_spawn:
             if await self.ensure_alive(name):
                 self.scratches.get(name).should_hide = True
