@@ -235,6 +235,7 @@ async def run_daemon():
         await notify_fatal(f"Pypr couldn't load config: {e}")
         raise SystemExit(1) from e
 
+    manager.log.debug("[ initialized ]".center(80, "="))
     try:
         await manager.run()
     except KeyboardInterrupt:
