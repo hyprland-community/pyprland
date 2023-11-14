@@ -280,17 +280,14 @@ async def run_client():
         await manager.load_config(init=False)
 
         def format_doc(txt, padding=24):
-            lines = txt.split("\n")
-            return "\n".join(
-                [lines[0].strip()] + [(" " * padding) + t.strip() for t in lines[1:]]
-            )
+            return txt.split("\n")[0]
 
         print(
             """Syntax: pypr [command]
 
-If command is ommited, runs the daemon which will start every configured command.
+If command is ommited, runs the daemon which will start every configured plugin.
 
-Commands:
+Available commands:
 
  reload               Reloads the config file (only supports adding or updating plugins)"""
         )
