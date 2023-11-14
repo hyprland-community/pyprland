@@ -236,7 +236,7 @@ async def run_daemon():
                 manager.log.critical("Failed to open hyprland event stream: %s.", e)
                 raise PyprError() from e
             manager.log.warning(
-                "Failed to get event stream: %s}, retry %s/%s...", e, attempt, max_retry
+                "Failed to get event stream: %s, retry %s/%s...", e, attempt, max_retry
             )
             await asyncio.sleep(1)
         else:
