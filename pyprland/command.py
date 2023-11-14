@@ -36,6 +36,7 @@ class Pyprland:
         self.queues = {}
 
     async def initialize(self):
+        "Initializes the main structures"
         await self.load_config()  # ensure sockets are connected first
 
         for name in self.plugins:
@@ -113,6 +114,7 @@ class Pyprland:
         await self.__load_plugins_config(init=init)
 
     async def _run_plugin_handler(self, plugin, full_name, params):
+        "Runs a single handler on a plugin"
         self.log.debug("%s.%s%s", plugin.name, full_name, params)
         try:
             await getattr(plugin, full_name)(*params)
@@ -198,6 +200,7 @@ class Pyprland:
             await asyncio.gather(*(plugin.exit() for plugin in self.plugins.values()))
 
     async def _plugin_runner_loop(self, name):
+        "Runs tasks for a given plugin indefinitely"
         q = self.queues[name]
 
         while True:
