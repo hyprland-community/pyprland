@@ -142,6 +142,7 @@ class Scratch:  # {{{
         self.client_info = {}
         self.should_hide = False
         self.initialized = False
+        self.meta = {}
 
     async def initialize(self):
         "Initialize the scratchpad"
@@ -309,7 +310,6 @@ class ScratchDB:  # {{{
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, subprocess.Popen] = {}
     scratches = ScratchDB()
-    last_show = 0.0
 
     focused_window_tracking: dict[str, dict] = {}
 
@@ -429,21 +429,20 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     # Events {{{
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
-        if self.last_show + AFTER_SHOW_INHIBITION > time.time():
-            self.log.debug(
-                "Ignoring event because a scratch has just been made visible"
-            )
-            return
         addr = addr.strip()
-        scratch = self.scratches.get(addr=addr)
-        if not scratch:
-            for uid, scratch in self.scratches.items():
-                if scratch.client_info and scratch.address != addr:
-                    if (
-                        scratch.visible
-                        and scratch.conf.get("unfocus") == "hide"
-                        and not self.scratches.hasState(scratch, "transition")
-                    ):
+        for uid, scratch in self.scratches.items():
+            if scratch.client_info and scratch.address != addr:
+                if (
+                    scratch.visible
+                    and scratch.conf.get("unfocus") == "hide"
+                    and not self.scratches.hasState(scratch, "transition")
+                ):
+                    last_shown = self.scratches.get(uid).meta.get("last_shown", 0)
+                    if last_shown + AFTER_SHOW_INHIBITION > time.time():
+                        self.log.debug(
+                            "(SKIPPED) hide %s because another client is active", uid
+                        )
+                    else:
                         self.log.debug("hide %s because another client is active", uid)
                         await self.run_hide(uid, autohide=True)
 
@@ -581,7 +580,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         # Transition ended
         self.scratches.clearState(item, "transition")
         await self._fix_size_and_position(item, monitor)
-        self.last_show = time.time()
+        item.meta["last_shown"] = time.time()
 
     async def _fix_size_and_position(self, item, monitor):
         "fixes the size and position of the scratchpad"
