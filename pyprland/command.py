@@ -3,6 +3,7 @@
 import asyncio
 import importlib
 import itertools
+from functools import partial
 import tomllib
 import json
 import os
@@ -32,6 +33,13 @@ class Pyprland:
     def __init__(self):
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
+        self.queues = {}
+
+    async def initialize(self):
+        await self.load_config()  # ensure sockets are connected first
+
+        for name in self.plugins:
+            self.queues[name] = asyncio.Queue()
 
     async def __open_config(self):
         """Loads config file as self.config"""
@@ -104,32 +112,33 @@ class Pyprland:
         assert self.config
         await self.__load_plugins_config(init=init)
 
+    async def _run_plugin_handler(self, plugin, full_name, params):
+        self.log.debug("%s.%s%s", plugin.name, full_name, params)
+        try:
+            await getattr(plugin, full_name)(*params)
+        except AssertionError as e:
+            self.log.error(
+                "Bug detected, please report on https://github.com/fdev31/pyprland/issues"
+            )
+            self.log.exception(e)
+            await notify_error(
+                f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}"
+            )
+        except Exception as e:  # pylint: disable=W0718
+            self.log.warning("%s::%s(%s) failed:", plugin.name, full_name, params)
+            self.log.exception(e)
+            await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
+
     async def _callHandler(self, full_name, *params):
         "Call an event handler with params"
-
-        for plugin in [self] + list(self.plugins.values()):
+        handled = False
+        for plugin in list(self.plugins.values()):
             if hasattr(plugin, full_name):
-                self.log.debug("%s.%s%s", plugin.name, full_name, params)
-                try:
-                    await getattr(plugin, full_name)(*params)
-                except AssertionError as e:
-                    self.log.error(
-                        "Bug detected, please report on https://github.com/fdev31/pyprland/issues"
-                    )
-                    self.log.exception(e)
-                    await notify_error(
-                        f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}"
-                    )
-                except Exception as e:  # pylint: disable=W0718
-                    self.log.warning(
-                        "%s::%s(%s) failed:", plugin.name, full_name, params
-                    )
-                    self.log.exception(e)
-                    await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
-                break
-        else:
-            return False
-        return True
+                handled = True
+                await self.queues[plugin.name].put(
+                    partial(self._run_plugin_handler, plugin, full_name, params)
+                )
+        return handled
 
     async def read_events_loop(self):
         "Consumes the event loop and calls corresponding handlers"
@@ -188,11 +197,22 @@ class Pyprland:
         finally:
             await asyncio.gather(*(plugin.exit() for plugin in self.plugins.values()))
 
+    async def _plugin_runner_loop(self, name):
+        q = self.queues[name]
+
+        while True:
+            task = await q.get()
+            await task()
+
     async def run(self):
         "Runs the server and the event listener"
+        plugin_workers = [
+            asyncio.create_task(self._plugin_runner_loop(name)) for name in self.plugins
+        ]
         await asyncio.gather(
             asyncio.create_task(self.serve()),
             asyncio.create_task(self.read_events_loop()),
+            *plugin_workers,
         )
 
     run_reload = load_config
@@ -222,7 +242,7 @@ async def run_daemon():
     manager.event_reader = events_reader
 
     try:
-        await manager.load_config()  # ensure sockets are connected first
+        await manager.initialize()
     except PyprError as e:
         if bool(str(e)):
             await notify_fatal(f"Pypr failed to start: {e}")

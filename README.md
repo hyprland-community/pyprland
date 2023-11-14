@@ -16,6 +16,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 # WIP
 
 - Using hyprland's notifications in case of serious errors
+- architecture improvement (should fix rare issues)
 
 # 1.5.0
 
