@@ -13,9 +13,12 @@ Host process for multiple Hyprland plugins, such as:
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins), finally browse the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
-# WIP
+# Changelog
 
-- commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
+> [!note]
+>  **WIP: current `main` branch**
+> 
+> - commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
 
 # 1.5.1
 
@@ -24,37 +27,37 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 - rework focus handling logic to handle more corner cases
 - improved `pypr -h` readability
 
-# 1.5.0
+## 1.5.0
 
 - Add support for a [TOML](https://toml.io/) configuration file, will be used if found (instead of JSON)
   - JSON format will probably stay supported but is more prone to errors
 - Wiki uses TOML as a reference
 
-# 1.4.5
+## 1.4.5
 
 - fix some regression using `size` & `position` in scratchpads
 - improve logging of client connexion errors
 
-# 1.4.4
+## 1.4.4
 
 - add an [excludes](https://github.com/hyprland-community/pyprland/wiki/Plugins#excludes-optional) option to scratchpads
 - fix random problem showing scratches
 
-# 1.4.3
+## 1.4.3
 
 - more resilient to slowly starting scratchpads
 
-# 1.4.2
+## 1.4.2
 
 - [two new options](https://github.com/hyprland-community/pyprland/wiki/Plugins#size-optional) for scratchpads: `position` and `size` - from @iliayar
 - simplification of the scratchpad code - fixes misc issues
 - bugfixes
 
-# 1.4.1
+## 1.4.1
 
 - minor bugfixes
 
-# 1.4.0
+## 1.4.0
 
 - Add [expose](https://github.com/hyprland-community/pyprland/wiki/Plugins#expose) addon
 - scratchpad: add [lazy](https://github.com/hyprland-community/pyprland/wiki/Plugins#lazy-optional) option
