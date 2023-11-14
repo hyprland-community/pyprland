@@ -279,7 +279,7 @@ async def run_client():
     if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
 
-        def format_doc(txt, padding=24):
+        def format_doc(txt):
             return txt.split("\n")[0]
 
         print(
