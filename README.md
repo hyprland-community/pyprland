@@ -13,6 +13,10 @@ Host process for multiple Hyprland plugins, such as:
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page and the [plugins list](https://github.com/hyprland-community/pyprland/wiki/Plugins), finally browse the [wiki](https://github.com/hyprland-community/pyprland/wiki) for more information.
 
+# WIP
+
+- commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
+
 # 1.5.1
 
 - important rework of the plugin processing logic, making code safer (bugfix)

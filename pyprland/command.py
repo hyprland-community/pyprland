@@ -309,7 +309,9 @@ Available commands:
         await notify_error("Pypr can't connect, is daemon running ?")
         raise PyprError() from e
 
-    writer.write((" ".join(sys.argv[1:])).encode())
+    args = sys.argv[1:]
+    args[0] = args[0].replace("-", "_")
+    writer.write((" ".join(args)).encode())
     await writer.drain()
     writer.close()
     await writer.wait_closed()
