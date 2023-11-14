@@ -1,13 +1,13 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.4.0"
+    rev: "v4.5.0"
     hooks:
       - id: check-yaml
       - id: check-json
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys']
   - repo: https://github.com/ambv/black
-    rev: "23.7.0"
+    rev: "23.11.0"
     hooks:
       - id: black
   - repo: https://github.com/lovesegfault/beautysh
@@ -15,6 +15,6 @@ repos:
     hooks:
       - id: beautysh
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.32.0"
+    rev: "v1.33.0"
     hooks:
       - id: yamllint
