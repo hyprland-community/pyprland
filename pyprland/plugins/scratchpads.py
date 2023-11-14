@@ -1,15 +1,18 @@
 " Scratchpads addon "
 import os
 import logging
+import time
 import asyncio
 import subprocess
 from typing import Any, cast
+from functools import partial
 from collections import defaultdict
 
 from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from .interface import Plugin
 
 DEFAULT_MARGIN = 60
+AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
 
 # Helper functions {{{
 
@@ -306,6 +309,7 @@ class ScratchDB:  # {{{
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, subprocess.Popen] = {}
     scratches = ScratchDB()
+    last_show = 0.0
 
     focused_window_tracking: dict[str, dict] = {}
 
@@ -425,6 +429,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     # Events {{{
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
+        if self.last_show + AFTER_SHOW_INHIBITION > time.time():
+            self.log.debug(
+                "Ignoring event because a scratch has just been made visible"
+            )
+            return
         addr = addr.strip()
         scratch = self.scratches.get(addr=addr)
         if not scratch:
@@ -561,6 +570,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         # Transition ended
         self.scratches.clearState(item, "transition")
         await self._fix_size_and_position(item, monitor)
+        self.last_show = time.time()
 
     async def _fix_size_and_position(self, item, monitor):
         "fixes the size and position of the scratchpad"
