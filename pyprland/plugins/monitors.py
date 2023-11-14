@@ -1,4 +1,5 @@
 " The monitors plugin "
+import asyncio
 import subprocess
 from typing import Any, cast
 
@@ -75,7 +76,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if not no_default:
             default_command = self.config.get("unknown")
             if default_command:
-                subprocess.call(default_command, shell=True)
+                await asyncio.create_subprocess_shell(default_command)
 
     def _place_monitors(
         self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]
