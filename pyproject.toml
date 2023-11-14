@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyprland"
-version = "1.5.0"
+version = "1.5.1"
 description = "An hyperland plugin system"
 authors = ["fdev31 <fdev31@gmail.com>"]
 license = "MIT"
