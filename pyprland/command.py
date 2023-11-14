@@ -234,6 +234,7 @@ async def run_daemon():
         except Exception as e:  # pylint: disable=W0718
             if attempt > max_retry:
                 manager.log.critical("Failed to open hyprland event stream: %s.", e)
+                await notify_fatal("Failed to open hyprland event stream")
                 raise PyprError() from e
             manager.log.warning(
                 "Failed to get event stream: %s, retry %s/%s...", e, attempt, max_retry
