@@ -285,7 +285,7 @@ async def run_client():
         print(
             """Syntax: pypr [command]
 
-If command is ommited, runs the daemon which will start every configured plugin.
+If the command is ommited, runs the daemon which will start every configured plugin.
 
 Available commands:
 
