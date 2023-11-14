@@ -483,18 +483,29 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     # }}}
     # Commands {{{
-    async def run_toggle(self, uid: str) -> None:
+    async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name" """
-        uid = uid.strip()
-        item = self.scratches.get(uid)
-        if not item:
-            self.log.warning("%s is not configured", uid)
-            return
-        self.log.debug("%s is visible = %s", uid, item.visible)
-        if item.visible and item.isAlive():
-            await self.run_hide(uid)
+        if " " in uid_or_uids:
+            uids = [x.strip() for x in uid_or_uids.split() if x.strip()]
         else:
-            await self.run_show(uid)
+            uids = [uid_or_uids.strip()]
+
+        assert len(uids)
+        is_visible = self.scratches.get(uids[0]).visible
+
+        tasks = []
+
+        for uid in uids:
+            item = self.scratches.get(uid)
+            if not item:
+                self.log.warning("%s is not configured", uid)
+            else:
+                self.log.debug("%s is visible = %s", uid, item.visible)
+                if is_visible and item.isAlive():
+                    tasks.append(partial(self.run_hide, uid))
+                else:
+                    tasks.append(partial(self.run_show, uid))
+        await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
     async def _anim_hide(self, animation_type, scratch):
         "animate hiding a scratchpad"
