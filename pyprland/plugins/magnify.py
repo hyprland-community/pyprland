@@ -7,7 +7,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     zoomed = False
 
     async def run_zoom(self, *args):
-        """[factor] zooms to "factor" or toggles zoom level ommited"""
+        """[factor] zooms to "factor" or toggles zoom level if factor is ommited"""
         if args:
             value = int(args[0])
             await hyprctl(f"misc:cursor_zoom_factor {value}", "keyword")

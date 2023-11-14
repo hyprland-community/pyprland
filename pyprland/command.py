@@ -278,6 +278,13 @@ async def run_client():
     manager = Pyprland()
     if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
+
+        def format_doc(txt, padding=24):
+            lines = txt.split("\n")
+            return "\n".join(
+                [lines[0].strip()] + [(" " * padding) + t.strip() for t in lines[1:]]
+            )
+
         print(
             """Syntax: pypr [command]
 
@@ -293,7 +300,7 @@ Commands:
                     fn = getattr(plug, name)
                     if callable(fn):
                         print(
-                            f" {name[4:]:20} {fn.__doc__.strip() if fn.__doc__ else 'N/A'} (from {plug.name})"
+                            f" {name[4:]:20s} {format_doc(fn.__doc__) if fn.__doc__ else 'N/A'} [{plug.name}]"
                         )
 
         return

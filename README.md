@@ -17,6 +17,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 - Using hyprland's notifications in case of serious errors
 - architecture improvement (should fix rare issues)
+- improved `pypr -h` readability
 
 # 1.5.0
 
