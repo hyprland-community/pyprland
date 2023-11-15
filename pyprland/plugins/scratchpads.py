@@ -9,6 +9,7 @@ from functools import partial
 from collections import defaultdict
 
 from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
+from ..ipc import notify_error
 from .interface import Plugin
 
 DEFAULT_MARGIN = 60
@@ -368,22 +369,31 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.info("starting %s", uid)
             await self.start_scratch_command(uid)
             self.log.info("==> Wait for %s spawning", uid)
-            for loop_count in range(1, 8):
-                await asyncio.sleep(loop_count**2 / 10.0)
-                info = await get_client_props(pid=item.pid)
-                if info:
-                    await item.updateClientInfo(info)
-                    self.log.info(
-                        "=> %s client (proc:%s, addr:%s) received on time",
-                        uid,
-                        item.pid,
-                        item.full_address,
-                    )
-                    self.scratches.register(item)
-                    self.scratches.clearState(item, "respawned")
-                    return True
-            self.log.error("=> Failed spawning %s as proc %s", uid, item.pid)
-            return False
+            for loop_count in range(8):
+                if item.isAlive():
+                    if loop_count:
+                        await asyncio.sleep(loop_count**2 / 10.0)
+                    info = await get_client_props(pid=item.pid)
+                    if info:
+                        await item.updateClientInfo(info)
+                        self.log.info(
+                            "=> %s client (proc:%s, addr:%s) received on time",
+                            uid,
+                            item.pid,
+                            item.full_address,
+                        )
+                        self.scratches.register(item)
+                        self.scratches.clearState(item, "respawned")
+                        break
+            else:
+                self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
+                if item.isAlive():
+                    error = "The command didn't open a window"
+                else:
+                    error = "The command died"
+                self.log.error(error)
+                await notify_error(f"Failed to open {item.uid}: {error}")
+                return False
         return True
 
     async def start_scratch_command(self, name: str) -> None:

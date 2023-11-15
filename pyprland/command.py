@@ -84,10 +84,10 @@ class Pyprland:
                     if init:
                         await plug.init()
                     self.plugins[name] = plug
-                except ModuleNotFoundError:
+                except ModuleNotFoundError as e:
                     self.log.error("Unable to locate plugin called '%s'", name)
                     await notify_info(
-                        f'Config requires plugin "{name}" but pypr can\'t find it'
+                        f'Config requires plugin "{name}" but pypr can\'t find it: {e}'
                     )
                     continue
                 except Exception as e:
