@@ -131,7 +131,7 @@ class Pyprland:
             self.log.exception(e)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    async def _callHandler(self, full_name, *params):
+    async def _callHandler(self, full_name, *params, notify=""):
         "Call an event handler with params"
         handled = False
         for plugin in list(self.plugins.values()):
@@ -140,6 +140,8 @@ class Pyprland:
                 await self.queues[plugin.name].put(
                     partial(self._run_plugin_handler, plugin, full_name, params)
                 )
+        if notify and not handled:
+            await notify_info(f'"{notify}" not found')
         return handled
 
     async def read_events_loop(self):
@@ -188,7 +190,7 @@ class Pyprland:
         # run mako for notifications & uncomment this
         # os.system(f"notify-send '{data}'")
 
-        if not await self._callHandler(full_name, *args):
+        if not await self._callHandler(full_name, *args, notify=cmd):
             self.log.warning("No such command: %s", cmd)
 
     async def serve(self):
