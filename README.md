@@ -18,10 +18,15 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 > [!note]
 >  **WIP: current `main` branch**
 > 
-> - `scratchpads`: commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
-> - `monitors`: `unknown` command doesn't block pypr anymore
+> - nothing yet
 
-# 1.5.1
+# 1.5.2
+
+- `scratchpads`: commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
+- `monitors`: `unknown` command doesn't block pypr anymore
+- fix package's required Python version
+
+## 1.5.1
 
 - scratchpads stability improvements:
     - review plugin processing logic, making code safer
