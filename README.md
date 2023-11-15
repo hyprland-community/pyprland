@@ -23,7 +23,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 # 1.5.2
 
 - `scratchpads`: commands can now use "-" instead of "_", eg: `pypr change-workspace +1`
-- `monitors`: `unknown` command doesn't block pypr anymore
+- `monitors`: `unknown` command isn't blocking pypr anymore
 - fix package's required Python version
 
 ## 1.5.1
