@@ -12,7 +12,7 @@ homepage = "https://github.com/hyprland-community/pyprland/"
 pypr = "pyprland.command:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 
 
 [build-system]
