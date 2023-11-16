@@ -23,6 +23,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 >   - enables a perfect first display **IF `class` AND `size` ARE PROVIDED**
 >   - floating state will be set
 >   - only active if `animation` is enabled
+>
 > **Breaking change**
 > - `scratchpads`: `class` doesn't automatically enable class matching anymore, add `class_match = true` to keep the same behavior if you are using it
 > - `class` is still used "as is" to set the initial state of the client window
