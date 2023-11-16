@@ -390,9 +390,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 if item.isAlive():
                     error = "The command didn't open a window"
                 else:
-                    error = "The command died"
+                    self.procs[uid].communicate()
+                    error = (
+                        f"The command terminated with code {self.procs[uid].returncode}"
+                    )
                 self.log.error(error)
-                await notify_error(f"Failed to open {item.uid}: {error}")
+                await notify_error(f"Failed to show {item.uid}: {error}")
                 return False
         return True
 
