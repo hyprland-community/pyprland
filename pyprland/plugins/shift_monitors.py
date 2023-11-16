@@ -14,7 +14,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         ]
 
     async def run_shift_monitors(self, arg: str):
-        """Swaps monitors' workspaces in the given direction"""
+        """<+1/-1> Swaps monitors' workspaces in the given direction"""
         direction: int = int(arg)
         if direction > 0:
             mon_list = self.monitors[:-1]
