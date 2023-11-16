@@ -17,9 +17,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         assert isinstance(wid, int)
         if wid < 1:  # special workspace: unminimize
             wrk = cast(dict, await hyprctlJSON("activeworkspace"))
-            await hyprctl(f"togglespecialworkspace {special_workspace}")
-            await hyprctl(f"movetoworkspacesilent {wrk['id']},address:{aw['address']}")
-            await hyprctl(f"focuswindow address:{aw['address']}")
+            await hyprctl(
+                [
+                    f"togglespecialworkspace {special_workspace}",
+                    f"movetoworkspacesilent {wrk['id']},address:{aw['address']}",
+                    f"focuswindow address:{aw['address']}",
+                ]
+            )
         else:
             await hyprctl(
                 f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}"
@@ -38,17 +42,25 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if self.exposed:
             aw: dict[str, Any] = cast(dict, await hyprctlJSON("activewindow"))
             focused_addr = aw["address"]
+            commands = []
             for client in self.exposed_clients:
-                await hyprctl(
+                commands.append(
                     f"movetoworkspacesilent {client['workspace']['id']},address:{client['address']}"
                 )
-            await hyprctl("togglespecialworkspace exposed")
-            await hyprctl(f"focuswindow address:{focused_addr}")
+            commands.extend(
+                [
+                    "togglespecialworkspace exposed",
+                    f"focuswindow address:{focused_addr}",
+                ]
+            )
+            await hyprctl(commands)
             self.exposed = []
         else:
             self.exposed = cast(list, await hyprctlJSON("clients"))
+            commands = []
             for client in self.exposed_clients:
-                await hyprctl(
+                commands.append(
                     f"movetoworkspacesilent special:exposed,address:{client['address']}"
                 )
-            await hyprctl("togglespecialworkspace exposed")
+            commands.append("togglespecialworkspace exposed")
+            await hyprctl(commands)
