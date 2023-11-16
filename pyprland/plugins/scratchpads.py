@@ -358,7 +358,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         for scratch in list(self.scratches.getByState("configured")):
             self.scratches.clearState(scratch, "configured")
 
-    async def _set_scratch_configuration(self, scratch):
+    async def _configure_windowrules(self, scratch):
         "Setting up initial client window state (sets windowrules)"
         configured = self.scratches.hasState(scratch, "configured")
         if configured:
@@ -398,7 +398,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         if not item.isAlive():
             self.log.info("%s is not running, restarting...", uid)
-            await self._set_scratch_configuration(item)
+            await self._configure_windowrules(item)
             if uid in self.procs:
                 self.procs[uid].kill()
             self.scratches.reset(item)
