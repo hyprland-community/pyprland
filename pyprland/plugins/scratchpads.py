@@ -371,20 +371,25 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             width, height = convert_coords(
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
-            margin_x = (monitor["width"] - width) // 2
-            margin_y = (monitor["height"] - height) // 2
+            position = scratch.conf.get("position")
+            if position:
+                margin_x, margin_y = convert_coords(self.log, position, monitor)
+            else:
+                margin_x = (monitor["width"] - width) // 2
+                margin_y = (monitor["height"] - height) // 2
 
-            position = {
+            t_pos = {
                 "fromtop": f"{margin_x} -200%",
                 "frombottom": f"{margin_x} 200%",
                 "fromright": f"200% {margin_y}",
                 "fromleft": f"-200% {margin_y}",
             }[animation_type]
+
             await hyprctl(
                 [
                     f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
                     f"windowrule float,^({defined_class})$",
-                    f"windowrule move {position},^({defined_class})$",
+                    f"windowrule move {t_pos},^({defined_class})$",
                     f"windowrule size {width} {height},^({defined_class})$",
                 ],
                 "keyword",
