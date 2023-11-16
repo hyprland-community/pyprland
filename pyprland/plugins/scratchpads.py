@@ -619,8 +619,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         self.scratches.setState(item, "transition")
         # Start the transition
-        await hyprctl(f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}")
-        await hyprctl(f"movetoworkspacesilent {wrkspc},address:{item.full_address}")
+        await hyprctl(
+            [
+                f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}",
+                f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
+            ]
+        )
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
