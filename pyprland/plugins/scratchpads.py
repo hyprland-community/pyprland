@@ -381,13 +381,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 "fromleft": f"-200% {margin_y}",
             }[animation_type]
             await hyprctl(
-                f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
+                [
+                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
+                    f"windowrule float,^({defined_class})$",
+                    f"windowrule move {position},^({defined_class})$",
+                    f"windowrule size {width} {height},^({defined_class})$",
+                ],
                 "keyword",
-            )
-            await hyprctl(f"windowrule float,^({defined_class})$", "keyword")
-            await hyprctl(f"windowrule move {position},^({defined_class})$", "keyword")
-            await hyprctl(
-                f"windowrule size {width} {height},^({defined_class})$", "keyword"
             )
 
     async def ensure_alive(self, uid):
