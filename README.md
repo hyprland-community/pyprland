@@ -18,7 +18,8 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 > [!note]
 >  **WIP: current `main` branch**
 > 
-> - nothing yet
+> - `scratchpads`: **breaking change** `class` doesn't automatically enable class matching anymore, add `class_match = true` to keep the same behavior if you are using it
+> - `scratchpads`: without any `hyprland.conf` rules needed, first display is glitch-free if `class` and `size` are provided
 
 # 1.5.3
 

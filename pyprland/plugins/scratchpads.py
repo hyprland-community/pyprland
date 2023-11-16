@@ -355,6 +355,41 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             else:
                 self.log.error("Failure starting %s", name)
 
+        for scratch in list(self.scratches.getByState("configured")):
+            self.scratches.clearState(scratch, "configured")
+
+    async def _set_scratch_configuration(self, scratch):
+        "Setting up initial client window state (sets windowrules)"
+        configured = self.scratches.hasState(scratch, "configured")
+        if configured:
+            return
+        self.scratches.setState(scratch, "configured")
+        animation_type: str = scratch.conf.get("animation", "").lower()
+        defined_class: str = scratch.conf.get("class", "")
+        if animation_type and defined_class:
+            monitor = await get_focused_monitor_props()
+            width, height = convert_coords(
+                self.log, scratch.conf.get("size", "80% 80%"), monitor
+            )
+            margin_x = (monitor["width"] - width) // 2
+            margin_y = (monitor["height"] - height) // 2
+
+            position = {
+                "fromtop": f"{margin_x} -200%",
+                "frombottom": f"{margin_x} 200%",
+                "fromright": f"200% {margin_y}",
+                "fromleft": f"-200% {margin_y}",
+            }[animation_type]
+            await hyprctl(
+                f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
+                "keyword",
+            )
+            await hyprctl(f"windowrule float,^({defined_class})$", "keyword")
+            await hyprctl(f"windowrule move {position},^({defined_class})$", "keyword")
+            await hyprctl(
+                f"windowrule size {width} {height},^({defined_class})$", "keyword"
+            )
+
     async def ensure_alive(self, uid):
         """Ensure the scratchpad is started
         Returns true if started
@@ -363,6 +398,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         if not item.isAlive():
             self.log.info("%s is not running, restarting...", uid)
+            await self._set_scratch_configuration(item)
             if uid in self.procs:
                 self.procs[uid].kill()
             self.scratches.reset(item)
@@ -460,9 +496,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                         await self.run_hide(uid, autohide=True)
 
     async def _alternative_lookup(self):
-        "if class attribute is defined, use class matching and return True"
+        "if class_match attribute is defined, use class matching and return True"
         class_lookup_hack = [
-            s for s in self.scratches.getByState("respawned") if s.conf.get("class")
+            s
+            for s in self.scratches.getByState("respawned")
+            if s.conf.get("class_match")
         ]
         if not class_lookup_hack:
             return False
