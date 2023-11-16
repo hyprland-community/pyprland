@@ -18,9 +18,14 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 > [!note]
 >  **WIP: current `main` branch**
 > 
-> - `scratchpads`: **breaking change** `class` doesn't automatically enable class matching anymore, add `class_match = true` to keep the same behavior if you are using it
-> - `scratchpads`: without any `hyprland.conf` rules needed, first display is glitch-free **if `class` and `size` are provided**
->   - in such case, the client window is considered "managed" entirely in *pypr* configuration and the floating state will be set for you
+> - `scratchpads`: zero Hyprland configuration! (if `class` is provided)
+>   - no `hyprland.conf` rules needed
+>   - enables a perfect first display **IF `class` AND `size` ARE PROVIDED**
+>   - floating state will be set
+>   - only active if `animation` is enabled
+> **Breaking change**
+> - `scratchpads`: `class` doesn't automatically enable class matching anymore, add `class_match = true` to keep the same behavior if you are using it
+> - `class` is still used "as is" to set the initial state of the client window
 
 # 1.5.3
 
