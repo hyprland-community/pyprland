@@ -134,7 +134,7 @@ class Pyprland:
     async def _callHandler(self, full_name, *params, notify=""):
         "Call an event handler with params"
         handled = False
-        for plugin in list(self.plugins.values()):
+        for plugin in list(self.plugins.values()) + [self]:
             if hasattr(plugin, full_name):
                 handled = True
                 await self.queues[plugin.name].put(
