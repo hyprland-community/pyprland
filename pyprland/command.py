@@ -332,10 +332,12 @@ def main():
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and os.path.exists(CONTROL):
+        asyncio.run(notify_fatal("Trying to run pypr more than once ?"))
         log.critical(
-            f"""{CONTROL} exists,
+            """%s exists,
 is pypr already running ?
-if that's not the case, delete this file and run again."""
+If that's not the case, delete this file and run again.""",
+            CONTROL,
         )
     else:
         try:
