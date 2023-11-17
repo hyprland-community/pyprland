@@ -19,7 +19,8 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - Nothing (yet) 
+> - Prevents running `pypr` more than once
+>   - You may need to delete the control socket manually after this update
 
 # 1.6.0
 
