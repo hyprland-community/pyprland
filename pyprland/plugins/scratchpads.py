@@ -432,11 +432,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     error = "The command didn't open a window"
                 else:
                     self.procs[uid].communicate()
-                    error = (
-                        f"The command terminated with code {self.procs[uid].returncode}"
-                    )
-                self.log.error(error)
-                await notify_error(f"Failed to show {item.uid}: {error}")
+                    code = self.procs[uid].returncode
+                    if code:
+                        error = f"The command failed with code {code}"
+                    else:
+                        error = (
+                            "The command terminated sucessfully, is it already running?"
+                        )
+                self.log.error('"%s": %s', item.conf["command"], error)
+                await notify_error(f'Failed to show scratch "{uid}": {error}')
                 return False
         return True
 
