@@ -329,16 +329,28 @@ def main():
         init_logger()
     ipc_init()
     log = get_logger("startup")
-    try:
-        asyncio.run(run_daemon() if len(sys.argv) <= 1 else run_client())
-    except KeyboardInterrupt:
-        pass
-    except PyprError:
-        log.critical("Command failed.")
-    except json.decoder.JSONDecodeError as e:
-        log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
-    except Exception:  # pylint: disable=W0718
-        log.critical("Unhandled exception:", exc_info=True)
+
+    invoke_daemon = len(sys.argv) <= 1
+    if invoke_daemon and os.path.exists(CONTROL):
+        log.critical(
+            f"""{CONTROL} exists,
+is pypr already running ?
+if that's not the case, delete this file and run again."""
+        )
+    else:
+        try:
+            asyncio.run(run_daemon() if invoke_daemon else run_client())
+        except KeyboardInterrupt:
+            pass
+        except PyprError:
+            log.critical("Command failed.")
+        except json.decoder.JSONDecodeError as e:
+            log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
+        except Exception:  # pylint: disable=W0718
+            log.critical("Unhandled exception:", exc_info=True)
+        finally:
+            if invoke_daemon:
+                os.unlink(CONTROL)
 
 
 if __name__ == "__main__":
