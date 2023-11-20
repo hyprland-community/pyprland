@@ -3,11 +3,15 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
+    flake-utils.inputs.systems.follows = "systems";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
+      inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.systems.follows = "systems";
     };
+    systems.url = "github:nix-systems/default";
   };
 
   outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }:
