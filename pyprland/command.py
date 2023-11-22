@@ -319,16 +319,29 @@ Available commands:
     await writer.wait_closed()
 
 
+def use_param(txt):
+    v = False
+    if txt in sys.argv:
+        i = sys.argv.index(txt)
+        v = sys.argv[i + 1]
+        del sys.argv[i : i + 2]
+    return v
+
+
 def main():
     "runs the command"
-    if "--debug" in sys.argv:
-        i = sys.argv.index("--debug")
-        init_logger(filename=sys.argv[i + 1], force_debug=True)
-        del sys.argv[i : i + 2]
+    debug_flag = use_param("--debug")
+    if debug_flag:
+        init_logger(filename=debug_flag, force_debug=True)
     else:
         init_logger()
     ipc_init()
     log = get_logger("startup")
+
+    config_override = use_param("--config")
+    if config_override:
+        global CONFIG_FILE
+        CONFIG_FILE = config_override
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and os.path.exists(CONTROL):
