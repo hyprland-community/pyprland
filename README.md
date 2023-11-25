@@ -29,7 +29,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 ## 1.6.2
 
-- add a `--config <path>` argument
+- add a `--config <path>` argument: allows overriding the configuration file path
 - scratchpads: improve multi-monitor support
 
 ## 1.6.1
