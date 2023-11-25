@@ -634,6 +634,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
             ]
         )
+        await self._fix_size_and_position(item, monitor)
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
@@ -643,7 +644,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         # Transition ended
         self.scratches.clearState(item, "transition")
-        await self._fix_size_and_position(item, monitor)
         item.meta["last_shown"] = time.time()
 
     async def _fix_size_and_position(self, item, monitor):
@@ -651,6 +651,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         size = item.conf.get("size")
         position = item.conf.get("position")
+        assert any((size, position))
         if position:
             x_pos, y_pos = convert_coords(self.log, position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
@@ -662,6 +663,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             await hyprctl(
                 f"resizewindowpixel exact {x_size} {y_size},address:{item.full_address}"
             )
+        await item.updateClientInfo()
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"
