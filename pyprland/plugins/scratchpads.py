@@ -651,7 +651,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         size = item.conf.get("size")
         position = item.conf.get("position")
-        assert any((size, position))
         if position:
             x_pos, y_pos = convert_coords(self.log, position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]

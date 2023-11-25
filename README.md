@@ -23,6 +23,10 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 >  **WIP: current `main` branch**
 > - Nothing
 
+## 1.6.3
+
+- Hot fix - a wrong assert statement was introduced in 1.6.2
+
 # 1.6.2
 
 - add a `--config <path>` argument
