@@ -23,7 +23,12 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 >  **WIP: current `main` branch**
 > - Nothing
 
-# 1.6.1
+# 1.6.2
+
+- add a `--config <path>` argument
+- scratchpads: improve multi-monitor support
+
+## 1.6.1
 
 - Prevents running `pypr` more than once
   - You may need to delete the control socket manually after this update
