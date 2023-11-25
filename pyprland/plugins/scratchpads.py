@@ -662,7 +662,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             await hyprctl(
                 f"resizewindowpixel exact {x_size} {y_size},address:{item.full_address}"
             )
-        await item.updateClientInfo()
+        if size or position:
+            await item.updateClientInfo()
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"
