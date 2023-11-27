@@ -21,7 +21,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - Nothing
+> - `scratchpads`: `size` and `position` can use absolute pixels (suffix: "px"). Can be mixed with percents (eg: "800px 30%")
 
 # 1.6.3
 

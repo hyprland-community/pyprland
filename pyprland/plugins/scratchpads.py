@@ -23,6 +23,7 @@ def convert_coords(logger, coords, monitor):
     Converts a string like "X Y" to coordinates relative to monitor
     Supported formats for X, Y:
     - Percentage: "V%". V in [0; 100]
+    - Pixels: "Vpx". V should fit in your screen and not be zero
 
     Example:
     "10% 20%", monitor 800x600 => 80, 120
@@ -31,12 +32,14 @@ def convert_coords(logger, coords, monitor):
     assert coords, "coords must be non null"
 
     def convert(size, dim):
+        scale = float(monitor["scale"])
         if size[-1] == "%":
             p = int(size[:-1])
             if p < 0 or p > 100:
                 raise ValueError(f"Percentage must be in range [0; 100], got {p}")
-            scale = float(monitor["scale"])
             return int(monitor[dim] / scale * p / 100)
+        elif size[-2:] == "px":
+            return int(size[:-2])
         raise ValueError(f"Unsupported format for dimension {dim} size, got {size}")
 
     try:
