@@ -374,6 +374,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             width, height = convert_coords(
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
+
             position = scratch.conf.get("position")
             if position:
                 margin_x, margin_y = convert_coords(self.log, position, monitor)
@@ -661,9 +662,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
             )
         if size:
-            x_size, y_size = convert_coords(self.log, size, monitor)
+            width, height = convert_coords(self.log, size, monitor)
+            max_size = item.conf.get("max_size")
+            if max_size:
+                max_width, max_height = convert_coords(self.log, max_size, monitor)
+                width = min(max_width, width)
+                height = min(max_height, height)
             await hyprctl(
-                f"resizewindowpixel exact {x_size} {y_size},address:{item.full_address}"
+                f"resizewindowpixel exact {width} {height},address:{item.full_address}"
             )
         if size or position:
             await item.updateClientInfo()

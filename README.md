@@ -21,9 +21,13 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - `scratchpads`: `size` and `position` can use absolute pixels (suffix: "px"). Can be mixed with percents (eg: "800px 30%")
 
-# 1.6.3
+# 1.6.4
+
+- `scratchpads`: `size` and `position` can use absolute pixels (suffix: "px"). Can be mixed with percents (eg: "800px 30%")
+- `scratchpads`: new option `max_size`, using the same argument format as `size`. Most probably useful to limit width or height when using very large or tall monitors along with more standard ones.
+
+## 1.6.3
 
 - Hot fix - a wrong assert statement was introduced in 1.6.2
 
