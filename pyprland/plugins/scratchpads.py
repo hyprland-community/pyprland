@@ -38,7 +38,7 @@ def convert_coords(logger, coords, monitor):
             if p < 0 or p > 100:
                 raise ValueError(f"Percentage must be in range [0; 100], got {p}")
             return int(monitor[dim] / scale * p / 100)
-        elif size[-2:] == "px":
+        if size[-2:] == "px":
             return int(size[:-2])
         raise ValueError(f"Unsupported format for dimension {dim} size, got {size}")
 
