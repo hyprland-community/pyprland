@@ -64,15 +64,24 @@ async def get_clients():
     return await hyprctlJSON("clients")
 
 
-async def get_client_props(addr: str | None = None, pid: int | None = None):
+async def get_client_props(
+    addr: str | None = None, pid: int | None = None, cls: str | None = None
+):
     "Returns client properties given its address"
-    assert addr or pid
+    assert addr or pid or cls
+
     if addr:
         assert len(addr) > 2, "Client address is invalid"
-    if pid:
+        prop_name = "address"
+        prop_value = addr
+    elif cls:
+        prop_name = "class"
+        prop_value = cls
+    else:
         assert pid, "Client pid is invalid"
-    prop_name = "address" if addr else "pid"
-    prop_value = addr if addr else pid
+        prop_name = "pid"
+        prop_value = pid
+
     for client in await get_clients():
         assert isinstance(client, dict)
         if client.get(prop_name) == prop_value:
@@ -442,7 +451,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 if item.isAlive():
                     if loop_count:
                         await asyncio.sleep(loop_count**2 / 10.0)
-                    info = await get_client_props(pid=item.pid)
+                    if item.conf.get("class_match"):
+                        info = await get_client_props(cls=item.conf.get("class"))
+                    else:
+                        info = await get_client_props(pid=item.pid)
                     if info:
                         await item.updateClientInfo(info)
                         self.log.info(
