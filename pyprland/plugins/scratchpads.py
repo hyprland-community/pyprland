@@ -12,10 +12,16 @@ from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from ..ipc import notify_error
 from .interface import Plugin
 
-DEFAULT_MARGIN = 60
+
+DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
 
 # Helper functions {{{
+
+
+def get_space_identifier(obj):
+    "Returns a unique object for the workspace + monitor combination"
+    return (obj.workspace, obj.monitor)
 
 
 def convert_coords(logger, coords, monitor):
@@ -147,6 +153,7 @@ class Scratch:  # {{{
         self.should_hide = False
         self.initialized = False
         self.meta = {}
+        self.space_identifier = None
 
     async def initialize(self):
         "Initialize the scratchpad"
@@ -316,6 +323,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     scratches = ScratchDB()
 
     focused_window_tracking: dict[str, dict] = {}
+
+    workspace = ""  # Currently active workspace
+    monitor = ""  # CUrrently active monitor
+
+    async def init(self):
+        "Initializes the Scratchpad extension"
+        self.workspace = (await hyprctlJSON("activeworkspace"))["name"]
+        self.monitor = next(
+            mon for mon in (await hyprctlJSON("monitors")) if mon["focused"]
+        )
 
     async def exit(self) -> None:
         "exit hook"
@@ -489,6 +506,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+    async def event_focusedmon(self, mon):
+        "focused monitor hook"
+        self.monitor = mon
+
+    async def event_workspace(self, workspace) -> None:
+        "workspace change hook"
+        self.workspace = workspace
+
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
         addr = addr.strip()
@@ -554,7 +579,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             uids = [uid_or_uids.strip()]
 
         assert len(uids)
-        is_visible = self.scratches.get(uids[0]).visible
+        first_scratch = self.scratches.get(uids[0])
+        is_visible = (
+            first_scratch.visible
+            and first_scratch.space_identifier == get_space_identifier(self)
+        )
 
         tasks = []
 
@@ -623,6 +652,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         await item.initialize()
 
         item.visible = True
+        item.space_identifier = get_space_identifier(self)
         monitor = await get_focused_monitor_props()
         assert monitor
         assert item.full_address, "No address !"
