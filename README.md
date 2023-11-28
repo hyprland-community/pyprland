@@ -23,6 +23,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 >  **WIP: current `main` branch**
 > - flake update
 > - scratchpads: always consider the focused workspace to test visibility (improved UX)
+> - scratchpads: experimental progressive web apps support
 
 # 1.6.4
 
