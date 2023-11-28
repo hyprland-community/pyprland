@@ -13,7 +13,6 @@ from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from ..ipc import notify_error
 from .interface import Plugin
 
-
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
 
@@ -164,6 +163,8 @@ class Scratch:  # {{{
         self.uid = uid
         self.pid = 0
         self.conf = opts
+        if "pwa_hack" in opts:
+            self.conf["lazy"] = True
         self.visible = False
         self.client_info = {}
         self.should_hide = False
@@ -181,8 +182,13 @@ class Scratch:  # {{{
             f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
         )
 
-    def isAlive(self) -> bool:
+    async def isAlive(self) -> bool:
         "is the process running ?"
+        if self.conf.get("pwa_hack"):
+            if getattr(self, "started_as_pwa", False):
+                return bool(await get_client_props(cls=self.conf["class"]))
+            return False
+
         path = f"/proc/{self.pid}"
         if os.path.exists(path):
             with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
@@ -357,10 +363,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             proc = self.procs[scratch.uid]
             proc.terminate()
             for _ in range(10):
-                if not scratch.isAlive():
+                if not await scratch.isAlive():
                     break
                 await asyncio.sleep(0.1)
-            if scratch.isAlive():
+            if await scratch.isAlive():
                 proc.kill()
             proc.wait()
 
@@ -432,56 +438,91 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 "keyword",
             )
 
+    async def _ensure_alive_pwa(self, item) -> bool:
+        "Ensure alive, PWA version"
+        uid = item.uid
+        started = getattr(item, "started_as_pwa", False)
+        if not await item.isAlive():
+            started = False
+        if not started:
+            self.scratches.reset(item)
+            await self.start_scratch_command(uid)
+
+            for loop_count in range(8):
+                await asyncio.sleep((1 + loop_count) ** 2 / 10.0)
+                info = await get_client_props(cls=item.conf.get("class"))
+                if info:
+                    await item.updateClientInfo(info)
+                    self.log.info(
+                        "=> %s client (proc:%s, addr:%s) received on time",
+                        uid,
+                        item.pid,
+                        item.full_address,
+                    )
+                    self.scratches.register(item)
+                    self.scratches.clearState(item, "respawned")
+                    item.started_as_pwa = True
+                    break
+            else:
+                return False
+        return True
+
+    async def _start_scratch(self, item):
+        "Ensure alive, standard version"
+        uid = item.uid
+        self.log.info("%s is not running, restarting...", uid)
+        await self._configure_windowrules(item)
+        if uid in self.procs:
+            self.procs[uid].kill()
+        self.scratches.reset(item)
+        self.log.info("starting %s", uid)
+        await self.start_scratch_command(uid)
+        self.log.info("==> Wait for %s spawning", uid)
+        for loop_count in range(8):
+            if await item.isAlive():
+                if loop_count:
+                    await asyncio.sleep(loop_count**2 / 10.0)
+                if item.conf.get("class_match"):
+                    info = await get_client_props(cls=item.conf.get("class"))
+                else:
+                    info = await get_client_props(pid=item.pid)
+                if info:
+                    await item.updateClientInfo(info)
+                    self.log.info(
+                        "=> %s client (proc:%s, addr:%s) received on time",
+                        uid,
+                        item.pid,
+                        item.full_address,
+                    )
+                    self.scratches.register(item)
+                    self.scratches.clearState(item, "respawned")
+                    break
+        else:
+            self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
+            if await item.isAlive():
+                error = "The command didn't open a window"
+            else:
+                self.procs[uid].communicate()
+                code = self.procs[uid].returncode
+                if code:
+                    error = f"The command failed with code {code}"
+                else:
+                    error = "The command terminated sucessfully, is it already running?"
+            self.log.error('"%s": %s', item.conf["command"], error)
+            await notify_error(f'Failed to show scratch "{uid}": {error}')
+            return False
+
     async def ensure_alive(self, uid):
         """Ensure the scratchpad is started
         Returns true if started
         """
         item = self.scratches.get(name=uid)
 
-        if not item.isAlive():
-            self.log.info("%s is not running, restarting...", uid)
-            await self._configure_windowrules(item)
-            if uid in self.procs:
-                self.procs[uid].kill()
-            self.scratches.reset(item)
-            self.log.info("starting %s", uid)
-            await self.start_scratch_command(uid)
-            self.log.info("==> Wait for %s spawning", uid)
-            for loop_count in range(8):
-                if item.isAlive():
-                    if loop_count:
-                        await asyncio.sleep(loop_count**2 / 10.0)
-                    if item.conf.get("class_match"):
-                        info = await get_client_props(cls=item.conf.get("class"))
-                    else:
-                        info = await get_client_props(pid=item.pid)
-                    if info:
-                        await item.updateClientInfo(info)
-                        self.log.info(
-                            "=> %s client (proc:%s, addr:%s) received on time",
-                            uid,
-                            item.pid,
-                            item.full_address,
-                        )
-                        self.scratches.register(item)
-                        self.scratches.clearState(item, "respawned")
-                        break
-            else:
-                self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
-                if item.isAlive():
-                    error = "The command didn't open a window"
-                else:
-                    self.procs[uid].communicate()
-                    code = self.procs[uid].returncode
-                    if code:
-                        error = f"The command failed with code {code}"
-                    else:
-                        error = (
-                            "The command terminated sucessfully, is it already running?"
-                        )
-                self.log.error('"%s": %s', item.conf["command"], error)
-                await notify_error(f'Failed to show scratch "{uid}": {error}')
-                return False
+        if item.conf.get("pwa_hack"):
+            return self._ensure_alive_pwa(item)
+
+        if not await item.isAlive():
+            await self._start_scratch(item)
         return True
 
     async def start_scratch_command(self, name: str) -> None:
@@ -612,7 +653,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 self.log.warning("%s is not configured", uid)
             else:
                 self.log.debug("%s is visible = %s", uid, item.visible)
-                if is_visible and item.isAlive():
+                if is_visible and await item.isAlive():
                     tasks.append(partial(self.run_hide, uid))
                 else:
                     tasks.append(partial(self.run_show, uid))
