@@ -1,10 +1,32 @@
 """ Shared utilities: logging """
 import logging
+import time
 import os
 
 __all__ = ["DEBUG", "get_logger", "init_logger"]
 
 DEBUG = os.environ.get("DEBUG", False)
+
+
+def cache50ms(func):
+    """Caches an async function so it can't be called more than once every 50ms
+
+    Doesn't support handling of the parameters
+    """
+    last_result = None
+    last_update = 0.0
+
+    async def _cached_fn(*args):
+        nonlocal last_result, last_update
+
+        t = time.time()
+        if last_update + 0.05 > t:
+            return last_result
+        last_result = await func(*args)
+        last_update = t
+        return last_result
+
+    return _cached_fn
 
 
 class PyprError(Exception):
