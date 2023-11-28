@@ -21,6 +21,8 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
+> - flake update
+> - scratchpads: always consider the focused workspace to test visibility (improved UX)
 
 # 1.6.4
 
