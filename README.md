@@ -21,7 +21,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - flake update
+> - update the nix flake
 > - scratchpads: always consider the focused workspace to test visibility (improved UX)
 > - scratchpads: experimental progressive web apps support
 
