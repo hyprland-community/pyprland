@@ -512,7 +512,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         item = self.scratches.get(name=uid)
 
         if item.conf.get("pwa_hack"):
-            return self._ensure_alive_pwa(item)
+            return await self._ensure_alive_pwa(item)
 
         if not await item.isAlive():
             await self._start_scratch(item)
