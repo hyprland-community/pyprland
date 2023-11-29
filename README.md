@@ -21,12 +21,12 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - scratchpads: experimental progressive web apps support
+> - `scratchpads`: experimental progressive web apps support
 
 # 1.6.5
 
 - update the nix flake
-- scratchpads: always consider the focused workspace to test visibility (improved UX - #32)
+- `scratchpads`: always consider the focused workspace to test visibility (improved UX - #32)
 
 ## 1.6.4
 
@@ -40,7 +40,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 ## 1.6.2
 
 - add a `--config <path>` argument: allows overriding the configuration file path
-- scratchpads: improve multi-monitor support
+- `scratchpads`: improve multi-monitor support
 
 ## 1.6.1
 
@@ -73,7 +73,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 ## 1.5.1
 
-- scratchpads stability improvements:
+- `scratchpads` stability improvements:
     - review plugin processing logic, making code safer
     - Using hyprland's notifications in case of serious errors
     - rework focus handling logic to handle more corner cases
