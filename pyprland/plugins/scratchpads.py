@@ -633,6 +633,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         assert len(uids)
         first_scratch = self.scratches.get(uids[0])
+        if not first_scratch:
+            self.log.warning("%s doesn't exist, can't toggle.", uids[0])
+            await notify_error(
+                f"Scratchpad '{uids[0]}' not found, check your configuration or the toggle parameter"
+            )
+            return
+
         is_visible = (
             first_scratch.visible
             and first_scratch.space_identifier == get_space_identifier(self)
@@ -679,6 +686,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """<name> shows scratchpad "name" """
         uid = uid.strip()
         item = self.scratches.get(uid)
+
+        if not item:
+            self.log.warning("%s doesn't exist, can't hide.", uid)
+            await notify_error(
+                f"Scratchpad '{uid}' not found, check your configuration or the show parameter"
+            )
+            return
 
         self.focused_window_tracking[uid] = cast(
             dict[str, Any], await hyprctlJSON("activewindow")
@@ -763,10 +777,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         `force` ignores the visibility check"""
         uid = uid.strip()
         scratch = self.scratches.get(uid)
+
         if not scratch:
+            await notify_error(
+                f"Scratchpad '{uid}' not found, check your configuration or the hide parameter"
+            )
             self.log.warning("%s is not configured", uid)
             return
         if not scratch.visible and not force:
+            await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
         scratch.visible = False

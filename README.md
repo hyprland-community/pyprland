@@ -22,6 +22,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 > [!note]
 >  **WIP: current `main` branch**
 > - `scratchpads`: experimental progressive web apps support
+> - `scratchpads`: better feedback on usage errors
 
 # 1.6.5
 
