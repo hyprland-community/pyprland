@@ -8,7 +8,6 @@ from typing import Any, cast
 from functools import partial
 from collections import defaultdict
 
-from ..common import cache50ms
 from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
 from ..ipc import notify_error
 from .interface import Plugin
@@ -57,12 +56,6 @@ def convert_coords(logger, coords, monitor):
         raise e
 
 
-@cache50ms
-async def get_clients():
-    "Cached 'clients' IPC call"
-    return await hyprctlJSON("clients")
-
-
 async def get_client_props(
     addr: str | None = None, pid: int | None = None, cls: str | None = None
 ):
@@ -81,7 +74,7 @@ async def get_client_props(
         prop_name = "pid"
         prop_value = pid
 
-    for client in await get_clients():
+    for client in await hyprctlJSON("clients"):
         assert isinstance(client, dict)
         if client.get(prop_name) == prop_value:
             return client
@@ -549,7 +542,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """Update every scratchpads information if no `scratch` given,
         else update a specific scratchpad info"""
         pid = orig_scratch.pid if orig_scratch else None
-        for client in await get_clients():
+        for client in await hyprctlJSON("clients"):
             assert isinstance(client, dict)
             if pid and pid != client["pid"]:
                 continue
@@ -604,7 +597,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return False
         self.log.debug("Lookup hack triggered")
         # hack to update the client info from the provided class
-        for client in await get_clients():
+        for client in await hyprctlJSON("clients"):
             assert isinstance(client, dict)
             for pending_scratch in class_lookup_hack:
                 if pending_scratch.conf["class"] == client["class"]:
