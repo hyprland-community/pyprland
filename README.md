@@ -26,7 +26,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 # 1.6.5
 
 - update the nix flake
-- `scratchpads`: always consider the focused workspace to test visibility (improved UX - #32)
+- `scratchpads`: always consider the focused workspace to test visibility (improved UX, see [#32][i32])
 
 ## 1.6.4
 
@@ -154,3 +154,6 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 - First release, a modular hpr-scratcher (`scratchpads` plugin)
 - Add `workspaces_follow_focus` addon
 
+
+
+[i32]: https://github.com/fdev31/pyprland/issues/32
