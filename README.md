@@ -25,8 +25,8 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 # 1.6.5
 
-> - update the nix flake
-> - scratchpads: always consider the focused workspace to test visibility (improved UX - #32)
+- update the nix flake
+- scratchpads: always consider the focused workspace to test visibility (improved UX - #32)
 
 ## 1.6.4
 
