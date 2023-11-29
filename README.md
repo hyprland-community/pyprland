@@ -21,11 +21,14 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - update the nix flake
-> - scratchpads: always consider the focused workspace to test visibility (improved UX)
 > - scratchpads: experimental progressive web apps support
 
-# 1.6.4
+# 1.6.5
+
+> - update the nix flake
+> - scratchpads: always consider the focused workspace to test visibility (improved UX - #32)
+
+## 1.6.4
 
 - `scratchpads`: `size` and `position` can use absolute pixels (suffix: "px"). Can be mixed with percents (eg: "800px 30%")
 - `scratchpads`: new option `max_size`, using the same argument format as `size`. Most probably useful to limit width or height when using very large or tall monitors along with more standard ones.
