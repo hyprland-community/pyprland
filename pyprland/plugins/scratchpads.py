@@ -156,7 +156,7 @@ class Scratch:  # {{{
         self.uid = uid
         self.pid = 0
         self.conf = opts
-        if "pwa_hack" in opts:
+        if not opts.get("process_tracking", True):
             self.conf["lazy"] = True
         self.visible = False
         self.client_info = {}
@@ -177,18 +177,18 @@ class Scratch:  # {{{
 
     async def isAlive(self) -> bool:
         "is the process running ?"
-        if self.conf.get("pwa_hack"):
-            if getattr(self, "started_as_pwa", False):
+        if self.conf.get("process_tracking", True):
+            path = f"/proc/{self.pid}"
+            if os.path.exists(path):
+                with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
+                    for line in f.readlines():
+                        if line.startswith("State"):
+                            state = line.split()[1]
+                            return state not in "ZX"  # not "Z (zombie)"or "X (dead)"
+        else:
+            if getattr(self, "bogus_pid", False):
                 return bool(await get_client_props(cls=self.conf["class"]))
-            return False
 
-        path = f"/proc/{self.pid}"
-        if os.path.exists(path):
-            with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
-                for line in f.readlines():
-                    if line.startswith("State"):
-                        state = line.split()[1]
-                        return state not in "ZX"  # not "Z (zombie)"or "X (dead)"
         return False
 
     def reset(self, pid: int) -> None:
@@ -431,17 +431,17 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 "keyword",
             )
 
-    async def _ensure_alive_pwa(self, item) -> bool:
+    async def _ensure_alive_no_pid(self, item) -> bool:
         "Ensure alive, PWA version"
         uid = item.uid
-        started = getattr(item, "started_as_pwa", False)
+        started = getattr(item, "bogus_pid", False)
         if not await item.isAlive():
             started = False
         if not started:
             self.scratches.reset(item)
             await self.start_scratch_command(uid)
 
-            for loop_count in range(8):
+            for loop_count in range(1, 8):
                 await asyncio.sleep((1 + loop_count) ** 2 / 10.0)
                 info = await get_client_props(cls=item.conf.get("class"))
                 if info:
@@ -454,7 +454,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     )
                     self.scratches.register(item)
                     self.scratches.clearState(item, "respawned")
-                    item.started_as_pwa = True
+                    item.bogus_pid = True
                     break
             else:
                 return False
@@ -510,12 +510,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """
         item = self.scratches.get(name=uid)
         await self._configure_windowrules(item)
-        if item.conf.get("pwa_hack"):
-            return await self._ensure_alive_pwa(item)
 
-        if not await item.isAlive():
-            await self._start_scratch(item)
-        return True
+        if item.conf.get("process_tracking", True):
+            if not await item.isAlive():
+                await self._start_scratch(item)
+            return True
+
+        return await self._ensure_alive_no_pid(item)
 
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
