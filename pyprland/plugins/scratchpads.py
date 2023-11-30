@@ -464,7 +464,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         "Ensure alive, standard version"
         uid = item.uid
         self.log.info("%s is not running, restarting...", uid)
-        await self._configure_windowrules(item)
         if uid in self.procs:
             self.procs[uid].kill()
         self.scratches.reset(item)
@@ -510,7 +509,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         Returns true if started
         """
         item = self.scratches.get(name=uid)
-
+        await self._configure_windowrules(item)
         if item.conf.get("pwa_hack"):
             return await self._ensure_alive_pwa(item)
 
