@@ -28,6 +28,11 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 - `scratchpads`: supports progressive web apps by making [`process_tracking`](https://github.com/hyprland-community/pyprland/wiki/Plugins#process_tracking-optional---discouraged) as an option.
 - `scratchpads`: better feedback on usage errors
 
+**Breaking change**
+
+- `scratchpads`: animate by default using "fromTop" animation type
+  - set `animation=false` to revert to the former behavior if you didn't configure any animation
+
 # 1.6.5
 
 - update the nix flake
