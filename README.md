@@ -33,7 +33,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 - `scratchpads`: animate by default using "fromTop" animation type
   - set `animation=false` to revert to the former behavior if you didn't configure any animation
 
-# 1.6.5
+## 1.6.5
 
 - update the nix flake
 - `scratchpads`: always consider the focused workspace to test visibility (improved UX, see [#32][i32])
