@@ -158,6 +158,7 @@ class Scratch:  # {{{
         self.conf = opts
         if not opts.get("process_tracking", True):
             self.conf["lazy"] = True
+            self.conf["class_match"] = True
         self.visible = False
         self.client_info = {}
         self.should_hide = False

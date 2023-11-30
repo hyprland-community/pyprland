@@ -21,7 +21,7 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - no activity
+> - `scratchpads`: enable `class_match` automatically if `process_tracking=false`
 
 # 1.6.6
 
