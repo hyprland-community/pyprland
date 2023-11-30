@@ -399,7 +399,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if configured:
             return
         self.scratches.setState(scratch, "configured")
-        animation_type: str = scratch.conf.get("animation", "").lower()
+        animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
         if animation_type and defined_class:
             monitor = await get_focused_monitor_props()
