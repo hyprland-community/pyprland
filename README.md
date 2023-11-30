@@ -25,8 +25,8 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 # 1.6.6
 
-- `scratchpads`: supports progressive web apps by making [`process_tracking`](https://github.com/hyprland-community/pyprland/wiki/Plugins#process_tracking-optional---discouraged) as an option.
-- `scratchpads`: better feedback on usage errors
+- `scratchpads`: supports progressive web apps by making [`process_tracking`](https://github.com/hyprland-community/pyprland/wiki/Plugins#process_tracking-optional---discouraged) as an option ([#31][i31])
+-  `scratchpads`: better feedback on usage errors
 
 **Breaking change**
 
@@ -167,3 +167,4 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 
 [i32]: https://github.com/fdev31/pyprland/issues/32
+[i31]: https://github.com/fdev31/pyprland/issues/31
