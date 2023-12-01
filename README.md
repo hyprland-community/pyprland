@@ -13,13 +13,13 @@ Host process for multiple Hyprland plugins, such as:
 - temporary workarounds
 - anything you can imagine using [Hyprland API](https://wiki.hyprland.org/Configuring/Dispatchers/) and [events](https://wiki.hyprland.org/Plugins/Development/Event-list/)!
 
-### - Read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page
+### → Read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page
 
-### - Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) for more details
+### → Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) for more details
 
-### - Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
+### → Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
 
-### - finally browse the other [wiki](https://github.com/hyprland-community/pyprland/wiki) pages
+### → finally browse the other [wiki](https://github.com/hyprland-community/pyprland/wiki) pages
 
 > [!Note]
 > **WIP**
