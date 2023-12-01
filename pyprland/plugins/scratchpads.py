@@ -437,33 +437,45 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 "keyword",
             )
 
-    async def _ensure_alive_no_pid(self, item) -> bool:
-        "Ensure alive, PWA version"
-        uid = item.uid
-        started = getattr(item, "bogus_pid", False)
-        if not await item.isAlive():
-            started = False
-        if not started:
-            self.scratches.reset(item)
-            await self.start_scratch_command(uid)
-
-            for loop_count in range(1, 8):
-                await asyncio.sleep((1 + loop_count) ** 2 / 10.0)
-                info = await get_client_props(cls=item.conf.get("class"))
+    async def __wait_for_client(self, item, use_proc=True) -> bool:
+        """Waits for a client to be up and running
+        if `class_match` is enabled, will use the class, else the process's PID will be used.
+        """
+        self.log.info("==> Wait for %s spawning", item.uid)
+        for loop_count in range(1, 8):
+            self.log.info("loop")
+            await asyncio.sleep(loop_count**2 / 10.0)
+            if not use_proc or await item.isAlive():
+                if item.conf.get("class_match"):
+                    info = await get_client_props(cls=item.conf.get("class"))
+                else:
+                    info = await get_client_props(pid=item.pid)
                 if info:
                     await item.updateClientInfo(info)
                     self.log.info(
                         "=> %s client (proc:%s, addr:%s) received on time",
-                        uid,
+                        item.uid,
                         item.pid,
                         item.full_address,
                     )
                     self.scratches.register(item)
                     self.scratches.clearState(item, "respawned")
-                    item.bogus_pid = True
-                    break
-            else:
-                return False
+                    return True
+        return False
+
+    async def _start_scratch_classbased(self, item) -> bool:
+        "Ensure alive, PWA version"
+        uid = item.uid
+        started = getattr(item, "bogus_pid", False)
+        if not await item.isAlive():
+            started = False
+        self.log.error("started = %s", started)
+        if not started:
+            self.scratches.reset(item)
+            await self.start_scratch_command(uid)
+            r = await self.__wait_for_client(item, use_proc=False)
+            item.bogus_pid = True
+            return r
         return True
 
     async def _start_scratch(self, item):
@@ -475,27 +487,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.scratches.reset(item)
         self.log.info("starting %s", uid)
         await self.start_scratch_command(uid)
-        self.log.info("==> Wait for %s spawning", uid)
-        for loop_count in range(8):
-            if await item.isAlive():
-                if loop_count:
-                    await asyncio.sleep(loop_count**2 / 10.0)
-                if item.conf.get("class_match"):
-                    info = await get_client_props(cls=item.conf.get("class"))
-                else:
-                    info = await get_client_props(pid=item.pid)
-                if info:
-                    await item.updateClientInfo(info)
-                    self.log.info(
-                        "=> %s client (proc:%s, addr:%s) received on time",
-                        uid,
-                        item.pid,
-                        item.full_address,
-                    )
-                    self.scratches.register(item)
-                    self.scratches.clearState(item, "respawned")
-                    break
-        else:
+        if not await self.__wait_for_client(item):
             self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
             if await item.isAlive():
                 error = "The command didn't open a window"
@@ -522,7 +514,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 await self._start_scratch(item)
             return True
 
-        return await self._ensure_alive_no_pid(item)
+        return await self._start_scratch_classbased(item)
 
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
@@ -540,7 +532,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         pid = proc.pid
         scratch.reset(pid)
         self.scratches.register(scratch, pid=pid)
-        self.log.info("scratch %s has pid %s", scratch.uid, pid)
+        self.log.info(
+            "scratch %s (%s) has pid %s", scratch.uid, scratch.conf.get("command"), pid
+        )
         if old_pid:
             self.scratches.clear(pid=old_pid)
 
