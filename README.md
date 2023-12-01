@@ -21,9 +21,16 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 > [!note]
 >  **WIP: current `main` branch**
-> - `scratchpads`: enable `class_match` automatically if `process_tracking=false`
+> - nothing yet
 
-# 1.6.6
+# 1.6.7
+
+- `scratchpads`:
+  - support vertical monitors ([#33][i33])
+  - enable `class_match` automatically if `process_tracking=false`
+  - two fixes when using the `exclude` option
+
+## 1.6.6
 
 - `scratchpads`: supports progressive web apps by making [`process_tracking`](https://github.com/hyprland-community/pyprland/wiki/Plugins#process_tracking-optional---discouraged) as an option ([#31][i31])
 -  `scratchpads`: better feedback on usage errors
@@ -168,3 +175,5 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 [i32]: https://github.com/fdev31/pyprland/issues/32
 [i31]: https://github.com/fdev31/pyprland/issues/31
+[i33]: https://github.com/hyprland-community/pyprland/pull/33
+
