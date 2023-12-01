@@ -38,6 +38,11 @@ def convert_coords(logger, coords, monitor):
 
     def convert(size, dim):
         scale = float(monitor["scale"])
+        if monitor["transform"] in [1, 3]:
+            if dim == "width":
+                dim = "height"
+            elif dim == "height":
+                dim = "width"
         if size[-1] == "%":
             p = int(size[:-1])
             if p < 0 or p > 100:
