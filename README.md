@@ -15,9 +15,9 @@ Host process for multiple Hyprland plugins, such as:
 
 Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page or the [wiki](https://github.com/hyprland-community/pyprland/wiki) in general.
 
-## Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) for more details
+### Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) for more details
 
-## Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
+### Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
 
 > [!WIP]
 > - nothing yet
