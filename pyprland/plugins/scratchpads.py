@@ -720,7 +720,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             ]
         for tbh_scratch in excluded:
             self.log.info("hidding %s", tbh_scratch)
-            await self.run_hide(tbh_scratch, autohide=True)
+
+            scratch = self.scratches.get(uid)
+            if scratch.visible:
+                await self.run_hide(tbh_scratch, autohide=True)
         await item.updateClientInfo()
         await item.initialize()
 
@@ -790,7 +793,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             )
             self.log.warning("%s is not configured", uid)
             return
-        if not scratch.visible and not force:
+        if not scratch.visible and not force and not autohide:
             await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
