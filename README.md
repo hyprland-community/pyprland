@@ -19,5 +19,6 @@ Check the [Getting started](https://github.com/hyprland-community/pyprland/wiki/
 
 ### Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
 
-> [!WIP]
+> [!Note]
+> **WIP**
 > - nothing yet
