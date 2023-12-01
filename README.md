@@ -20,7 +20,3 @@ Host process for multiple Hyprland plugins, such as:
 ### → Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
 
 ### → finally browse the other [wiki](https://github.com/hyprland-community/pyprland/wiki) pages
-
-> [!Note]
-> **WIP**
-> - nothing yet
