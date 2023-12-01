@@ -561,7 +561,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     # Events {{{
     async def event_focusedmon(self, mon):
         "focused monitor hook"
-        self.monitor = mon
+        self.monitor = mon.strip()
 
     async def event_workspace(self, workspace) -> None:
         "workspace change hook"
