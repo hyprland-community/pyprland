@@ -446,8 +446,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.log.info("==> Wait for %s spawning", item.uid)
         for loop_count in range(1, 8):
             await asyncio.sleep(loop_count**2 / 10.0)
+            is_alive = await item.isAlive()
+
             # skips the checks if the process isn't started (just wait)
-            if await item.isAlive() or not use_proc:
+            if is_alive or not use_proc:
                 if item.conf.get("class_match"):
                     info = await get_client_props(cls=item.conf.get("class"))
                 else:
@@ -463,6 +465,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     self.scratches.register(item)
                     self.scratches.clearState(item, "respawned")
                     return True
+            if use_proc and not is_alive:
+                return False
         return False
 
     async def _start_scratch_classbased(self, item) -> bool:
@@ -471,7 +475,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         started = getattr(item, "bogus_pid", False)
         if not await item.isAlive():
             started = False
-        self.log.error("started = %s", started)
         if not started:
             self.scratches.reset(item)
             await self.start_scratch_command(uid)
@@ -483,12 +486,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def _start_scratch(self, item):
         "Ensure alive, standard version"
         uid = item.uid
-        self.log.info("%s is not running, restarting...", uid)
         if uid in self.procs:
             self.procs[uid].kill()
         self.scratches.reset(item)
-        self.log.info("starting %s", uid)
         await self.start_scratch_command(uid)
+        self.log.info("starting %s", uid)
         if not await self.__wait_for_client(item):
             self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
             if await item.isAlive():
@@ -501,8 +503,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 else:
                     error = "The command terminated sucessfully, is it already running?"
             self.log.error('"%s": %s', item.conf["command"], error)
-            await notify_error(f'Failed to show scratch "{uid}": {error}')
             return False
+        return True
 
     async def ensure_alive(self, uid):
         """Ensure the scratchpad is started
@@ -513,7 +515,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         if item.conf.get("process_tracking", True):
             if not await item.isAlive():
-                await self._start_scratch(item)
+                self.log.info("%s is not running, starting...", uid)
+                if not await self._start_scratch(item):
+                    await notify_error(f'Failed to show scratch "{item.uid}"')
             return True
 
         return await self._start_scratch_classbased(item)

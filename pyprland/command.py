@@ -120,7 +120,7 @@ class Pyprland:
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
             self.log.error(
-                "Bug detected, please report on https://github.com/fdev31/pyprland/issues"
+                "This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues"
             )
             self.log.exception(e)
             await notify_error(
