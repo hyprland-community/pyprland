@@ -17,6 +17,8 @@ AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
 
 # Helper functions {{{
 
+invert_dimension = {"width": "height", "height": "width"}
+
 
 def get_space_identifier(obj):
     "Returns a unique object for the workspace + monitor combination"
@@ -36,21 +38,20 @@ def convert_coords(logger, coords, monitor):
 
     assert coords, "coords must be non null"
 
-    def convert(size, dim):
+    def convert(size, dimension):
         scale = float(monitor["scale"])
-        if monitor["transform"] in [1, 3]:
-            if dim == "width":
-                dim = "height"
-            elif dim == "height":
-                dim = "width"
+        if monitor["transform"] in (1, 3):
+            dimension = invert_dimension[dimension]
         if size[-1] == "%":
             p = int(size[:-1])
             if p < 0 or p > 100:
                 raise ValueError(f"Percentage must be in range [0; 100], got {p}")
-            return int(monitor[dim] / scale * p / 100)
+            return int(monitor[dimension] / scale * p / 100)
         if size[-2:] == "px":
             return int(size[:-2])
-        raise ValueError(f"Unsupported format for dimension {dim} size, got {size}")
+        raise ValueError(
+            f"Unsupported format for dimension {dimension} size, got {size}"
+        )
 
     try:
         x_str, y_str = coords.split()
