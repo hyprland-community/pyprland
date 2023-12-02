@@ -23,4 +23,5 @@ Host process for multiple Hyprland plugins, such as:
 
 ## Dependencies
 
+- Hyprland >= 0.25
 - Python >= 3.11
