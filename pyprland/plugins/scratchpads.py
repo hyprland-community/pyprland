@@ -195,6 +195,7 @@ class Scratch:  # {{{
         else:
             if getattr(self, "bogus_pid", False):
                 return bool(await get_client_props(cls=self.conf["class"]))
+            return False
 
         return False
 
@@ -444,9 +445,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """
         self.log.info("==> Wait for %s spawning", item.uid)
         for loop_count in range(1, 8):
-            self.log.info("loop")
             await asyncio.sleep(loop_count**2 / 10.0)
-            if not use_proc or await item.isAlive():
+            # skips the checks if the process isn't started (just wait)
+            if await item.isAlive() or not use_proc:
                 if item.conf.get("class_match"):
                     info = await get_client_props(cls=item.conf.get("class"))
                 else:
@@ -454,7 +455,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 if info:
                     await item.updateClientInfo(info)
                     self.log.info(
-                        "=> %s client (proc:%s, addr:%s) received on time",
+                        "=> %s client (proc:%s, addr:%s) detected on time",
                         item.uid,
                         item.pid,
                         item.full_address,
