@@ -503,6 +503,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 else:
                     error = "The command terminated sucessfully, is it already running?"
             self.log.error('"%s": %s', item.conf["command"], error)
+            await notify_error(error)
             return False
         return True
 
@@ -518,6 +519,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):
                     await notify_error(f'Failed to show scratch "{item.uid}"')
+                    return False
             return True
 
         return await self._start_scratch_classbased(item)
