@@ -721,9 +721,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 scratch.uid for scratch in self.scratches.values() if scratch.uid != uid
             ]
         for tbh_scratch in excluded:
-            self.log.info("hidding %s", tbh_scratch)
-
-            scratch = self.scratches.get(uid)
+            scratch = self.scratches.get(tbh_scratch)
             if scratch.visible:
                 await self.run_hide(tbh_scratch, autohide=True)
         await item.updateClientInfo()
