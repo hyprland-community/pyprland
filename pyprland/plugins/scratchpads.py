@@ -720,10 +720,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             excluded = [
                 scratch.uid for scratch in self.scratches.values() if scratch.uid != uid
             ]
-        for tbh_scratch in excluded:
-            scratch = self.scratches.get(tbh_scratch)
+        for e_uid in excluded:
+            scratch = self.scratches.get(e_uid)
             if scratch.visible:
-                await self.run_hide(tbh_scratch, autohide=True)
+                await self.run_hide(e_uid, autohide=True)
         await item.updateClientInfo()
         await item.initialize()
 
