@@ -9,7 +9,6 @@ import json
 import os
 import sys
 from typing import cast
-from collections import defaultdict
 
 from .common import PyprError, get_logger, init_logger
 from .ipc import get_event_stream, notify_error, notify_fatal, notify_info
