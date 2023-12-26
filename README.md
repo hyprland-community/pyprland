@@ -1,4 +1,4 @@
-![pif](https://github.com/hyprland-community/pyprland/assets/238622/ddac10ea-db67-4982-a493-9b45117e5fa7)
+![rect](https://github.com/hyprland-community/pyprland/assets/238622/3fab93b6-6445-4e7b-b757-035095b5c8e8)
 
 ## Tweaks & extensions for Hyprland
 
