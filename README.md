@@ -1,5 +1,3 @@
-# Pyprland
-
 ![pif](https://github.com/hyprland-community/pyprland/assets/238622/ddac10ea-db67-4982-a493-9b45117e5fa7)
 
 ## Tweaks & extensions for Hyprland
