@@ -2,12 +2,8 @@
 
 ## A plugin system for Hyprland
 
-Host process for multiple Hyprland plugins, such as:
-
-- scratchpads (aka "dropdowns")
-- multi-monitor friendly behavior (placement, focus, ...)
-- shortcut / togglers for hyprctl commands
-- miscelaneous obscure commands for specific usages
+Host process for multiple Hyprland plugins,
+aiming simplicity and efficiency.
 
 You can implement anything you can imagine using Python with [Hyprland API](https://wiki.hyprland.org/Configuring/Dispatchers/) and [events](https://wiki.hyprland.org/Plugins/Development/Event-list/)!
 
