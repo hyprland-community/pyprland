@@ -3,7 +3,7 @@
 ## A plugin system for Hyprland
 
 Host process for multiple Hyprland plugins,
-aiming simplicity and efficiency.
+aiming at simplicity and efficiency.
 
 You can implement anything you can imagine using Python with [Hyprland API](https://wiki.hyprland.org/Configuring/Dispatchers/) and [events](https://wiki.hyprland.org/Plugins/Development/Event-list/)!
 
