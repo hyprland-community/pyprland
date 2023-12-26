@@ -1,6 +1,6 @@
 # Pyprland
+![logoP](https://github.com/hyprland-community/pyprland/assets/238622/42af5df9-fdb6-4d76-9dd3-11991322394b)
 
-![pyprland7_logo_cropped](https://github.com/hyprland-community/pyprland/assets/238622/db1315de-7f60-4ff9-8b08-79eae341c8e8)
 
 ## Tweaks & extensions for Hyprland
 
