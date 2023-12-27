@@ -1,4 +1,9 @@
-" Sample plugin "
+""" Sample plugin
+Exposes a "dummy" command: `pypr dummy` showing a notification
+- listen to `æctivewindowv2` Hyprland event to count focus changes
+- uses `color` configuration item with a default value
+"""
+
 from pyprland.plugins.interface import Plugin
 from pyprland.ipc import hyprctlJSON, notify_info
 
