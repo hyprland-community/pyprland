@@ -15,6 +15,11 @@ pypr = "pyprland.command:main"
 python = "^3.11"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.2"
+pytest-mock = "^3.12.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
