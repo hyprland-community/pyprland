@@ -10,18 +10,19 @@ from pyprland.ipc import hyprctlJSON, notify_info
 
 class Extension(Plugin):
     "Dummy plugin example"
-    focus_switch = 0
+    focus_changes = 0
 
     async def run_dummy(self):
         "Show the number of focus switches and monitors"
+        # The doc string above is used in `pypr help`
 
         monitor_list = await hyprctlJSON("monitors")
         color = self.config.get("color", "3333BB")
         await notify_info(
-            f"You switched windows {self.focus_switch}x on {len(monitor_list)} monitor(s)",
+            f"Focus changed {self.focus_changes} times on {len(monitor_list)} monitor(s)",
             color=color,
         )
 
     async def event_activewindowv2(self, _addr) -> None:
-        "Handle event `activewindowv2`"
-        self.focus_switch += 1
+        "Handle event `activewindowv2` and track the count"
+        self.focus_changes += 1
