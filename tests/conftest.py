@@ -36,10 +36,10 @@ class MockWriter:
 
 orig_start_unix_server = asyncio.start_unix_server
 
-hyprctl_mock = (MockReader(), MockWriter())
-hyprevt_mock = (MockReader(), MockWriter())
+hyprctl_mock = None
+hyprevt_mock = None
+pyprctrl_mock = None
 
-pyprctrl_mock = MockReader()
 
 misc_objects = {}
 
@@ -75,18 +75,35 @@ async def sample1_config(monkeypatch):
     yield
 
 
+async def mocked_hyprctlJSON(command):
+    if command == "monitors":
+        return MONITORS
+    raise NotImplemented()
+
+
 @fixture
 async def server_fixture(monkeypatch):
     "Handle server setup boilerplate"
+    global hyprevt_mock, hyprctl_mock, pyprctrl_mock
+
+    hyprctl_mock = (MockReader(), MockWriter())
+    hyprevt_mock = (MockReader(), MockWriter())
+
+    pyprctrl_mock = MockReader()
+
+    monkeypatch.setenv("XDG_RUNTIME_DIR", "/tmp")
+    monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
+    monkeypatch.setattr("pyprland.ipc.notify", AsyncMock())
+    monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
+
+    from pyprland.command import run_daemon
+    from pyprland import ipc
+
     orig_open_unix_connection = asyncio.open_unix_connection
     asyncio.open_unix_connection = my_mocked_unix_connection
     asyncio.start_unix_server = my_mocked_unix_server
 
-    monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
-    from pyprland.command import run_daemon
-    from pyprland.ipc import init as ipc_init
-
-    ipc_init()
+    ipc.init()
 
     # Use asyncio.gather to run the server logic concurrently with other async tasks
     server_task = asyncio.create_task(run_daemon())
@@ -96,11 +113,61 @@ async def server_fixture(monkeypatch):
 
     yield  # The test runs at this point
 
+    await pyprctrl_mock.q.put(b"exit\n")
+
     # Cleanup: Cancel the server task to stop the server
     server_task.cancel()
+
+    # Wait for the server task to complete
+    await server_task
 
     asyncio.open_unix_connection = orig_open_unix_connection
     asyncio.start_unix_server = orig_start_unix_server
 
-    # Wait for the server task to complete
-    await server_task
+
+MONITORS = [
+    {
+        "id": 1,
+        "name": "DP-1",
+        "description": "Microstep MAG342CQPV DB6H513700137 (DP-1)",
+        "make": "Microstep",
+        "model": "MAG342CQPV",
+        "serial": "DB6H513700137",
+        "width": 3440,
+        "height": 1440,
+        "refreshRate": 59.99900,
+        "x": 0,
+        "y": 1080,
+        "activeWorkspace": {"id": 1, "name": "1"},
+        "specialWorkspace": {"id": 0, "name": ""},
+        "reserved": [0, 50, 0, 0],
+        "scale": 1.00,
+        "transform": 0,
+        "focused": True,
+        "dpmsStatus": True,
+        "vrr": False,
+        "activelyTearing": False,
+    },
+    {
+        "id": 0,
+        "name": "HDMI-A-1",
+        "description": "BNQ BenQ PJ 0x01010101 (HDMI-A-1)",
+        "make": "BNQ",
+        "model": "BenQ PJ",
+        "serial": "0x01010101",
+        "width": 1920,
+        "height": 1080,
+        "refreshRate": 60.00000,
+        "x": 0,
+        "y": 0,
+        "activeWorkspace": {"id": 4, "name": "4"},
+        "specialWorkspace": {"id": 0, "name": ""},
+        "reserved": [0, 50, 0, 0],
+        "scale": 1.00,
+        "transform": 0,
+        "focused": False,
+        "dpmsStatus": True,
+        "vrr": False,
+        "activelyTearing": False,
+    },
+]
