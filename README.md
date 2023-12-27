@@ -11,7 +11,7 @@ It has a safe design which is friendly for developers.
 
 ### → Read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page
 
-### → Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) to list current features
+### → Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) to see the current features
 
 ### → Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
 
