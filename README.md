@@ -21,3 +21,7 @@ It has a safe design which is friendly for developers.
 
 - Hyprland >= 0.25
 - Python >= 3.11
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date)](https://star-history.com/#fdev31/pyprland&Date)
