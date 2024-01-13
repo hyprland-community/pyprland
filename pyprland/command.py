@@ -202,7 +202,10 @@ class Pyprland:
 
         while True:
             task = await q.get()
-            await task()
+            try:
+                await task()
+            except Exception as e:
+                self.log.error("plugin %s failed to run %s: %s", name, task, e)
 
     async def run(self):
         "Runs the server and the event listener"
