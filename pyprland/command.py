@@ -40,6 +40,7 @@ class Pyprland:
 
         for name in self.plugins:
             self.queues[name] = asyncio.Queue()
+        self.queues[self.name] = asyncio.Queue()
 
     async def __open_config(self):
         """Loads config file as self.config"""
@@ -209,8 +210,9 @@ class Pyprland:
 
     async def run(self):
         "Runs the server and the event listener"
+        all_plugins = list(self.plugins.keys()) + [self.name]
         plugin_workers = [
-            asyncio.create_task(self._plugin_runner_loop(name)) for name in self.plugins
+            asyncio.create_task(self._plugin_runner_loop(name)) for name in all_plugins
         ]
         await asyncio.gather(
             asyncio.create_task(self.serve()),
