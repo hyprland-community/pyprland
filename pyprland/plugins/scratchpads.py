@@ -567,6 +567,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+    async def event_configreloaded(self, _nothing):
+        "Re-apply windowrules when hyprland is restarted"
+        for scratch in list(self.scratches.getByState("configured")):
+            self.scratches.clearState(scratch, "configured")
+            await self._configure_windowrules(scratch)
+
     async def event_focusedmon(self, mon):
         "focused monitor hook"
         self.monitor = mon.strip()
