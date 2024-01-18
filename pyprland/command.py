@@ -205,8 +205,10 @@ class Pyprland:
             task = await q.get()
             try:
                 await task()
-            except Exception as e:
-                self.log.error("plugin %s failed to run %s: %s", name, task, e)
+            except Exception as e:  # pylint: disable=W0718
+                self.log.error(
+                    "Unhandled error running plugin %s::%s: %s", name, task, e
+                )
 
     async def run(self):
         "Runs the server and the event listener"
