@@ -31,15 +31,16 @@ def get_XY(place, main_mon, other_mon):
 
     centered = "middle" in place or "center" in place
 
+    # XXX: scale support missing here ?
     if align_x:
         if centered:
             x += int((other_mon["width"] - main_mon["width"]) / 2)
-        elif "endof" in place:
+        elif "end" in place:
             x += int((other_mon["width"] - main_mon["width"]))
     else:
         if centered:
             y += int((other_mon["height"] - main_mon["height"]) / 2)
-        elif "endof" in place:
+        elif "end" in place:
             y += int(other_mon["height"] - main_mon["height"])
     return (x, y)
 
@@ -141,7 +142,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             matched = pattern in mon_description
             for position, descr_list in config.items():
                 for descr in descr_list:
-                    lp = position.lower()
+                    lp = position.lower().replace("_", "").replace("-", "")
                     if matched or mon_description in descr:
                         yield (
                             lp if matched else self._flipped_positions[lp],
