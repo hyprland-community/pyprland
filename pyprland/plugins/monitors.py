@@ -7,71 +7,41 @@ from ..ipc import hyprctlJSON
 from .interface import Plugin
 
 
-def get_XY(place, main_mon, other_mon):  # pylint: disable=too-many-return-statements
-    "returns (x, y) position of `main_mon` to set it at `place` regarding `other_mon`"
-    if place == "topof":
-        return (
-            other_mon["x"],
-            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
-        )
-    if place == "bottomof":
-        return (
-            other_mon["x"],
-            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
-        )
-    if place == "leftof":
-        return (
-            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
-            other_mon["y"],
-        )
-    if place == "rightof":
-        return (
-            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
-            other_mon["y"],
-        )
-    # Handle <position>MiddleOf
-    if place == "topmiddleof":
-        return (
-            other_mon["x"] + int((other_mon["width"] - main_mon["width"]) / 2),
-            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
-        )
-    if place == "bottommiddleof":
-        return (
-            other_mon["x"] + int((other_mon["width"] - main_mon["width"]) / 2),
-            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
-        )
-    if place == "leftmiddleof":
-        return (
-            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
-            other_mon["y"] + int((other_mon["height"] - main_mon["height"]) / 2),
-        )
-    if place == "rightmiddleof":
-        return (
-            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
-            other_mon["y"] + int((other_mon["height"] - main_mon["height"]) / 2),
-        )
-    # Handle <position>EndOf
-    if place == "topendof":
-        return (
-            other_mon["x"] + int((other_mon["width"] - main_mon["width"])),
-            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
-        )
-    if place == "bottomendof":
-        return (
-            other_mon["x"] + int((other_mon["width"] - main_mon["width"])),
-            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
-        )
-    if place == "leftendof":
-        return (
-            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
-            other_mon["y"] + int((other_mon["height"] - main_mon["height"])),
-        )
-    if place == "rightendof":
-        return (
-            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
-            other_mon["y"] + int((other_mon["height"] - main_mon["height"])),
-        )
-    return None
+def get_XY(place, main_mon, other_mon):
+    """Get the XY position of a monitor according to another (after `place` is applied)
+    Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
+    """
+    align_x = False
+    if place.startswith("top"):
+        x = other_mon["x"]
+        y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
+        align_x = True
+    elif place.startswith("bottom"):
+        x = other_mon["x"]
+        y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
+        align_x = True
+    elif place.startswith("left"):
+        x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
+        y = other_mon["y"]
+    elif place.startswith("right"):
+        x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
+        y = other_mon["y"]
+    else:
+        return None
+
+    centered = "middle" in place or "center" in place
+
+    if align_x:
+        if centered:
+            x += int((other_mon["width"] - main_mon["width"]) / 2)
+        elif "endof" in place:
+            x += int((other_mon["width"] - main_mon["width"]))
+    else:
+        if centered:
+            y += int((other_mon["height"] - main_mon["height"]) / 2)
+        elif "endof" in place:
+            y += int(other_mon["height"] - main_mon["height"])
+    return (x, y)
 
 
 def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
@@ -197,13 +167,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
             if other_mon and main_mon:
                 matched = True
-                try:
-                    x, y = get_XY(place, main_mon, other_mon)
-                except TypeError:
-                    self.log.error("Unknown position type: %s (%s)", place, rule)
-                else:
+                pos = get_XY(place, main_mon, other_mon)
+                if pos:
+                    x, y = pos
                     self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
-                configure_monitors(monitors, mon_name, x, y)
+                    configure_monitors(monitors, mon_name, x, y)
+                else:
+                    self.log.error("Unknown position type: %s (%s)", place, rule)
 
                 if self._changes_tracker is not None:
                     self._changes_tracker.add(mon_name)
