@@ -12,19 +12,23 @@ def get_XY(place, main_mon, other_mon):
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
     """
     align_x = False
+    scaled_m_w = int(main_mon["width"] / main_mon["scale"])
+    scaled_m_h = int(main_mon["height"] / main_mon["scale"])
+    scaled_om_w = int(other_mon["width"] / other_mon["scale"])
+    scaled_om_h = int(other_mon["height"] / other_mon["scale"])
     if place.startswith("top"):
         x = other_mon["x"]
-        y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
+        y = other_mon["y"] - scaled_m_h
         align_x = True
     elif place.startswith("bottom"):
         x = other_mon["x"]
-        y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
+        y = other_mon["y"] + scaled_om_h
         align_x = True
     elif place.startswith("left"):
-        x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
+        x = other_mon["x"] - scaled_m_w
         y = other_mon["y"]
     elif place.startswith("right"):
-        x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
+        x = other_mon["x"] + scaled_om_w
         y = other_mon["y"]
     else:
         return None
@@ -34,14 +38,14 @@ def get_XY(place, main_mon, other_mon):
     # XXX: scale support missing here ?
     if align_x:
         if centered:
-            x += int((other_mon["width"] - main_mon["width"]) / 2)
+            x += int((scaled_om_w - scaled_m_w) / 2)
         elif "end" in place:
-            x += int((other_mon["width"] - main_mon["width"]))
+            x += int(scaled_om_w - scaled_m_w)
     else:
         if centered:
-            y += int((other_mon["height"] - main_mon["height"]) / 2)
+            y += int((scaled_om_h - scaled_m_h) / 2)
         elif "end" in place:
-            y += int(other_mon["height"] - main_mon["height"])
+            y += scaled_m_h - scaled_om_h
     return (x, y)
 
 
