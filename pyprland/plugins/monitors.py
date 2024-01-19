@@ -10,12 +10,14 @@ from .interface import Plugin
 def get_XY(place, main_mon, other_mon):  # pylint: disable=too-many-return-statements
     "returns (x, y) position of `main_mon` to set it at `place` regarding `other_mon`"
     if place == "topof":
-        return other_mon["x"], other_mon["y"] - int(
-            main_mon["height"] / main_mon["scale"]
+        return (
+            other_mon["x"],
+            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
         )
     if place == "bottomof":
-        return other_mon["x"], other_mon["y"] + int(
-            other_mon["height"] / other_mon["scale"]
+        return (
+            other_mon["x"],
+            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
         )
     if place == "leftof":
         return (
