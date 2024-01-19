@@ -7,6 +7,71 @@ from ..ipc import hyprctlJSON
 from .interface import Plugin
 
 
+def get_XY(place, main_mon, other_mon):  # pylint: disable=too-many-return-statements
+    "returns (x, y) position of `main_mon` to set it at `place` regarding `other_mon`"
+    if place == "topof":
+        return other_mon["x"], other_mon["y"] - int(
+            main_mon["height"] / main_mon["scale"]
+        )
+    if place == "bottomof":
+        return other_mon["x"], other_mon["y"] + int(
+            other_mon["height"] / other_mon["scale"]
+        )
+    if place == "leftof":
+        return (
+            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
+            other_mon["y"],
+        )
+    if place == "rightof":
+        return (
+            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
+            other_mon["y"],
+        )
+    # Handle <position>MiddleOf
+    if place == "topmiddleof":
+        return (
+            other_mon["x"] + int((other_mon["width"] - main_mon["width"]) / 2),
+            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
+        )
+    if place == "bottommiddleof":
+        return (
+            other_mon["x"] + int((other_mon["width"] - main_mon["width"]) / 2),
+            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
+        )
+    if place == "leftmiddleof":
+        return (
+            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
+            other_mon["y"] + int((other_mon["height"] - main_mon["height"]) / 2),
+        )
+    if place == "rightmiddleof":
+        return (
+            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
+            other_mon["y"] + int((other_mon["height"] - main_mon["height"]) / 2),
+        )
+    # Handle <position>EndOf
+    if place == "topendof":
+        return (
+            other_mon["x"] + int((other_mon["width"] - main_mon["width"])),
+            other_mon["y"] - int(main_mon["height"] / main_mon["scale"]),
+        )
+    if place == "bottomendof":
+        return (
+            other_mon["x"] + int((other_mon["width"] - main_mon["width"])),
+            other_mon["y"] + int(other_mon["height"] / other_mon["scale"]),
+        )
+    if place == "leftendof":
+        return (
+            other_mon["x"] - int(main_mon["width"] / main_mon["scale"]),
+            other_mon["y"] + int((other_mon["height"] - main_mon["height"])),
+        )
+    if place == "rightendof":
+        return (
+            other_mon["x"] + int(other_mon["width"] / other_mon["scale"]),
+            other_mon["y"] + int((other_mon["height"] - main_mon["height"])),
+        )
+    return None
+
+
 def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
     "Apply the configuration change"
 
@@ -130,68 +195,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
             if other_mon and main_mon:
                 matched = True
-                x: int = 0
-                y: int = 0
-
-                assert isinstance(main_mon["height"], int)
-                assert isinstance(main_mon["width"], int)
-                assert isinstance(main_mon["scale"], float)
-
-                assert isinstance(other_mon["height"], int)
-                assert isinstance(other_mon["width"], int)
-                assert isinstance(other_mon["scale"], float)
-
-                if place == "topof":
-                    x = other_mon["x"]
-                    y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
-                elif place == "bottomof":
-                    x = other_mon["x"]
-                    y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
-                elif place == "leftof":
-                    x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
-                    y = other_mon["y"]
-                elif place == "rightof":
-                    x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
-                    y = other_mon["y"]
-                # Handle <position>MiddleOf
-                elif place == "topmiddleof":
-                    x = other_mon["x"] + int(
-                        (other_mon["width"] - main_mon["width"]) / 2
-                    )
-                    y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
-                elif place == "bottommiddleof":
-                    x = other_mon["x"] + int(
-                        (other_mon["width"] - main_mon["width"]) / 2
-                    )
-                    y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
-                elif place == "leftmiddleof":
-                    x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
-                    y = other_mon["y"] + int(
-                        (other_mon["height"] - main_mon["height"]) / 2
-                    )
-                elif place == "rightmiddleof":
-                    x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
-                    y = other_mon["y"] + int(
-                        (other_mon["height"] - main_mon["height"]) / 2
-                    )
-                # Handle <position>EndOf
-                elif place == "topendof":
-                    x = other_mon["x"] + int((other_mon["width"] - main_mon["width"]))
-                    y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
-                elif place == "bottomendof":
-                    x = other_mon["x"] + int((other_mon["width"] - main_mon["width"]))
-                    y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
-                elif place == "leftendof":
-                    x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
-                    y = other_mon["y"] + int((other_mon["height"] - main_mon["height"]))
-                elif place == "rightendof":
-                    x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
-                    y = other_mon["y"] + int((other_mon["height"] - main_mon["height"]))
+                try:
+                    x, y = get_XY(place, main_mon, other_mon)
+                except TypeError:
+                    self.log.error("Unknown position type: %s (%s)", place, rule)
                 else:
-                    self.log.error("Unknown position: %s", place)
-
-                self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
+                    self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
                 configure_monitors(monitors, mon_name, x, y)
+
                 if self._changes_tracker is not None:
                     self._changes_tracker.add(mon_name)
                     # Also prevent the reference screen from moving
