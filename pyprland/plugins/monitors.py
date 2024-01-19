@@ -88,6 +88,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "bottomof": "topof",
         "leftof": "rightof",
         "rightof": "leftof",
+        "topmiddleof": "bottommiddleof",
+        "bottommiddleof": "topmiddleof",
+        "leftmiddleof": "rightmiddleof",
+        "rightmiddleof": "leftmiddleof",
+        "topendof": "bottomendof",
+        "bottomendof": "topendof",
+        "leftendof": "rightendof",
+        "rightendof": "leftendof",
     }
 
     def _get_rules(self, mon_description):
@@ -114,7 +122,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         mon_name: str = cast(str, mon_info["name"])
         monitors_by_descr = {m["description"]: m for m in monitors}
         self._clear_mon_by_pat_cache()
-
         matched = False
 
         for place, other_screen, rule in self._get_rules(mon_info["description"]):
@@ -143,9 +150,45 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 elif place == "leftof":
                     x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
                     y = other_mon["y"]
-                else:  # rightof
+                elif place == "rightof":
                     x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
                     y = other_mon["y"]
+                # Handle <position>MiddleOf
+                elif place == "topmiddleof":
+                    x = other_mon["x"] + int(
+                        (other_mon["width"] - main_mon["width"]) / 2
+                    )
+                    y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
+                elif place == "bottommiddleof":
+                    x = other_mon["x"] + int(
+                        (other_mon["width"] - main_mon["width"]) / 2
+                    )
+                    y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
+                elif place == "leftmiddleof":
+                    x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
+                    y = other_mon["y"] + int(
+                        (other_mon["height"] - main_mon["height"]) / 2
+                    )
+                elif place == "rightmiddleof":
+                    x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
+                    y = other_mon["y"] + int(
+                        (other_mon["height"] - main_mon["height"]) / 2
+                    )
+                # Handle <position>EndOf
+                elif place == "topendof":
+                    x = other_mon["x"] + int((other_mon["width"] - main_mon["width"]))
+                    y = other_mon["y"] - int(main_mon["height"] / main_mon["scale"])
+                elif place == "bottomendof":
+                    x = other_mon["x"] + int((other_mon["width"] - main_mon["width"]))
+                    y = other_mon["y"] + int(other_mon["height"] / other_mon["scale"])
+                elif place == "leftendof":
+                    x = other_mon["x"] - int(main_mon["width"] / main_mon["scale"])
+                    y = other_mon["y"] + int((other_mon["height"] - main_mon["height"]))
+                elif place == "rightendof":
+                    x = other_mon["x"] + int(other_mon["width"] / other_mon["scale"])
+                    y = other_mon["y"] + int((other_mon["height"] - main_mon["height"]))
+                else:
+                    self.log.error("Unknown position: %s", place)
 
                 self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
                 configure_monitors(monitors, mon_name, x, y)
