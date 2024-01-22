@@ -49,7 +49,7 @@ def get_XY(place, main_mon, other_mon):
     return (x, y)
 
 
-def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
+def apply_monitor_position(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
     "Apply the configuration change"
 
     command = ["wlr-randr"]
@@ -180,7 +180,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 if pos:
                     x, y = pos
                     self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
-                    configure_monitors(monitors, mon_name, x, y)
+                    apply_monitor_position(monitors, mon_name, x, y)
                 else:
                     self.log.error("Unknown position type: %s (%s)", place, rule)
 
