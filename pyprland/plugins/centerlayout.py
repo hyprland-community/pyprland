@@ -1,4 +1,10 @@
-" Plugin template "
+"""
+Implements a "Centered" layout:
+- windows are normally tiled but one
+- the active window is floating and centered
+- you can cycle the active window, keeping the same layout type
+- layout can be toggled any time
+"""
 from typing import Any
 from collections import defaultdict
 
