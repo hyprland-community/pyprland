@@ -1,5 +1,4 @@
 " Plugin template "
-import asyncio
 from typing import Any
 from collections import defaultdict
 
@@ -12,17 +11,17 @@ class Extension(Plugin):
     "Sample plugin template"
 
     margin = 100
+    workspace_info: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {"enabled": False, "addr": ""}
+    )
+    active_workspace = ""
+    active_window_addr = ""
 
     async def init(self):
-        self.workspace_info: dict[str, dict[str, Any]] = defaultdict(
-            lambda: dict(enabled=False, addr="")
-        )
-        self.active_workspace = ""
+        "initializes the plugin"
         for monitor in await hyprctlJSON("monitors"):
             if monitor["focused"]:
                 self.active_workspace = str(monitor["activeWorkspace"]["name"])
-        # TODO: fetch active client in active_workspace
-        self.active_window_addr = ""
 
     async def event_workspace(self, wrkspace):
         "active workspace hook"
@@ -37,6 +36,7 @@ class Extension(Plugin):
         self.active_window_addr = "0x" + addr.strip()
 
     async def run_centerlayout(self, what):
+        "<toggle|next|prev> turn on/off or change the active window"
         if what == "toggle":
             await self._run_toggle()
         elif what == "next":
@@ -44,9 +44,13 @@ class Extension(Plugin):
         elif what == "prev":
             await self._run_changefocus(-1)
 
+        if self.enabled:
+            await hyprctl(f"focuswindow address:{self.addr}")
+
     # Utils
 
     async def get_clients(self):
+        "Return the client list in the currently active workspace"
         clients = []
         for client in await hyprctlJSON("clients"):
             if client["workspace"]["name"] == self.active_workspace:
@@ -55,9 +59,11 @@ class Extension(Plugin):
         return clients
 
     async def unprepare_window(self):
+        "Set the window as normal"
         await hyprctl(f"togglefloating address:{self.addr}")
 
     async def prepare_window(self):
+        "Set the window as centered"
         addr = self.addr
         await hyprctl(f"togglefloating address:{addr}")
         width = 100
@@ -70,15 +76,14 @@ class Extension(Plugin):
                 height = monitor["height"] - (2 * self.margin)
                 x = monitor["x"] + self.margin
                 y = monitor["y"] + self.margin
-        # await asyncio.sleep(0.2)
         await hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
-        # await asyncio.sleep(0.2)
         # await hyprctl(f"centerwindow")
         await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
 
     # Subcommands
 
     async def _run_changefocus(self, direction):
+        "Change the focus in the given direction (>0 or <0)"
         if self.enabled:
             clients = await self.get_clients()
             index = 0
@@ -94,9 +99,10 @@ class Extension(Plugin):
             self.addr = new_client["address"]
             await self.prepare_window()
         else:
-            await hyprctl("movefocus %s" % "r" if direction > 0 else "l")
+            await hyprctl(f"movefocus {'r' if direction > 0 else 'l'}")
 
     async def _run_toggle(self):
+        "toggle the center layout"
         disabled = not self.enabled
         if disabled:
             self.addr = self.active_window_addr
@@ -110,19 +116,27 @@ class Extension(Plugin):
     # Getters
 
     def get_enabled(self):
+        "Is center layout enabled on the active workspace ?"
         return self.workspace_info[self.active_workspace]["enabled"]
 
     def set_enabled(self, value):
+        "set if center layout enabled on the active workspace"
         self.workspace_info[self.active_workspace]["enabled"] = value
 
-    enabled = property(get_enabled, set_enabled)
+    enabled = property(
+        get_enabled, set_enabled, "centered layout enabled on this workspace"
+    )
     del get_enabled, set_enabled
 
     def get_addr(self):
+        "get active workspace's centered window address"
         return self.workspace_info[self.active_workspace]["addr"]
 
     def set_addr(self, value):
+        "set active workspace's centered window address"
         self.workspace_info[self.active_workspace]["addr"] = value
 
-    addr = property(get_addr, set_addr)
+    addr = property(
+        get_addr, set_addr, doc="active workspace's centered window address"
+    )
     del get_addr, set_addr
