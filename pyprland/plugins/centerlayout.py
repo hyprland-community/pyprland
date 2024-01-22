@@ -28,6 +28,8 @@ class Extension(Plugin):
             if monitor["focused"]:
                 self.active_workspace = str(monitor["activeWorkspace"]["name"])
 
+    # Events
+
     async def event_workspace(self, wrkspace):
         "active workspace hook"
         self.active_workspace = wrkspace.strip()
@@ -39,6 +41,8 @@ class Extension(Plugin):
     async def event_activewindowv2(self, addr):
         "focused client hook"
         self.active_window_addr = "0x" + addr.strip()
+
+    # Command
 
     async def run_centerlayout(self, what):
         "<toggle|next|prev> turn on/off or change the active window"
