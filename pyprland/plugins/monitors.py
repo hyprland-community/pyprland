@@ -149,6 +149,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for pattern, config in self.config["placement"].items():
             matched = pattern in mon_description
             for position, descr_list in config.items():
+                if isinstance(descr_list, str):
+                    descr_list = [descr_list]
                 for descr in descr_list:
                     lp = position.lower().replace("_", "").replace("-", "")
                     if matched or mon_description in descr:
