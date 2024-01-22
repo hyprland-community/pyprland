@@ -14,7 +14,7 @@ from ..ipc import hyprctlJSON, hyprctl
 
 
 class Extension(Plugin):
-    "Sample plugin template"
+    "Manages a layout with one centered window on top of others"
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"enabled": False, "addr": ""}
@@ -131,7 +131,7 @@ class Extension(Plugin):
             await self.unprepare_window()
             self.addr = None
 
-        self.enabled = not self.enabled
+        self.enabled = disabled
 
     # Getters
 
