@@ -26,7 +26,7 @@ class Extension(Plugin):
         "initializes the plugin"
         for monitor in await hyprctlJSON("monitors"):
             if monitor["focused"]:
-                self.active_workspace = str(monitor["activeWorkspace"]["name"])
+                self.active_workspace = monitor["activeWorkspace"]["name"]
 
     # Events
 
