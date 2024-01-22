@@ -16,7 +16,6 @@ from ..ipc import hyprctlJSON, hyprctl
 class Extension(Plugin):
     "Sample plugin template"
 
-    margin = 100
     workspace_info: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"enabled": False, "addr": ""}
     )
@@ -64,24 +63,34 @@ class Extension(Plugin):
         clients.sort(key=lambda c: c["address"])
         return clients
 
-    async def unprepare_window(self):
+    async def unprepare_window(self, clients=None):
         "Set the window as normal"
-        await hyprctl(f"togglefloating address:{self.addr}")
-
-    async def prepare_window(self):
-        "Set the window as centered"
+        if not clients:
+            clients = await self.get_clients()
         addr = self.addr
-        await hyprctl(f"togglefloating address:{addr}")
+        for cli in clients:
+            if cli["address"] == addr and cli["floating"]:
+                await hyprctl(f"togglefloating address:{addr}")
+
+    async def prepare_window(self, clients=None):
+        "Set the window as centered"
+        if not clients:
+            clients = await self.get_clients()
+        addr = self.addr
+        for cli in clients:
+            if cli["address"] == addr and not cli["floating"]:
+                await hyprctl(f"togglefloating address:{addr}")
         width = 100
         height = 100
         x = 0
         y = 0
+        margin = self.margin
         for monitor in await hyprctlJSON("monitors"):
             if monitor["focused"]:
-                width = monitor["width"] - (2 * self.margin)
-                height = monitor["height"] - (2 * self.margin)
-                x = monitor["x"] + self.margin
-                y = monitor["y"] + self.margin
+                width = monitor["width"] - (2 * margin)
+                height = monitor["height"] - (2 * margin)
+                x = monitor["x"] + margin
+                y = monitor["y"] + margin
         await hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
         # await hyprctl(f"centerwindow")
         await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
@@ -101,11 +110,12 @@ class Extension(Plugin):
             elif index == len(clients):
                 index = 0
             new_client = clients[index]
-            await self.unprepare_window()
+            await self.unprepare_window(clients)
             self.addr = new_client["address"]
-            await self.prepare_window()
+            await self.prepare_window(clients)
         else:
-            await hyprctl(f"movefocus {'r' if direction > 0 else 'l'}")
+            orientation = "ud" if self.config.get("vertical") else "lr"
+            await hyprctl(f"movefocus {orientation[1 if direction > 0 else 0]}")
 
     async def _run_toggle(self):
         "toggle the center layout"
@@ -120,6 +130,11 @@ class Extension(Plugin):
         self.enabled = not self.enabled
 
     # Getters
+
+    @property
+    def margin(self):
+        "Returns the margin of the centered window"
+        return self.config.get("margin", 100)
 
     def get_enabled(self):
         "Is center layout enabled on the active workspace ?"
