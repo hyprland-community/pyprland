@@ -149,7 +149,7 @@ class Extension(Plugin):
         self.workspace_info[self.active_workspace]["enabled"] = value
 
     enabled = property(
-        get_enabled, set_enabled, "centered layout enabled on this workspace"
+        get_enabled, set_enabled, doc="centered layout enabled on this workspace"
     )
     del get_enabled, set_enabled
 
