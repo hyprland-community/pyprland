@@ -35,7 +35,6 @@ def get_XY(place, main_mon, other_mon):
 
     centered = "middle" in place or "center" in place
 
-    # XXX: scale support missing here ?
     if align_x:
         if centered:
             x += int((scaled_om_w - scaled_m_w) / 2)
