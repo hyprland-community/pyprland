@@ -31,11 +31,11 @@ class Extension(Plugin):
     # Events
 
     async def event_workspace(self, wrkspace):
-        "active workspace hook"
+        "track the active workspace"
         self.active_workspace = wrkspace.strip()
 
     async def event_focusedmon(self, mon):
-        "focused monitor hook"
+        "track the active workspace"
         _, self.active_workspace = mon.strip().rsplit(",", 1)
 
     async def event_activewindowv2(self, addr):
