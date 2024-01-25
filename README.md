@@ -27,8 +27,12 @@ It has a safe design which is friendly for developers.
 [![Star History Chart](https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date)](https://star-history.com/#fdev31/pyprland&Date)
 
 > [!note]
-> *BREAKING NEWS*
-> - **Git (future 1.8.0)** : `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
+> *Latest major changes*
+> **Git (future 1.8.0)**
+> - `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
 >   - add the `toggle_special` plugin to your config and rename the command in your `hyprland.conf` & scripts!
-> - **wiki**: split the `Plugins`: one page each
-> - **1.7.0** : `monitors` plugin uses now a new syntax - full rewrite (expect a behavior change)
+> - New `centerlayout` plugin
+> **Wiki**
+> - `Plugins` have been split, one page each
+> **1.7.0**
+> - **BREAKING CHANGE** `monitors` plugin uses now a new syntax - full rewrite (expect a behavior change)
