@@ -20,6 +20,8 @@ CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.so
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
+PYPR_DEMO = os.environ.get("PYPR_DEMO", False)
+
 
 class Pyprland:
     "Main app object"
@@ -182,9 +184,9 @@ class Pyprland:
             args = args[1:]
 
         full_name = f"run_{cmd}"
-        # Demos:
-        # run mako for notifications & uncomment this
-        # os.system(f"notify-send '{data}'")
+
+        if PYPR_DEMO:
+            os.system(f"notify-send -t 4000 '{data}'")
 
         if not await self._callHandler(full_name, *args, notify=cmd):
             self.log.warning("No such command: %s", cmd)
