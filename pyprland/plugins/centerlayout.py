@@ -44,7 +44,6 @@ class Extension(Plugin):
 
     async def event_closewindow(self, addr):
         "Disable when the main window is closed"
-        print(self.active_window_addr, addr)
         if self.enabled and self.active_window_addr == "0x" + addr:
             await self._run_toggle()
 
