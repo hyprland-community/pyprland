@@ -39,8 +39,14 @@ class Extension(Plugin):
         _, self.active_workspace = mon.strip().rsplit(",", 1)
 
     async def event_activewindowv2(self, addr):
-        "focused client hook"
+        "keep track of focused client"
         self.active_window_addr = "0x" + addr.strip()
+
+    async def event_closewindow(self, addr):
+        "Disable when the main window is closed"
+        print(self.active_window_addr, addr)
+        if self.enabled and self.active_window_addr == "0x" + addr:
+            await self._run_toggle()
 
     # Command
 
