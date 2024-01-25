@@ -159,7 +159,7 @@ class Pyprland:
             full_name = f"event_{cmd}"
 
             # self.log.debug("[%s] %s", cmd, params.strip())
-            await self._callHandler(full_name, params)
+            await self._callHandler(full_name, params.rstrip("\n"))
 
     async def read_command(self, reader, writer) -> None:
         "Receives a socket command"
