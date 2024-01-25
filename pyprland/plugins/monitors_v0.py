@@ -56,7 +56,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         self, monitor_name, no_default=False, monitors: list | None = None
     ) -> None:
         "Triggers when a monitor is plugged"
-        monitor_name = monitor_name.strip()
 
         if not monitors:
             monitors = cast(list, await hyprctlJSON("monitors"))

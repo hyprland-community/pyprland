@@ -32,15 +32,15 @@ class Extension(Plugin):
 
     async def event_workspace(self, wrkspace):
         "track the active workspace"
-        self.active_workspace = wrkspace.strip()
+        self.active_workspace = wrkspace
 
     async def event_focusedmon(self, mon):
         "track the active workspace"
-        _, self.active_workspace = mon.strip().rsplit(",", 1)
+        _, self.active_workspace = mon.rsplit(",", 1)
 
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
-        self.active_window_addr = "0x" + addr.strip()
+        self.active_window_addr = "0x" + addr
 
     async def event_closewindow(self, addr):
         "Disable when the main window is closed"

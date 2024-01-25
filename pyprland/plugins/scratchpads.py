@@ -575,7 +575,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def event_focusedmon(self, mon):
         "focused monitor hook"
-        self.monitor = mon.strip()
+        self.monitor = mon
 
     async def event_workspace(self, workspace) -> None:
         "workspace change hook"
@@ -583,7 +583,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
-        addr = addr.strip()
         for uid, scratch in self.scratches.items():
             if scratch.client_info and scratch.address != addr:
                 if (
@@ -698,7 +697,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def run_show(self, uid) -> None:
         """<name> shows scratchpad "name" """
-        uid = uid.strip()
         item = self.scratches.get(uid)
 
         if not item:
@@ -790,7 +788,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """<name> hides scratchpad "name"
         if `autohide` is True, skips focus tracking
         `force` ignores the visibility check"""
-        uid = uid.strip()
         scratch = self.scratches.get(uid)
 
         if not scratch:

@@ -26,8 +26,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def event_monitoradded(self, monitor):
         "keep track of monitors"
-        self.monitors.append(monitor.strip())
+        self.monitors.append(monitor)
 
     async def event_monitorremoved(self, monitor):
         "keep track of monitors"
-        self.monitors.remove(monitor.strip())
+        self.monitors.remove(monitor)
