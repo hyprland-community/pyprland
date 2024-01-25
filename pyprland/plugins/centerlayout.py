@@ -5,7 +5,7 @@ Implements a "Centered" layout:
 - you can cycle the active window, keeping the same layout type
 - layout can be toggled any time
 """
-from typing import Any
+from typing import Any, cast
 from collections import defaultdict
 
 from .interface import Plugin
@@ -26,7 +26,7 @@ class Extension(Plugin):
         "initializes the plugin"
         for monitor in await hyprctlJSON("monitors"):
             if monitor["focused"]:
-                self.active_workspace = monitor["activeWorkspace"]["name"]
+                self.active_workspace = cast(str, monitor["activeWorkspace"]["name"])
 
     # Events
 
@@ -95,9 +95,9 @@ class Extension(Plugin):
                 height = monitor["height"] - (2 * margin)
                 x = monitor["x"] + margin
                 y = monitor["y"] + margin
+        await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
         await hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
         # await hyprctl(f"centerwindow")
-        await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
 
     # Subcommands
 
