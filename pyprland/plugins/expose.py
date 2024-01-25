@@ -1,5 +1,4 @@
 """ expose Brings every client window to screen for selection
-toggle_minimized allows having an "expose" like selection of minimized windows
 """
 from typing import Any, cast
 
@@ -9,25 +8,6 @@ from .interface import Plugin
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     exposed: list[dict] = []
-
-    async def run_toggle_minimized(self, special_workspace="minimized"):
-        """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)"""
-        aw = cast(dict, await hyprctlJSON("activewindow"))
-        wid = aw["workspace"]["id"]
-        assert isinstance(wid, int)
-        if wid < 1:  # special workspace: unminimize
-            wrk = cast(dict, await hyprctlJSON("activeworkspace"))
-            await hyprctl(
-                [
-                    f"togglespecialworkspace {special_workspace}",
-                    f"movetoworkspacesilent {wrk['id']},address:{aw['address']}",
-                    f"focuswindow address:{aw['address']}",
-                ]
-            )
-        else:
-            await hyprctl(
-                f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}"
-            )
 
     @property
     def exposed_clients(self):
