@@ -26,3 +26,4 @@ class Extension(Plugin):
     async def event_activewindowv2(self, _addr) -> None:
         "Handle event `activewindowv2` and track the count"
         self.focus_changes += 1
+        self.log.info("Focus changed, count = %d", self.focus_changes)
