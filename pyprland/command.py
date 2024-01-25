@@ -118,7 +118,7 @@ class Pyprland:
     async def _run_plugin_handler(self, plugin, full_name, params):
         "Runs a single handler on a plugin"
         color = 33 if full_name.startswith("run_") else 30
-        self.log.debug(f"\033[{color};1m%s.%s%s\033[0m", plugin.name, full_name, params)
+        plugin.log.debug(f"\033[{color};1m%s%s\033[0m", full_name, params)
         try:
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
