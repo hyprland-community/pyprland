@@ -65,10 +65,11 @@ class Extension(Plugin):
 
     async def get_clients(self):
         "Return the client list in the currently active workspace"
-        clients = []
-        for client in await hyprctlJSON("clients"):
-            if client["workspace"]["name"] == self.active_workspace:
-                clients.append(client)
+        clients = [
+            client
+            for client in await hyprctlJSON("clients")
+            if client["workspace"]["name"] == self.active_workspace
+        ]
         clients.sort(key=lambda c: c["address"])
         return clients
 
@@ -110,17 +111,22 @@ class Extension(Plugin):
         "Change the focus in the given direction (>0 or <0)"
         if self.enabled:
             clients = await self.get_clients()
+            if len(clients) < 2:
+                # If < 2 clients, disable the layout & stop
+                await self.unprepare_window()
+                return
             index = 0
             for i, client in enumerate(clients):
                 if client["address"] == self.addr:
                     index = i + direction
+                    break
             if index < 0:
                 index = len(clients) - 1
             elif index == len(clients):
                 index = 0
             new_client = clients[index]
-            await self.unprepare_window(clients)
             self.addr = new_client["address"]
+            await self.unprepare_window(clients)
             await self.prepare_window(clients)
         else:
             orientation = "ud" if self.config.get("vertical") else "lr"
@@ -134,7 +140,6 @@ class Extension(Plugin):
             await self.prepare_window()
         else:
             await self.unprepare_window()
-            self.addr = None
 
         self.enabled = disabled
 
