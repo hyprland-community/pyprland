@@ -20,11 +20,15 @@ class Extension(Plugin):
         lambda: {"enabled": False, "addr": ""}
     )
     active_workspace = ""
+    # focused window
     active_window_addr = ""
+    # main centered window
+    main_window_addr = ""
 
     async def init(self):
         "initializes the plugin"
         for monitor in await hyprctlJSON("monitors"):
+            assert isinstance(monitor, dict)
             if monitor["focused"]:
                 self.active_workspace = cast(str, monitor["activeWorkspace"]["name"])
 
@@ -44,7 +48,8 @@ class Extension(Plugin):
 
     async def event_closewindow(self, addr):
         "Disable when the main window is closed"
-        if self.enabled and self.active_window_addr == "0x" + addr:
+        closed_main = self.main_window_addr == "0x" + addr
+        if self.enabled and closed_main:
             await self._run_toggle()
 
     # Command
@@ -59,7 +64,7 @@ class Extension(Plugin):
             await self._run_changefocus(-1)
 
         if self.enabled:
-            await hyprctl(f"focuswindow address:{self.addr}")
+            await hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     # Utils
 
@@ -67,8 +72,8 @@ class Extension(Plugin):
         "Return the client list in the currently active workspace"
         clients = [
             client
-            for client in await hyprctlJSON("clients")
-            if client["workspace"]["name"] == self.active_workspace
+            for client in cast(list[dict[str, Any]], await hyprctlJSON("clients"))
+            if cast(str, client["workspace"]["name"]) == self.active_workspace
         ]
         clients.sort(key=lambda c: c["address"])
         return clients
@@ -77,7 +82,7 @@ class Extension(Plugin):
         "Set the window as normal"
         if not clients:
             clients = await self.get_clients()
-        addr = self.addr
+        addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and cli["floating"]:
                 await hyprctl(f"togglefloating address:{addr}")
@@ -86,7 +91,7 @@ class Extension(Plugin):
         "Set the window as centered"
         if not clients:
             clients = await self.get_clients()
-        addr = self.addr
+        addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and not cli["floating"]:
                 await hyprctl(f"togglefloating address:{addr}")
@@ -95,7 +100,7 @@ class Extension(Plugin):
         x = 0
         y = 0
         margin = self.margin
-        for monitor in await hyprctlJSON("monitors"):
+        for monitor in cast(list[dict[str, Any]], await hyprctlJSON("monitors")):
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin)
                 height = monitor["height"] - (2 * margin)
@@ -117,7 +122,7 @@ class Extension(Plugin):
                 return
             index = 0
             for i, client in enumerate(clients):
-                if client["address"] == self.addr:
+                if client["address"] == self.main_window_addr:
                     index = i + direction
                     break
             if index < 0:
@@ -125,7 +130,7 @@ class Extension(Plugin):
             elif index == len(clients):
                 index = 0
             new_client = clients[index]
-            self.addr = new_client["address"]
+            self.main_window_addr = new_client["address"]
             await self.unprepare_window(clients)
             await self.prepare_window(clients)
         else:
@@ -136,7 +141,7 @@ class Extension(Plugin):
         "toggle the center layout"
         disabled = not self.enabled
         if disabled:
-            self.addr = self.active_window_addr
+            self.main_window_addr = self.active_window_addr
             await self.prepare_window()
         else:
             await self.unprepare_window()
