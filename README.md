@@ -31,7 +31,8 @@ It has a safe design which is friendly for developers.
 ### Git (future 1.8.0)
 
 - `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
-  - add the `toggle_special` plugin to your config and rename the command in your `hyprland.conf` & scripts!
+  - add the [toggle_special](https://github.com/hyprland-community/pyprland/wiki/toggle_special) plugin to your config and rename the command in your `hyprland.conf` & scripts!
+  - was provided by [expose](https://github.com/hyprland-community/pyprland/wiki/expose)
 - New [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin
 
 ### Wiki
@@ -40,4 +41,4 @@ It has a safe design which is friendly for developers.
 
 ### 1.7.0
 
-- **BREAKING CHANGE** `monitors` plugin uses now a new syntax - full rewrite (expect a behavior change)
+- **BREAKING CHANGE** [layout_center](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
