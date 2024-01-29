@@ -81,7 +81,7 @@ class Extension(Plugin):
 
     # Command
 
-    async def run_centerlayout(self, what):
+    async def run_center_layout(self, what):
         "<toggle|next|prev> turn on/off or change the active window"
         if what == "toggle":
             await self._run_toggle()
