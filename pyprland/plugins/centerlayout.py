@@ -147,7 +147,7 @@ class Extension(Plugin):
         return self.enabled
 
     async def _run_changefocus(self, direction):
-        "Change the focus in the given direction (>0 or <0)"
+        "Change the focus in the given direction (-1 or 1)"
         if self.enabled:
             clients = await self.get_clients()
             if await self._sanity_check(clients):
