@@ -22,8 +22,6 @@ class Extension(Plugin):
     active_workspace = ""
     # focused window
     active_window_addr = ""
-    # main centered window
-    main_window_addr = ""
 
     async def init(self):
         "initializes the plugin"
@@ -45,12 +43,19 @@ class Extension(Plugin):
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
         self.active_window_addr = "0x" + addr
+        if self.enabled:
+            await hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr):
         "Disable when the main window is closed"
-        closed_main = self.main_window_addr == "0x" + addr
-        if self.enabled and closed_main:
-            await self._run_toggle()
+        clients = [
+            c for c in await self.get_clients() if c["address"] != self.main_window_addr
+        ]
+        if self.enabled and await self._sanity_check(clients):
+            self.log.debug("Sanity passed")
+            closed_main = self.main_window_addr == "0x" + addr
+            if self.enabled and closed_main:
+                await self._run_changefocus(1)
 
     # Command
 
@@ -62,9 +67,6 @@ class Extension(Plugin):
             await self._run_changefocus(1)
         elif what == "prev":
             await self._run_changefocus(-1)
-
-        if self.enabled:
-            await hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     # Utils
 
@@ -106,33 +108,41 @@ class Extension(Plugin):
                 height = monitor["height"] - (2 * margin)
                 x = monitor["x"] + margin
                 y = monitor["y"] + margin
-        await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
         await hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
+        await hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
         # await hyprctl(f"centerwindow")
 
     # Subcommands
+
+    async def _sanity_check(self, clients=None):
+        "Auto-disable if needed & return enabled status"
+        clients = clients or await self.get_clients()
+        if len(clients) < 2:
+            # If < 2 clients, disable the layout & stop
+            self.log.info("disabling (clients starvation)")
+            await self.unprepare_window()
+            self.enabled = False
+        return self.enabled
 
     async def _run_changefocus(self, direction):
         "Change the focus in the given direction (>0 or <0)"
         if self.enabled:
             clients = await self.get_clients()
-            if len(clients) < 2:
-                # If < 2 clients, disable the layout & stop
-                await self.unprepare_window()
-                return
-            index = 0
-            for i, client in enumerate(clients):
-                if client["address"] == self.main_window_addr:
-                    index = i + direction
-                    break
-            if index < 0:
-                index = len(clients) - 1
-            elif index == len(clients):
+            if await self._sanity_check(clients):
                 index = 0
-            new_client = clients[index]
-            await self.unprepare_window(clients)
-            self.main_window_addr = new_client["address"]
-            await self.prepare_window(clients)
+                for i, client in enumerate(clients):
+                    if client["address"] == self.main_window_addr:
+                        index = i + direction
+                        break
+                if index < 0:
+                    index = len(clients) - 1
+                elif index == len(clients):
+                    index = 0
+                new_client = clients[index]
+                await self.unprepare_window(clients)
+                self.main_window_addr = new_client["address"]
+                await hyprctl(f"focuswindow address:{self.main_window_addr}")
+                await self.prepare_window(clients)
         else:
             orientation = "ud" if self.config.get("vertical") else "lr"
             await hyprctl(f"movefocus {orientation[1 if direction > 0 else 0]}")
@@ -176,7 +186,7 @@ class Extension(Plugin):
         "set active workspace's centered window address"
         self.workspace_info[self.active_workspace]["addr"] = value
 
-    addr = property(
+    main_window_addr = property(
         get_addr, set_addr, doc="active workspace's centered window address"
     )
     del get_addr, set_addr
