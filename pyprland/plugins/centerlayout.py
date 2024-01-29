@@ -43,7 +43,18 @@ class Extension(Plugin):
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
         self.active_window_addr = "0x" + addr
-        if self.enabled:
+        if (
+            self.config.get("captive_focus", True)
+            and self.enabled
+            and self.active_window_addr != self.main_window_addr
+            and len(
+                [
+                    c
+                    for c in await self.get_clients()
+                    if c["address"] == self.active_window_addr
+                ]
+            )
+        ):
             await hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr):
