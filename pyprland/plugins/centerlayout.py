@@ -5,6 +5,7 @@ Implements a "Centered" layout:
 - you can cycle the active window, keeping the same layout type
 - layout can be toggled any time
 """
+import asyncio
 from typing import Any, cast
 from collections import defaultdict
 
@@ -32,6 +33,17 @@ class Extension(Plugin):
 
     # Events
 
+    async def event_openwindow(self, windescr):
+        "Re-set focus to main if a window is opened"
+        if not self.enabled:
+            return
+        win_addr = "0x" + windescr.split(",", 1)[0]
+        for cli in await self.get_clients():
+            print(cli["address"], win_addr)
+            if cli["address"] == win_addr:
+                await hyprctl(f"focuswindow address:{self.main_window_addr}")
+                break
+
     async def event_workspace(self, wrkspace):
         "track the active workspace"
         self.active_workspace = wrkspace
@@ -44,7 +56,7 @@ class Extension(Plugin):
         "keep track of focused client"
         self.active_window_addr = "0x" + addr
         if (
-            self.config.get("captive_focus", True)
+            self.config.get("captive_focus")
             and self.enabled
             and self.active_window_addr != self.main_window_addr
             and len(
