@@ -5,7 +5,6 @@ Implements a "Centered" layout:
 - you can cycle the active window, keeping the same layout type
 - layout can be toggled any time
 """
-import asyncio
 from typing import Any, cast
 from collections import defaultdict
 
@@ -65,6 +64,7 @@ class Extension(Plugin):
                     if c["address"] == self.active_window_addr
                 ]
             )
+            > 0
         ):
             await hyprctl(f"focuswindow address:{self.main_window_addr}")
 
