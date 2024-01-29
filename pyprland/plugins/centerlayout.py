@@ -39,7 +39,6 @@ class Extension(Plugin):
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
         for cli in await self.get_clients():
-            print(cli["address"], win_addr)
             if cli["address"] == win_addr:
                 await hyprctl(f"focuswindow address:{self.main_window_addr}")
                 break
