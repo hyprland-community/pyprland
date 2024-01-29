@@ -9,13 +9,13 @@ You can implement anything you can imagine using Python with [Hyprland API](http
 
 It has a safe design which is friendly for developers.
 
-### → Read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page
+### → [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started)
 
-### → Open the [plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins) to see the current features
+### → [Features/plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
 
-### → Check the [Relases](https://github.com/hyprland-community/pyprland/releases) for a change log
+### → [Changes log](https://github.com/hyprland-community/pyprland/releases)
 
-### → finally browse the other [wiki](https://github.com/hyprland-community/pyprland/wiki) pages
+### →[The Wiki](https://github.com/hyprland-community/pyprland/wiki)
 
 ## Dependencies
 
