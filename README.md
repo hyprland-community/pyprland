@@ -32,7 +32,7 @@ It has a safe design which is friendly for developers.
 
 - `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
   - add the `toggle_special` plugin to your config and rename the command in your `hyprland.conf` & scripts!
-- New [layout_center](https://github.com/hyprland-community/pyprland/wiki/center_layout) plugin
+- New [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin
 
 ### Wiki
 
