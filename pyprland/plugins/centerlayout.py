@@ -130,8 +130,8 @@ class Extension(Plugin):
             elif index == len(clients):
                 index = 0
             new_client = clients[index]
-            self.main_window_addr = new_client["address"]
             await self.unprepare_window(clients)
+            self.main_window_addr = new_client["address"]
             await self.prepare_window(clients)
         else:
             orientation = "ud" if self.config.get("vertical") else "lr"
