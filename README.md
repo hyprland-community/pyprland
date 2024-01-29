@@ -9,9 +9,9 @@ You can implement anything you can imagine using Python with [Hyprland API](http
 
 It has a safe design which is friendly for developers.
 
-### → [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started)
-
 ### → [Features/plugin list](https://github.com/hyprland-community/pyprland/wiki/Plugins)
+
+### → [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started)
 
 ### → [Changes log](https://github.com/hyprland-community/pyprland/releases)
 
