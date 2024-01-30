@@ -24,7 +24,14 @@ It has a safe design which is friendly for developers.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date)](https://star-history.com/#fdev31/pyprland&Date)
+<a href="https://star-history.com/#fdev31/pyprland&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Date" />
+  </picture>
+</a>
+
 
 ## Latest major changes
 
