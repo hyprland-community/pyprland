@@ -35,7 +35,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await self.hyprctl(commands)
             self.exposed = []
         else:
-            self.exposed = cast(list, await self.hyprctlJSON("clients"))
+            cur_wrkspc = await self.hyprctlJSON("activeworkspace")
+            self.exposed = [
+                c
+                for c in cast(list, await self.hyprctlJSON("clients"))
+                if c["workspace"]["id"] != cur_wrkspc["id"]
+            ]
             commands = []
             for client in self.exposed_clients:
                 commands.append(
