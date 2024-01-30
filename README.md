@@ -15,7 +15,7 @@ It has a safe design which is friendly for developers.
 
 ### → [Changes log](https://github.com/hyprland-community/pyprland/releases)
 
-### →[The Wiki](https://github.com/hyprland-community/pyprland/wiki)
+### → [The Wiki](https://github.com/hyprland-community/pyprland/wiki)
 
 ## Dependencies
 
