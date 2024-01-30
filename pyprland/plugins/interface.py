@@ -12,7 +12,12 @@ class Plugin:
         "create a new plugin `name` and the matching logger"
         self.name = name
         self.log = get_logger(name)
-        self.hyprctl, self.hyprctlJSON, self.notify = getCtrlObjects(self.log)
+        ctrl = getCtrlObjects(self.log)
+        (
+            self.hyprctl,
+            self.hyprctlJSON,  # pylint: disable=invalid-name
+            self.notify,
+        ) = ctrl
         self.config: dict[str, Any] = {}
 
     async def init(self):

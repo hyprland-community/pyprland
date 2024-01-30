@@ -185,7 +185,7 @@ class Scratch:  # {{{
     @property
     def full_address(self) -> str:
         "Returns the client address"
-        return self.client_info.get("address", "")
+        return cast(str, self.client_info.get("address", ""))
 
     async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
@@ -321,13 +321,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     workspace = ""  # Currently active workspace
     monitor = ""  # CUrrently active monitor
 
-    async def init(self):
-        "Initializes the Scratchpad extension"
+    def __init__(self, name):
+        super().__init__(name)
         self.get_client_props = partial(get_client_props, logger=self.log)
         Scratch.get_client_props = self.get_client_props
         self.get_focused_monitor_props = partial(
             get_focused_monitor_props, logger=self.log
         )
+
+    async def init(self):
+        "Initializes the Scratchpad extension"
         self.workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         self.monitor = next(
             mon for mon in (await self.hyprctlJSON("monitors")) if mon["focused"]
