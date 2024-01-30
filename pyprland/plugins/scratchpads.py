@@ -8,8 +8,7 @@ from typing import Any, cast
 from functools import partial
 from collections import defaultdict
 
-from ..ipc import get_focused_monitor_props, hyprctl, hyprctlJSON
-from ..ipc import notify_error
+from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
 
 DEFAULT_MARGIN = 60  # in pixels
@@ -62,30 +61,6 @@ def convert_coords(logger, coords, monitor):
         raise e
 
 
-async def get_client_props(
-    addr: str | None = None, pid: int | None = None, cls: str | None = None
-):
-    "Returns client properties given its address"
-    assert addr or pid or cls
-
-    if addr:
-        assert len(addr) > 2, "Client address is invalid"
-        prop_name = "address"
-        prop_value = addr
-    elif cls:
-        prop_name = "class"
-        prop_value = cls
-    else:
-        assert pid, "Client pid is invalid"
-        prop_name = "pid"
-        prop_value = pid
-
-    for client in await hyprctlJSON("clients"):
-        assert isinstance(client, dict)
-        if client.get(prop_name) == prop_value:
-            return client
-
-
 # }}}
 
 
@@ -93,7 +68,7 @@ class Animations:  # {{{
     "Animation store"
 
     @staticmethod
-    async def fromtop(monitor, client, client_uid, margin):
+    def fromtop(monitor, client, client_uid, margin):
         "Slide from/to top"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -103,10 +78,10 @@ class Animations:  # {{{
         client_width = client["size"][0]
         margin_x = int((mon_width - client_width) / 2) + mon_x
 
-        await hyprctl(f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}")
+        return f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}"
 
     @staticmethod
-    async def frombottom(monitor, client, client_uid, margin):
+    def frombottom(monitor, client, client_uid, margin):
         "Slide from/to bottom"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -117,12 +92,10 @@ class Animations:  # {{{
         client_width = client["size"][0]
         client_height = client["size"][1]
         margin_x = int((mon_width - client_width) / 2) + mon_x
-        await hyprctl(
-            f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
-        )
+        return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
 
     @staticmethod
-    async def fromleft(monitor, client, client_uid, margin):
+    def fromleft(monitor, client, client_uid, margin):
         "Slide from/to left"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -132,10 +105,10 @@ class Animations:  # {{{
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
 
-        await hyprctl(f"movewindowpixel exact {margin + mon_x} {margin_y},{client_uid}")
+        return f"movewindowpixel exact {margin + mon_x} {margin_y},{client_uid}"
 
     @staticmethod
-    async def fromright(monitor, client, client_uid, margin):
+    def fromright(monitor, client, client_uid, margin):
         "Slide from/to right"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -146,9 +119,7 @@ class Animations:  # {{{
         client_width = client["size"][0]
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
-        await hyprctl(
-            f"movewindowpixel exact {mon_width - client_width - margin + mon_x } {margin_y},{client_uid}"
-        )
+        return f"movewindowpixel exact {mon_width - client_width - margin + mon_x } {margin_y},{client_uid}"
 
 
 # }}}
@@ -172,13 +143,13 @@ class Scratch:  # {{{
         self.meta = {}
         self.space_identifier = None
 
-    async def initialize(self):
+    async def initialize(self, ex):
         "Initialize the scratchpad"
         if self.initialized:
             return
         self.initialized = True
         await self.updateClientInfo()
-        await hyprctl(
+        await ex.hyprctl(
             f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
         )
 
@@ -194,7 +165,7 @@ class Scratch:  # {{{
                             return state not in "ZX"  # not "Z (zombie)"or "X (dead)"
         else:
             if getattr(self, "bogus_pid", False):
-                return bool(await get_client_props(cls=self.conf["class"]))
+                return bool(await self.get_client_props(cls=self.conf["class"]))
             return False
 
         return False
@@ -219,7 +190,7 @@ class Scratch:  # {{{
     async def updateClientInfo(self, client_info=None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
-            client_info = await get_client_props(addr=self.full_address)
+            client_info = await self.get_client_props(addr=self.full_address)
         if not isinstance(client_info, dict):
             self.log.error(
                 "client_info of %s must be a dict: %s", self.address, client_info
@@ -352,9 +323,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     async def init(self):
         "Initializes the Scratchpad extension"
-        self.workspace = (await hyprctlJSON("activeworkspace"))["name"]
+        self.get_client_props = partial(get_client_props, logger=self.log)
+        Scratch.get_client_props = self.get_client_props
+        self.get_focused_monitor_props = partial(
+            get_focused_monitor_props, logger=self.log
+        )
+        self.workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         self.monitor = next(
-            mon for mon in (await hyprctlJSON("monitors")) if mon["focused"]
+            mon for mon in (await self.hyprctlJSON("monitors")) if mon["focused"]
         )
 
     async def exit(self) -> None:
@@ -410,7 +386,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
         if animation_type and defined_class:
-            monitor = await get_focused_monitor_props()
+            monitor = await get_focused_monitor_props(self.log)
             width, height = convert_coords(
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
@@ -429,7 +405,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 "fromleft": f"-200% {margin_y}",
             }[animation_type]
 
-            await hyprctl(
+            await self.hyprctl(
                 [
                     f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
                     f"windowrule float,^({defined_class})$",
@@ -451,9 +427,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
                 if item.conf.get("class_match"):
-                    info = await get_client_props(cls=item.conf.get("class"))
+                    info = await self.get_client_props(cls=item.conf.get("class"))
                 else:
-                    info = await get_client_props(pid=item.pid)
+                    info = await self.get_client_props(pid=item.pid)
                 if info:
                     await item.updateClientInfo(info)
                     self.log.info(
@@ -550,7 +526,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """Update every scratchpads information if no `scratch` given,
         else update a specific scratchpad info"""
         pid = orig_scratch.pid if orig_scratch else None
-        for client in await hyprctlJSON("clients"):
+        for client in await self.hyprctlJSON("clients"):
             assert isinstance(client, dict)
             if pid and pid != client["pid"]:
                 continue
@@ -610,7 +586,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return False
         self.log.debug("Lookup hack triggered")
         # hack to update the client info from the provided class
-        for client in await hyprctlJSON("clients"):
+        for client in await self.hyprctlJSON("clients"):
             assert isinstance(client, dict)
             for pending_scratch in class_lookup_hack:
                 if pending_scratch.conf["class"] == client["class"]:
@@ -633,7 +609,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if item and item.should_hide:
                 await self.run_hide(item.uid, force=True)
         if item:
-            await item.initialize()
+            await item.initialize(self)
 
     # }}}
     # Commands {{{
@@ -683,13 +659,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
-            await hyprctl(f"movewindowpixel 0 -{offset},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 -{offset},{addr}")
         elif animation_type == "frombottom":
-            await hyprctl(f"movewindowpixel 0 {offset},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 {offset},{addr}")
         elif animation_type == "fromleft":
-            await hyprctl(f"movewindowpixel -{offset} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel -{offset} 0,{addr}")
         elif animation_type == "fromright":
-            await hyprctl(f"movewindowpixel {offset} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel {offset} 0,{addr}")
 
         if self.scratches.hasState(scratch, "transition"):
             return  # abort sequence
@@ -707,7 +683,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return
 
         self.focused_window_tracking[uid] = cast(
-            dict[str, Any], await hyprctlJSON("activewindow")
+            dict[str, Any], await self.hyprctlJSON("activewindow")
         )
 
         if not item:
@@ -729,11 +705,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if scratch.visible:
                 await self.run_hide(e_uid, autohide=True)
         await item.updateClientInfo()
-        await item.initialize()
+        await item.initialize(self)
 
         item.visible = True
         item.space_identifier = get_space_identifier(self)
-        monitor = await get_focused_monitor_props()
+        monitor = await get_focused_monitor_props(self.log)
         assert monitor
         assert item.full_address, "No address !"
 
@@ -742,7 +718,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         self.scratches.setState(item, "transition")
         # Start the transition
-        await hyprctl(
+        await self.hyprctl(
             [
                 f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}",
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
@@ -752,9 +728,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if animation_type:
             margin = item.conf.get("margin", DEFAULT_MARGIN)
             fn = getattr(Animations, animation_type)
-            await fn(monitor, item.client_info, "address:" + item.full_address, margin)
+            command = fn(
+                monitor, item.client_info, "address:" + item.full_address, margin
+            )
+            await self.hyprctl(command)
 
-        await hyprctl(f"focuswindow address:{item.full_address}")
+        await self.hyprctl(f"focuswindow address:{item.full_address}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
         # Transition ended
         self.scratches.clearState(item, "transition")
@@ -768,7 +747,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if position:
             x_pos, y_pos = convert_coords(self.log, position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await hyprctl(
+            await self.hyprctl(
                 f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
             )
         if size:
@@ -778,7 +757,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 max_width, max_height = convert_coords(self.log, max_size, monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
-            await hyprctl(
+            await self.hyprctl(
                 f"resizewindowpixel exact {width} {height},address:{item.full_address}"
             )
         if size or position:
@@ -807,7 +786,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             await self._anim_hide(animation_type, scratch)
 
         if not self.scratches.hasState(scratch, "transition"):
-            await hyprctl(
+            await self.hyprctl(
                 f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
             )
 
@@ -815,7 +794,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             animation_type and uid in self.focused_window_tracking
         ):  # focus got lost when animating
             if not autohide and "address" in self.focused_window_tracking[uid]:
-                await hyprctl(
+                await self.hyprctl(
                     f"focuswindow address:{self.focused_window_tracking[uid]['address']}"
                 )
                 del self.focused_window_tracking[uid]

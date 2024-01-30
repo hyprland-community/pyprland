@@ -1,7 +1,6 @@
 " shift workspaces across monitors "
 from typing import cast
 
-from ..ipc import hyprctl, hyprctlJSON
 from .interface import Plugin
 
 
@@ -10,7 +9,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def init(self):
         self.monitors: list[str] = [
-            mon["name"] for mon in cast(list[dict], await hyprctlJSON("monitors"))
+            mon["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors"))
         ]
 
     async def run_shift_monitors(self, arg: str):
@@ -22,7 +21,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             mon_list = list(reversed(self.monitors[1:]))
 
         for i, mon in enumerate(mon_list):
-            await hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i+direction]}")
+            await self.hyprctl(
+                f"swapactiveworkspaces {mon} {self.monitors[i+direction]}"
+            )
 
     async def event_monitoradded(self, monitor):
         "keep track of monitors"

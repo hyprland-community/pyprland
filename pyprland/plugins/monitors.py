@@ -3,7 +3,6 @@ import asyncio
 import subprocess
 from typing import Any, cast
 
-from ..ipc import hyprctlJSON
 from .interface import Plugin
 
 
@@ -72,7 +71,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_relayout(self):
         "Recompute & apply every monitors's layout"
-        monitors = cast(list[dict], await hyprctlJSON("monitors"))
+        monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
         self._changes_tracker = set()
         for monitor in monitors:
             if monitor["name"] not in self._changes_tracker:
@@ -87,7 +86,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "Triggers when a monitor is plugged"
 
         if not monitors:
-            monitors = cast(list, await hyprctlJSON("monitors"))
+            monitors = cast(list, await self.hyprctlJSON("monitors"))
 
         assert monitors
 

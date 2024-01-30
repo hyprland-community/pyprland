@@ -1,7 +1,6 @@
 """ Force workspaces to follow the focus / mouse """
 from typing import cast
 
-from ..ipc import hyprctl, hyprctlJSON
 from .interface import Plugin
 
 
@@ -20,12 +19,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         # move every free workspace to the currently focused desktop
         busy_workspaces = set(
             mon["activeWorkspace"]["id"]
-            for mon in cast(list[dict], await hyprctlJSON("monitors"))
+            for mon in cast(list[dict], await self.hyprctlJSON("monitors"))
             if mon["name"] != monitor_id
         )
         workspaces = [
             w["id"]
-            for w in cast(list[dict], await hyprctlJSON("workspaces"))
+            for w in cast(list[dict], await self.hyprctlJSON("workspaces"))
             if w["id"] > 0
         ]
 
@@ -34,13 +33,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if n in busy_workspaces or n == workspace_id:
                 continue
             batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
-        await hyprctl(batch)
+        await self.hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
         """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces"""
         increment = int(direction)
         # get focused screen info
-        monitors = await hyprctlJSON("monitors")
+        monitors = await self.hyprctlJSON("monitors")
         assert isinstance(monitors, list)
         for monitor in monitors:
             if monitor["focused"]:
@@ -64,5 +63,5 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             next_workspace = available_workspaces[
                 (idx + increment) % len(available_workspaces)
             ]
-        await hyprctl(f"moveworkspacetomonitor {next_workspace},{monitor['name']}")
-        await hyprctl(f"workspace {next_workspace}")
+        await self.hyprctl(f"moveworkspacetomonitor {next_workspace},{monitor['name']}")
+        await self.hyprctl(f"workspace {next_workspace}")

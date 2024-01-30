@@ -15,9 +15,11 @@ HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock
 EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
 
 
-async def notify(text, duration=3, color="ff1010", icon=-1):
+async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):
     "Uses hyprland notification system"
-    await hyprctl(f"{icon} {int(duration*1000)} rgb({color})  {text}", "notify")
+    await hyprctl(
+        f"{icon} {int(duration*1000)} rgb({color})  {text}", "notify", logger=logger
+    )
 
 
 notify_fatal = partial(notify, icon=3, duration=10)
@@ -30,14 +32,14 @@ async def get_event_stream():
     return await asyncio.open_unix_connection(EVENTS)
 
 
-async def hyprctlJSON(command) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctlJSON(command, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
-    assert log
-    log.debug(command)
+    logger = logger or log
+    logger.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
-        log.critical("hyprctl socket not found! is it running ?")
+        logger.critical("hyprctl socket not found! is it running ?")
         raise PyprError() from e
     ctl_writer.write(f"-j/{command}".encode())
     await ctl_writer.drain()
@@ -58,14 +60,14 @@ def _format_command(command_list, default_base_command):
             yield f"{command[1]} {command[0]}"
 
 
-async def hyprctl(command, base_command="dispatch") -> bool:
+async def hyprctl(command, base_command="dispatch", logger=None) -> bool:
     """Run an IPC command. Returns success value."""
-    assert log
-    log.debug(command)
+    logger = logger or log
+    logger.debug("%s %s", base_command, command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
-        log.critical("hyprctl socket not found! is it running ?")
+        logger.critical("hyprctl socket not found! is it running ?")
         raise PyprError() from e
 
     if isinstance(command, list):
@@ -82,20 +84,53 @@ async def hyprctl(command, base_command="dispatch") -> bool:
     await ctl_writer.wait_closed()
     r: bool = resp == b"ok" * nb_cmds
     if not r:
-        log.error("FAILED %s", resp)
+        logger.error("FAILED %s", resp)
     return r
 
 
-async def get_focused_monitor_props() -> dict[str, Any]:
+async def get_focused_monitor_props(logger=None) -> dict[str, Any]:
     "Returns focused monitor data"
-    for monitor in await hyprctlJSON("monitors"):
+    for monitor in await hyprctlJSON("monitors", logger=logger):
         assert isinstance(monitor, dict)
         if monitor.get("focused"):
             return monitor
     raise RuntimeError("no focused monitor")
 
 
+async def get_client_props(
+    addr: str | None = None, pid: int | None = None, cls: str | None = None, logger=None
+):
+    "Returns client properties given its address"
+    assert addr or pid or cls
+
+    if addr:
+        assert len(addr) > 2, "Client address is invalid"
+        prop_name = "address"
+        prop_value = addr
+    elif cls:
+        prop_name = "class"
+        prop_value = cls
+    else:
+        assert pid, "Client pid is invalid"
+        prop_name = "pid"
+        prop_value = pid
+
+    for client in await hyprctlJSON("clients", logger=logger):
+        assert isinstance(client, dict)
+        if client.get(prop_name) == prop_value:
+            return client
+
+
 def init():
     "initialize logging"
     global log
     log = get_logger("ipc")
+
+
+def getCtrlObjects(logger):
+    "Returns (hyprctl, hyprctlJSON, notify) configured for the given logger"
+    return (
+        partial(hyprctl, logger=logger),
+        partial(hyprctlJSON, logger=logger),
+        partial(notify, logger=logger),
+    )

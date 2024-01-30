@@ -2,6 +2,7 @@
 from typing import Any
 
 from ..common import get_logger
+from ..ipc import getCtrlObjects
 
 
 class Plugin:
@@ -11,6 +12,7 @@ class Plugin:
         "create a new plugin `name` and the matching logger"
         self.name = name
         self.log = get_logger(name)
+        self.hyprctl, self.hyprctlJSON, self.notify = getCtrlObjects(self.log)
         self.config: dict[str, Any] = {}
 
     async def init(self):
