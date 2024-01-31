@@ -27,7 +27,6 @@ class Pyprland:
     server: asyncio.Server
     event_reader: asyncio.StreamReader
     stopped = False
-    name = "builtin"
     config: None | dict[str, dict] = None
     tasks: None | asyncio.TaskGroup = None
 
@@ -39,8 +38,6 @@ class Pyprland:
     async def initialize(self):
         "Initializes the main structures"
         await self.load_config()  # ensure sockets are connected first
-
-        self.queues[self.name] = asyncio.Queue()
 
     async def __open_config(self):
         """Loads config file as self.config"""
@@ -109,7 +106,7 @@ class Pyprland:
                     raise PyprError() from e
         if init_pyprland:
             plug = self.plugins["pyprland"]
-            setattr(plug, "run_reload", self.load_config)
+            plug.set_commands(reload=self.load_config)
 
     async def load_config(self, init=True):
         """Loads the configuration
