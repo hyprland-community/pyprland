@@ -76,7 +76,8 @@ class Pyprland:
         """Loads the plugins mentioned in the config.
         If init is `True`, call the `init()` method on each plugin.
         """
-        for name in self.config["pyprland"]["plugins"]:
+        init_pyprland = "pyprland" not in self.plugins
+        for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
             if name not in self.plugins:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
                 try:
@@ -106,6 +107,9 @@ class Pyprland:
                     await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.error("Error initializing plugin %s:", name, exc_info=True)
                     raise PyprError() from e
+        if init_pyprland:
+            plug = self.plugins["pyprland"]
+            setattr(plug, "run_reload", self.load_config)
 
     async def load_config(self, init=True):
         """Loads the configuration
@@ -138,7 +142,7 @@ class Pyprland:
     async def _callHandler(self, full_name, *params, notify=""):
         "Call an event handler with params"
         handled = False
-        for plugin in list(self.plugins.values()) + [self]:
+        for plugin in self.plugins.values():
             if hasattr(plugin, full_name):
                 handled = True
                 await self.queues[plugin.name].put(
@@ -216,10 +220,9 @@ class Pyprland:
 
     async def _plug_tasks(self):
         "Runs plugins' task using the created `tasks` TaskGroup attribute"
-        all_plugins = list(self.plugins.keys()) + [self.name]
         async with asyncio.TaskGroup() as group:
             self.tasks = group
-            for name in all_plugins:
+            for name in self.plugins:
                 group.create_task(self._plugin_runner_loop(name))
 
     async def run(self):
@@ -229,8 +232,6 @@ class Pyprland:
             asyncio.create_task(self.read_events_loop()),
             asyncio.create_task(self._plug_tasks()),
         )
-
-    run_reload = load_config
 
 
 async def run_daemon():
