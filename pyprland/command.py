@@ -206,7 +206,7 @@ class Pyprland:
         "Runs tasks for a given plugin indefinitely"
         q = self.queues[name]
 
-        while True:
+        while not self.stopped:
             task = await q.get()
             try:
                 await task()
@@ -215,7 +215,7 @@ class Pyprland:
                     "Unhandled error running plugin %s::%s: %s", name, task, e
                 )
 
-    async def _plug_tasks(self):
+    async def plugins_runner(self):
         "Runs plugins' task using the created `tasks` TaskGroup attribute"
         async with asyncio.TaskGroup() as group:
             self.tasks = group
@@ -227,7 +227,7 @@ class Pyprland:
         await asyncio.gather(
             asyncio.create_task(self.serve()),
             asyncio.create_task(self.read_events_loop()),
-            asyncio.create_task(self._plug_tasks()),
+            asyncio.create_task(self.plugins_runner()),
         )
 
 
