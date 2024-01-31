@@ -725,6 +725,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             [
                 f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}",
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
+                f"alterzorder top,address:{item.full_address}",
             ]
         )
         await self._fix_size_and_position(item, monitor)
