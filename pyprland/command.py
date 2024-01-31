@@ -8,7 +8,6 @@ import tomllib
 import json
 import os
 import sys
-from typing import cast
 
 from .common import PyprError, get_logger, init_logger
 from .ipc import get_event_stream, notify_error, notify_fatal, notify_info
@@ -30,6 +29,7 @@ class Pyprland:
     stopped = False
     name = "builtin"
     config: None | dict[str, dict] = None
+    tasks: None | asyncio.TaskGroup = None
 
     def __init__(self):
         self.plugins: dict[str, Plugin] = {}
@@ -40,8 +40,6 @@ class Pyprland:
         "Initializes the main structures"
         await self.load_config()  # ensure sockets are connected first
 
-        for name in self.plugins:
-            self.queues[name] = asyncio.Queue()
         self.queues[self.name] = asyncio.Queue()
 
     async def __open_config(self):
@@ -78,13 +76,16 @@ class Pyprland:
         """Loads the plugins mentioned in the config.
         If init is `True`, call the `init()` method on each plugin.
         """
-        for name in cast(dict, self.config["pyprland"]["plugins"]):
+        for name in self.config["pyprland"]["plugins"]:
             if name not in self.plugins:
                 modname = name if "." in name else f"pyprland.plugins.{name}"
                 try:
                     plug = importlib.import_module(modname).Extension(name)
                     if init:
                         await plug.init()
+                        self.queues[name] = asyncio.Queue()
+                        if self.tasks:
+                            self.tasks.create_task(self._plugin_runner_loop(name))
                     self.plugins[name] = plug
                 except ModuleNotFoundError as e:
                     self.log.error("Unable to locate plugin called '%s'", name)
@@ -213,16 +214,20 @@ class Pyprland:
                     "Unhandled error running plugin %s::%s: %s", name, task, e
                 )
 
+    async def _plug_tasks(self):
+        "Runs plugins' task using the created `tasks` TaskGroup attribute"
+        all_plugins = list(self.plugins.keys()) + [self.name]
+        async with asyncio.TaskGroup() as group:
+            self.tasks = group
+            for name in all_plugins:
+                group.create_task(self._plugin_runner_loop(name))
+
     async def run(self):
         "Runs the server and the event listener"
-        all_plugins = list(self.plugins.keys()) + [self.name]
-        plugin_workers = [
-            asyncio.create_task(self._plugin_runner_loop(name)) for name in all_plugins
-        ]
         await asyncio.gather(
             asyncio.create_task(self.serve()),
             asyncio.create_task(self.read_events_loop()),
-            *plugin_workers,
+            asyncio.create_task(self._plug_tasks()),
         )
 
     run_reload = load_config
