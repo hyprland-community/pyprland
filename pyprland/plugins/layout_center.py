@@ -83,9 +83,15 @@ class Extension(Plugin):
         if what == "toggle":
             await self._run_toggle()
         elif what == "next":
-            await self._run_changefocus(1)
+            await self._run_changefocus(1, default_override="next")
         elif what == "prev":
-            await self._run_changefocus(-1)
+            await self._run_changefocus(1, default_override="prev")
+        elif what == "next2":
+            await self._run_changefocus(1, default_override="next2")
+        elif what == "prev2":
+            await self._run_changefocus(1, default_override="prev2")
+        else:
+            await self.notify_error(f"unknown layout_center command: {what}")
 
     # Utils
 
@@ -143,7 +149,7 @@ class Extension(Plugin):
             self.enabled = False
         return self.enabled
 
-    async def _run_changefocus(self, direction):
+    async def _run_changefocus(self, direction, default_override=None):
         "Change the focus in the given direction (-1 or 1)"
         if self.enabled:
             clients = await self.get_clients()
@@ -163,8 +169,8 @@ class Extension(Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
                 await self.prepare_window(clients)
         else:
-            orientation = "ud" if self.config.get("vertical") else "lr"
-            await self.hyprctl(f"movefocus {orientation[1 if direction > 0 else 0]}")
+            if default_override:
+                await self.hyprctl(default_override)
 
     async def _run_toggle(self):
         "toggle the center layout"
