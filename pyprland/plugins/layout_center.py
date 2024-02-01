@@ -158,6 +158,7 @@ class Extension(Plugin):
                 try:
                     idx = addresses.index(self.main_window_addr)
                 except ValueError:
+                    # TODO: recall previous index
                     idx = 0
                 index = idx + direction
                 if index < 0:
