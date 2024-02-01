@@ -155,7 +155,11 @@ class Extension(Plugin):
             clients = await self.get_clients()
             if await self._sanity_check(clients):
                 addresses = [c["address"] for c in clients]
-                index = addresses.index(self.main_window_addr) + direction
+                try:
+                    idx = addresses.index(self.main_window_addr)
+                except ValueError:
+                    idx = 0
+                index = idx + direction
                 if index < 0:
                     index = len(clients) - 1
                 elif index == len(clients):
