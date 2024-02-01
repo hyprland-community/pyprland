@@ -19,7 +19,7 @@ It has a safe design which is friendly for developers.
 
 ## Dependencies
 
-- Hyprland >= 0.25
+- Hyprland >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
 - Python >= 3.11
 
 ## Star History
@@ -35,9 +35,8 @@ It has a safe design which is friendly for developers.
 
 ## Latest major changes
 
-### Git (future 1.8.0)
+### 1.8.0
 
-- require Hyprland >= 0.30
 - `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
   - add the [toggle_special](https://github.com/hyprland-community/pyprland/wiki/toggle_special) plugin to your config and rename the command in your `hyprland.conf` & scripts!
   - was provided by [expose](https://github.com/hyprland-community/pyprland/wiki/expose)
