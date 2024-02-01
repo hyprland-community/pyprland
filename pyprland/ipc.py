@@ -133,4 +133,6 @@ def getCtrlObjects(logger):
         partial(hyprctl, logger=logger),
         partial(hyprctlJSON, logger=logger),
         partial(notify, logger=logger),
+        partial(notify_info, logger=logger),
+        partial(notify_error, logger=logger),
     )

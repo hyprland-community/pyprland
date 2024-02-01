@@ -17,6 +17,8 @@ class Plugin:
             self.hyprctl,
             self.hyprctlJSON,  # pylint: disable=invalid-name
             self.notify,
+            self.notify_info,
+            self.notify_error,
         ) = ctrl
         self.config: dict[str, Any] = {}
 
