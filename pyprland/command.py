@@ -109,7 +109,7 @@ class Pyprland:
             plug.set_commands(reload=self.load_config)
 
     async def load_config(self, init=True):
-        """Loads the configuration
+        """loads the configuration (new plugins will be added & config updated)
 
         if `init` is true, also initializes the plugins"""
 
@@ -298,8 +298,7 @@ async def run_client():
 If the command is ommited, runs the daemon which will start every configured plugin.
 
 Available commands:
-
- reload               Reloads the config file (only supports adding or updating plugins)"""
+"""
         )
         for plug in manager.plugins.values():
             for name in dir(plug):
