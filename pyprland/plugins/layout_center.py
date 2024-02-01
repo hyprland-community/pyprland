@@ -185,10 +185,11 @@ class Extension(Plugin):
     @property
     def offset(self):
         "Returns the centered window offset"
-        if "offset" in self.config:
+        offset = self.config.get("offset", [0, 0])
+        if isinstance(offset, str):
             x, y = (int(i) for i in self.config["offset"].split() if i.strip())
             return [x, y]
-        return [0, 0]
+        return offset
 
     @property
     def margin(self):
