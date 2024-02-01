@@ -17,10 +17,9 @@ class Extension(Plugin):
 
         monitor_list = await self.hyprctlJSON("monitors")
         color = self.config.get("color", "3333BB")
-        await self.notify(
+        await self.notify_info(
             f"Focus changed {self.focus_changes} times on {len(monitor_list)} monitor(s)",
             color=color,
-            logger=self.log,
         )
 
     async def event_activewindowv2(self, _addr) -> None:
