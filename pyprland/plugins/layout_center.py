@@ -71,9 +71,9 @@ class Extension(Plugin):
         addr = "0x" + addr
         clients = [c for c in await self.get_clients() if c["address"] != addr]
         if self.enabled and await self._sanity_check(clients):
-            self.log.debug("Sanity passed")
-            closed_main = self.main_window_addr == "0x" + addr
+            closed_main = self.main_window_addr == addr
             if self.enabled and closed_main:
+                self.log.debug("main window closed, focusing next")
                 await self._run_changefocus(1)
 
     # Command
