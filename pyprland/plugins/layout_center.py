@@ -85,11 +85,11 @@ class Extension(Plugin):
         elif what == "next":
             await self._run_changefocus(1, default_override="next")
         elif what == "prev":
-            await self._run_changefocus(1, default_override="prev")
+            await self._run_changefocus(-1, default_override="prev")
         elif what == "next2":
             await self._run_changefocus(1, default_override="next2")
         elif what == "prev2":
-            await self._run_changefocus(1, default_override="prev2")
+            await self._run_changefocus(-1, default_override="prev2")
         else:
             await self.notify_error(f"unknown layout_center command: {what}")
 
