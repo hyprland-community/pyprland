@@ -169,8 +169,9 @@ class Extension(Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
                 await self.prepare_window(clients)
         else:
-            if default_override:
-                await self.hyprctl(default_override)
+            command = self.config.get(default_override)
+            if command:
+                await self.hyprctl(command)
 
     async def _run_toggle(self):
         "toggle the center layout"
