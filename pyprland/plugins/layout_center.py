@@ -20,6 +20,7 @@ class Extension(Plugin):
     active_workspace = ""
     # focused window
     active_window_addr = ""
+    last_index = 0
 
     async def init(self):
         "initializes the plugin"
@@ -35,9 +36,10 @@ class Extension(Plugin):
         if not self.enabled:
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
-        for cli in await self.get_clients():
-            if cli["address"] == win_addr and not cli['floating']:
+        for i, cli in enumerate(await self.get_clients()):
+            if cli["address"] == win_addr and not cli["floating"]:
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+                self.last_index = i
                 break
 
     async def event_workspace(self, wrkspace):
@@ -158,8 +160,7 @@ class Extension(Plugin):
                 try:
                     idx = addresses.index(self.main_window_addr)
                 except ValueError:
-                    # TODO: recall previous index
-                    idx = 0
+                    idx = self.last_index
                 index = idx + direction
                 if index < 0:
                     index = len(clients) - 1
@@ -169,6 +170,7 @@ class Extension(Plugin):
                 await self.unprepare_window(clients)
                 self.main_window_addr = new_client["address"]
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+                self.last_index = index
                 await self.prepare_window(clients)
         else:
             command = self.config.get(default_override)
