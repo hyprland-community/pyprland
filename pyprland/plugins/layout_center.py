@@ -188,7 +188,8 @@ class Extension(Plugin):
 
         self.enabled = disabled
 
-    # Getters
+    # Properties
+
     @property
     def offset(self):
         "Returns the centered window offset"
@@ -203,6 +204,7 @@ class Extension(Plugin):
         "Returns the margin of the centered window"
         return self.config.get("margin", 60)
 
+    # enabled
     def get_enabled(self):
         "Is center layout enabled on the active workspace ?"
         return self.workspace_info[self.active_workspace]["enabled"]
@@ -216,15 +218,18 @@ class Extension(Plugin):
     )
     del get_enabled, set_enabled
 
-    def get_addr(self):
+    # main_window_addr
+    def get_main_window_addr(self):
         "get active workspace's centered window address"
         return self.workspace_info[self.active_workspace]["addr"]
 
-    def set_addr(self, value):
+    def set_main_window_addr(self, value):
         "set active workspace's centered window address"
         self.workspace_info[self.active_workspace]["addr"] = value
 
     main_window_addr = property(
-        get_addr, set_addr, doc="active workspace's centered window address"
+        get_main_window_addr,
+        set_main_window_addr,
+        doc="active workspace's centered window address",
     )
-    del get_addr, set_addr
+    del get_main_window_addr, set_main_window_addr
