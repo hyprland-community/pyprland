@@ -140,14 +140,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                                 results.append((self._flipped_positions[lpos], nameA))
             return results
 
-        for name in reversed(graph):
-            mon1 = monitors_by_name[name]
-            for name2 in graph[name]:
-                mon2 = monitors_by_name[name2]
-                for pos, _ in get_matching_config(name, name2):
-                    x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
-                    mon2["x"] = x
-                    mon2["y"] = y
+        # Update positions
+        for _ in range(len(monitors_by_name)):
+            for name in reversed(graph):
+                mon1 = monitors_by_name[name]
+                for name2 in graph[name]:
+                    mon2 = monitors_by_name[name2]
+                    for pos, _ in get_matching_config(name, name2):
+                        x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
+                        mon2["x"] = x
+                        mon2["y"] = y
 
         off_x = None
         off_y = None
