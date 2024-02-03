@@ -20,6 +20,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install pytest_asyncio
+          mkdir ~/.config/hypr/
+          touch ~/.config/hypr/pyprland.toml
       - name: Testing the code with pytest
         run: |
           pytest
