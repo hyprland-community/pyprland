@@ -8,6 +8,10 @@ from typing import Any, cast
 from .interface import Plugin
 
 
+def clean_pos(position):
+    return position.lower().replace("_", "").replace("-", "")
+
+
 def get_XY(place, main_mon, other_mon):
     """Get the XY position of a monitor according to another (after `place` is applied)
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
@@ -88,6 +92,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitors_by_name = {m["name"]: m for m in monitors}
         plugged_monitors = {m["name"] for m in monitors}
         cleaned_config: dict[str, dict[str, str]] = {}
+
         # change partial descriptions used in config for monitor names
         for descr1, placement in placement_rules.items():
             mon = self._get_mon_by_pat(descr1, monitors_by_descr)
@@ -105,7 +110,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     for p in descr_list
                 ]
                 if resolved:
-                    cleaned_config[name1][position] = [
+                    cleaned_config[name1][clean_pos(position)] = [
                         r for r in resolved if r in plugged_monitors
                     ]
 
@@ -114,19 +119,19 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         graph = defaultdict(list)
         for name1, positions in cleaned_config.items():
             for pos, names in positions.items():
-                flipped = not (pos.startswith("left") or pos.startswith("top"))
+                tldr_direction = pos.startswith("left") or pos.startswith("top")
                 for name2 in names:
-                    if flipped:
-                        graph[name2].append(name1)
-                    else:
+                    if tldr_direction:
                         graph[name1].append(name2)
+                    else:
+                        graph[name2].append(name1)
 
         def get_matching_config(name1, name2):
             results = []
             ref_set = set((name1, name2))
             for nameA, positions in cleaned_config.items():
                 for pos, names in positions.items():
-                    lpos = pos.lower()
+                    lpos = clean_pos(pos)
                     for nameB in names:
                         if set((nameA, nameB)) == ref_set:
                             if nameA == name1:
@@ -144,8 +149,24 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     mon2["x"] = x
                     mon2["y"] = y
 
+        off_x = None
+        off_y = None
+        for mon in monitors:
+            if off_x is None:
+                off_x = mon["x"]
+
+            if off_y is None:
+                off_y = mon["y"]
+
+            off_x = min(mon["x"], off_x)
+            off_y = min(mon["y"], off_y)
+
+        for mon in monitors:
+            mon["x"] -= off_x
+            mon["y"] -= off_y
+
         command = ["wlr-randr"]
-        for monitor in sorted(monitors, key=lambda x: x["name"]):
+        for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
             command.extend(
                 ["--output", monitor["name"], "--pos", f'{monitor["x"]},{monitor["y"]}']
             )
@@ -224,7 +245,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 if isinstance(descr_list, str):
                     descr_list = [descr_list]
                 for descr in descr_list:
-                    lp = position.lower().replace("_", "").replace("-", "")
+                    lp = clean_pos(position)
                     if matched or mon_description in descr:
                         yield (
                             lp if matched else self._flipped_positions[lp],
