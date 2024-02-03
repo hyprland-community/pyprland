@@ -68,8 +68,6 @@ def apply_monitor_position(monitors, screenid: str, pos_x: int, pos_y: int) -> N
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
-    _changes_tracker: set | None = None
-
     _mon_by_pat_cache: dict[str, dict] = {}
 
     async def load_config(self, config) -> None:
@@ -144,15 +142,22 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             return results
 
         # Update positions
-        for _ in range(len(monitors_by_name)):
+        for _ in range(len(monitors_by_name) ** 2):
+            changed = False
             for name in reversed(graph):
                 mon1 = monitors_by_name[name]
                 for name2 in graph[name]:
                     mon2 = monitors_by_name[name2]
                     for pos, _ in get_matching_config(name, name2):
                         x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
-                        mon2["x"] = x
-                        mon2["y"] = y
+                        if x != mon2["x"]:
+                            changed = True
+                            mon2["x"] = x
+                        if y != mon2["y"]:
+                            changed = True
+                            mon2["y"] = y
+            if not changed:
+                break
 
         off_x = None
         off_y = None
@@ -283,10 +288,5 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     apply_monitor_position(monitors, mon_name, x, y)
                 else:
                     self.log.error("Unknown position type: %s (%s)", place, rule)
-
-                if self._changes_tracker is not None:
-                    self._changes_tracker.add(mon_name)
-                    # Also prevent the reference screen from moving
-                    self._changes_tracker.add(other_mon["name"])
 
         return matched
