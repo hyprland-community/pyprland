@@ -22,17 +22,6 @@ It has a safe design which is friendly for developers.
 - Hyprland >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
 - Python >= 3.11
 
-## Star History
-
-<a href="https://star-history.com/#fdev31/pyprland&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
-  </picture>
-</a>
-
-
 ## Latest major changes
 
 ### 1.8.0
@@ -49,3 +38,13 @@ It has a safe design which is friendly for developers.
 ### 1.7.0
 
 - **BREAKING CHANGE** [layout_center](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
+
+## Star History
+
+<a href="https://star-history.com/#fdev31/pyprland&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
+  </picture>
+</a>
