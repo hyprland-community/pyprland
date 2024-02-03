@@ -1,5 +1,6 @@
 " generic fixtures "
 from unittest.mock import AsyncMock, Mock, MagicMock
+from copy import deepcopy
 import asyncio
 import pytest
 from pytest_asyncio import fixture
@@ -81,13 +82,13 @@ async def third_monitor(monkeypatch):
 @fixture
 async def sample1_config(monkeypatch):
     "Runs with config n°1"
-    monkeypatch.setattr("tomllib.load", lambda x: CONFIG_1)
+    monkeypatch.setattr("tomllib.load", lambda x: deepcopy(CONFIG_1))
     yield
 
 
 async def mocked_hyprctlJSON(command, logger=None):
     if command == "monitors":
-        return MONITORS.copy()
+        return deepcopy(MONITORS)
     raise NotImplementedError()
 
 
