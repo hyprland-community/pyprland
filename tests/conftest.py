@@ -75,10 +75,10 @@ async def sample1_config(monkeypatch):
     yield
 
 
-async def mocked_hyprctlJSON(command):
+async def mocked_hyprctlJSON(command, logger=None):
     if command == "monitors":
         return MONITORS
-    raise NotImplemented()
+    raise NotImplementedError()
 
 
 @fixture
