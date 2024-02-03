@@ -1,6 +1,8 @@
 " The monitors plugin "
 import asyncio
 import subprocess
+from collections import defaultdict
+from copy import deepcopy
 from typing import Any, cast
 
 from .interface import Plugin
@@ -69,16 +71,87 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await super().load_config(config)
         await self.run_relayout()
 
+    # Command
+
     async def run_relayout(self):
         "Recompute & apply every monitors's layout"
+
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
-        self._changes_tracker = set()
-        for monitor in monitors:
-            if monitor["name"] not in self._changes_tracker:
-                await self.event_monitoradded(
-                    monitor["name"], no_default=True, monitors=monitors
-                )
-        self._changes_tracker = None
+        placement_rules = deepcopy(self.config.get("placement", {}))
+
+        # - resolve names used in config so it's monitor's name instead of partial descriptions
+        # - filter config to only contain items relevant to plugged monitors
+        # - make a sorted graph of the monitors according to the config
+        # - for each monitor in the graph, apply the configuration of the connected monitors
+
+        monitors_by_descr = {m["description"]: m for m in monitors}
+        monitors_by_name = {m["name"]: m for m in monitors}
+        plugged_monitors = {m["name"] for m in monitors}
+        cleaned_config: dict[str, dict[str, str]] = {}
+        # change partial descriptions used in config for monitor names
+        for descr1, placement in placement_rules.items():
+            mon = self._get_mon_by_pat(descr1, monitors_by_descr)
+            if not mon:
+                continue
+            name1 = mon["name"]
+            if name1 not in plugged_monitors:
+                continue
+            cleaned_config[name1] = {}
+            for position, descr_list in placement.items():
+                if isinstance(descr_list, str):
+                    descr_list = [descr_list]
+                resolved = [
+                    self._get_mon_by_pat(p, monitors_by_descr)["name"]
+                    for p in descr_list
+                ]
+                if resolved:
+                    cleaned_config[name1][position] = [
+                        r for r in resolved if r in plugged_monitors
+                    ]
+
+        # make a sorted graph based on the cleaned_config
+
+        graph = defaultdict(list)
+        for name1, positions in cleaned_config.items():
+            for pos, names in positions.items():
+                flipped = not (pos.startswith("left") or pos.startswith("top"))
+                for name2 in names:
+                    if flipped:
+                        graph[name2].append(name1)
+                    else:
+                        graph[name1].append(name2)
+
+        def get_matching_config(name1, name2):
+            results = []
+            ref_set = set((name1, name2))
+            for nameA, positions in cleaned_config.items():
+                for pos, names in positions.items():
+                    lpos = pos.lower()
+                    for nameB in names:
+                        if set((nameA, nameB)) == ref_set:
+                            if nameA == name1:
+                                results.append((lpos, nameB))
+                            else:
+                                results.append((self._flipped_positions[lpos], nameA))
+            return results
+
+        for name in reversed(graph):
+            mon1 = monitors_by_name[name]
+            for name2 in graph[name]:
+                mon2 = monitors_by_name[name2]
+                for pos, _ in get_matching_config(name, name2):
+                    x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
+                    mon2["x"] = x
+                    mon2["y"] = y
+
+        command = ["wlr-randr"]
+        for monitor in sorted(monitors, key=lambda x: x["name"]):
+            command.extend(
+                ["--output", monitor["name"], "--pos", f'{monitor["x"]},{monitor["y"]}']
+            )
+        subprocess.call(command)
+
+    # Event handlers
 
     async def event_monitoradded(
         self, monitor_name, no_default=False, monitors: list | None = None
@@ -105,6 +178,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             default_command = self.config.get("unknown")
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
+
+    # Utils
 
     def _clear_mon_by_pat_cache(self):
         "clear the cache"
