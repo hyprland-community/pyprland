@@ -9,6 +9,7 @@ from .interface import Plugin
 
 
 def clean_pos(position):
+    "Harmonize position format"
     return position.lower().replace("_", "").replace("-", "")
 
 
@@ -77,7 +78,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     # Command
 
-    async def run_relayout(self):
+    async def run_relayout(
+        self,
+    ):  # pylint: disable=too-many-statements,too-many-locals,too-many-branches
         "Recompute & apply every monitors's layout"
 
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
@@ -129,15 +132,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         def get_matching_config(name1, name2):
             results = []
             ref_set = set((name1, name2))
-            for nameA, positions in cleaned_config.items():
+            for name_a, positions in cleaned_config.items():
                 for pos, names in positions.items():
                     lpos = clean_pos(pos)
-                    for nameB in names:
-                        if set((nameA, nameB)) == ref_set:
-                            if nameA == name1:
-                                results.append((lpos, nameB))
+                    for name_b in names:
+                        if set((name_a, name_b)) == ref_set:
+                            if name_a == name1:
+                                results.append((lpos, name_b))
                             else:
-                                results.append((self._flipped_positions[lpos], nameA))
+                                results.append((self._flipped_positions[lpos], name_a))
             return results
 
         # Update positions
