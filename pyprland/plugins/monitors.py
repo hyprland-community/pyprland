@@ -8,6 +8,25 @@ from typing import Any, cast
 from .interface import Plugin
 
 
+def trim_offset(monitors):
+    "Makes the monitor set layout start at 0,0"
+    off_x = None
+    off_y = None
+    for mon in monitors:
+        if off_x is None:
+            off_x = mon["x"]
+
+        if off_y is None:
+            off_y = mon["y"]
+
+        off_x = min(mon["x"], off_x)
+        off_y = min(mon["y"], off_y)
+
+    for mon in monitors:
+        mon["x"] -= off_x
+        mon["y"] -= off_y
+
+
 def clean_pos(position):
     "Harmonize position format"
     return position.lower().replace("_", "").replace("-", "")
@@ -67,6 +86,20 @@ def apply_monitor_position(monitors, screenid: str, pos_x: int, pos_y: int) -> N
     subprocess.call(command)
 
 
+def build_graph(config):
+    "make a sorted graph based on the cleaned_config"
+    graph = defaultdict(list)
+    for name1, positions in config.items():
+        for pos, names in positions.items():
+            tldr_direction = pos.startswith("left") or pos.startswith("top")
+            for name2 in names:
+                if tldr_direction:
+                    graph[name1].append(name2)
+                else:
+                    graph[name2].append(name1)
+    return graph
+
+
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     _mon_by_pat_cache: dict[str, dict] = {}
 
@@ -78,102 +111,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_relayout(
         self,
-    ):  # pylint: disable=too-many-statements,too-many-locals,too-many-branches
+    ):  # pylint: disable=too-many-locals
         "Recompute & apply every monitors's layout"
 
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
-        placement_rules = deepcopy(self.config.get("placement", {}))
 
-        # - resolve names used in config so it's monitor's name instead of partial descriptions
-        # - filter config to only contain items relevant to plugged monitors
-        # - make a sorted graph of the monitors according to the config
-        # - for each monitor in the graph, apply the configuration of the connected monitors
-
-        monitors_by_descr = {m["description"]: m for m in monitors}
-        monitors_by_name = {m["name"]: m for m in monitors}
-        plugged_monitors = {m["name"] for m in monitors}
-        cleaned_config: dict[str, dict[str, str]] = {}
-
-        # change partial descriptions used in config for monitor names
-        for descr1, placement in placement_rules.items():
-            mon = self._get_mon_by_pat(descr1, monitors_by_descr)
-            if not mon:
-                continue
-            name1 = mon["name"]
-            if name1 not in plugged_monitors:
-                continue
-            cleaned_config[name1] = {}
-            for position, descr_list in placement.items():
-                if isinstance(descr_list, str):
-                    descr_list = [descr_list]
-                resolved = [
-                    self._get_mon_by_pat(p, monitors_by_descr)["name"]
-                    for p in descr_list
-                ]
-                if resolved:
-                    cleaned_config[name1][clean_pos(position)] = [
-                        r for r in resolved if r in plugged_monitors
-                    ]
-
-        # make a sorted graph based on the cleaned_config
-
-        graph = defaultdict(list)
-        for name1, positions in cleaned_config.items():
-            for pos, names in positions.items():
-                tldr_direction = pos.startswith("left") or pos.startswith("top")
-                for name2 in names:
-                    if tldr_direction:
-                        graph[name1].append(name2)
-                    else:
-                        graph[name2].append(name1)
-
-        def get_matching_config(name1, name2):
-            results = []
-            ref_set = set((name1, name2))
-            for name_a, positions in cleaned_config.items():
-                for pos, names in positions.items():
-                    lpos = clean_pos(pos)
-                    for name_b in names:
-                        if set((name_a, name_b)) == ref_set:
-                            if name_a == name1:
-                                results.append((lpos, name_b))
-                            else:
-                                results.append((self._flipped_positions[lpos], name_a))
-            return results
-
-        # Update positions
-        for _ in range(len(monitors_by_name) ** 2):
-            changed = False
-            for name in reversed(graph):
-                mon1 = monitors_by_name[name]
-                for name2 in graph[name]:
-                    mon2 = monitors_by_name[name2]
-                    for pos, _ in get_matching_config(name, name2):
-                        x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
-                        if x != mon2["x"]:
-                            changed = True
-                            mon2["x"] = x
-                        if y != mon2["y"]:
-                            changed = True
-                            mon2["y"] = y
-            if not changed:
-                break
-
-        off_x = None
-        off_y = None
-        for mon in monitors:
-            if off_x is None:
-                off_x = mon["x"]
-
-            if off_y is None:
-                off_y = mon["y"]
-
-            off_x = min(mon["x"], off_x)
-            off_y = min(mon["y"], off_y)
-
-        for mon in monitors:
-            mon["x"] -= off_x
-            mon["y"] -= off_y
+        cleaned_config = self.resolve_names(monitors)
+        graph = build_graph(cleaned_config)
+        self._update_positions({m["name"]: m for m in monitors}, graph, cleaned_config)
+        trim_offset(monitors)
 
         command = ["wlr-randr"]
         for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
@@ -290,3 +236,64 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     self.log.error("Unknown position type: %s (%s)", place, rule)
 
         return matched
+
+    def _update_positions(self, monitors_by_name, graph, config):
+        "Apply configuration to monitors_by_name using graph"
+        for _ in range(len(monitors_by_name) ** 2):
+            changed = False
+            for name in reversed(graph):
+                mon1 = monitors_by_name[name]
+                for name2 in graph[name]:
+                    mon2 = monitors_by_name[name2]
+                    for pos, _ in self.get_matching_config(name, name2, config):
+                        x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
+                        if x != mon2["x"]:
+                            changed = True
+                            mon2["x"] = x
+                        if y != mon2["y"]:
+                            changed = True
+                            mon2["y"] = y
+            if not changed:
+                break
+
+    def get_matching_config(self, name1, name2, config):
+        "Returns rules matching name1 or name2 (relative to name1), looking up config"
+        results = []
+        ref_set = set((name1, name2))
+        for name_a, positions in config.items():
+            for pos, names in positions.items():
+                lpos = clean_pos(pos)
+                for name_b in names:
+                    if set((name_a, name_b)) == ref_set:
+                        if name_a == name1:
+                            results.append((lpos, name_b))
+                        else:
+                            results.append((self._flipped_positions[lpos], name_a))
+        return results
+
+    def resolve_names(self, monitors):
+        "change partial descriptions used in config for monitor names"
+        placement_rules = deepcopy(self.config.get("placement", {}))
+        monitors_by_descr = {m["description"]: m for m in monitors}
+        cleaned_config: dict[str, dict[str, str]] = {}
+        plugged_monitors = {m["name"] for m in monitors}
+        for descr1, placement in placement_rules.items():
+            mon = self._get_mon_by_pat(descr1, monitors_by_descr)
+            if not mon:
+                continue
+            name1 = mon["name"]
+            if name1 not in plugged_monitors:
+                continue
+            cleaned_config[name1] = {}
+            for position, descr_list in placement.items():
+                if isinstance(descr_list, str):
+                    descr_list = [descr_list]
+                resolved = [
+                    self._get_mon_by_pat(p, monitors_by_descr)["name"]
+                    for p in descr_list
+                ]
+                if resolved:
+                    cleaned_config[name1][clean_pos(position)] = [
+                        r for r in resolved if r in plugged_monitors
+                    ]
+        return cleaned_config
