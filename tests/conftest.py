@@ -1,5 +1,5 @@
 " generic fixtures "
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, MagicMock
 import asyncio
 import pytest
 from pytest_asyncio import fixture
@@ -40,6 +40,8 @@ hyprctl_mock = None
 hyprevt_mock = None
 pyprctrl_mock = None
 
+subprocess_call = None
+
 
 misc_objects = {}
 
@@ -69,32 +71,41 @@ async def empty_config(monkeypatch):
 
 
 @fixture
+async def third_monitor(monkeypatch):
+    "Adds a third monitor"
+    MONITORS.append(EXTRA_MON)
+    yield
+    MONITORS[:] = MONITORS[:-1]
+
+
+@fixture
 async def sample1_config(monkeypatch):
-    "Runs with no config"
+    "Runs with config n°1"
     monkeypatch.setattr("tomllib.load", lambda x: CONFIG_1)
     yield
 
 
 async def mocked_hyprctlJSON(command, logger=None):
     if command == "monitors":
-        return MONITORS
+        return MONITORS.copy()
     raise NotImplementedError()
 
 
 @fixture
 async def server_fixture(monkeypatch):
     "Handle server setup boilerplate"
-    global hyprevt_mock, hyprctl_mock, pyprctrl_mock
+    global hyprevt_mock, hyprctl_mock, pyprctrl_mock, subprocess_call
 
     hyprctl_mock = (MockReader(), MockWriter())
     hyprevt_mock = (MockReader(), MockWriter())
-
     pyprctrl_mock = MockReader()
+    subprocess_call = MagicMock(return_value=0)
 
     monkeypatch.setenv("XDG_RUNTIME_DIR", "/tmp")
     monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
     monkeypatch.setattr("pyprland.ipc.notify", AsyncMock())
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
+    monkeypatch.setattr("subprocess.call", subprocess_call)
 
     from pyprland.command import run_daemon
     from pyprland import ipc
@@ -124,6 +135,29 @@ async def server_fixture(monkeypatch):
     asyncio.open_unix_connection = orig_open_unix_connection
     asyncio.start_unix_server = orig_start_unix_server
 
+
+EXTRA_MON = {
+    "id": 1,
+    "name": "eDP-1",
+    "description": "Sony (eDP-1)",
+    "make": "Sony",
+    "model": "XXX",
+    "serial": "YYY",
+    "width": 640,
+    "height": 480,
+    "refreshRate": 59.99900,
+    "x": 0,
+    "y": 0,
+    "activeWorkspace": {"id": 2, "name": "2"},
+    "specialWorkspace": {"id": 0, "name": ""},
+    "reserved": [0, 50, 0, 0],
+    "scale": 1.00,
+    "transform": 0,
+    "focused": True,
+    "dpmsStatus": True,
+    "vrr": False,
+    "activelyTearing": False,
+}
 
 MONITORS = [
     {

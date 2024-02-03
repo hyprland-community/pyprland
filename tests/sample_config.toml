@@ -75,7 +75,5 @@ position = "10% 10%"
 unknown = "wlrlui"
 
 [monitors.placement]
-"BenQ PJ".topOf = "DP-1"
-"PLX2783H-DP".topOf = "DP-1"
-"Dell Inc. DELL P24".topOf = "eDP-1"
-
+"(eDP-1)".rightOf = "(DP-1)"
+"(DP-1)".rightOf = "(HDMI-A-1)"
