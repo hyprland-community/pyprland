@@ -13,13 +13,13 @@ async def test_relayout():
         (
             "wlr-randr",
             "--output",
-            "DP-1",
-            "--pos",
-            "1920,0",
-            "--output",
             "HDMI-A-1",
             "--pos",
             "0,0",
+            "--output",
+            "DP-1",
+            "--pos",
+            "1920,0",
         )
     )
 
@@ -34,13 +34,13 @@ async def test_broken_relayout():
         (
             "wlr-randr",
             "--output",
-            "DP-1",
-            "--pos",
-            "1920,0",
-            "--output",
             "HDMI-A-1",
             "--pos",
             "0,0",
+            "--output",
+            "DP-1",
+            "--pos",
+            "1920,0",
             "--output",
             "eDP-1",
             "--pos",
