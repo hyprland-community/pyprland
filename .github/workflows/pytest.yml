@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint
-      - name: Analysing the code with pylint
+          pip install pytest
+      - name: Testing the code with pytest
         run: |
-          pylint $(git ls-files '*.py' |grep -v ^tests)
+          pytest
