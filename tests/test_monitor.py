@@ -143,7 +143,7 @@ async def test_3screens_relayout():
 
 @pytest.mark.usefixtures("third_monitor", "bottomup_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_3screens_relayout():
+async def test_3screens_relayout_b():
     await tst.pypr("relayout")
     await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
