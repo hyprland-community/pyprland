@@ -16,7 +16,8 @@ class Obj:
     pypr_command_reader: typing.Callable = None
 
 
-def pytest_configure(config):
+def pytest_configure():
+    "Runs once before all"
     from pyprland.common import init_logger
 
     init_logger("/dev/null", force_debug=True)
@@ -43,14 +44,14 @@ async def send_event(cmd):
     await hyprevt[0].q.put(b"%s\n" % cmd.encode("utf-8"))
 
 
-async def my_mocked_unix_server(command_reader, *a):
+async def mocked_unix_server(command_reader, *a):
     misc_objects.pypr_command_reader = command_reader
     server = AsyncMock()
     server.close = Mock()
     return server
 
 
-async def my_mocked_unix_connection(path):
+async def mocked_unix_connection(path):
     "Return a mocked reader & writer"
     if path.endswith(".socket2.sock"):
         return hyprevt
@@ -97,11 +98,14 @@ async def server_fixture(monkeypatch):
 
     monkeypatch.setenv("XDG_RUNTIME_DIR", "/tmp")
     monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
+
+    monkeypatch.setattr("asyncio.open_unix_connection", mocked_unix_connection)
+    monkeypatch.setattr("asyncio.start_unix_server", mocked_unix_server)
+
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
     monkeypatch.setattr("pyprland.ipc.hyprctl", hyprctl)
+
     monkeypatch.setattr("subprocess.call", subprocess_call)
-    monkeypatch.setattr("asyncio.open_unix_connection", my_mocked_unix_connection)
-    monkeypatch.setattr("asyncio.start_unix_server", my_mocked_unix_server)
 
     from pyprland.command import run_daemon
     from pyprland import ipc
