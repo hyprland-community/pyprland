@@ -136,8 +136,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if self.config.get("full_relayout", False):
             await self.run_relayout()
         else:
-            if not monitors:
-                monitors = cast(list, await self.hyprctlJSON("monitors"))
+            monitors = cast(list, await self.hyprctlJSON("monitors"))
 
             assert monitors
 
