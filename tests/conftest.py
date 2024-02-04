@@ -2,7 +2,6 @@
 from unittest.mock import AsyncMock, Mock, MagicMock
 from copy import deepcopy
 import asyncio
-import pytest
 from pytest_asyncio import fixture
 import tomllib
 
@@ -35,16 +34,20 @@ class MockWriter:
         self.wait_closed = AsyncMock()
 
 
-orig_start_unix_server = asyncio.start_unix_server
-
-hyprctl_mock = None
-hyprevt_mock = None
-pyprctrl_mock = None
-
-subprocess_call = None
+# Mocks
+hyprctl_mock: tuple[MockReader, MockWriter]
+hyprevt_mock: tuple[MockReader, MockWriter]
+pyprctrl_mock: MockReader
+subprocess_call: MagicMock
 
 
 misc_objects = {}
+
+
+async def pypr(cmd):
+    "Simulates the pypr command"
+    assert pyprctrl_mock
+    return pyprctrl_mock.q.put(b"%s\n" % cmd.encode("utf-8"))
 
 
 async def my_mocked_unix_server(reader, *a):
@@ -111,9 +114,8 @@ async def server_fixture(monkeypatch):
     from pyprland.command import run_daemon
     from pyprland import ipc
 
-    orig_open_unix_connection = asyncio.open_unix_connection
-    asyncio.open_unix_connection = my_mocked_unix_connection
-    asyncio.start_unix_server = my_mocked_unix_server
+    monkeypatch.setattr("asyncio.open_unix_connection", my_mocked_unix_connection)
+    monkeypatch.setattr("asyncio.start_unix_server", my_mocked_unix_server)
 
     ipc.init()
 
@@ -132,9 +134,6 @@ async def server_fixture(monkeypatch):
 
     # Wait for the server task to complete
     await server_task
-
-    asyncio.open_unix_connection = orig_open_unix_connection
-    asyncio.start_unix_server = orig_start_unix_server
 
 
 EXTRA_MON = {

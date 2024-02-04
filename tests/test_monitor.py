@@ -6,6 +6,10 @@ from . import conftest as tst
 from pytest_asyncio import fixture
 
 
+def get_xrandr_calls():
+    return {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
+
+
 @fixture
 async def reversed_config(monkeypatch):
     "Runs with config n°1"
@@ -24,7 +28,7 @@ plugins = ["monitors"]
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_relayout():
-    await tst.pyprctrl_mock.q.put(b"relayout\n")
+    await tst.pypr("relayout")
     assert tst.subprocess_call.call_count == 1
     calls = set([tuple(al[0][0]) for al in tst.subprocess_call.call_args_list])
     calls.remove(
@@ -45,9 +49,9 @@ async def test_relayout():
 @pytest.mark.usefixtures("third_monitor", "sample1_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_3screens_relayout():
-    await tst.pyprctrl_mock.q.put(b"relayout\n")
+    await tst.pypr("relayout")
     assert tst.subprocess_call.call_count == 1
-    calls = set([tuple(al[0][0]) for al in tst.subprocess_call.call_args_list])
+    calls = get_xrandr_calls()
     print(calls)
     calls.remove(
         (
@@ -71,9 +75,9 @@ async def test_3screens_relayout():
 @pytest.mark.usefixtures("third_monitor", "reversed_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_3screens_relayout():
-    await tst.pyprctrl_mock.q.put(b"relayout\n")
+    await tst.pypr("relayout")
     assert tst.subprocess_call.call_count == 1
-    calls = set([tuple(al[0][0]) for al in tst.subprocess_call.call_args_list])
+    calls = get_xrandr_calls()
     print(calls)
     calls.remove(
         (
@@ -94,8 +98,15 @@ async def test_3screens_relayout():
     )
 
 
+@pytest.mark.usefixtures("sample1_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events():
+    return
+    await tst.hyprevt_mock.q.put(b"")
+
+
 @pytest.mark.usefixtures("empty_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_nothing():
-    await tst.pyprctrl_mock.q.put(b"relayout\n")
+    await tst.pypr("relayout")
     assert tst.subprocess_call.call_count == 0
