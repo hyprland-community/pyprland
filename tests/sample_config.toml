@@ -69,4 +69,4 @@ unknown = "wlrlui"
 
 [monitors.placement]
 "(eDP-1)".rightOf = "(DP-1)"
-"(DP-1)".rightOf = "(HDMI-A-1)"
+"(DP-1)".rightOf = ["(HDMI-A-1)"]
