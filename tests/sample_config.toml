@@ -65,7 +65,7 @@ max_size = "1080px 100%"
 unfocus = "hide"
 
 [monitors]
-unknown = "wlrlui"
+startup_relayout = false
 
 [monitors.placement]
 "(eDP-1)".rightOf = "(DP-1)"

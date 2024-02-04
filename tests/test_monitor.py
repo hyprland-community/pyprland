@@ -2,6 +2,7 @@ import asyncio
 import pytest
 import tomllib
 from . import conftest as tst
+import asyncio
 
 from pytest_asyncio import fixture
 
@@ -29,8 +30,9 @@ plugins = ["monitors"]
 @pytest.mark.asyncio
 async def test_relayout():
     await tst.pypr("relayout")
+    await asyncio.sleep(0.1)
     assert tst.subprocess_call.call_count == 1
-    calls = set([tuple(al[0][0]) for al in tst.subprocess_call.call_args_list])
+    calls = {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
     calls.remove(
         (
             "wlr-randr",
@@ -50,6 +52,7 @@ async def test_relayout():
 @pytest.mark.asyncio
 async def test_3screens_relayout():
     await tst.pypr("relayout")
+    await asyncio.sleep(0.1)
     assert tst.subprocess_call.call_count == 1
     calls = get_xrandr_calls()
     print(calls)
@@ -74,7 +77,7 @@ async def test_3screens_relayout():
 
 @pytest.mark.usefixtures("third_monitor", "reversed_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_3screens_relayout():
+async def test_3screens_rev_relayout():
     await tst.pypr("relayout")
     assert tst.subprocess_call.call_count == 1
     calls = get_xrandr_calls()
@@ -108,5 +111,6 @@ async def test_events():
 @pytest.mark.usefixtures("empty_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_nothing():
-    await tst.pypr("relayout")
-    assert tst.subprocess_call.call_count == 0
+    await tst.pypr("inexistant")
+    assert tst.hyprctl_cmd.call_args_list[0][0][1] == "notify"
+    assert tst.hyprctl_cmd.call_count == 1
