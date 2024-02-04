@@ -212,7 +212,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "place a given monitor according to config"
 
         mon_name: str = cast(str, mon_info["name"])
-        monitors_by_descr = {m["description"]: m for m in monitors}
+        monitors_by_name = {m["name"]: m for m in monitors}
         self._clear_mon_by_pat_cache()
         matched = False
 
@@ -220,9 +220,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for place, other_screen, rule in self._get_rules(
             mon_info["name"], cleaned_config
         ):
-            other_mon = self._get_mon_by_pat(other_screen, monitors_by_descr)
+            other_mon = monitors_by_name.get(other_screen)
 
-            if other_mon and mon_info:
+            if other_mon:
                 matched = True
                 pos = get_XY(place, mon_info, other_mon)
                 if pos:
