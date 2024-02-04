@@ -273,5 +273,5 @@ async def test_events4():
 @pytest.mark.asyncio
 async def test_nothing():
     await tst.pypr("inexistant")
-    assert tst.hyprctl_cmd.call_args_list[0][0][1] == "notify"
-    assert tst.hyprctl_cmd.call_count == 1
+    assert tst.hyprctl.call_args_list[0][0][1] == "notify"
+    assert tst.hyprctl.call_count == 1

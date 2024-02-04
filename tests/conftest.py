@@ -4,7 +4,10 @@ from copy import deepcopy
 import asyncio
 from pytest_asyncio import fixture
 import tomllib
-import logging
+
+
+class Obj:
+    pass
 
 
 def pytest_configure(config):
@@ -39,30 +42,29 @@ class MockWriter:
 
 
 # Mocks
-hyprctl_mock: tuple[MockReader, MockWriter]
-hyprevt_mock: tuple[MockReader, MockWriter]
-pyprctrl_mock: tuple[MockReader, MockWriter]
+hyprevt: tuple[MockReader, MockWriter]
+pyprctrl: tuple[MockReader, MockWriter]
 subprocess_call: MagicMock
-hyprctl_cmd: AsyncMock
+hyprctl: AsyncMock
 
-misc_objects = {}
+misc_objects = Obj()
 
 
 async def pypr(cmd):
     "Simulates the pypr command"
-    assert pyprctrl_mock
-    await pyprctrl_mock[0].q.put(b"%s\n" % cmd.encode("utf-8"))
-    await misc_objects["pypr_command_reader"](*pyprctrl_mock)
+    assert pyprctrl
+    await pyprctrl[0].q.put(b"%s\n" % cmd.encode("utf-8"))
+    await misc_objects.pypr_command_reader(*pyprctrl)
 
 
 async def send_event(cmd):
     "Simulates receiving a Hyprland event"
-    assert hyprevt_mock
-    await hyprevt_mock[0].q.put(b"%s\n" % cmd.encode("utf-8"))
+    assert hyprevt
+    await hyprevt[0].q.put(b"%s\n" % cmd.encode("utf-8"))
 
 
 async def my_mocked_unix_server(command_reader, *a):
-    misc_objects["pypr_command_reader"] = command_reader
+    misc_objects.pypr_command_reader = command_reader
     mo = AsyncMock()
     mo.close = Mock()
     return mo
@@ -70,10 +72,8 @@ async def my_mocked_unix_server(command_reader, *a):
 
 async def my_mocked_unix_connection(path):
     "Return a mocked reader & writer"
-    if path.endswith(".socket.sock"):
-        return hyprctl_mock
     if path.endswith(".socket2.sock"):
-        return hyprevt_mock
+        return hyprevt
     raise ValueError()
 
 
@@ -108,18 +108,17 @@ async def mocked_hyprctlJSON(command, logger=None):
 @fixture
 async def server_fixture(monkeypatch):
     "Handle server setup boilerplate"
-    global hyprevt_mock, hyprctl_mock, pyprctrl_mock, subprocess_call, hyprctl_cmd
+    global hyprevt, pyprctrl, subprocess_call, hyprctl
 
-    hyprctl_cmd = AsyncMock(return_value=True)
-    hyprctl_mock = (MockReader(), MockWriter())
-    hyprevt_mock = (MockReader(), MockWriter())
-    pyprctrl_mock = (MockReader(), MockWriter())
+    hyprctl = AsyncMock(return_value=True)
+    hyprevt = (MockReader(), MockWriter())
+    pyprctrl = (MockReader(), MockWriter())
     subprocess_call = MagicMock(return_value=0)
 
     monkeypatch.setenv("XDG_RUNTIME_DIR", "/tmp")
     monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
-    monkeypatch.setattr("pyprland.ipc.hyprctl", hyprctl_cmd)
+    monkeypatch.setattr("pyprland.ipc.hyprctl", hyprctl)
     monkeypatch.setattr("subprocess.call", subprocess_call)
     monkeypatch.setattr("asyncio.open_unix_connection", my_mocked_unix_connection)
     monkeypatch.setattr("asyncio.start_unix_server", my_mocked_unix_server)
