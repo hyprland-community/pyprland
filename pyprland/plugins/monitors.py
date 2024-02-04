@@ -148,8 +148,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 self.log.warning("Monitor %s not found", monitor_name)
                 return
 
-            if self._place_single_monitor(mon_info, monitors):
-                return
+            self._place_single_monitor(mon_info, monitors)
 
     # Utils
 
