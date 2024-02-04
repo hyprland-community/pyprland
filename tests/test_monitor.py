@@ -12,7 +12,7 @@ async def wait_called(fn, timeout=1.0):
         if fn.call_count:
             break
         await asyncio.sleep(0.02)
-        delay += 0.1
+        delay += 0.02
 
         if delay > timeout:
             raise TimeoutError()
