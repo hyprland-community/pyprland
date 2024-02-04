@@ -111,7 +111,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_relayout(
         self,
-    ):  # pylint: disable=too-many-locals
+    ):
         "Recompute & apply every monitors's layout"
 
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
