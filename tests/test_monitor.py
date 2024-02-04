@@ -2,9 +2,20 @@ import asyncio
 import pytest
 import tomllib
 from . import conftest as tst
-import asyncio
 
 from pytest_asyncio import fixture
+
+
+async def wait_called(fn, timeout=1.0):
+    delay = 0.0
+    while True:
+        if fn.call_count:
+            break
+        await asyncio.sleep(0.02)
+        delay += 0.1
+
+        if delay > timeout:
+            raise TimeoutError()
 
 
 @fixture
@@ -69,8 +80,7 @@ startup_relayout = false
 @pytest.mark.asyncio
 async def test_relayout():
     await tst.pypr("relayout")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
     calls.remove(
         (
@@ -91,8 +101,7 @@ async def test_relayout():
 @pytest.mark.asyncio
 async def test_3screens_relayout():
     await tst.pypr("relayout")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(
@@ -118,8 +127,7 @@ async def test_3screens_relayout():
 @pytest.mark.asyncio
 async def test_3screens_rev_relayout():
     await tst.pypr("relayout")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(
@@ -145,8 +153,7 @@ async def test_3screens_rev_relayout():
 @pytest.mark.asyncio
 async def test_events():
     await tst.send_event("monitoradded>>DP-1")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(
@@ -164,8 +171,7 @@ async def test_events():
 @pytest.mark.asyncio
 async def test_events2():
     await tst.send_event("monitoradded>>DP-1")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "-3440,0"))
@@ -175,8 +181,7 @@ async def test_events2():
 @pytest.mark.asyncio
 async def test_events3():
     await tst.send_event("monitoradded>>DP-1")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,-1440"))
@@ -186,8 +191,7 @@ async def test_events3():
 @pytest.mark.asyncio
 async def test_events4():
     await tst.send_event("monitoradded>>DP-1")
-    await asyncio.sleep(0.1)
-    assert tst.subprocess_call.call_count == 1
+    await wait_called(tst.subprocess_call)
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,1080"))
