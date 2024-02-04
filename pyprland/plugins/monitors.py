@@ -1,4 +1,5 @@
 " The monitors plugin "
+import asyncio
 import subprocess
 from collections import defaultdict
 from copy import deepcopy
@@ -148,7 +149,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 self.log.warning("Monitor %s not found", monitor_name)
                 return
 
-            self._place_single_monitor(mon_info, monitors)
+            default_command = self.config.get("unknown")
+            if self._place_single_monitor(mon_info, monitors) and default_command:
+                await asyncio.create_subprocess_shell(default_command)
 
     # Utils
 
