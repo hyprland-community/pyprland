@@ -7,6 +7,42 @@ import asyncio
 from pytest_asyncio import fixture
 
 
+@fixture
+async def topdown_config(monkeypatch):
+    "Runs with config n°1"
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+
+[monitors.placement]
+"(eDP-1)".topOf = "(DP-1)"
+"(DP-1)".topOf = "(HDMI-A-1)"
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+@fixture
+async def bottomup_config(monkeypatch):
+    "Runs with config n°1"
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+
+[monitors.placement]
+"(eDP-1)".bottomOf = "(DP-1)"
+"(DP-1)".bottomOf = "(HDMI-A-1)"
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
 def get_xrandr_calls():
     return {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
 
@@ -17,6 +53,9 @@ async def reversed_config(monkeypatch):
     config = """
 [pyprland]
 plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
 
 [monitors.placement]
 "(eDP-1)".leftOf = "(DP-1)"
@@ -79,6 +118,7 @@ async def test_3screens_relayout():
 @pytest.mark.asyncio
 async def test_3screens_rev_relayout():
     await tst.pypr("relayout")
+    await asyncio.sleep(0.1)
     assert tst.subprocess_call.call_count == 1
     calls = get_xrandr_calls()
     print(calls)
@@ -104,8 +144,53 @@ async def test_3screens_rev_relayout():
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_events():
-    return
-    await tst.hyprevt_mock.q.put(b"")
+    await tst.send_event("monitoradded>>DP-1")
+    await asyncio.sleep(0.1)
+    assert tst.subprocess_call.call_count == 1
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(
+        (
+            "wlr-randr",
+            "--output",
+            "DP-1",
+            "--pos",
+            "1920,0",
+        )
+    )
+
+
+@pytest.mark.usefixtures("reversed_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events2():
+    await tst.send_event("monitoradded>>DP-1")
+    await asyncio.sleep(0.1)
+    assert tst.subprocess_call.call_count == 1
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "-3440,0"))
+
+
+@pytest.mark.usefixtures("topdown_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events3():
+    await tst.send_event("monitoradded>>DP-1")
+    await asyncio.sleep(0.1)
+    assert tst.subprocess_call.call_count == 1
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,-1440"))
+
+
+@pytest.mark.usefixtures("bottomup_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events4():
+    await tst.send_event("monitoradded>>DP-1")
+    await asyncio.sleep(0.1)
+    assert tst.subprocess_call.call_count == 1
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,1080"))
 
 
 @pytest.mark.usefixtures("empty_config", "server_fixture")

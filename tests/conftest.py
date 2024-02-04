@@ -55,6 +55,12 @@ async def pypr(cmd):
     await misc_objects["pypr_command_reader"](*pyprctrl_mock)
 
 
+async def send_event(cmd):
+    "Simulates receiving a Hyprland event"
+    assert hyprevt_mock
+    await hyprevt_mock[0].q.put(b"%s\n" % cmd.encode("utf-8"))
+
+
 async def my_mocked_unix_server(command_reader, *a):
     misc_objects["pypr_command_reader"] = command_reader
     mo = AsyncMock()
