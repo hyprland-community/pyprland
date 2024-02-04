@@ -19,6 +19,24 @@ async def wait_called(fn, timeout=1.0):
 
 
 @fixture
+async def descr_config(monkeypatch):
+    "Runs with config n°1"
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+
+[monitors.placement]
+"Sony".rightOf = "Microstep"
+"Microstep".rightOf = ["BenQ"]
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+@fixture
 async def topdown_config(monkeypatch):
     "Runs with config n°1"
     config = """
@@ -123,6 +141,32 @@ async def test_3screens_relayout():
     )
 
 
+@pytest.mark.usefixtures("third_monitor", "bottomup_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_3screens_relayout():
+    await tst.pypr("relayout")
+    await wait_called(tst.subprocess_call)
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(
+        (
+            "wlr-randr",
+            "--output",
+            "HDMI-A-1",
+            "--pos",
+            "0,0",
+            "--output",
+            "DP-1",
+            "--pos",
+            "0,1080",
+            "--output",
+            "eDP-1",
+            "--pos",
+            "0,2520",
+        )
+    )
+
+
 @pytest.mark.usefixtures("third_monitor", "reversed_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_3screens_rev_relayout():
@@ -167,6 +211,24 @@ async def test_events():
     )
 
 
+@pytest.mark.usefixtures("descr_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events_d():
+    await tst.send_event("monitoradded>>DP-1")
+    await wait_called(tst.subprocess_call)
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(
+        (
+            "wlr-randr",
+            "--output",
+            "DP-1",
+            "--pos",
+            "1920,0",
+        )
+    )
+
+
 @pytest.mark.usefixtures("reversed_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_events2():
@@ -185,6 +247,16 @@ async def test_events3():
     calls = get_xrandr_calls()
     print(calls)
     calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,-1440"))
+
+
+@pytest.mark.usefixtures("sample1_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_events3b():
+    await tst.send_event("monitoradded>>HDMI-A-1")
+    await wait_called(tst.subprocess_call)
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(("wlr-randr", "--output", "HDMI-A-1", "--pos", "-1920,0"))
 
 
 @pytest.mark.usefixtures("bottomup_config", "server_fixture")
