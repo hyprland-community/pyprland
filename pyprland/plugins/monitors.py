@@ -148,7 +148,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.warning("Monitor %s not found", monitor_name)
             return
 
-        if self._place_monitors(mon_info, monitors):
+        if self._place_single_monitor(mon_info, monitors):
             return
 
         if not no_default:
@@ -209,7 +209,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             f"{pattern} {config}",
                         )
 
-    def _place_monitors(
+    def _place_single_monitor(
         self,
         mon_info: dict[str, int | float | str | list],
         monitors: list[dict[str, Any]],
