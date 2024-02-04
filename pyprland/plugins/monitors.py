@@ -118,7 +118,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         cleaned_config = self.resolve_names(monitors)
         graph = build_graph(cleaned_config)
-        self._update_positions({m["name"]: m for m in monitors}, graph, cleaned_config)
+        self._update_positions(monitors, graph, cleaned_config)
         trim_offset(monitors)
 
         command = ["wlr-randr"]
@@ -237,8 +237,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         return matched
 
-    def _update_positions(self, monitors_by_name, graph, config):
+    def _update_positions(self, monitors, graph, config):
         "Apply configuration to monitors_by_name using graph"
+        monitors_by_name = {m["name"]: m for m in monitors}
         for _ in range(len(monitors_by_name) ** 2):
             changed = False
             for name in reversed(graph):
