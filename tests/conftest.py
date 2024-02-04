@@ -47,7 +47,7 @@ misc_objects = {}
 async def pypr(cmd):
     "Simulates the pypr command"
     assert pyprctrl_mock
-    return pyprctrl_mock.q.put(b"%s\n" % cmd.encode("utf-8"))
+    await pyprctrl_mock.q.put(b"%s\n" % cmd.encode("utf-8"))
 
 
 async def my_mocked_unix_server(reader, *a):

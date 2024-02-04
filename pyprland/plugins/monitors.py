@@ -1,5 +1,4 @@
 " The monitors plugin "
-import asyncio
 import subprocess
 from collections import defaultdict
 from copy import deepcopy
@@ -105,7 +104,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def load_config(self, config) -> None:
         await super().load_config(config)
-        await self.run_relayout()
+        if self.config.get("startup_relayout", True):
+            await self.run_relayout()
 
     # Command
 
@@ -130,31 +130,27 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     # Event handlers
 
-    async def event_monitoradded(
-        self, monitor_name, no_default=False, monitors: list | None = None
-    ) -> None:
+    async def event_monitoradded(self, monitor_name) -> None:
         "Triggers when a monitor is plugged"
 
-        if not monitors:
-            monitors = cast(list, await self.hyprctlJSON("monitors"))
-
-        assert monitors
-
-        for mon in monitors:
-            if mon["name"].startswith(monitor_name):
-                mon_info = mon
-                break
+        if self.config.get("full_relayout", False):
+            await self.run_relayout()
         else:
-            self.log.warning("Monitor %s not found", monitor_name)
-            return
+            if not monitors:
+                monitors = cast(list, await self.hyprctlJSON("monitors"))
 
-        if self._place_single_monitor(mon_info, monitors):
-            return
+            assert monitors
 
-        if not no_default:
-            default_command = self.config.get("unknown")
-            if default_command:
-                await asyncio.create_subprocess_shell(default_command)
+            for mon in monitors:
+                if mon["name"].startswith(monitor_name):
+                    mon_info = mon
+                    break
+            else:
+                self.log.warning("Monitor %s not found", monitor_name)
+                return
+
+            if self._place_single_monitor(mon_info, monitors):
+                return
 
     # Utils
 
