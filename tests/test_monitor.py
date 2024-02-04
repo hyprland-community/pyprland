@@ -99,7 +99,7 @@ startup_relayout = false
 async def test_relayout():
     await tst.pypr("relayout")
     await wait_called(tst.subprocess_call)
-    calls = {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
+    calls = get_xrandr_calls()
     calls.remove(
         (
             "wlr-randr",
