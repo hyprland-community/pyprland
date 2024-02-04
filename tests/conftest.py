@@ -1,13 +1,19 @@
 " generic fixtures "
+import typing
 from unittest.mock import AsyncMock, Mock, MagicMock
 from copy import deepcopy
 import asyncio
+from dataclasses import dataclass
 from pytest_asyncio import fixture
 import tomllib
+from .testtools import MockReader, MockWriter
+
+CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
 
+@dataclass
 class Obj:
-    pass
+    pypr_command_reader: typing.Callable = None
 
 
 def pytest_configure(config):
@@ -16,37 +22,11 @@ def pytest_configure(config):
     init_logger("/dev/null", force_debug=True)
 
 
-CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
-
-
-class MockReader:
-    "A StreamReader mock"
-
-    def __init__(self):
-        self.q = asyncio.Queue()
-
-    async def readline(self, *a):
-        return await self.q.get()
-
-    read = readline
-
-
-class MockWriter:
-    "A StreamWriter mock"
-
-    def __init__(self):
-        self.write = Mock()
-        self.drain = AsyncMock()
-        self.close = Mock()
-        self.wait_closed = AsyncMock()
-
-
 # Mocks
 hyprevt: tuple[MockReader, MockWriter]
 pyprctrl: tuple[MockReader, MockWriter]
 subprocess_call: MagicMock
 hyprctl: AsyncMock
-
 misc_objects = Obj()
 
 
@@ -65,9 +45,9 @@ async def send_event(cmd):
 
 async def my_mocked_unix_server(command_reader, *a):
     misc_objects.pypr_command_reader = command_reader
-    mo = AsyncMock()
-    mo.close = Mock()
-    return mo
+    server = AsyncMock()
+    server.close = Mock()
+    return server
 
 
 async def my_mocked_unix_connection(path):
