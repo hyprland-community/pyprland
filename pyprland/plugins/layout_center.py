@@ -5,6 +5,7 @@ Implements a "Centered" layout:
 - you can cycle the active window, keeping the same layout type
 - layout can be toggled any time
 """
+
 from typing import Any, cast
 from collections import defaultdict
 
