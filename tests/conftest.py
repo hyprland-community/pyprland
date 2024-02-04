@@ -13,7 +13,8 @@ CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
 @dataclass
 class Obj:
-    pypr_command_reader: typing.Callable = None
+    "keep track of pypr's object when needed"
+    pypr_command_reader: typing.Callable = lambda *a: None
 
 
 def pytest_configure():
