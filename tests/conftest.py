@@ -121,26 +121,18 @@ async def server_fixture(monkeypatch):
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
     monkeypatch.setattr("pyprland.ipc.hyprctl", hyprctl_cmd)
     monkeypatch.setattr("subprocess.call", subprocess_call)
+    monkeypatch.setattr("asyncio.open_unix_connection", my_mocked_unix_connection)
+    monkeypatch.setattr("asyncio.start_unix_server", my_mocked_unix_server)
 
     from pyprland.command import run_daemon
     from pyprland import ipc
 
-    monkeypatch.setattr("asyncio.open_unix_connection", my_mocked_unix_connection)
-    monkeypatch.setattr("asyncio.start_unix_server", my_mocked_unix_server)
-
     ipc.init()
 
-    # Use asyncio.gather to run the server logic concurrently with other async tasks
     server_task = asyncio.create_task(run_daemon())
-
-    yield  # The test runs at this point
-    await pypr("exit")
+    yield  # Run the test
     server_task.cancel()
     await server_task
-
-    # Cleanup: Cancel the server task to stop the server
-
-    # Wait for the server task to complete
 
 
 EXTRA_MON = {
