@@ -188,16 +188,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "rightendof": "leftendof",
     }
 
-    def _get_rules(self, mon_description):
+    def _get_rules(self, mon_name, placement):
         "build a list of matching rules from the config"
-        for pattern, config in self.config["placement"].items():
-            matched = pattern in mon_description
+        for pattern, config in placement.items():
+            matched = pattern == mon_name
             for position, descr_list in config.items():
                 if isinstance(descr_list, str):
                     descr_list = [descr_list]
                 for descr in descr_list:
                     lp = clean_pos(position)
-                    if matched or mon_description in descr:
+                    if matched or descr == mon_name:
                         yield (
                             lp if matched else self._flipped_positions[lp],
                             descr,
@@ -216,13 +216,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         self._clear_mon_by_pat_cache()
         matched = False
 
-        for place, other_screen, rule in self._get_rules(mon_info["description"]):
-            main_mon = mon_info
+        cleaned_config = self.resolve_names(monitors)
+        for place, other_screen, rule in self._get_rules(
+            mon_info["name"], cleaned_config
+        ):
             other_mon = self._get_mon_by_pat(other_screen, monitors_by_descr)
 
-            if other_mon and main_mon:
+            if other_mon and mon_info:
                 matched = True
-                pos = get_XY(place, main_mon, other_mon)
+                pos = get_XY(place, mon_info, other_mon)
                 if pos:
                     x, y = pos
                     self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
