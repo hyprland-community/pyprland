@@ -288,10 +288,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             for position, descr_list in placement.items():
                 if isinstance(descr_list, str):
                     descr_list = [descr_list]
-                resolved = [
-                    self._get_mon_by_pat(p, monitors_by_descr)["name"]
-                    for p in descr_list
-                ]
+                resolved = []
+                for p in descr_list:
+                    r = self._get_mon_by_pat(p, monitors_by_descr)
+                    if r:
+                        resolved.append(r["name"])
                 if resolved:
                     cleaned_config[name1][clean_pos(position)] = [
                         r for r in resolved if r in plugged_monitors
