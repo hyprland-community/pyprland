@@ -19,6 +19,42 @@ async def wait_called(fn, timeout=1.0):
 
 
 @fixture
+async def shapeL_config(monkeypatch):
+    "L shape"
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+
+[monitors.placement]
+"Sony".topOf = ["BenQ"]
+"Microstep".rightOf = ["BenQ"]
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+@fixture
+async def flipped_shapeL_config(monkeypatch):
+    "flipped L shape"
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+
+[monitors.placement]
+"Sony".bottomOf = "BenQ"
+"Microstep".rightOf = "Sony"
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+@fixture
 async def descr_config(monkeypatch):
     "Runs with config n°1"
     config = """
@@ -163,6 +199,58 @@ async def test_3screens_relayout_b():
             "eDP-1",
             "--pos",
             "0,2520",
+        )
+    )
+
+
+@pytest.mark.usefixtures("third_monitor", "shapeL_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_shape_l():
+    await tst.pypr("relayout")
+    await wait_called(tst.subprocess_call)
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(
+        (
+            "wlr-randr",
+            "--output",
+            "eDP-1",
+            "--pos",
+            "0,0",
+            "--output",
+            "HDMI-A-1",
+            "--pos",
+            "0,480",
+            "--output",
+            "DP-1",
+            "--pos",
+            "1920,480",
+        )
+    )
+
+
+@pytest.mark.usefixtures("third_monitor", "flipped_shapeL_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_flipped_shape_l():
+    await tst.pypr("relayout")
+    await wait_called(tst.subprocess_call)
+    calls = get_xrandr_calls()
+    print(calls)
+    calls.remove(
+        (
+            "wlr-randr",
+            "--output",
+            "HDMI-A-1",
+            "--pos",
+            "0,0",
+            "--output",
+            "eDP-1",
+            "--pos",
+            "0,1080",
+            "--output",
+            "DP-1",
+            "--pos",
+            "640,1080",
         )
     )
 
