@@ -3,67 +3,6 @@ plugins = [
   "monitors",
 ]
 
-[workspaces_follow_focus]
-max_workspaces = 9
-
-[expose]
-include_special = false
-
-[scratchpads.nix]
-animation = "fromTop"
-command = "firefox --no-remote --class nixpkgs-search --new-window https://search.nixos.org/packages"
-class = "nixpkgs-search"
-lazy = true
-size = "50% 75%"
-position = "25% 5%"
-excludes = "*"
-
-[scratchpads.zic]
-command = "/opt/brave-bin/brave --profile-directory=Default --app-id=cinhimbnkkaeohfgghhklpknlkffjgod"
-class = "brave-cinhimbnkkaeohfgghhklpknlkffjgod-Default"
-class_match = true
-size = "50% 50%"
-process_tracking = false
-animation = "fromBottom"
-
-[scratchpads.meets]
-command = "/opt/brave-bin/brave --profile-directory=Default --app-id=kjgfgldnnfoeklkmfkjfagphfepbbdan"
-class = "brave-kjgfgldnnfoeklkmfkjfagphfepbbdan-Default"
-class_match = true
-size = "50% 50%"
-process_tracking = false
-animation = "fromBottom"
-
-[scratchpads.stb]
-animation = "fromBottom"
-command = "kitty --class kitty-stb sstb"
-class = "kitty-stb"
-lazy = true
-size = "75% 45%"
-
-[scratchpads.stb-logs]
-animation = "fromTop"
-command = "kitty --class kitty-stb-logs stbLog"
-class = "kitty-stb-logs"
-lazy = true
-size = "75% 40%"
-
-[scratchpads.term]
-animation = "fromTop"
-command = "kitty --class kitty-dropterm"
-class = "kitty-dropterm"
-size = "75% 60%"
-max_size = "1920px 100%"
-
-[scratchpads.volume]
-animation = "fromRight"
-command = "pavucontrol"
-class = "pavucontrol"
-lazy = true
-size = "40% 90%"
-max_size = "1080px 100%"
-unfocus = "hide"
-
 [monitors]
 startup_relayout = false
 
