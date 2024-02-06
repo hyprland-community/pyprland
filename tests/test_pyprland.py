@@ -1,0 +1,38 @@
+from typing import cast
+import pytest
+import tomllib
+from . import conftest as tst
+from .testtools import wait_called
+from unittest.mock import Mock
+
+
+@pytest.mark.usefixtures("sample1_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_reload(monkeypatch):
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = true
+placement = {}
+"""
+    from pyprland.command import Pyprland
+
+    master = cast(Pyprland, Pyprland.instance)
+    cfg = master.plugins["monitors"].config
+
+    placement = cfg["placement"]
+    bool_opt = cfg["startup_relayout"]
+
+    load_proxy = Mock(wraps=lambda x: tomllib.loads(config))
+
+    monkeypatch.setattr("tomllib.load", load_proxy)
+    await tst.pypr("reload")
+
+    await wait_called(load_proxy)
+
+    assert placement != cfg["placement"]
+    assert bool_opt != cfg["startup_relayout"]
+    assert cfg["startup_relayout"] == True
+    assert cfg["placement"] == {}

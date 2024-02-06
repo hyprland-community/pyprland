@@ -34,6 +34,7 @@ class Pyprland:
 
     @classmethod
     def _set_instance(cls, instance):
+        "Set instance reference into class (for testing/debugging only)"
         cls.instance = instance
 
     def __init__(self):

@@ -2,6 +2,18 @@ import asyncio
 from unittest.mock import AsyncMock, Mock
 
 
+async def wait_called(fn, timeout=1.0):
+    delay = 0.0
+    while True:
+        if fn.call_count:
+            break
+        await asyncio.sleep(0.02)
+        delay += 0.02
+
+        if delay > timeout:
+            raise TimeoutError()
+
+
 class MockReader:
     "A StreamReader mock"
 

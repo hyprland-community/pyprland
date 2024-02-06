@@ -4,7 +4,7 @@ import logging
 import time
 import asyncio
 import subprocess
-from typing import Any, cast
+from typing import Any, cast, Callable
 from functools import partial
 from collections import defaultdict
 
@@ -128,6 +128,7 @@ class Animations:  # {{{
 class Scratch:  # {{{
     "A scratchpad state including configuration & client state"
     log = logging.getLogger("scratch")
+    get_client_props: Callable
 
     def __init__(self, uid, opts):
         self.uid = uid
