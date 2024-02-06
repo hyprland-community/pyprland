@@ -30,7 +30,8 @@ class Plugin:
 
     async def load_config(self, config: dict[str, Any]):
         "Loads the configuration section from the passed `config`"
+        self.config.clear()
         try:
-            self.config = config[self.name]
+            self.config.update(config[self.name])
         except KeyError:
             self.config = {}

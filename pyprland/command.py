@@ -4,6 +4,7 @@ import asyncio
 import importlib
 import itertools
 from functools import partial
+from typing import Self
 import tomllib
 import json
 import os
@@ -27,13 +28,15 @@ class Pyprland:
     server: asyncio.Server
     event_reader: asyncio.StreamReader
     stopped = False
-    config: None | dict[str, dict] = None
+    config: dict[str, dict] = {}
     tasks: None | asyncio.TaskGroup = None
 
     def __init__(self):
+        self.config = {}
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
         self.queues = {}
+        self._set_instance(self)
 
     async def initialize(self):
         "Initializes the main structures"
@@ -44,12 +47,13 @@ class Pyprland:
         if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
             self.log.warning("Consider changing your configuration to TOML format.")
 
+        self.config.clear()
         fname = os.path.expanduser(CONFIG_FILE)
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
             try:
                 with open(fname, "rb") as f:
-                    self.config = tomllib.load(f)
+                    self.config.update(tomllib.load(f))
             except FileNotFoundError as e:
                 self.log.critical(
                     "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
@@ -59,7 +63,7 @@ class Pyprland:
             self.log.info("Loading %s", OLD_CONFIG_FILE)
             try:
                 with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
-                    self.config = json.loads(f.read())
+                    self.config.update(json.loads(f.read()))
             except FileNotFoundError as e:
                 self.log.critical(
                     "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
