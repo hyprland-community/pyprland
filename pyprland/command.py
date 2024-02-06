@@ -30,6 +30,11 @@ class Pyprland:
     stopped = False
     config: dict[str, dict] = {}
     tasks: None | asyncio.TaskGroup = None
+    instance: Self
+
+    @classmethod
+    def _set_instance(cls, instance):
+        cls.instance = instance
 
     def __init__(self):
         self.config = {}
