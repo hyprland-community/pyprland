@@ -340,7 +340,7 @@ def use_param(txt):
     """Checks if parameter `txt` is in sys.argv
     if found, removes it from sys.argv & returns the argument value
     """
-    v = False
+    v = ""
     if txt in sys.argv:
         i = sys.argv.index(txt)
         v = sys.argv[i + 1]

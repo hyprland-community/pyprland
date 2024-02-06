@@ -275,7 +275,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "change partial descriptions used in config for monitor names"
         placement_rules = deepcopy(self.config.get("placement", {}))
         monitors_by_descr = {m["description"]: m for m in monitors}
-        cleaned_config: dict[str, dict[str, str]] = {}
+        cleaned_config: dict[str, dict[str, Any]] = {}
         plugged_monitors = {m["name"] for m in monitors}
         for descr1, placement in placement_rules.items():
             mon = self._get_mon_by_pat(descr1, monitors_by_descr)

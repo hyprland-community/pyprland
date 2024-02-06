@@ -103,6 +103,8 @@ async def get_client_props(
     "Returns client properties given its address"
     assert addr or pid or cls
 
+    prop_value: int | str
+
     if addr:
         assert len(addr) > 2, "Client address is invalid"
         prop_name = "address"

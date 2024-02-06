@@ -278,7 +278,7 @@ class ScratchDB:  # {{{
             self._by_addr[scratch.address] = scratch
         else:
             if name is not None:
-                d = self._by_name
+                d: dict[Any, Scratch] = cast(dict[str, Scratch], self._by_name)
                 v = name
             elif pid is not None:
                 d = self._by_pid
@@ -289,7 +289,7 @@ class ScratchDB:  # {{{
             d[v] = scratch
         # }}}
 
-    def get(self, name=None, pid=None, addr=None) -> Scratch:
+    def get(self, name=None, pid=None, addr=None) -> Scratch | None:
         "return the Scratch matching given name, pid or address"
         # {{{
         assert 1 == len(list(filter(bool, (name, pid, addr)))), (
@@ -298,7 +298,7 @@ class ScratchDB:  # {{{
             addr,
         )
         if name is not None:
-            d = self._by_name
+            d: dict[Any, Scratch] = self._by_name
             v = name
         elif pid is not None:
             d = self._by_pid
@@ -364,21 +364,25 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
         scratches_to_spawn = set()
         for name in scratches:
-            if not self.scratches.get(name):
+            scratch = self.scratches.get(name)
+            if scratch:
+                scratch.conf = scratches[name].conf
+            else:
                 self.scratches.register(scratches[name], name)
                 is_lazy = scratches[name].conf.get("lazy", False)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
-            else:
-                self.scratches.get(name).conf = scratches[name].conf
 
         for name in scratches_to_spawn:
             if await self.ensure_alive(name):
-                self.scratches.get(name).should_hide = True
+                scratch = self.scratches.get(name)
+                assert scratch
+                scratch.should_hide = True
             else:
                 self.log.error("Failure starting %s", name)
 
         for scratch in list(self.scratches.getByState("configured")):
+            assert scratch
             self.scratches.clearState(scratch, "configured")
 
     async def _configure_windowrules(self, scratch):
@@ -493,6 +497,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """
         item = self.scratches.get(name=uid)
         await self._configure_windowrules(item)
+        assert item
 
         if item.conf.get("process_tracking", True):
             if not await item.isAlive():
@@ -507,6 +512,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
         scratch = self.scratches.get(name)
+        assert scratch
         self.scratches.setState(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
         proc = subprocess.Popen(
@@ -570,7 +576,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                     and scratch.conf.get("unfocus") == "hide"
                     and not self.scratches.hasState(scratch, "transition")
                 ):
-                    last_shown = self.scratches.get(uid).meta.get("last_shown", 0)
+                    last_shown = scratch.meta.get("last_shown", 0)
                     if last_shown + AFTER_SHOW_INHIBITION > time.time():
                         self.log.debug(
                             "(SKIPPED) hide %s because another client is active", uid
@@ -706,6 +712,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             ]
         for e_uid in excluded:
             scratch = self.scratches.get(e_uid)
+            assert scratch
             if scratch.visible:
                 await self.run_hide(e_uid, autohide=True)
         await item.updateClientInfo()
