@@ -37,7 +37,7 @@ It has a safe design which is friendly for developers.
 
 ### 1.7.0
 
-- **BREAKING CHANGE** [layout_center](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
+- **BREAKING CHANGE** [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
 
 ## Star History
 
