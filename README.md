@@ -9,9 +9,7 @@ It provides a variety of [plugins](https://github.com/hyprland-community/pyprlan
 
 New users need to read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page.
 
-
 → [Changes log](https://github.com/hyprland-community/pyprland/releases)
-
 → [Documentation](https://github.com/hyprland-community/pyprland/wiki)
 
 ## Dependencies
