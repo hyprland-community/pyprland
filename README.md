@@ -36,6 +36,16 @@ New users need to read the [Getting started](https://github.com/hyprland-communi
 
 - **BREAKING CHANGE** [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
 
+## Developers
+
+If you feel like contributing, you are welcome. It can be done in many different ways:
+
+- [bug reporting](https://github.com/hyprland-community/pyprland/issues) or proposing solid feature requests
+- Improving the [wiki](https://github.com/hyprland-community/pyprland/wiki) (more formal structure, additional content, better wording, etc...)
+- Writing [new plugins](https://github.com/hyprland-community/pyprland/wiki/Development)
+- Improving existing [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins)
+- Improving [test coverage](https://github.com/hyprland-community/pyprland/tree/main/tests)
+
 ## Star History
 
 <a href="https://star-history.com/#fdev31/pyprland&Date">
