@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 import tomllib
 from . import conftest as tst
