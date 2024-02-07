@@ -7,8 +7,6 @@ aiming at simplicity and efficiency.
 
 It provides a variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) you can enable to your liking.
 
-Pyprland aims at being friendly for both developers and users while offering a good performance level.
-
 New users need to read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page.
 
 
