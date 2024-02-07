@@ -48,6 +48,8 @@ If you feel like contributing, you are welcome. It can be done in many different
 - Improving existing [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins)
 - Improving [test coverage](https://github.com/hyprland-community/pyprland/tree/main/tests)
 
+Check the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document if you are not familiar with it
+
 ## Star History
 
 <a href="https://star-history.com/#fdev31/pyprland&Date">
