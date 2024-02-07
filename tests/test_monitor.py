@@ -54,8 +54,8 @@ plugins = ["monitors"]
 startup_relayout = false
 
 [monitors.placement]
-"Sony".rightOf = "Microstep"
-"Microstep".rightOf = ["BenQ"]
+"Sony".rightCenterOf = "Microstep"
+"Microstep".rightCenterOf = ["BenQ"]
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield
@@ -283,7 +283,7 @@ async def test_events():
             "--output",
             "DP-1",
             "--pos",
-            "1920,0",
+            "1920,-180",
         )
     )
 
