@@ -283,7 +283,7 @@ async def test_events():
             "--output",
             "DP-1",
             "--pos",
-            "1920,-180",
+            "1920,0",
         )
     )
 
@@ -301,7 +301,7 @@ async def test_events_d():
             "--output",
             "DP-1",
             "--pos",
-            "1920,0",
+            "1920,-180",
         )
     )
 
