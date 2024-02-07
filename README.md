@@ -7,7 +7,7 @@ aiming at simplicity and efficiency.
 
 It provides a variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) you can enable to your liking.
 
-New users need to read the [Getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page.
+New users need to read the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page.
 
 → [Documentation](https://github.com/hyprland-community/pyprland/wiki)
 
