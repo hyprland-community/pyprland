@@ -14,6 +14,8 @@ New users need to read the [Getting started](https://github.com/hyprland-communi
 → [Changes log](https://github.com/hyprland-community/pyprland/releases)
 
 
+→ [Discussions](https://github.com/hyprland-community/pyprland/discussions)
+
 ## Dependencies
 
 - Hyprland >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
