@@ -79,11 +79,15 @@ every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu]
 
 async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     "initializes the module"
-    engines = (
-        [next(e for e in every_menu_engine if e.proc_name == force_engine)]
-        if force_engine
-        else every_menu_engine
-    )
+    try:
+        engines = (
+            [next(e for e in every_menu_engine if e.proc_name == force_engine)]
+            if force_engine
+            else every_menu_engine
+        )
+    except StopIteration:
+        engines = []
+
     for engine in engines:
         if engine.is_available():
             return engine(extra_parameters)
