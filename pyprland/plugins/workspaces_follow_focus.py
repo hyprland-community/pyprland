@@ -7,9 +7,8 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     workspace_list: list[int] = []
 
-    async def load_config(self, config):
-        "loads the config"
-        await super().load_config(config)
+    async def on_reload(self):
+        "rebuild workspaces list"
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
     async def event_focusedmon(self, screenid_index):

@@ -22,11 +22,18 @@ class Plugin:
         ) = ctrl
         self.config: dict[str, Any] = {}
 
+    # Functions to override
+
     async def init(self):
         "empty init function"
 
+    async def on_reload(self):
+        "empty reload function"
+
     async def exit(self):
         "empty exit function"
+
+    # Generic implementations
 
     async def load_config(self, config: dict[str, Any]):
         "Loads the configuration section from the passed `config`"

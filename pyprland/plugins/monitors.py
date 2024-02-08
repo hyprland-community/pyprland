@@ -103,8 +103,7 @@ def build_graph(config):
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     _mon_by_pat_cache: dict[str, dict] = {}
 
-    async def load_config(self, config) -> None:
-        await super().load_config(config)
+    async def on_reload(self):
         if self.config.get("startup_relayout", True):
             await self.run_relayout()
 

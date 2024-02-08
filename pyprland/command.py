@@ -108,6 +108,8 @@ class Pyprland:
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)
+                    await self.plugins[name].on_reload()
+                    self.plugins[name].log.info("configured")
                 except PyprError:
                     raise
                 except Exception as e:

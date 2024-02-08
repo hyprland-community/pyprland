@@ -355,11 +355,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             *(die_in_piece(scratch) for scratch in self.scratches.values())
         )
 
-    async def load_config(self, config: dict[str, Any]) -> None:
+    async def on_reload(self) -> None:
         "config loader"
-        my_config: dict[str, dict[str, Any]] = config[self.name]
         scratches = {
-            name: Scratch(name, options) for name, options in my_config.items()
+            name: Scratch(name, options) for name, options in self.config.items()
         }
 
         scratches_to_spawn = set()
