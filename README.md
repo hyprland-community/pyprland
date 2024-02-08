@@ -2,7 +2,7 @@
 
 ## Extending Hyprland's features
 
-Pyprland is a host process for multiple Hyprland extensions,
+Pyprland is a host process for multiple [Hyprland](https://hyprland.org/) extensions,
 aiming at simplicity and efficiency.
 
 It provides a variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) you can enable to your liking.
