@@ -10,7 +10,8 @@ class MenuEngine:
     proc_detect_parameters: list[str] = ["--help"]
 
     def __init__(self, extra_parameters):
-        self.proc_extra_parameters = extra_parameters
+        if extra_parameters:
+            self.proc_extra_parameters = extra_parameters
 
     @classmethod
     def is_available(cls):
