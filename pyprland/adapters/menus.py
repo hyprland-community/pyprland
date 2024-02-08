@@ -2,6 +2,8 @@
 import subprocess
 import asyncio
 
+from ..common import PyprError
+
 
 class MenuEngine:
     "Menu backend interface"
@@ -85,3 +87,4 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     for engine in engines:
         if engine.is_available():
             return engine(extra_parameters)
+    raise PyprError("No engine found")
