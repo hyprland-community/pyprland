@@ -87,4 +87,11 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     for engine in engines:
         if engine.is_available():
             return engine(extra_parameters)
+
+    if force_engine:
+        # Attempt to use the user-supplied command
+        me = MenuEngine(extra_parameters)
+        me.proc_name = force_engine
+        return me
+
     raise PyprError("No engine found")
