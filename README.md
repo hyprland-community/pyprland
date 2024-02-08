@@ -23,6 +23,10 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Latest major changes
 
+### Git (future 1.9)
+
+- New [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugin
+
 
 ### 1.8
 
