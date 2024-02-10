@@ -154,9 +154,11 @@ class Pyprland:
         for plugin in self.plugins.values():
             if hasattr(plugin, full_name):
                 handled = True
-                await self.queues[plugin.name].put(
-                    partial(self._run_plugin_handler, plugin, full_name, params)
-                )
+                task = partial(self._run_plugin_handler, plugin, full_name, params)
+                if plugin == "pyprland":
+                    await task()
+                else:
+                    await self.queues[plugin.name].put(task)
         if notify and not handled:
             await notify_info(f'"{notify}" not found')
         return handled
