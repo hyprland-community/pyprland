@@ -17,7 +17,8 @@ class Extension(Plugin, MenuRequiredMixin):
         await self.ensure_menu_configured()
         options = self.config["entries"]
         if name:
-            options = options[name]
+            for elt in name.split("."):
+                options = options[elt]
 
         while True:
             if isinstance(options, str):
