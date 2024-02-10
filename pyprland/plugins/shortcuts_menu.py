@@ -19,7 +19,7 @@ class Extension(Plugin, MenuRequiredMixin):
                 await self._run_command(option, variables)
             else:
                 choices = []
-                var_name = option["var"]
+                var_name = option["name"]
                 if option.get("command"):  # use the option to select some variable
                     proc = await asyncio.create_subprocess_shell(
                         option["command"], stdout=subprocess.PIPE
