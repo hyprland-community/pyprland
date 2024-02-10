@@ -23,9 +23,10 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Latest major changes
 
-### Git (future 1.10)
+### 1.10
 
 - New `fetch_client_menu` plugin (shows a menu to bring a window to the active desktop)
+- Dynamic menus can be achieved by [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu)
 
 ### 1.9
 
