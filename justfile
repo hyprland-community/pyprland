@@ -1,3 +1,9 @@
+test:
+    tox -e test
+
+doc:
+    tox -e doc
+
 test_all: test_cover test_lint test_wiki
 
 test_wiki:
