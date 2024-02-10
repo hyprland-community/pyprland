@@ -80,14 +80,11 @@ class Extension(Plugin):
 
     # Utils
 
-    async def get_clients(self):
+    async def get_clients(self):  # pylint: disable=arguments-differ
         "Return the client list in the currently active workspace"
-        clients = [
-            client
-            for client in cast(list[dict[str, Any]], await self.hyprctlJSON("clients"))
-            if client["mapped"]
-            and cast(str, client["workspace"]["name"]) == state.active_workspace
-        ]
+        clients = await super().get_clients(
+            mapped=True, workspace=state.active_workspace
+        )
         clients.sort(key=lambda c: c["address"])
         return clients
 
