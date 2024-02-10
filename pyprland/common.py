@@ -1,9 +1,11 @@
 """ Shared utilities: logging """
+
+import os
+import re
 import logging
 from dataclasses import dataclass
-import os
 
-__all__ = ["DEBUG", "get_logger", "state", "PyprError"]
+__all__ = ["DEBUG", "get_logger", "state", "PyprError", "apply_variables"]
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -92,3 +94,18 @@ Exposes most-commonly accessed attributes to avoid specific IPC requests
 - `active_workspace` workspace's name
 - `active_window` window's address
 """
+
+
+def apply_variables(template: str, variables: dict[str, str]):
+    """Replace [var_name] with content from supplied variables
+    Args:
+        template: the string template
+        variables: a dict containing the variables to replace
+    """
+    pattern = r"\[([^\[\]]+)\]"
+
+    def replace(match):
+        var_name = match.group(1)
+        return variables.get(var_name, match.group(0))
+
+    return re.sub(pattern, replace, template)

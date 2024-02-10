@@ -1,4 +1,5 @@
 """ Force workspaces to follow the focus / mouse """
+
 from typing import cast
 
 from .interface import Plugin

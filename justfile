@@ -1,5 +1,5 @@
 test:
-    tox -e test
+    tox
 
 doc:
     tox -e doc

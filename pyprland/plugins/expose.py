@@ -1,5 +1,6 @@
 """ expose Brings every client window to screen for selection
 """
+
 from .interface import Plugin
 from ..common import state
 

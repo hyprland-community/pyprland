@@ -19,7 +19,7 @@ class Extension(Plugin, MenuRequiredMixin):
         separator = self.config.get("separator", "|")
 
         choice = await self.menu.run(
-            f"{i+1} {separator} {c['title']}" for i, c in enumerate(clients)
+            [f"{i+1} {separator} {c['title']}" for i, c in enumerate(clients)]
         )
 
         if choice:

@@ -4,6 +4,7 @@ from asyncio import subprocess
 
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
+from ..common import apply_variables
 
 
 class Extension(Plugin, MenuRequiredMixin):
@@ -40,7 +41,7 @@ class Extension(Plugin, MenuRequiredMixin):
         "Runs a shell `command`, optionally replacing `variables`"
         self.log.info("Executing %s (%s)", command, variables)
         await asyncio.create_subprocess_shell(
-            command.format(**variables) if variables else command
+            apply_variables(command, variables) if variables else command
         )
 
     async def run_menu(self, name=""):
