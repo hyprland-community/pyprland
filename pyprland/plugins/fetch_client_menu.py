@@ -14,17 +14,17 @@ class Extension(Plugin, MenuRequiredMixin):
         "Select a client window and move it to the active workspace"
         await self._ensure_menu_configured()
 
-        clients = await self.hyprctlJSON("clients")
+        clients = await self.get_clients(workspace_bl=state.active_workspace)
 
-        options = {
-            f"{i} | {c['title']}": c
-            for i, c in enumerate(clients)
-            if c["mapped"] and c["workspace"]["name"] != state.active_workspace
-        }
-        choice = await self.menu.run(options.keys())
+        separator = self.config.get("separator", "|")
 
-        if choice in options:
-            addr = options[choice]["address"]
+        choice = await self.menu.run(
+            f"{i+1} {separator} {c['title']}" for i, c in enumerate(clients)
+        )
+
+        if choice:
+            num = int(choice.split(None, 1)[0]) - 1
+            addr = clients[num]["address"]
             await self.hyprctl(
                 f"movetoworkspace {state.active_workspace},address:{addr}"
             )
