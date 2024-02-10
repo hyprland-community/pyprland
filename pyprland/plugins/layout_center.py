@@ -150,7 +150,7 @@ class Extension(Plugin):
                 index = idx + direction
                 if index < 0:
                     index = len(clients) - 1
-                elif index == len(clients):
+                elif index >= len(clients):
                     index = 0
                 new_client = clients[index]
                 await self.unprepare_window(clients)
