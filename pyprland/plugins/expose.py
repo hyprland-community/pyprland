@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from .interface import Plugin
+from ..common import state
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
@@ -35,11 +36,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await self.hyprctl(commands)
             self.exposed = []
         else:
-            cur_wrkspc = await self.hyprctlJSON("activeworkspace")
             self.exposed = [
                 c
                 for c in cast(list, await self.hyprctlJSON("clients"))
-                if c["workspace"]["id"] != cur_wrkspc["id"]
+                if c["workspace"]["name"] != state.active_workspace
             ]
             commands = []
             for client in self.exposed_clients:

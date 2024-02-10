@@ -330,13 +330,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             get_focused_monitor_props, logger=self.log
         )
 
-    async def init(self):
-        "Initializes the Scratchpad extension"
-        self.workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
-        self.monitor = next(
-            mon for mon in (await self.hyprctlJSON("monitors")) if mon["focused"]
-        )
-
     async def exit(self) -> None:
         "exit hook"
 
@@ -557,14 +550,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         for scratch in list(self.scratches.getByState("configured")):
             self.scratches.clearState(scratch, "configured")
             await self._configure_windowrules(scratch)
-
-    async def event_focusedmon(self, mon):
-        "focused monitor hook"
-        self.monitor = mon
-
-    async def event_workspace(self, workspace) -> None:
-        "workspace change hook"
-        self.workspace = workspace
 
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"

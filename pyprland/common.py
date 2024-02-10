@@ -1,5 +1,6 @@
 """ Shared utilities: logging """
 import logging
+from dataclasses import dataclass
 import os
 
 __all__ = ["DEBUG", "get_logger", "init_logger"]
@@ -69,3 +70,13 @@ def get_logger(name="pypr", level=None):
         logger.addHandler(handler)
     logger.info('Logger "%s" initialized', name)
     return logger
+
+
+@dataclass
+class SharedState:
+    "Stores commonly requested properties"
+    active_workspace: str = ""
+    active_monitor: str = ""
+
+
+state = SharedState()

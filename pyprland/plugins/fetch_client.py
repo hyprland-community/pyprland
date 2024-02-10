@@ -1,22 +1,12 @@
 " Select a client window and move it to the active workspace"
 
-from typing import cast
-
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
+from ..common import state
 
 
 class Extension(Plugin, MenuRequiredMixin):
     "Shows a menu with shortcuts"
-
-    active_workspace = ""
-
-    async def init(self):
-        "initializes the plugin"
-        for monitor in await self.hyprctlJSON("monitors"):
-            assert isinstance(monitor, dict)
-            if monitor["focused"]:
-                self.active_workspace = cast(str, monitor["activeWorkspace"]["name"])
 
     # Commands
 
@@ -29,21 +19,12 @@ class Extension(Plugin, MenuRequiredMixin):
         options = {
             f"{i} | {c['title']}": c
             for i, c in enumerate(clients)
-            if c["mapped"] and c["workspace"]["name"] != self.active_workspace
+            if c["mapped"] and c["workspace"]["name"] != state.active_workspace
         }
-
         choice = await self.menu.run(options.keys())
 
         if choice in options:
             addr = options[choice]["address"]
             await self.hyprctl(
-                f"movetoworkspace {self.active_workspace},address:{addr}"
+                f"movetoworkspace {state.active_workspace},address:{addr}"
             )
-
-    async def event_workspace(self, wrkspace):
-        "track the active workspace"
-        self.active_workspace = wrkspace
-
-    async def event_focusedmon(self, mon):
-        "track the active workspace"
-        _, self.active_workspace = mon.rsplit(",", 1)

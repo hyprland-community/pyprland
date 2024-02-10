@@ -4,6 +4,7 @@
 from typing import cast
 
 from .interface import Plugin
+from ..common import state
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
@@ -13,11 +14,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)
         if wid < 1:  # special workspace: unminimize
-            wrk = cast(dict, await self.hyprctlJSON("activeworkspace"))
             await self.hyprctl(
                 [
                     f"togglespecialworkspace {special_workspace}",
-                    f"movetoworkspacesilent {wrk['id']},address:{aw['address']}",
+                    f"movetoworkspacesilent {state.active_workspace},address:{aw['address']}",
                     f"focuswindow address:{aw['address']}",
                 ]
             )

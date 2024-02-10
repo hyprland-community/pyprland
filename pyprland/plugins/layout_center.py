@@ -10,6 +10,7 @@ from typing import Any, cast
 from collections import defaultdict
 
 from .interface import Plugin
+from ..common import state
 
 
 class Extension(Plugin):
@@ -18,17 +19,9 @@ class Extension(Plugin):
     workspace_info: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"enabled": False, "addr": ""}
     )
-    active_workspace = ""
     # focused window
     active_window_addr = ""
     last_index = 0
-
-    async def init(self):
-        "initializes the plugin"
-        for monitor in await self.hyprctlJSON("monitors"):
-            assert isinstance(monitor, dict)
-            if monitor["focused"]:
-                self.active_workspace = cast(str, monitor["activeWorkspace"]["name"])
 
     # Events
 
@@ -42,14 +35,6 @@ class Extension(Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
                 self.last_index = i
                 break
-
-    async def event_workspace(self, wrkspace):
-        "track the active workspace"
-        self.active_workspace = wrkspace
-
-    async def event_focusedmon(self, mon):
-        "track the active workspace"
-        _, self.active_workspace = mon.rsplit(",", 1)
 
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
@@ -104,7 +89,7 @@ class Extension(Plugin):
             client
             for client in cast(list[dict[str, Any]], await self.hyprctlJSON("clients"))
             if client["mapped"]
-            and cast(str, client["workspace"]["name"]) == self.active_workspace
+            and cast(str, client["workspace"]["name"]) == state.active_workspace
         ]
         clients.sort(key=lambda c: c["address"])
         return clients
@@ -208,11 +193,11 @@ class Extension(Plugin):
     # enabled
     def get_enabled(self):
         "Is center layout enabled on the active workspace ?"
-        return self.workspace_info[self.active_workspace]["enabled"]
+        return self.workspace_info[state.active_workspace]["enabled"]
 
     def set_enabled(self, value):
         "set if center layout enabled on the active workspace"
-        self.workspace_info[self.active_workspace]["enabled"] = value
+        self.workspace_info[state.active_workspace]["enabled"] = value
 
     enabled = property(
         get_enabled, set_enabled, doc="centered layout enabled on this workspace"
@@ -222,11 +207,11 @@ class Extension(Plugin):
     # main_window_addr
     def get_main_window_addr(self):
         "get active workspace's centered window address"
-        return self.workspace_info[self.active_workspace]["addr"]
+        return self.workspace_info[state.active_workspace]["addr"]
 
     def set_main_window_addr(self, value):
         "set active workspace's centered window address"
-        self.workspace_info[self.active_workspace]["addr"] = value
+        self.workspace_info[state.active_workspace]["addr"] = value
 
     main_window_addr = property(
         get_main_window_addr,

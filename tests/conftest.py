@@ -84,6 +84,8 @@ async def sample1_config(monkeypatch):
 async def mocked_hyprctlJSON(command, logger=None):
     if command == "monitors":
         return deepcopy(MONITORS)
+    if command == "activeworkspace":
+        return {"name": "1", "id": 1}
     raise NotImplementedError()
 
 
