@@ -12,7 +12,7 @@ class Extension(Plugin, MenuRequiredMixin):
 
     async def run_menu(self, name=""):
         """[name] Shows the menu, if "name" is provided, will only show this sub-menu"""
-        await self._ensure_menu_configured()
+        await self.ensure_menu_configured()
         options = self.config["entries"]
         if name:
             options = options[name]

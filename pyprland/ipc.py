@@ -1,5 +1,16 @@
 #!/bin/env python
 """ Interact with hyprland using sockets """
+
+__all__ = [
+    "get_focused_monitor_props",
+    "get_client_props",
+    "notify",
+    "notify_error",
+    "notify_info",
+    "hyprctl",
+    "hyprctlJSON",
+]
+
 import asyncio
 import json
 import os
@@ -11,8 +22,13 @@ from .common import PyprError, get_logger
 
 log: Logger | None = None
 
-HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
-EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
+try:
+    HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
+    EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
+except KeyError:
+    print(
+        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
+    )
 
 
 async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):
@@ -32,7 +48,9 @@ async def get_event_stream():
     return await asyncio.open_unix_connection(EVENTS)
 
 
-async def hyprctlJSON(command, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctlJSON(
+    command: str, logger=None
+) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
     logger = logger or log
     logger.debug(command)
@@ -60,8 +78,18 @@ def _format_command(command_list, default_base_command):
             yield f"{command[1]} {command[0]}"
 
 
-async def hyprctl(command, base_command="dispatch", logger=None) -> bool:
-    """Run an IPC command. Returns success value."""
+async def hyprctl(
+    command: str | list[str], base_command: str = "dispatch", logger=None
+) -> bool:
+    """Run an IPC command. Returns success value.
+
+    Args:
+        command: single command (str) or list of commands to send to Hyprland
+        base_command: type of command to send
+
+    Returns:
+        True on success
+    """
     logger = logger or log
     logger.debug("%s %s", base_command, command)
     try:
@@ -89,7 +117,15 @@ async def hyprctl(command, base_command="dispatch", logger=None) -> bool:
 
 
 async def get_focused_monitor_props(logger=None) -> dict[str, Any]:
-    "Returns focused monitor data"
+    """Returns focused monitor data
+
+    Args:
+        logger: logger to use in case of error
+
+    Returns:
+
+        dict() with the focused monitor properties
+    """
     for monitor in await hyprctlJSON("monitors", logger=logger):
         assert isinstance(monitor, dict)
         if monitor.get("focused"):
@@ -100,7 +136,15 @@ async def get_focused_monitor_props(logger=None) -> dict[str, Any]:
 async def get_client_props(
     addr: str | None = None, pid: int | None = None, cls: str | None = None, logger=None
 ):
-    "Returns client properties given its address"
+    """
+    Returns client properties
+
+    Args:
+        addr (str): address of the client (includes "0x" prefix)
+        pid (int): PID of the client
+        cls (str): class of the client
+        logger: logger to use in case of error
+    """
     assert addr or pid or cls
 
     prop_value: int | str

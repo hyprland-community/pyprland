@@ -15,12 +15,19 @@ from .ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from .ipc import init as ipc_init
 from .plugins.interface import Plugin
 
-CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
+try:
+    CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
+except KeyError:
+    print(
+        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
+    )
 
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
 PYPR_DEMO = os.environ.get("PYPR_DEMO", False)
+
+__all__: list[str] = []
 
 
 class Pyprland:

@@ -6,11 +6,17 @@ from logging import Logger
 from ..common import PyprError
 
 
+__all__ = ["MenuRequiredMixin", "MenuEngine"]
+
+
 class MenuEngine:
     "Menu backend interface"
     proc_name: str
+    " process name for this engine "
     proc_extra_parameters: str = ""
+    " process parameters to use for this engine "
     proc_detect_parameters: list[str] = ["--help"]
+    " process parameters used to check if the engine can run "
 
     def __init__(self, extra_parameters):
         if extra_parameters:
@@ -25,8 +31,15 @@ class MenuEngine:
             return False
         return True
 
-    async def run(self, choices):
-        "Run the engine and get the response for the proposed `choices`"
+    async def run(self, choices: list[str]) -> str:
+        """Run the engine and get the response for the proposed `choices`
+
+        Args:
+            choices: options to chose from
+
+        Returns:
+            The choice which have been selected by the user, or an empty string
+        """
         proc = await asyncio.create_subprocess_shell(
             f"{self.proc_name} {self.proc_extra_parameters}",
             stdin=asyncio.subprocess.PIPE,
@@ -103,13 +116,17 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
 
 
 class MenuRequiredMixin:
-    "A mixin supporting 'engine' and 'parameters' config options to show a menu"
+    """An extension mixin supporting 'engine' and 'parameters' config options to show a menu"""
+
     _menu_configured = False
     menu: MenuEngine
+    """ provided `MenuEngine` """
     config: dict
+    " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
     log: Logger
+    " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
 
-    async def _ensure_menu_configured(self):
+    async def ensure_menu_configured(self):
         "If not configured, init the menu system"
         if not self._menu_configured:
             self.menu = await init(

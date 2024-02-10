@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 import os
 
-__all__ = ["DEBUG", "get_logger", "init_logger"]
+__all__ = ["DEBUG", "get_logger", "state", "PyprError"]
 
 DEBUG = os.environ.get("DEBUG", False)
 
@@ -58,8 +58,13 @@ def init_logger(filename=None, force_debug=False):
     LogObjects.handlers.append(stream_handler)
 
 
-def get_logger(name="pypr", level=None):
-    "Returns a logger for `name`"
+def get_logger(name="pypr", level=None) -> logging.Logger:
+    """Returns a named logger
+
+    Args:
+        name (str): logger's name
+        level (int): logger's level (auto if not set)
+    """
     logger = logging.getLogger(name)
     if level is None:
         logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
@@ -81,3 +86,9 @@ class SharedState:
 
 
 state = SharedState()
+"""
+Exposes most-commonly accessed attributes to avoid specific IPC requests
+- `active_monitor` monitor's name
+- `active_workspace` workspace's name
+- `active_window` window's address
+"""

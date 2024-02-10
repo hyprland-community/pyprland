@@ -12,7 +12,7 @@ class Extension(Plugin, MenuRequiredMixin):
 
     async def run_fetch_client_menu(self):
         "Select a client window and move it to the active workspace"
-        await self._ensure_menu_configured()
+        await self.ensure_menu_configured()
 
         clients = await self.get_clients(workspace_bl=state.active_workspace)
 

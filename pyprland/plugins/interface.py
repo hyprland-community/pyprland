@@ -1,17 +1,37 @@
 " Common plugin interface "
-from typing import Any, cast
+from typing import Any, cast, Callable
 
 from ..common import get_logger
 from ..ipc import getCtrlObjects
 
 
 class Plugin:
-    "Base plugin class, handles logger and config"
+    """Base class for any pyprland plugin"""
+
+    hyprctlJSON: Callable
+    " `pyprland.ipc.hyprctlJSON` using the pluggin's logger "
+
+    hyprctl: Callable
+    " `pyprland.ipc.hyprctl` using the pluggin's logger "
+
+    notify: Callable
+    " `pyprland.ipc.notify` using the pluggin's logger "
+
+    notify_info: Callable
+    " `pyprland.ipc.notify_info` using the pluggin's logger "
+
+    notify_error: Callable
+    " `pyprland.ipc.notify_error` using the pluggin's logger "
+
+    config: dict[str, Any]
+    " This plugin configuration section as a dict object "
 
     def __init__(self, name: str):
         "create a new plugin `name` and the matching logger"
         self.name = name
+        """ the plugin name """
         self.log = get_logger(name)
+        """ the logger to use for this plugin """
         ctrl = getCtrlObjects(self.log)
         (
             self.hyprctl,
@@ -20,15 +40,21 @@ class Plugin:
             self.notify_info,
             self.notify_error,
         ) = ctrl
-        self.config: dict[str, Any] = {}
+        self.config = {}
 
     # Functions to override
 
     async def init(self):
-        "empty init function"
+        """
+        This should contain the code you would normally add to `__init__`.
+        Note that the `config` attribute isn't ready yet when this is called.
+        """
 
     async def on_reload(self):
-        "empty reload function"
+        """
+        Add the code which requires the `config` attribute here.
+        This is called on *init* and *reload*
+        """
 
     async def exit(self):
         "empty exit function"
