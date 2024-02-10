@@ -12,6 +12,30 @@ class Extension(Plugin, MenuRequiredMixin):
 
     # Commands
 
+    async def run_menu(self, name=""):
+        """[name] Shows the menu, if "name" is provided, will only show this sub-menu"""
+        await self.ensure_menu_configured()
+        options = self.config["entries"]
+        if name:
+            options = options[name]
+
+        while True:
+            if isinstance(options, str):
+                self.log.info("running %s", options)
+                await self._run_command(options.strip())
+                break
+            if isinstance(options, list):
+                self.log.info("interpreting %s", options)
+                await self._handle_chain(options)
+                break
+            try:
+                options = options[await self.menu.run(options)]
+            except KeyError:
+                self.log.info("menu command canceled")
+                break
+
+    # Utils
+
     async def _handle_chain(self, options):
         "Handles a chain of special objects + final command string"
         variables: dict[str, str] = {}
@@ -43,25 +67,3 @@ class Extension(Plugin, MenuRequiredMixin):
         await asyncio.create_subprocess_shell(
             apply_variables(command, variables) if variables else command
         )
-
-    async def run_menu(self, name=""):
-        """[name] Shows the menu, if "name" is provided, will only show this sub-menu"""
-        await self.ensure_menu_configured()
-        options = self.config["entries"]
-        if name:
-            options = options[name]
-
-        while True:
-            if isinstance(options, str):
-                self.log.info("running %s", options)
-                await self._run_command(options.strip())
-                break
-            if isinstance(options, list):
-                self.log.info("interpreting %s", options)
-                await self._handle_chain(options)
-                break
-            try:
-                options = options[await self.menu.run(options)]
-            except KeyError:
-                self.log.info("menu command canceled")
-                break
