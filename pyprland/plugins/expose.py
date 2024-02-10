@@ -1,6 +1,6 @@
 """ expose Brings every client window to screen for selection
 """
-from typing import Any, cast
+from typing import cast
 
 from .interface import Plugin
 from ..common import state
@@ -20,8 +20,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """Expose every client on the active workspace.
         If expose is active restores everything and move to the focused window"""
         if self.exposed:
-            aw: dict[str, Any] = cast(dict, await self.hyprctlJSON("activewindow"))
-            focused_addr = aw["address"]
             commands = []
             for client in self.exposed_clients:
                 commands.append(
@@ -30,7 +28,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             commands.extend(
                 [
                     "togglespecialworkspace exposed",
-                    f"focuswindow address:{focused_addr}",
+                    f"focuswindow address:{state.active_window}",
                 ]
             )
             await self.hyprctl(commands)

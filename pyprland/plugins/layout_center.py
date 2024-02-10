@@ -19,8 +19,6 @@ class Extension(Plugin):
     workspace_info: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"enabled": False, "addr": ""}
     )
-    # focused window
-    active_window_addr = ""
     last_index = 0
 
     # Events
@@ -36,18 +34,17 @@ class Extension(Plugin):
                 self.last_index = i
                 break
 
-    async def event_activewindowv2(self, addr):
+    async def event_activewindowv2(self, _):
         "keep track of focused client"
-        self.active_window_addr = "0x" + addr
         if (
             self.config.get("captive_focus")
             and self.enabled
-            and self.active_window_addr != self.main_window_addr
+            and state.active_window != self.main_window_addr
             and len(
                 [
                     c
                     for c in await self.get_clients()
-                    if c["address"] == self.active_window_addr
+                    if c["address"] == state.active_window
                 ]
             )
             > 0
@@ -167,7 +164,7 @@ class Extension(Plugin):
         "toggle the center layout"
         disabled = not self.enabled
         if disabled:
-            self.main_window_addr = self.active_window_addr
+            self.main_window_addr = state.active_window
             await self.prepare_window()
         else:
             await self.unprepare_window()

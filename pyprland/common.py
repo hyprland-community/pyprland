@@ -75,8 +75,9 @@ def get_logger(name="pypr", level=None):
 @dataclass
 class SharedState:
     "Stores commonly requested properties"
-    active_workspace: str = ""
-    active_monitor: str = ""
+    active_workspace: str = ""  # workspace name
+    active_monitor: str = ""  # monitor name
+    active_window: str = ""  # window address
 
 
 state = SharedState()

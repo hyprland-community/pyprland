@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
+from ..common import state
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
@@ -162,8 +163,10 @@ class Scratch:  # {{{
                 with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
                     for line in f.readlines():
                         if line.startswith("State"):
-                            state = line.split()[1]
-                            return state not in "ZX"  # not "Z (zombie)"or "X (dead)"
+                            proc_state = line.split()[1]
+                            return (
+                                proc_state not in "ZX"
+                            )  # not "Z (zombie)"or "X (dead)"
         else:
             if getattr(self, "bogus_pid", False):
                 return bool(await self.get_client_props(cls=self.conf["class"]))
@@ -216,21 +219,21 @@ class ScratchDB:  # {{{
     _states: defaultdict[str, set[Scratch]] = defaultdict(set)
 
     # State management {{{
-    def getByState(self, state: str):
-        "get a set of `Scratch` being in `state`"
-        return self._states[state]
+    def getByState(self, status: str):
+        "get a set of `Scratch` being in `status`"
+        return self._states[status]
 
-    def hasState(self, scratch: Scratch, state: str):
-        "Returns true if `scratch` has state `state`"
-        return scratch in self._states[state]
+    def hasState(self, scratch: Scratch, status: str):
+        "Returns true if `scratch` has state `status`"
+        return scratch in self._states[status]
 
-    def setState(self, scratch: Scratch, state: str):
-        "Sets `scratch` in the provided state"
-        self._states[state].add(scratch)
+    def setState(self, scratch: Scratch, status: str):
+        "Sets `scratch` in the provided status"
+        self._states[status].add(scratch)
 
-    def clearState(self, scratch: Scratch, state: str):
-        "Unsets the the provided state from the scratch"
-        self._states[state].remove(scratch)
+    def clearState(self, scratch: Scratch, status: str):
+        "Unsets the the provided status from the scratch"
+        self._states[status].remove(scratch)
 
     # }}}
 
@@ -317,7 +320,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, subprocess.Popen] = {}
     scratches = ScratchDB()
 
-    focused_window_tracking: dict[str, dict] = {}
+    focused_window_tracking: dict[str, str] = {}
 
     workspace = ""  # Currently active workspace
     monitor = ""  # CUrrently active monitor
@@ -676,9 +679,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             )
             return
 
-        self.focused_window_tracking[uid] = cast(
-            dict[str, Any], await self.hyprctlJSON("activewindow")
-        )
+        self.focused_window_tracking[uid] = state.active_window
 
         if not item:
             self.log.warning("%s is not configured", uid)
@@ -791,7 +792,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         ):  # focus got lost when animating
             if not autohide and "address" in self.focused_window_tracking[uid]:
                 await self.hyprctl(
-                    f"focuswindow address:{self.focused_window_tracking[uid]['address']}"
+                    f"focuswindow address:{self.focused_window_tracking[uid]}"
                 )
                 del self.focused_window_tracking[uid]
 
