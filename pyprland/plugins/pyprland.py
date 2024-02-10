@@ -8,7 +8,7 @@ class Extension(Plugin):
 
     async def init(self):
         "initializes the plugin"
-        state.active_window = (await self.hyprctlJSON("activewindow"))["address"]
+        state.active_window = ""
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         state.active_monitor = next(
             mon for mon in (await self.hyprctlJSON("monitors")) if mon["focused"]
