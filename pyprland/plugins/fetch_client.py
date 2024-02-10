@@ -22,7 +22,7 @@ class Extension(Plugin, MenuRequiredMixin):
 
     async def run_fetch_client_menu(self):
         "Select a client window and move it to the active workspace"
-        await self._ensure_configured()
+        await self._ensure_menu_configured()
 
         clients = await self.hyprctlJSON("clients")
 

@@ -109,7 +109,7 @@ class MenuRequiredMixin:
     config: dict
     log: Logger
 
-    async def _ensure_configured(self):
+    async def _ensure_menu_configured(self):
         "If not configured, init the menu system"
         if not self._menu_configured:
             self.menu = await init(
