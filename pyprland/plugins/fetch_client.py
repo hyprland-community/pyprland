@@ -3,15 +3,13 @@
 from typing import cast
 
 from .interface import Plugin
-from ..adapters.menus import init, MenuEngine
+from ..adapters.menus import MenuRequiredMixin
 
 
-class Extension(Plugin):
+class Extension(Plugin, MenuRequiredMixin):
     "Shows a menu with shortcuts"
 
     active_workspace = ""
-    menu: MenuEngine
-    _configured = False
 
     async def init(self):
         "initializes the plugin"
@@ -19,18 +17,6 @@ class Extension(Plugin):
             assert isinstance(monitor, dict)
             if monitor["focused"]:
                 self.active_workspace = cast(str, monitor["activeWorkspace"]["name"])
-
-    async def on_reload(self):
-        self._configured = False
-
-    async def _ensure_configured(self):
-        "If not configured, init the menu system"
-        if not self._configured:
-            self.menu = await init(
-                self.config.get("engine"), self.config.get("parameters", "")
-            )
-            self.log.info("Using %s engine", self.menu.proc_name)
-            self._configured = True
 
     # Commands
 

@@ -1,6 +1,7 @@
 " Menu engine adapter "
 import subprocess
 import asyncio
+from logging import Logger
 
 from ..common import PyprError
 
@@ -99,3 +100,24 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
         return me
 
     raise PyprError("No engine found")
+
+
+class MenuRequiredMixin:
+    "A mixin supporting 'engine' and 'parameters' config options to show a menu"
+    _menu_configured = False
+    menu: MenuEngine
+    config: dict
+    log: Logger
+
+    async def _ensure_configured(self):
+        "If not configured, init the menu system"
+        if not self._menu_configured:
+            self.menu = await init(
+                self.config.get("engine"), self.config.get("parameters", "")
+            )
+            self.log.info("Using %s engine", self.menu.proc_name)
+            self._menu_configured = True
+
+    async def on_reload(self):
+        "Resets the configuration status"
+        self._menu_configured = False
