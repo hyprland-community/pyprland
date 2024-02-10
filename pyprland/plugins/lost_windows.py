@@ -23,7 +23,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def run_attract_lost(self):
         """Brings lost floating windows to the current workspace"""
         monitors = cast(list, await self.hyprctlJSON("monitors"))
-        windows = cast(list, await self.hyprctlJSON("clients"))
+        windows = cast(list, await self.get_clients())
         lost = [
             win
             for win in windows

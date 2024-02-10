@@ -1,7 +1,5 @@
 """ expose Brings every client window to screen for selection
 """
-from typing import cast
-
 from .interface import Plugin
 from ..common import state
 
@@ -34,11 +32,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await self.hyprctl(commands)
             self.exposed = []
         else:
-            self.exposed = [
-                c
-                for c in cast(list, await self.hyprctlJSON("clients"))
-                if c["workspace"]["name"] != state.active_workspace
-            ]
+            self.exposed = await self.get_clients(workspace_bl=state.active_workspace)
             commands = []
             for client in self.exposed_clients:
                 commands.append(
