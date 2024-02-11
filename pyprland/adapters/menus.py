@@ -1,12 +1,15 @@
 " Menu engine adapter "
 import subprocess
 import asyncio
+from typing import Iterable
 from logging import Logger
 
-from ..common import PyprError
+from ..common import PyprError, get_logger
 
 
 __all__ = ["MenuRequiredMixin", "MenuEngine"]
+
+menu_logger = get_logger("menus adapter")
 
 
 class MenuEngine:
@@ -31,7 +34,7 @@ class MenuEngine:
             return False
         return True
 
-    async def run(self, choices: list[str]) -> str:
+    async def run(self, choices: Iterable[str]) -> str:
         """Run the engine and get the response for the proposed `choices`
 
         Args:
@@ -40,8 +43,10 @@ class MenuEngine:
         Returns:
             The choice which have been selected by the user, or an empty string
         """
+        command = f"{self.proc_name} {self.proc_extra_parameters}"
+        menu_logger.debug(command)
         proc = await asyncio.create_subprocess_shell(
-            f"{self.proc_name} {self.proc_extra_parameters}",
+            command,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
         )
