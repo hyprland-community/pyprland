@@ -5,7 +5,7 @@ from ..adapters.menus import MenuRequiredMixin
 from ..common import state
 
 
-class Extension(Plugin, MenuRequiredMixin):
+class Extension(MenuRequiredMixin, Plugin):
     "Shows a menu with shortcuts"
 
     # Commands
