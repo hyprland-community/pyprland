@@ -20,6 +20,16 @@ class Extension(MenuRequiredMixin, Plugin):
             for elt in name.split("."):
                 options = options[elt]
 
+        def _format_title(label, obj):
+            if isinstance(obj, dict):
+                suffix = self.config.get("submenu_end", "➜")
+                prefix = self.config.get("submenu_start", "")
+            else:
+                suffix = self.config.get("command_end", "")
+                prefix = self.config.get("command_start", "")
+
+            return f"{prefix} {label} {suffix}".strip()
+
         while True:
             if isinstance(options, str):
                 self.log.info("running %s", options)
@@ -30,7 +40,9 @@ class Extension(MenuRequiredMixin, Plugin):
                 await self._handle_chain(options)
                 break
             try:
-                options = options[await self.menu.run(options)]
+                formatted_options = {_format_title(k, v): v for k, v in options.items()}
+                selection = await self.menu.run(formatted_options)
+                options = formatted_options[selection]
             except KeyError:
                 self.log.info("menu command canceled")
                 break
