@@ -107,10 +107,15 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     except StopIteration:
         engines = []
 
+    if force_engine and engines:
+        return engines[0](extra_parameters)
+
+    # detect engine
     for engine in engines:
         if engine.is_available():
             return engine(extra_parameters)
 
+    # fallback if not found but forced
     if force_engine:
         # Attempt to use the user-supplied command
         me = MenuEngine(extra_parameters)
