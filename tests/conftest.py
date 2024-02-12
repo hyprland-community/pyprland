@@ -96,6 +96,8 @@ def subprocess_shell_mock(mocker):
     mocked_process = MagicMock(spec=asyncio.subprocess.Process)
     mocked_subprocess_shell.return_value = mocked_process
     mocked_process.pid = 666
+    mocked_process.stderr = AsyncMock(return_code="")
+    mocked_process.stdout = AsyncMock(return_code="")
     mocked_process.return_code = 0
     return mocked_subprocess_shell, mocked_process
 
