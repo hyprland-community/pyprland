@@ -1,11 +1,14 @@
 " Scratchpads addon "
 import os
-import logging
 import time
+import logging
 import asyncio
 from typing import Any, cast, Callable
 from functools import partial
 from collections import defaultdict
+
+from aiofiles import os as aios
+from aiofiles import open as aiopen
 
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
@@ -158,9 +161,11 @@ class Scratch:  # {{{
         "is the process running ?"
         if self.conf.get("process_tracking", True):
             path = f"/proc/{self.pid}"
-            if os.path.exists(path):
-                with open(os.path.join(path, "status"), "r", encoding="utf-8") as f:
-                    for line in f.readlines():
+            if await aios.path.exists(path):
+                async with aiopen(
+                    os.path.join(path, "status"), mode="r", encoding="utf-8"
+                ) as f:
+                    for line in await f.readlines():
                         if line.startswith("State"):
                             proc_state = line.split()[1]
                             return (

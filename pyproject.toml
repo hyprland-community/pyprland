@@ -13,6 +13,7 @@ pypr = "pyprland.command:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+aiofiles = "^23.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
