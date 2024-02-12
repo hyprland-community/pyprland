@@ -1,0 +1,28 @@
+---
+name: Tox
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          mkdir ~/.config/hypr/
+          touch ~/.config/hypr/pyprland.toml
+
+          python -m pip install --upgrade pip
+          pip install tox
+
+      - name: Runs all the tests via tox
+        run: |
+          tox
