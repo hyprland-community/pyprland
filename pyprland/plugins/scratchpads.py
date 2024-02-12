@@ -316,7 +316,7 @@ class ScratchDB:  # {{{
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
-    procs: dict[str, asyncio.subprocess.Process] = {}
+    procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
     scratches = ScratchDB()
 
     focused_window_tracking: dict[str, str] = {}
@@ -344,7 +344,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 await asyncio.sleep(0.1)
             if await scratch.isAlive():
                 proc.kill()
-            proc.wait()
+            await proc.wait()
 
         await asyncio.gather(
             *(die_in_piece(scratch) for scratch in self.scratches.values())
@@ -477,7 +477,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if await item.isAlive():
                 error = "The command didn't open a window"
             else:
-                self.procs[uid].communicate()
+                await self.procs[uid].communicate()
                 code = self.procs[uid].returncode
                 if code:
                     error = f"The command failed with code {code}"
