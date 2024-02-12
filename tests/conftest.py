@@ -1,5 +1,5 @@
 " generic fixtures "
-import typing
+from typing import Callable
 from unittest.mock import AsyncMock, Mock, MagicMock
 from copy import deepcopy
 import asyncio
@@ -11,12 +11,6 @@ from .testtools import MockReader, MockWriter
 CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
 
-@dataclass
-class Obj:
-    "keep track of pypr's object when needed"
-    pypr_command_reader: typing.Callable = lambda *a: None
-
-
 def pytest_configure():
     "Runs once before all"
     from pyprland.common import init_logger
@@ -25,11 +19,6 @@ def pytest_configure():
 
 
 # Mocks
-hyprevt: tuple[MockReader, MockWriter]
-pyprctrl: tuple[MockReader, MockWriter]
-subprocess_call: MagicMock
-hyprctl: AsyncMock
-misc_objects = Obj()
 
 
 @dataclass
@@ -38,28 +27,26 @@ class GlobalMocks:
     pyprctrl: tuple[MockReader, MockWriter] = None
     subprocess_call: MagicMock = None
     hyprctl: AsyncMock = None
-    misc_objects = Obj()
-    pyprland_debug_mock = None
+
+    _pypr_command_reader: Callable = None
+
+    async def pypr(self, cmd):
+        "Simulates the pypr command"
+        assert self.pyprctrl
+        await self.pyprctrl[0].q.put(b"%s\n" % cmd.encode("utf-8"))
+        await self._pypr_command_reader(*self.pyprctrl)
+
+    async def send_event(self, cmd):
+        "Simulates receiving a Hyprland event"
+        assert self.hyprevt
+        await self.hyprevt[0].q.put(b"%s\n" % cmd.encode("utf-8"))
 
 
 mocks = GlobalMocks()
 
 
-async def pypr(cmd):
-    "Simulates the pypr command"
-    assert pyprctrl
-    await pyprctrl[0].q.put(b"%s\n" % cmd.encode("utf-8"))
-    await misc_objects.pypr_command_reader(*pyprctrl)
-
-
-async def send_event(cmd):
-    "Simulates receiving a Hyprland event"
-    assert hyprevt
-    await hyprevt[0].q.put(b"%s\n" % cmd.encode("utf-8"))
-
-
-async def mocked_unix_server(command_reader, *a):
-    misc_objects.pypr_command_reader = command_reader
+async def mocked_unix_server(command_reader, *_):
+    mocks._pypr_command_reader = command_reader
     server = AsyncMock()
     server.close = Mock()
     return server
@@ -68,7 +55,7 @@ async def mocked_unix_server(command_reader, *a):
 async def mocked_unix_connection(path):
     "Return a mocked reader & writer"
     if path.endswith(".socket2.sock"):
-        return hyprevt
+        return mocks.hyprevt
     raise ValueError()
 
 
@@ -116,12 +103,10 @@ def subprocess_shell_mock(mocker):
 @fixture
 async def server_fixture(monkeypatch, mocker):
     "Handle server setup boilerplate"
-    global hyprevt, pyprctrl, subprocess_call, hyprctl
-
-    hyprctl = AsyncMock(return_value=True)
-    hyprevt = (MockReader(), MockWriter())
-    pyprctrl = (MockReader(), MockWriter())
-    subprocess_call = MagicMock(return_value=0)
+    mocks.hyprctl = AsyncMock(return_value=True)
+    mocks.hyprevt = (MockReader(), MockWriter())
+    mocks.pyprctrl = (MockReader(), MockWriter())
+    mocks.subprocess_call = MagicMock(return_value=0)
 
     monkeypatch.setenv("XDG_RUNTIME_DIR", "/tmp")
     monkeypatch.setenv("HYPRLAND_INSTANCE_SIGNATURE", "/tmp/will_not_be_used/")
@@ -130,9 +115,7 @@ async def server_fixture(monkeypatch, mocker):
     monkeypatch.setattr("asyncio.start_unix_server", mocked_unix_server)
 
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
-    monkeypatch.setattr("pyprland.ipc.hyprctl", hyprctl)
-
-    monkeypatch.setattr("subprocess.call", subprocess_call)
+    monkeypatch.setattr("pyprland.ipc.hyprctl", mocks.hyprctl)
 
     from pyprland.command import run_daemon
     from pyprland import ipc

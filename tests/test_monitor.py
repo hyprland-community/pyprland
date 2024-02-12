@@ -1,6 +1,6 @@
 import pytest
 import tomllib
-from . import conftest as tst
+from .conftest import mocks as tst
 from .testtools import wait_called
 
 from pytest_asyncio import fixture

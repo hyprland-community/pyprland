@@ -2,7 +2,7 @@ import asyncio
 from typing import cast
 import pytest
 import tomllib
-from . import conftest as tst
+from .conftest import mocks as tst
 from .testtools import wait_called
 from unittest.mock import Mock
 
