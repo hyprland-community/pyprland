@@ -1,6 +1,5 @@
 " Shortcuts menu "
 import asyncio
-from asyncio import subprocess
 
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
@@ -60,7 +59,7 @@ class Extension(MenuRequiredMixin, Plugin):
                 var_name = option["name"]
                 if option.get("command"):  # use the option to select some variable
                     proc = await asyncio.create_subprocess_shell(
-                        option["command"], stdout=subprocess.PIPE
+                        option["command"], stdout=asyncio.subprocess.PIPE
                     )
                     assert proc.stdout
                     await proc.wait()
