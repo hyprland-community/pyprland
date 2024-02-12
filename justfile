@@ -5,5 +5,9 @@ test_quick:
 doc:
     tox -e doc
 
+wiki:
+    tox -e wiki
+
 test:
     tox
+
