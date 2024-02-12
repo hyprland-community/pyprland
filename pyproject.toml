@@ -25,6 +25,7 @@ vulture = "^2.11"
 pylint = "^3.0.3"
 coverage = "^7.4.1"
 pydantic = "^2.6.1"
+black = "^24.1.1"
 
 [build-system]
 requires = ["poetry-core"]
