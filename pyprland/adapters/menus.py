@@ -43,6 +43,9 @@ class MenuEngine:
         Returns:
             The choice which have been selected by the user, or an empty string
         """
+        menu_text = "\n".join(choices)
+        if not menu_text.strip():
+            return ""
         command = f"{self.proc_name} {self.proc_extra_parameters}"
         menu_logger.debug(command)
         proc = await asyncio.create_subprocess_shell(
@@ -52,8 +55,6 @@ class MenuEngine:
         )
         assert proc.stdin
         assert proc.stdout
-
-        menu_text = "\n".join(choices)
 
         proc.stdin.write(menu_text.encode())
         # flush program execution
