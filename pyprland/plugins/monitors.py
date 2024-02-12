@@ -121,25 +121,34 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
 
         cleaned_config = self.resolve_names(monitors)
-        self.log.debug("Using %s", cleaned_config)
+        if cleaned_config:
+            self.log.debug("Using %s", cleaned_config)
+        else:
+            self.log.debug("No configuration item is applicable")
         graph = build_graph(cleaned_config)
-        self._update_positions(monitors, graph, cleaned_config)
-        trim_offset(monitors)
+        need_change = self._update_positions(monitors, graph, cleaned_config)
+        if need_change:
+            trim_offset(monitors)
 
-        command = ["wlr-randr"]
-        for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-            command.extend(
-                ["--output", monitor["name"], "--pos", f'{monitor["x"]},{monitor["y"]}']
+            command = ["wlr-randr"]
+            for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
+                command.extend(
+                    [
+                        "--output",
+                        monitor["name"],
+                        "--pos",
+                        f'{monitor["x"]},{monitor["y"]}',
+                    ]
+                )
+            txt_cmd = " ".join(command)
+            self.log.info(txt_cmd)
+            proc = await asyncio.create_subprocess_shell(
+                txt_cmd, stderr=asyncio.subprocess.PIPE
             )
-        txt_cmd = " ".join(command)
-        self.log.info(txt_cmd)
-        proc = await asyncio.create_subprocess_shell(
-            txt_cmd, stderr=asyncio.subprocess.PIPE
-        )
-        assert proc.stderr
-        err = await proc.stderr.read()
-        if err:
-            self.log.debug(err)
+            assert proc.stderr
+            err = await proc.stderr.read()
+            if err:
+                self.log.debug(err)
 
     # Event handlers
 
@@ -254,6 +263,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     def _update_positions(self, monitors, graph, config):
         "Apply configuration to monitors_by_name using graph"
         monitors_by_name = {m["name"]: m for m in monitors}
+        requires_update = False
         for _ in range(len(monitors_by_name) ** 2):
             changed = False
             for name in reversed(graph):
@@ -264,12 +274,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                         x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
                         if x != mon2["x"]:
                             changed = True
+                            requires_update = True
                             mon2["x"] = x
                         if y != mon2["y"]:
                             changed = True
+                            requires_update = True
                             mon2["y"] = y
             if not changed:
                 break
+        return requires_update
 
     def get_matching_config(self, name1, name2, config):
         "Returns rules matching name1 or name2 (relative to name1), looking up config"
