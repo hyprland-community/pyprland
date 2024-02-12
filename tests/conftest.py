@@ -32,6 +32,19 @@ hyprctl: AsyncMock
 misc_objects = Obj()
 
 
+@dataclass
+class GlobalMocks:
+    hyprevt: tuple[MockReader, MockWriter] = None
+    pyprctrl: tuple[MockReader, MockWriter] = None
+    subprocess_call: MagicMock = None
+    hyprctl: AsyncMock = None
+    misc_objects = Obj()
+    pyprland_debug_mock = None
+
+
+mocks = GlobalMocks()
+
+
 async def pypr(cmd):
     "Simulates the pypr command"
     assert pyprctrl
@@ -101,7 +114,7 @@ def subprocess_shell_mock(mocker):
 
 
 @fixture
-async def server_fixture(monkeypatch):
+async def server_fixture(monkeypatch, mocker):
     "Handle server setup boilerplate"
     global hyprevt, pyprctrl, subprocess_call, hyprctl
 
@@ -129,12 +142,14 @@ async def server_fixture(monkeypatch):
     server_task = asyncio.create_task(run_daemon())
     from pyprland.command import Pyprland
 
+    # spy on Pyprland.log.debug using mocker
+    run_spi = mocker.spy(Pyprland, "run")
+
     for _ in range(10):
-        if Pyprland.instance and Pyprland.instance.initialized:
+        if run_spi.call_count:
             break
         await asyncio.sleep(0.1)
     yield  # Run the test
-    Pyprland.instance.initialized = False
     server_task.cancel()
     await server_task
 
