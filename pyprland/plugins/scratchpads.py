@@ -336,15 +336,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         "exit hook"
 
         async def die_in_piece(scratch: Scratch):
-            proc = self.procs[scratch.uid]
-            proc.terminate()
-            for _ in range(10):
-                if not await scratch.isAlive():
-                    break
-                await asyncio.sleep(0.1)
-            if await scratch.isAlive():
-                proc.kill()
-            await proc.wait()
+            if scratch.uid in self.procs:
+                proc = self.procs[scratch.uid]
+                proc.terminate()
+                for _ in range(10):
+                    if not await scratch.isAlive():
+                        break
+                    await asyncio.sleep(0.1)
+                if await scratch.isAlive():
+                    proc.kill()
+                await proc.wait()
 
         await asyncio.gather(
             *(die_in_piece(scratch) for scratch in self.scratches.values())
