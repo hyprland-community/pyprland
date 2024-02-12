@@ -24,6 +24,11 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Latest major changes
 
+### Git (future 2.0)
+
+- adds aiofiles dependency
+    - fully asynchronous plugins, including file operations
+
 ### 1.10
 
 - New [fetch_client_menu](https://github.com/hyprland-community/pyprland/wiki/fetch_client_menu) plugin (shows a menu to bring a window to the active desktop)
