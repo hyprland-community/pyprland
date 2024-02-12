@@ -96,11 +96,7 @@ startup_relayout = false
     yield
 
 
-def get_xrandr_calls():
-    return {tuple(al[0][0]) for al in tst.subprocess_call.call_args_list}
-
-
-def get_axrandr_calls(mock):
+def get_xrandr_calls(mock):
     return {al[0][0] for al in mock.call_args_list}
 
 
@@ -128,7 +124,7 @@ async def test_relayout(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
 
     calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
 
@@ -139,7 +135,7 @@ async def test_3screens_relayout(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
 
     calls.remove(
         "wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0 --output eDP-1 --pos 5360,0"
@@ -152,7 +148,7 @@ async def test_3screens_relayout_b(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
     calls.remove(
         "wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 0,1080 --output eDP-1 --pos 0,2520"
     )
@@ -164,7 +160,7 @@ async def test_shape_l(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
 
     calls.remove(
         "wlr-randr --output eDP-1 --pos 0,0 --output HDMI-A-1 --pos 0,480 --output DP-1 --pos 1920,480"
@@ -177,7 +173,7 @@ async def test_flipped_shape_l(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
 
     calls.remove(
         "wlr-randr --output HDMI-A-1 --pos 0,0 --output eDP-1 --pos 0,1080 --output DP-1 --pos 640,1080"
@@ -190,7 +186,7 @@ async def test_3screens_rev_relayout(subprocess_shell_mock):
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
-    calls = get_axrandr_calls(mocked_subprocess_shell)
+    calls = get_xrandr_calls(mocked_subprocess_shell)
 
     calls.remove(
         "wlr-randr --output eDP-1 --pos 0,0 --output DP-1 --pos 640,0 --output HDMI-A-1 --pos 4080,0"
@@ -202,7 +198,7 @@ async def test_3screens_rev_relayout(subprocess_shell_mock):
 async def test_events(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output DP-1 --pos 1920,0")
 
@@ -212,7 +208,7 @@ async def test_events(subprocess_shell_mock):
 async def test_events_d(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output DP-1 --pos 1920,-180")
 
@@ -222,7 +218,7 @@ async def test_events_d(subprocess_shell_mock):
 async def test_events2(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output DP-1 --pos -3440,0")
 
@@ -232,7 +228,7 @@ async def test_events2(subprocess_shell_mock):
 async def test_events3(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output DP-1 --pos 0,-1440")
 
@@ -242,7 +238,7 @@ async def test_events3(subprocess_shell_mock):
 async def test_events3b(subprocess_shell_mock):
     await tst.send_event("monitoradded>>HDMI-A-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output HDMI-A-1 --pos -1920,0")
 
@@ -252,7 +248,7 @@ async def test_events3b(subprocess_shell_mock):
 async def test_events4(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
     await wait_called(subprocess_shell_mock[0])
-    calls = get_axrandr_calls(subprocess_shell_mock[0])
+    calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
     calls.remove("wlr-randr --output DP-1 --pos 0,1080")
 

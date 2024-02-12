@@ -86,8 +86,6 @@ async def mocked_hyprctlJSON(command, logger=None):
         return deepcopy(MONITORS)
     if command == "activeworkspace":
         return {"name": "1", "id": 1}
-    if command == "activewindow":
-        return {"address": "0x1234567890"}
     raise NotImplementedError()
 
 
