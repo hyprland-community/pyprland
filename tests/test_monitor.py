@@ -136,7 +136,6 @@ async def test_relayout(subprocess_shell_mock):
 @pytest.mark.usefixtures("third_monitor", "sample1_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_3screens_relayout(subprocess_shell_mock):
-
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
@@ -162,7 +161,6 @@ async def test_3screens_relayout_b(subprocess_shell_mock):
 @pytest.mark.usefixtures("third_monitor", "shapeL_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_shape_l(subprocess_shell_mock):
-
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
@@ -176,7 +174,6 @@ async def test_shape_l(subprocess_shell_mock):
 @pytest.mark.usefixtures("third_monitor", "flipped_shapeL_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_flipped_shape_l(subprocess_shell_mock):
-
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
@@ -190,7 +187,6 @@ async def test_flipped_shape_l(subprocess_shell_mock):
 @pytest.mark.usefixtures("third_monitor", "reversed_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_3screens_rev_relayout(subprocess_shell_mock):
-
     mocked_subprocess_shell, mocked_process = subprocess_shell_mock
     await tst.pypr("relayout")
     await wait_called(mocked_subprocess_shell)
@@ -203,78 +199,62 @@ async def test_3screens_rev_relayout(subprocess_shell_mock):
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events():
+async def test_events(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(
-        (
-            "wlr-randr",
-            "--output",
-            "DP-1",
-            "--pos",
-            "1920,0",
-        )
-    )
+    calls.remove("wlr-randr --output DP-1 --pos 1920,0")
 
 
 @pytest.mark.usefixtures("descr_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events_d():
+async def test_events_d(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(
-        (
-            "wlr-randr",
-            "--output",
-            "DP-1",
-            "--pos",
-            "1920,-180",
-        )
-    )
+    calls.remove("wlr-randr --output DP-1 --pos 1920,-180")
 
 
 @pytest.mark.usefixtures("reversed_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events2():
+async def test_events2(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "-3440,0"))
+    calls.remove("wlr-randr --output DP-1 --pos -3440,0")
 
 
 @pytest.mark.usefixtures("topdown_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events3():
+async def test_events3(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,-1440"))
+    calls.remove("wlr-randr --output DP-1 --pos 0,-1440")
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events3b():
+async def test_events3b(subprocess_shell_mock):
     await tst.send_event("monitoradded>>HDMI-A-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(("wlr-randr", "--output", "HDMI-A-1", "--pos", "-1920,0"))
+    calls.remove("wlr-randr --output HDMI-A-1 --pos -1920,0")
 
 
 @pytest.mark.usefixtures("bottomup_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events4():
+async def test_events4(subprocess_shell_mock):
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(tst.subprocess_call)
-    calls = get_xrandr_calls()
+    await wait_called(subprocess_shell_mock[0])
+    calls = get_axrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove(("wlr-randr", "--output", "DP-1", "--pos", "0,1080"))
+    calls.remove("wlr-randr --output DP-1 --pos 0,1080")
 
 
 @pytest.mark.usefixtures("empty_config", "server_fixture")

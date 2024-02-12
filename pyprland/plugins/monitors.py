@@ -1,6 +1,5 @@
 " The monitors plugin "
 import asyncio
-import subprocess
 from collections import defaultdict
 from copy import deepcopy
 from typing import Any, cast
@@ -73,7 +72,7 @@ def get_XY(place, main_mon, other_mon):
     return (x, y)
 
 
-def apply_monitor_position(
+async def apply_monitor_position(
     monitors, screenid: str, pos_x: int, pos_y: int, logger=None
 ) -> None:
     "Apply the configuration change"
@@ -85,9 +84,10 @@ def apply_monitor_position(
     monitor["y"] = pos_y
 
     command.extend(["--output", screenid, "--pos", f"{pos_x},{pos_y}"])
+    txt_command = " ".join(command)
     if logger:
-        logger.debug(command)
-    subprocess.call(command)
+        logger.debug(txt_command)
+    await asyncio.create_subprocess_shell(txt_command)
 
 
 def build_graph(config):
@@ -121,6 +121,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
 
         cleaned_config = self.resolve_names(monitors)
+        self.log.debug("Using %s", cleaned_config)
         graph = build_graph(cleaned_config)
         self._update_positions(monitors, graph, cleaned_config)
         trim_offset(monitors)
@@ -161,7 +162,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 return
 
             default_command = self.config.get("unknown")
-            val = self._place_single_monitor(mon_info, monitors)
+            val = await self._place_single_monitor(mon_info, monitors)
             if val and default_command:
                 await asyncio.create_subprocess_shell(default_command)
 
@@ -218,7 +219,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             f"{pattern} {config}",
                         )
 
-    def _place_single_monitor(
+    async def _place_single_monitor(
         self,
         mon_info: dict[str, int | float | str | list],
         monitors: list[dict[str, Any]],
@@ -242,7 +243,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 if pos:
                     x, y = pos
                     self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
-                    apply_monitor_position(monitors, mon_name, x, y, logger=self.log)
+                    await apply_monitor_position(
+                        monitors, mon_name, x, y, logger=self.log
+                    )
                 else:
                     self.log.error("Unknown position type: %s (%s)", place, rule)
 

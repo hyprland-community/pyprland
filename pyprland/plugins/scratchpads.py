@@ -3,7 +3,6 @@ import os
 import logging
 import time
 import asyncio
-import subprocess
 from typing import Any, cast, Callable
 from functools import partial
 from collections import defaultdict
@@ -317,7 +316,7 @@ class ScratchDB:  # {{{
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
-    procs: dict[str, subprocess.Popen] = {}
+    procs: dict[str, asyncio.subprocess.Process] = {}
     scratches = ScratchDB()
 
     focused_window_tracking: dict[str, str] = {}
@@ -466,7 +465,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         "Ensure alive, standard version"
         uid = item.uid
         if uid in self.procs:
-            self.procs[uid].kill()
+            try:
+                self.procs[uid].kill()
+            except ProcessLookupError:
+                pass
         self.scratches.reset(item)
         await self.start_scratch_command(uid)
         self.log.info("starting %s", uid)
@@ -510,13 +512,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         assert scratch
         self.scratches.setState(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
-        proc = subprocess.Popen(
-            scratch.conf["command"],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            shell=True,
-        )
+        proc = await asyncio.create_subprocess_shell(scratch.conf["command"])
         self.procs[name] = proc
         pid = proc.pid
         scratch.reset(pid)
