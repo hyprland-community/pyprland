@@ -37,7 +37,8 @@ class Pyprland:
     stopped = False
     config: dict[str, dict] = {}
     tasks: None | asyncio.TaskGroup = None
-    instance: Self
+    instance: Self | None = None
+    initialized = False
 
     @classmethod
     def _set_instance(cls, instance):
@@ -292,6 +293,7 @@ async def run_daemon():
         raise SystemExit(1) from e
 
     manager.log.debug("[ initialized ]".center(80, "="))
+    manager.initialized = True
     try:
         await manager.run()
     except KeyboardInterrupt:

@@ -1,3 +1,4 @@
+import asyncio
 from typing import cast
 import pytest
 import tomllib
@@ -31,6 +32,8 @@ placement = {}
     await tst.pypr("reload")
 
     await wait_called(load_proxy)
+    # FIXME: find a method call to wait
+    await asyncio.sleep(0.1)
 
     assert placement != cfg["placement"]
     assert bool_opt != cfg["startup_relayout"]

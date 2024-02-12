@@ -92,6 +92,15 @@ async def mocked_hyprctlJSON(command, logger=None):
 
 
 @fixture
+def subprocess_shell_mock(mocker):
+    # Mocking the asyncio.create_subprocess_shell function
+    mocked_subprocess_shell = mocker.patch("asyncio.create_subprocess_shell")
+    mocked_process = MagicMock(spec=asyncio.subprocess.Process)
+    mocked_subprocess_shell.return_value = mocked_process
+    return mocked_subprocess_shell, mocked_process
+
+
+@fixture
 async def server_fixture(monkeypatch):
     "Handle server setup boilerplate"
     global hyprevt, pyprctrl, subprocess_call, hyprctl
@@ -118,7 +127,14 @@ async def server_fixture(monkeypatch):
     ipc.init()
 
     server_task = asyncio.create_task(run_daemon())
+    from pyprland.command import Pyprland
+
+    for _ in range(10):
+        if Pyprland.instance and Pyprland.instance.initialized:
+            break
+        await asyncio.sleep(0.1)
     yield  # Run the test
+    Pyprland.instance.initialized = False
     server_task.cancel()
     await server_task
 

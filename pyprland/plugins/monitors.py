@@ -73,7 +73,9 @@ def get_XY(place, main_mon, other_mon):
     return (x, y)
 
 
-def apply_monitor_position(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
+def apply_monitor_position(
+    monitors, screenid: str, pos_x: int, pos_y: int, logger=None
+) -> None:
     "Apply the configuration change"
 
     command = ["wlr-randr"]
@@ -83,6 +85,8 @@ def apply_monitor_position(monitors, screenid: str, pos_x: int, pos_y: int) -> N
     monitor["y"] = pos_y
 
     command.extend(["--output", screenid, "--pos", f"{pos_x},{pos_y}"])
+    if logger:
+        logger.debug(command)
     subprocess.call(command)
 
 
@@ -126,7 +130,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             command.extend(
                 ["--output", monitor["name"], "--pos", f'{monitor["x"]},{monitor["y"]}']
             )
-        subprocess.call(command)
+        txt_cmd = " ".join(command)
+        self.log.info(txt_cmd)
+        proc = await asyncio.create_subprocess_shell(
+            txt_cmd, stderr=asyncio.subprocess.PIPE
+        )
+        assert proc.stderr
+        err = await proc.stderr.read()
+        if err:
+            self.log.debug(err)
 
     # Event handlers
 
@@ -149,7 +161,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 return
 
             default_command = self.config.get("unknown")
-            if self._place_single_monitor(mon_info, monitors) and default_command:
+            val = self._place_single_monitor(mon_info, monitors)
+            if val and default_command:
                 await asyncio.create_subprocess_shell(default_command)
 
     # Utils
@@ -229,7 +242,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 if pos:
                     x, y = pos
                     self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
-                    apply_monitor_position(monitors, mon_name, x, y)
+                    apply_monitor_position(monitors, mon_name, x, y, logger=self.log)
                 else:
                     self.log.error("Unknown position type: %s (%s)", place, rule)
 
