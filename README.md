@@ -24,9 +24,9 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Latest major changes
 
-### Git (future 2.0)
+### 2.0
 
-- adds aiofiles dependency
+- New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
     - fully asynchronous plugins, including file operations
 
 ### 1.10
