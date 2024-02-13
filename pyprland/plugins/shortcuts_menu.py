@@ -40,7 +40,10 @@ class Extension(MenuRequiredMixin, Plugin):
                 break
             try:
                 formatted_options = {_format_title(k, v): v for k, v in options.items()}
-                selection = await self.menu.run(formatted_options)
+                if self.config.get("skip_single", True) and len(formatted_options) == 1:
+                    selection = list(formatted_options.keys())[0]
+                else:
+                    selection = await self.menu.run(formatted_options)
                 options = formatted_options[selection]
             except KeyError:
                 self.log.info("menu command canceled")
@@ -51,6 +54,7 @@ class Extension(MenuRequiredMixin, Plugin):
     async def _handle_chain(self, options):
         "Handles a chain of special objects + final command string"
         variables: dict[str, str] = {}
+        autovalidate = self.config.get("skip_single", True)
         for option in options:
             if isinstance(option, str):
                 await self._run_command(option, variables)
@@ -63,19 +67,25 @@ class Extension(MenuRequiredMixin, Plugin):
                     )
                     assert proc.stdout
                     await proc.wait()
+                    option_array = (await proc.stdout.read()).decode().split("\n")
                     choices.extend(
                         [
-                            line.strip()
-                            for line in (await proc.stdout.read()).decode().split("\n")
+                            apply_variables(line, variables).strip()
+                            for line in option_array
                         ]
                     )
                 elif option.get("options"):
-                    choices.extend(option["options"])
-                variables[var_name] = await self.menu.run(choices)
+                    choices.extend(
+                        apply_variables(txt, variables) for txt in option["options"]
+                    )
+
+                if autovalidate and len(choices) == 1:
+                    variables[var_name] = choices[0]
+                else:
+                    variables[var_name] = await self.menu.run(choices)
 
     async def _run_command(self, command, variables=None):
         "Runs a shell `command`, optionally replacing `variables`"
-        self.log.info("Executing %s (%s)", command, variables)
-        await asyncio.create_subprocess_shell(
-            apply_variables(command, variables) if variables else command
-        )
+        final_command = apply_variables(command, variables)
+        self.log.info("Executing %s", final_command)
+        await asyncio.create_subprocess_shell(final_command)
