@@ -3,7 +3,7 @@ from typing import Callable
 from unittest.mock import AsyncMock, Mock, MagicMock
 from copy import deepcopy
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pytest_asyncio import fixture
 import tomllib
 from .testtools import MockReader, MockWriter
@@ -28,7 +28,13 @@ class GlobalMocks:
     subprocess_call: MagicMock = None
     hyprctl: AsyncMock = None
 
+    json_commands_result: dict[str, list | dict] = field(default_factory=dict)
+
     _pypr_command_reader: Callable = None
+
+    def reset(self):
+        "Resets not standard mocks"
+        self.json_commands_result.clear()
 
     async def pypr(self, cmd):
         "Simulates the pypr command"
@@ -82,6 +88,8 @@ async def sample1_config(monkeypatch):
 
 
 async def mocked_hyprctlJSON(command, logger=None):
+    if command in mocks.json_commands_result:
+        return mocks.json_commands_result[command]
     if command == "monitors":
         return deepcopy(MONITORS)
     if command == "activeworkspace":
@@ -95,7 +103,7 @@ def subprocess_shell_mock(mocker):
     mocked_subprocess_shell = mocker.patch("asyncio.create_subprocess_shell")
     mocked_process = MagicMock(spec=asyncio.subprocess.Process)
     mocked_subprocess_shell.return_value = mocked_process
-    mocked_process.pid = 666
+    mocked_process.pid = 1  # init always exists
     mocked_process.stderr = AsyncMock(return_code="")
     mocked_process.stdout = AsyncMock(return_code="")
     mocked_process.return_code = 0
@@ -135,8 +143,11 @@ async def server_fixture(monkeypatch, mocker):
             break
         await asyncio.sleep(0.1)
     yield  # Run the test
+    await mocks.hyprctl("exit")
     server_task.cancel()
     await server_task
+    await asyncio.sleep(0.1)
+    mocks.reset()
 
 
 EXTRA_MON = {
