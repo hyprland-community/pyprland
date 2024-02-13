@@ -30,6 +30,7 @@ class Extension(MenuRequiredMixin, Plugin):
             return f"{prefix} {label} {suffix}".strip()
 
         while True:
+            selection = name
             if isinstance(options, str):
                 self.log.info("running %s", options)
                 await self._run_command(options.strip())
@@ -43,7 +44,7 @@ class Extension(MenuRequiredMixin, Plugin):
                 if self.config.get("skip_single", True) and len(formatted_options) == 1:
                     selection = list(formatted_options.keys())[0]
                 else:
-                    selection = await self.menu.run(formatted_options)
+                    selection = await self.menu.run(formatted_options, selection)
                 options = formatted_options[selection]
             except KeyError:
                 self.log.info("menu command canceled")
@@ -82,7 +83,7 @@ class Extension(MenuRequiredMixin, Plugin):
                 if autovalidate and len(choices) == 1:
                     variables[var_name] = choices[0]
                 else:
-                    variables[var_name] = await self.menu.run(choices)
+                    variables[var_name] = await self.menu.run(choices, var_name)
 
     async def _run_command(self, command, variables=None):
         "Runs a shell `command`, optionally replacing `variables`"

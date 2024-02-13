@@ -4,7 +4,7 @@ import asyncio
 from typing import Iterable
 from logging import Logger
 
-from ..common import PyprError, get_logger
+from ..common import PyprError, get_logger, apply_variables
 
 
 __all__ = ["MenuRequiredMixin", "MenuEngine"]
@@ -34,7 +34,7 @@ class MenuEngine:
             return False
         return True
 
-    async def run(self, choices: Iterable[str]) -> str:
+    async def run(self, choices: Iterable[str], prompt="") -> str:
         """Run the engine and get the response for the proposed `choices`
 
         Args:
@@ -46,7 +46,10 @@ class MenuEngine:
         menu_text = "\n".join(choices)
         if not menu_text.strip():
             return ""
-        command = f"{self.proc_name} {self.proc_extra_parameters}"
+        command = apply_variables(
+            f"{self.proc_name} {self.proc_extra_parameters}",
+            {"prompt": f"{prompt}:  "} if prompt else {"prompt": ""},
+        )
         menu_logger.debug(command)
         proc = await asyncio.create_subprocess_shell(
             command,
@@ -68,18 +71,19 @@ class MenuEngine:
 class TofiMenu(MenuEngine):
     "A tofi based menu"
     proc_name = "tofi"
+    proc_extra_parameters: str = "--prompt-text '[prompt]'"
 
 
 class RofiMenu(MenuEngine):
     "A rofi based menu"
     proc_name = "rofi"
-    proc_extra_parameters = "-dmenu -matching fuzzy -i"
+    proc_extra_parameters = "-dmenu -matching fuzzy -i -p '[prompt]'"
 
 
 class WofiMenu(MenuEngine):
     "A wofi based menu"
     proc_name = "wofi"
-    proc_extra_parameters = "-dmenu -i"
+    proc_extra_parameters = "-dmenu -i -p '[prompt]'"
 
 
 class DmenuMenu(MenuEngine):
