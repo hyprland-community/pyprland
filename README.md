@@ -13,8 +13,9 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Changes log](https://github.com/hyprland-community/pyprland/releases)
 
-
 → [Discussions](https://github.com/hyprland-community/pyprland/discussions)
+
+→ [Contact/Community discord](https://discord.com/invite/zzWqvcKRMy) (*fab31*)
 
 ## Dependencies
 
