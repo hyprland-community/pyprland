@@ -6,3 +6,10 @@ def test_templates():
         apply_variables("[one] $var [two] ${var2} [three]", {"one": "X", "three": "Y"})
         == "X $var [two] ${var2} Y"
     )
+    assert (
+        apply_variables(
+            "[one thing] $one one [one] ${var2} [one other thing] [one] [one thing]",
+            {"one": "X", "one thing": "Y"},
+        )
+        == "Y $one one X ${var2} [one other thing] X Y"
+    )
