@@ -28,12 +28,12 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
     - fully asynchronous plugins, including file operations
-- Added `hysteresis` support for `scratchpads` in 2.0.1.
+- Added `hysteresis` support for `scratchpads` in 2.0.1
 
-  Active when using `unfocus="hide"`.
+  Active when using `unfocus="hide"`
 
   Default value of 0.4 seconds should be fine for most usages.
-  If you don't like it, set `hysteresis=0` or a lower value. Higher values can be required for applications using thin tabs or other widgets around its border.
+  If you don't like it, set `hysteresis=0` or a lower value. Higher values can be required for applications using thin tabs or other widgets around its border
 
 ### 1.10
 
