@@ -4,7 +4,7 @@ import pytest
 from pytest_asyncio import fixture
 from .conftest import mocks as tst
 
-sys.path.append("examples")
+sys.path.append("sample_extension")
 
 
 @fixture
