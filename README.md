@@ -36,7 +36,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
   Default value of 0.4 seconds should be fine for most usages.
   If you don't like it, set a lower value or `hysteresis=0` to completely disable it. Higher values can be required for applications using thin tabs or other widgets around its border
 
-  Share the value which is optimal for you on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)! The current value may be refined later.
+  Share the value which is optimal for you on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)! The current value can be refined later.
 
 ### 1.10
 
