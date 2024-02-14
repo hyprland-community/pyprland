@@ -36,6 +36,8 @@ New users need to read the [getting started](https://github.com/hyprland-communi
   Default value of 0.4 seconds should be fine for most usages.
   If you don't like it, set a lower value or `hysteresis=0` to completely disable it. Higher values can be required for applications using thin tabs or other widgets around its border
 
+  Share the value which is optimal for you on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46) !
+
 ### 1.10
 
 - New [fetch_client_menu](https://github.com/hyprland-community/pyprland/wiki/fetch_client_menu) plugin (shows a menu to bring a window to the active desktop)
