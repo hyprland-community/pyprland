@@ -29,7 +29,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
     - fully asynchronous plugins, including file operations
-- Added `hysteresis` support for `scratchpads` in 2.0.1
+- Added `hysteresis` support for [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) in 2.0.1
 
   Active when using `unfocus="hide"`
 
