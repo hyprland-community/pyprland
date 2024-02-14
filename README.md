@@ -34,7 +34,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
   Active when using `unfocus="hide"`
 
   Default value of 0.4 seconds should be fine for most usages.
-  If it feels too slow for you, set a lower value or `hysteresis=0` to completely disable it. Higher values can be required for applications using thin tabs or other widgets around its border
+  If it feels too slow for you, set a lower value or `hysteresis=0` to completely disable it.
 
   Share the value which is optimal for you on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)! The current value can be refined later.
 
