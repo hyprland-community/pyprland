@@ -15,7 +15,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Discussions](https://github.com/hyprland-community/pyprland/discussions)
 
-→ [Contact/Community discord](https://discord.com/invite/zzWqvcKRMy) (*fab31*)
+→ [Contact / Community discord](https://discord.com/invite/zzWqvcKRMy) (*fab31*)
 
 ## Dependencies
 
