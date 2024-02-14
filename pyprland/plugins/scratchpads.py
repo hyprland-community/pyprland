@@ -16,6 +16,7 @@ from ..common import state
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
+DEFAULT_HYSTERESIS = 0.4  # In seconds
 
 # Helper functions {{{
 
@@ -320,6 +321,9 @@ class ScratchDB:  # {{{
 # }}}
 
 
+_pending_tasks: dict[str, Any] = {}
+
+
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
     scratches = ScratchDB()
@@ -559,20 +563,57 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
         for uid, scratch in self.scratches.items():
-            if scratch.client_info and scratch.address != addr:
-                if (
-                    scratch.visible
-                    and scratch.conf.get("unfocus") == "hide"
-                    and not self.scratches.hasState(scratch, "transition")
-                ):
-                    last_shown = scratch.meta.get("last_shown", 0)
-                    if last_shown + AFTER_SHOW_INHIBITION > time.time():
-                        self.log.debug(
-                            "(SKIPPED) hide %s because another client is active", uid
-                        )
-                    else:
-                        self.log.debug("hide %s because another client is active", uid)
-                        await self.run_hide(uid, autohide=True)
+            if scratch.client_info:
+                if scratch.address == addr:
+                    task = _pending_tasks.get(scratch.uid)
+                    if task:
+                        task.cancel()
+                        self.log.debug("Canceled previous task for %s", uid)
+                else:
+                    if (
+                        scratch.visible
+                        and scratch.conf.get("unfocus") == "hide"
+                        and not self.scratches.hasState(scratch, "transition")
+                    ):
+                        last_shown = scratch.meta.get("last_shown", 0)
+                        if last_shown + AFTER_SHOW_INHIBITION > time.time():
+                            self.log.debug(
+                                "(SKIPPED) hide %s because another client is active",
+                                uid,
+                            )
+                        else:
+                            hysteresis = scratch.conf.get(
+                                "hysteresis", DEFAULT_HYSTERESIS
+                            )
+                            if hysteresis:
+                                task = _pending_tasks.get(scratch.uid)
+                                if task:
+                                    task.cancel()
+                                    self.log.debug("Canceled previous task for %s", uid)
+                                _pending_tasks[scratch.uid] = asyncio.create_task(
+                                    asyncio.sleep(hysteresis)
+                                )
+
+                                async def _task(scratch, uid):
+                                    await _pending_tasks[scratch.uid]
+                                    del _pending_tasks[scratch.uid]
+                                    if state.active_window == scratch.full_address:
+                                        self.log.debug(
+                                            "Skipped hidding %s because client got the focus back",
+                                            uid,
+                                        )
+                                        return
+                                    self.log.debug(
+                                        "hide %s because another client is active", uid
+                                    )
+                                    await self.run_hide(uid, autohide=True)
+
+                                asyncio.create_task(_task(scratch, uid))
+                            else:
+                                self.log.debug(
+                                    "hide %s because another client is active", uid
+                                )
+                                await self.run_hide(uid, autohide=True)
 
     async def _alternative_lookup(self):
         "if class_match attribute is defined, use class matching and return True"
