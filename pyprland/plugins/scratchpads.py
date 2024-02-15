@@ -321,9 +321,6 @@ class ScratchDB:  # {{{
 # }}}
 
 
-_pending_tasks: dict[str, Any] = {}
-
-
 class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
     scratches = ScratchDB()
@@ -331,10 +328,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     focused_window_tracking: dict[str, str] = {}
 
     workspace = ""  # Currently active workspace
-    monitor = ""  # CUrrently active monitor
+    monitor = ""  # Currently active monitor
+
+    _pending_tasks: dict[str, Any]
 
     def __init__(self, name):
         super().__init__(name)
+        self._pending_tasks = {}
         self.get_client_props = partial(get_client_props, logger=self.log)
         Scratch.get_client_props = self.get_client_props
         self.get_focused_monitor_props = partial(
@@ -566,11 +566,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if not scratch.client_info:
                 continue
             if scratch.address == addr:
-                task = _pending_tasks.get(scratch.uid)
+                task = self._pending_tasks.get(scratch.uid)
                 if task:
                     task.cancel()
-                    if scratch.uid in _pending_tasks:
-                        del _pending_tasks[scratch.uid]
+                    if scratch.uid in self._pending_tasks:
+                        del self._pending_tasks[scratch.uid]
                     self.log.debug("Canceled previous task for %s", uid)
             else:
                 if (
@@ -588,17 +588,17 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
                     hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
                     if hysteresis:
-                        task = _pending_tasks.get(scratch.uid)
+                        task = self._pending_tasks.get(scratch.uid)
                         if task:
                             task.cancel()
                             self.log.debug("Canceled previous task for %s", uid)
-                        _pending_tasks[scratch.uid] = asyncio.create_task(
+                        self._pending_tasks[scratch.uid] = asyncio.create_task(
                             asyncio.sleep(hysteresis)
                         )
 
                         async def _task(scratch, uid):
-                            await _pending_tasks[scratch.uid]
-                            del _pending_tasks[scratch.uid]
+                            await self._pending_tasks[scratch.uid]
+                            del self._pending_tasks[scratch.uid]
                             if state.active_window == scratch.full_address:
                                 self.log.debug(
                                     "Skipped hidding %s because client got the focus back",
