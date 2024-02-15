@@ -330,11 +330,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
     workspace = ""  # Currently active workspace
     monitor = ""  # Currently active monitor
 
-    _pending_tasks: dict[str, Any]
+    _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
 
     def __init__(self, name):
         super().__init__(name)
-        self._pending_tasks = {}
+        self._hysteresis_tasks = {}
         self.get_client_props = partial(get_client_props, logger=self.log)
         Scratch.get_client_props = self.get_client_props
         self.get_focused_monitor_props = partial(
@@ -566,11 +566,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if not scratch.client_info:
                 continue
             if scratch.address == addr:
-                task = self._pending_tasks.get(scratch.uid)
+                task = self._hysteresis_tasks.get(scratch.uid)
                 if task:
                     task.cancel()
-                    if scratch.uid in self._pending_tasks:
-                        del self._pending_tasks[scratch.uid]
+                    if scratch.uid in self._hysteresis_tasks:
+                        del self._hysteresis_tasks[scratch.uid]
                     self.log.debug("Canceled previous task for %s", uid)
             else:
                 if (
@@ -588,17 +588,17 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
                     hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
                     if hysteresis:
-                        task = self._pending_tasks.get(scratch.uid)
+                        task = self._hysteresis_tasks.get(scratch.uid)
                         if task:
                             task.cancel()
                             self.log.debug("Canceled previous task for %s", uid)
-                        self._pending_tasks[scratch.uid] = asyncio.create_task(
+                        self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
                             asyncio.sleep(hysteresis)
                         )
 
                         async def _task(scratch, uid):
-                            await self._pending_tasks[scratch.uid]
-                            del self._pending_tasks[scratch.uid]
+                            await self._hysteresis_tasks[scratch.uid]
+                            del self._hysteresis_tasks[scratch.uid]
                             if state.active_window == scratch.full_address:
                                 self.log.debug(
                                     "Skipped hidding %s because client got the focus back",
