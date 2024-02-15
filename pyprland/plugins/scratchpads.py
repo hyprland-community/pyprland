@@ -569,6 +569,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 task = _pending_tasks.get(scratch.uid)
                 if task:
                     task.cancel()
+                    if scratch.uid in _pending_tasks:
+                        del _pending_tasks[scratch.uid]
                     self.log.debug("Canceled previous task for %s", uid)
             else:
                 if (
