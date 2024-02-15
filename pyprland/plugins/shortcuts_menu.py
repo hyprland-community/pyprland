@@ -1,9 +1,20 @@
 " Shortcuts menu "
+import re
 import asyncio
 
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
 from ..common import apply_variables
+
+
+def apply_filter(text, filt_cmd: str):
+    "Apply filters to text"
+    if not filt_cmd:
+        return text
+    if filt_cmd[0] == "s":  # vi-like substitute
+        (_, base, replacement, opts) = filt_cmd.split(filt_cmd[1])
+        return re.sub(base, replacement, text, count=0 if "g" in opts else 1)
+    return text
 
 
 class Extension(MenuRequiredMixin, Plugin):
@@ -20,12 +31,12 @@ class Extension(MenuRequiredMixin, Plugin):
                 options = options[elt]
 
         def _format_title(label, obj):
-            if isinstance(obj, dict):
-                suffix = self.config.get("submenu_end", "➜")
-                prefix = self.config.get("submenu_start", "")
-            else:
+            if isinstance(obj, str):
                 suffix = self.config.get("command_end", "")
                 prefix = self.config.get("command_start", "")
+            else:
+                suffix = self.config.get("submenu_end", "➜")
+                prefix = self.config.get("submenu_start", "")
 
             return f"{prefix} {label} {suffix}".strip()
 
@@ -83,7 +94,9 @@ class Extension(MenuRequiredMixin, Plugin):
                 if autovalidate and len(choices) == 1:
                     variables[var_name] = choices[0]
                 else:
-                    variables[var_name] = await self.menu.run(choices, var_name)
+                    selection = await self.menu.run(choices, var_name)
+                    variables[var_name] = apply_filter(selection, option.get("filter"))
+                    self.log.debug("set %s = %s", var_name, variables[var_name])
 
     async def _run_command(self, command, variables=None):
         "Runs a shell `command`, optionally replacing `variables`"

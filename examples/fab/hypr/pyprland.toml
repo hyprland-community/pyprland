@@ -97,6 +97,11 @@ command_start = "󰜎"
     "kitty -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
 ]
 
+"Clip" = [
+    {name="entry", command="cliphist list", filter="s/\t.*//"},
+    "cliphist decode '[entry]' | wl-copy"
+]
+
 [shortcuts_menu.entries.Hypr]
 Relayout = "pypr relayout"
 Reload = "pypr reload"
