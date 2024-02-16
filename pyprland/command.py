@@ -10,10 +10,10 @@ import json
 import os
 import sys
 
-from .common import PyprError, get_logger, init_logger
-from .ipc import get_event_stream, notify_error, notify_fatal, notify_info
-from .ipc import init as ipc_init
-from .plugins.interface import Plugin
+from pyprland.common import PyprError, get_logger, init_logger
+from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
+from pyprland.ipc import init as ipc_init
+from pyprland.plugins.interface import Plugin
 
 try:
     CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
