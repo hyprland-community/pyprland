@@ -8,22 +8,28 @@
   outputs = {
     self,
     nixpkgs,
-    poetry2nix,
     systems,
+    poetry2nix,
   }: let
+    inherit (poetry2nix.lib) mkPoetry2Nix;
+
     supportedSystems = nixpkgs.lib.genAttrs (import systems);
+    pkgsFor = system: nixpkgs.legacyPackages.${system};
   in {
     packages = supportedSystems (system: let
-      inherit (poetry2nix.lib.mkPoetry2Nix {pkgs = nixpkgs.legacyPackages.${system};}) mkPoetryApplication;
+      inherit (mkPoetry2Nix {pkgs = pkgsFor system;}) mkPoetryApplication;
     in {
-      default = mkPoetryApplication {projectDir = self;};
+      default = mkPoetryApplication {
+        projectDir = self;
+        checkGroups = [];
+      };
     });
 
     devShells = supportedSystems (system: let
-      inherit (poetry2nix.lib.mkPoetry2Nix {pkgs = nixpkgs.legacyPackages.${system};}) mkPoetryEnv;
+      inherit (mkPoetry2Nix {pkgs = pkgsFor system;}) mkPoetryEnv;
     in {
-      default = nixpkgs.legacyPackages.${system}.mkShellNoCC {
-        packages = with nixpkgs.legacyPackages.${system}; [
+      default = (pkgsFor system).mkShellNoCC {
+        packages = with (pkgsFor system); [
           (mkPoetryEnv {projectDir = self;})
           poetry
         ];
