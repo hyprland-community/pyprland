@@ -3,13 +3,13 @@ test_quick:
     .tox/py311/bin/coverage report
 
 doc:
-    tox -e doc
+    tox run -e doc
 
 wiki:
-    tox -e wiki
+    tox run -e wiki
 
 test:
-    tox
+    tox run
 
 release:
     ./scripts/make_release

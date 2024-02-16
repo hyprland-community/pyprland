@@ -25,4 +25,4 @@ jobs:
 
       - name: Runs all the tests via tox
         run: |
-          tox
+          tox run
