@@ -14,13 +14,13 @@ if [ -z "$title" ]; then
     title=$version
 fi
 
+TOKEN=$(gopass show api.github.com)
+URL=https://api.github.com/repos/hyprland-community/pyprland
+
 tox || exit -1
 echo $version | bumpPyProject.sh
 cd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh
-
-TOKEN=$(gopass show api.github.com)
-URL=https://api.github.com/repos/hyprland-community/pyprland
 
 # Make the release
 
