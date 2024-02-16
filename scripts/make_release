@@ -10,7 +10,7 @@ read version
 echo -n "Release name: "
 read title
 
-if [ -z "$title" ]
+if [ -z "$title" ]; then
     title=$version
 fi
 
@@ -19,8 +19,7 @@ echo $version | bumpPyProject.sh
 cd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh
 
-gopass show -c api.github.com
-TOKEN=$(wl-paste)
+TOKEN=$(gopass show api.github.com)
 URL=https://api.github.com/repos/hyprland-community/pyprland
 
 # Make the release
