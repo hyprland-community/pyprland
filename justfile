@@ -10,3 +10,6 @@ wiki:
 
 test:
     tox
+
+release:
+    ./scripts/make_release
