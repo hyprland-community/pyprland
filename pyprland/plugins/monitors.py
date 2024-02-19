@@ -155,7 +155,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def event_monitoradded(self, monitor_name) -> None:
         "Triggers when a monitor is plugged"
 
-        if self.config.get("full_relayout", False):
+        if self.config.get("full_relayout", True):
             await self.run_relayout()
         else:
             monitors = cast(list, await self.hyprctlJSON("monitors"))
