@@ -147,6 +147,7 @@ class Scratch:  # {{{
         self.initialized = False
         self.meta = {}
         self.space_identifier = None
+        self.monitor = ""
 
     async def initialize(self, ex):
         "Initialize the scratchpad"
@@ -554,6 +555,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+    async def event_monitorremoved(self, monitor_name) -> None:
+        " Hides scratchpads on the removed screen "
+        for scratch in self.scratches.values():
+            if scratch.monitor == monitor_name:
+                await self.run_hide(scratch.uid, autohide=True)
+
     async def event_configreloaded(self, _nothing):
         "Re-apply windowrules when hyprland is restarted"
         for scratch in list(self.scratches.getByState("configured")):
@@ -756,10 +763,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         wrkspc = monitor["activeWorkspace"]["id"]
 
         self.scratches.setState(item, "transition")
+        item.monitor = monitor['name']
         # Start the transition
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor special:scratch_{uid} {monitor['name']}",
+                f"moveworkspacetomonitor special:scratch_{uid} {item.monitor}",
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
                 f"alterzorder top,address:{item.full_address}",
             ]
