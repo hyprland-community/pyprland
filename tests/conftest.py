@@ -100,12 +100,16 @@ async def mocked_hyprctlJSON(command, logger=None):
 @fixture
 def subprocess_shell_mock(mocker):
     # Mocking the asyncio.create_subprocess_shell function
-    mocked_subprocess_shell = mocker.patch("asyncio.create_subprocess_shell")
-    mocked_process = MagicMock(spec=asyncio.subprocess.Process)
+    mocked_subprocess_shell = mocker.patch(
+        "asyncio.create_subprocess_shell", name="mocked_shell_command"
+    )
+    mocked_process = MagicMock(spec="subprocess.Process", name="mocked_subprocess")
     mocked_subprocess_shell.return_value = mocked_process
     mocked_process.pid = 1  # init always exists
     mocked_process.stderr = AsyncMock(return_code="")
     mocked_process.stdout = AsyncMock(return_code="")
+    mocked_process.terminate = Mock()
+    mocked_process.wait = AsyncMock()
     mocked_process.return_code = 0
     return mocked_subprocess_shell, mocked_process
 

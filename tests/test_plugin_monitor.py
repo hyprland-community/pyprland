@@ -15,6 +15,7 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "Sony".topOf = ["BenQ"]
@@ -33,6 +34,7 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "Sony".bottomOf = "BenQ"
@@ -51,6 +53,7 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "Sony".rightCenterOf = "Microstep"
@@ -69,6 +72,7 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "(eDP-1)".topOf = "(DP-1)"
@@ -87,10 +91,11 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
-"(eDP-1)".bottomOf = "(DP-1)"
-"(DP-1)".bottomOf = "(HDMI-A-1)"
+"(eDP-1)".bottomCenterOf = "(DP-1)"
+"(DP-1)".bottomCenterOf = "(HDMI-A-1)"
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield
@@ -109,6 +114,7 @@ plugins = ["monitors"]
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "(eDP-1)".leftOf = "(DP-1)"
@@ -150,7 +156,7 @@ async def test_3screens_relayout_b(subprocess_shell_mock):
     await wait_called(mocked_subprocess_shell)
     calls = get_xrandr_calls(mocked_subprocess_shell)
     calls.remove(
-        "wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 0,1080 --output eDP-1 --pos 0,2520"
+        "wlr-randr --output HDMI-A-1 --pos 760,0 --output DP-1 --pos 0,1080 --output eDP-1 --pos 1400,2520"
     )
 
 
@@ -200,7 +206,7 @@ async def test_events(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 1920,0")
+    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
 
 
 @pytest.mark.usefixtures("descr_config", "server_fixture")
@@ -210,7 +216,7 @@ async def test_events_d(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 1920,-180")
+    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,180 --output DP-1 --pos 1920,0")
 
 
 @pytest.mark.usefixtures("reversed_config", "server_fixture")
@@ -220,7 +226,7 @@ async def test_events2(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos -3440,0")
+    calls.remove("wlr-randr --output DP-1 --pos 0,0 --output HDMI-A-1 --pos 3440,0")
 
 
 @pytest.mark.usefixtures("topdown_config", "server_fixture")
@@ -230,7 +236,7 @@ async def test_events3(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 0,-1440")
+    calls.remove("wlr-randr --output DP-1 --pos 0,0 --output HDMI-A-1 --pos 0,1440")
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
@@ -240,7 +246,7 @@ async def test_events3b(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output HDMI-A-1 --pos -1920,0")
+    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
 
 
 @pytest.mark.usefixtures("bottomup_config", "server_fixture")
@@ -250,7 +256,7 @@ async def test_events4(subprocess_shell_mock):
     await wait_called(subprocess_shell_mock[0])
     calls = get_xrandr_calls(subprocess_shell_mock[0])
     print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 0,1080")
+    calls.remove("wlr-randr --output HDMI-A-1 --pos 760,0 --output DP-1 --pos 0,1080")
 
 
 @pytest.mark.usefixtures("empty_config", "server_fixture")

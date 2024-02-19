@@ -154,7 +154,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def event_monitoradded(self, monitor_name) -> None:
         "Triggers when a monitor is plugged"
-        await asyncio.sleep(self.config.get('new_monitor_delay', 1.0))
+        await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
 
         if self.config.get("full_relayout", True):
             await self.run_relayout()

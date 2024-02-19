@@ -556,7 +556,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     # Events {{{
     async def event_monitorremoved(self, monitor_name) -> None:
-        " Hides scratchpads on the removed screen "
+        "Hides scratchpads on the removed screen"
         for scratch in self.scratches.values():
             if scratch.monitor == monitor_name:
                 await self.run_hide(scratch.uid, autohide=True)
@@ -763,7 +763,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         wrkspc = monitor["activeWorkspace"]["id"]
 
         self.scratches.setState(item, "transition")
-        item.monitor = monitor['name']
+        item.monitor = monitor["name"]
         # Start the transition
         await self.hyprctl(
             [

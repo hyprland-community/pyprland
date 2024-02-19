@@ -4,11 +4,12 @@ from unittest.mock import AsyncMock, Mock
 
 async def wait_called(fn, timeout=1.0, count=1):
     delay = 0.0
+    ival = 0.05
     while True:
         if fn.call_count >= count:
             break
-        await asyncio.sleep(0.02)
-        delay += 0.02
+        await asyncio.sleep(ival)
+        delay += ival
 
         if delay > timeout:
             raise TimeoutError()

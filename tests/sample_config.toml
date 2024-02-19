@@ -5,6 +5,7 @@ plugins = [
 
 [monitors]
 startup_relayout = false
+new_monitor_delay = 0
 
 [monitors.placement]
 "(eDP-1)".rightOf = "(DP-1)"
