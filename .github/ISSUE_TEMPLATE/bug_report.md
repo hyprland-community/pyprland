@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: "[BUG] Enter a short bug description here"
-labels: enhancement
+labels: bug
 assignees: fdev31
 
 ---

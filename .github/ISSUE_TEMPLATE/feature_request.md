@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[FEAT] Description of the feature"
-labels: bug
+labels: feature
 assignees: fdev31
 
 ---
