@@ -57,6 +57,7 @@ class Extension(Plugin):
         for task in self.tasks:
             task.cancel()
             await task
+        self.tasks[:] = []
 
     async def start_source(self, name, props):
         "Start a source loop"
