@@ -39,8 +39,8 @@ class Extension(Plugin):
         self.running = True
         parsers = deepcopy(builtin_parsers)
         parsers.update(self.config.get("parsers", {}))
-        for name, props in parsers.items():
-            self.tasks.append(asyncio.create_task(self.start_parser(name, props)))
+        for name, pprops in parsers.items():
+            self.tasks.append(asyncio.create_task(self.start_parser(name, pprops)))
             self.parsers[name] = asyncio.Queue()
             self.log.debug("Loaded parser %s", name)
 
