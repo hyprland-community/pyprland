@@ -39,6 +39,7 @@ pushd scripts
 ./update_get-pypr.sh
 popd
 
+exit 0
 # Upload the standalone version
 
 http -j POST "https://uploads.github.com/repos/hyprland-community/pyprland/releases/${rel_id}/assets?name=pypr" \
