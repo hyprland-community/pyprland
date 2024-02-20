@@ -199,7 +199,7 @@ class Pyprland:
             await writer.wait_closed()
             self.server.close()
             return
-        args = data.split(None, 1)
+        args = data.strip().split(None, 1)
         if len(args) == 1:
             cmd = args[0]
             args = []
