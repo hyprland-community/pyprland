@@ -841,7 +841,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if (
             animation_type and uid in self.focused_window_tracking
         ):  # focus got lost when animating
-            if not autohide:
+            if not autohide and scratch.conf.get("restore_focus", True):
                 await self.hyprctl(
                     f"focuswindow address:{self.focused_window_tracking[uid]}"
                 )
