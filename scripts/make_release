@@ -11,7 +11,7 @@ echo -n "Release name: "
 read title
 
 if [ -z "$title" ]; then
-    title=$version
+    title="Version $version"
 fi
 
 TOKEN=$(gopass show -o websites/api.github.com/fdev31)
@@ -20,29 +20,29 @@ URL=https://api.github.com/repos/hyprland-community/pyprland
 tox || exit -1
 echo $version | bumpPyProject.sh
 pushd ../aurPkgs/pyprland/
-    echo $version | bumpAurPkg.sh
+echo $version | bumpAurPkg.sh
 popd
 
 # Make the release
 
 rel_id=$(http -b -j POST $URL/releases \
-  "Accept: application/vnd.github+json" \
-  "Authorization: Bearer ${TOKEN}" \
-  "X-GitHub-Api-Version: 2022-11-28" \
-  tag_name=${version} \
-  target_commitish=main \
-  "name=${title}" \
-  body=@RELEASE_NOTES.md \
-  draft:=false prerelease:=false generate_release_notes:=false | jq .id)
+        "Accept: application/vnd.github+json" \
+        "Authorization: Bearer ${TOKEN}" \
+        "X-GitHub-Api-Version: 2022-11-28" \
+        tag_name=${version} \
+        target_commitish=main \
+        "name=${title}" \
+        body=@RELEASE_NOTES.md \
+    draft:=false prerelease:=false generate_release_notes:=false | jq .id)
 
 pushd scripts
-    ./update_get-pypr.sh
+./update_get-pypr.sh
 popd
 
 # Upload the standalone version
 
 http -j POST "https://uploads.github.com/repos/hyprland-community/pyprland/releases/${rel_id}/assets?name=pypr" \
-  "Accept: application/vnd.github+json" \
-  "Authorization: Bearer ${TOKEN}" \
-  "X-GitHub-Api-Version: 2022-11-28" \
-  "Content-Type: application/octet-stream" < dist/pypr
+    "Accept: application/vnd.github+json" \
+    "Authorization: Bearer ${TOKEN}" \
+    "X-GitHub-Api-Version: 2022-11-28" \
+    "Content-Type: application/octet-stream" < dist/pypr
