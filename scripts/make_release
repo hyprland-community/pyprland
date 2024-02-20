@@ -17,8 +17,10 @@ fi
 TOKEN=$(gopass show -o websites/api.github.com/fdev31)
 URL=https://api.github.com/repos/hyprland-community/pyprland
 
-tox || exit -1
 echo $version | bumpPyProject.sh
+
+tox || exit -1
+
 pushd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh
 popd
@@ -35,9 +37,15 @@ rel_id=$(http -b -j POST $URL/releases \
         body=@RELEASE_NOTES.md \
     draft:=false prerelease:=false generate_release_notes:=false | jq .id)
 
+# echo "Waiting 10s for pypi to update..."
+# for n in $(seq 10); do ; echo $n; sleep 1; done
+
 pushd scripts
 ./update_get-pypr.sh
+git commit get-pypr.py -m "Update get-pypr script"
+git push
 popd
+
 
 exit 0
 # Upload the standalone version
