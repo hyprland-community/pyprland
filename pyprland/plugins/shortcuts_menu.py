@@ -1,5 +1,4 @@
 " Shortcuts menu "
-import re
 import asyncio
 
 from .interface import Plugin
