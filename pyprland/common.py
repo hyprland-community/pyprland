@@ -109,3 +109,14 @@ def apply_variables(template: str, variables: dict[str, str]):
         return variables.get(var_name, match.group(0))
 
     return re.sub(pattern, replace, template)
+
+
+def apply_filter(text, filt_cmd: str):
+    """Apply filters to text
+    Currently supports only "s" command fom vim/ed"""
+    if not filt_cmd:
+        return text
+    if filt_cmd[0] == "s":  # vi-like substitute
+        (_, base, replacement, opts) = filt_cmd.split(filt_cmd[1])
+        return re.sub(base, replacement, text, count=0 if "g" in opts else 1)
+    return text
