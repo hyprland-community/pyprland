@@ -37,6 +37,8 @@ rel_id=$(http -b -j POST $URL/releases \
         body=@RELEASE_NOTES.md \
     draft:=false prerelease:=false generate_release_notes:=false | jq .id)
 
+echo "RELEASE ID: $rel_id"
+
 # echo "Waiting 10s for pypi to update..."
 # for n in $(seq 10); do ; echo $n; sleep 1; done
 
