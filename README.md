@@ -17,7 +17,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 Share your thoughts and setup bits on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)
 
-## People promoting Pyprland
+## About Pyprland
 
 🎉 ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
 
