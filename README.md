@@ -15,6 +15,8 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Contact (Community discord)](https://discord.com/invite/zzWqvcKRMy) (nick: *fab31*)
 
+Share your thoughts and setup bits on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)
+
 ## People promoting Pyprland
 
 🎉 ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
@@ -31,6 +33,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
+
 ### 2.0
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
@@ -39,7 +42,6 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
   If it feels too slow for you, set a lower value or `hysteresis=0` to completely disable it.
 
-  Share the value which is optimal for you on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)! The current value can be refined later.
 
 ### 1.10
 
