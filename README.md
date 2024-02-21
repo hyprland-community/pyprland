@@ -19,9 +19,9 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Dependencies
 
-- Hyprland >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
-- Python >= 3.11
-- aiofiles (python package) (Only in Git / Pyprland >= 2.0)
+- *Hyprland* >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
+- *Python* >= 3.11
+- *aiofiles* python package (since Pyprland >= 2.0)
 
 ## Latest major changes
 
