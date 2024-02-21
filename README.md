@@ -11,8 +11,6 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Documentation](https://github.com/hyprland-community/pyprland/wiki)
 
-→ [Changes log](https://github.com/hyprland-community/pyprland/releases)
-
 → [Discussions](https://github.com/hyprland-community/pyprland/discussions)
 
 → [Contact (Community discord)](https://discord.com/invite/zzWqvcKRMy) (nick: *fab31*)
@@ -26,6 +24,8 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 - aiofiles (python package) (Only in Git / Pyprland >= 2.0)
 
 ## Latest major changes
+
+Check the [changes log](https://github.com/hyprland-community/pyprland/releases) for more information
 
 ### 2.0
 
