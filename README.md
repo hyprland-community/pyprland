@@ -17,6 +17,8 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Contact / Community discord](https://discord.com/invite/zzWqvcKRMy) (*fab31*)
 
+["It just works very very well" - The Linux Cast (YouTube link)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131)
+
 ## Dependencies
 
 - Hyprland >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
