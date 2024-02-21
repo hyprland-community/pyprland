@@ -29,7 +29,7 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 ## Latest major changes
 
-Check the [changes log](https://github.com/hyprland-community/pyprland/releases) for more information
+Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
 ### 2.0
 
