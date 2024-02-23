@@ -1,13 +1,19 @@
 " Shortcuts menu "
 import asyncio
+import typing
 
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
-from ..common import apply_variables, apply_filter
+from ..common import apply_variables, apply_filter, get_boolean_function
 
 
 class Extension(MenuRequiredMixin, Plugin):
     "Shows a menu with shortcuts"
+
+    cast_bool: typing.Callable
+
+    async def init(self):
+        self.cast_bool = get_boolean_function(self.log)
 
     # Commands
 
@@ -41,7 +47,10 @@ class Extension(MenuRequiredMixin, Plugin):
                 break
             try:
                 formatted_options = {_format_title(k, v): v for k, v in options.items()}
-                if self.config.get("skip_single", True) and len(formatted_options) == 1:
+                if (
+                    self.cast_bool(self.config.get("skip_single"), True)
+                    and len(formatted_options) == 1
+                ):
                     selection = list(formatted_options.keys())[0]
                 else:
                     selection = await self.menu.run(formatted_options, selection)
@@ -55,7 +64,7 @@ class Extension(MenuRequiredMixin, Plugin):
     async def _handle_chain(self, options):
         "Handles a chain of special objects + final command string"
         variables: dict[str, str] = {}
-        autovalidate = self.config.get("skip_single", True)
+        autovalidate = self.cast_bool(self.config.get("skip_single"), True)
         for option in options:
             if isinstance(option, str):
                 await self._run_command(option, variables)

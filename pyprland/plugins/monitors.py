@@ -2,9 +2,10 @@
 import asyncio
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, cast
+from typing import Any, cast, Callable
 
 from .interface import Plugin
+from ..common import get_boolean_function
 
 
 def trim_offset(monitors):
@@ -107,8 +108,13 @@ def build_graph(config):
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     _mon_by_pat_cache: dict[str, dict] = {}
 
+    cast_bool: Callable
+
+    async def init(self):
+        self.cast_bool = get_boolean_function(self.log)
+
     async def on_reload(self):
-        if self.config.get("startup_relayout", True):
+        if self.cast_bool(self.config.get("startup_relayout"), True):
             await self.run_relayout()
 
     # Command
@@ -156,7 +162,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "Triggers when a monitor is plugged"
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
 
-        if self.config.get("full_relayout", True):
+        if self.cast_bool(self.config.get("full_relayout"), True):
             await self.run_relayout()
         else:
             monitors = cast(list, await self.hyprctlJSON("monitors"))

@@ -1,17 +1,24 @@
 """ expose Brings every client window to screen for selection
 """
 
+import typing
+
 from .interface import Plugin
-from ..common import state
+from ..common import state, get_boolean_function
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     exposed: list[dict] = []
 
+    cast_bool: typing.Callable
+
+    async def init(self):
+        self.cast_bool = get_boolean_function(self.log)
+
     @property
     def exposed_clients(self):
         "Returns the list of clients currently using exposed mode"
-        if self.config.get("include_special", False):
+        if self.cast_bool(self.config.get("include_special"), False):
             return self.exposed
         return [c for c in self.exposed if c["workspace"]["id"] > 0]
 

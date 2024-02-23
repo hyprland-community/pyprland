@@ -6,11 +6,11 @@ Implements a "Centered" layout:
 - layout can be toggled any time
 """
 
-from typing import Any, cast
+from typing import Any, cast, Callable
 from collections import defaultdict
 
 from .interface import Plugin
-from ..common import state
+from ..common import state, get_boolean_function
 
 
 class Extension(Plugin):
@@ -20,6 +20,11 @@ class Extension(Plugin):
         lambda: {"enabled": False, "addr": ""}
     )
     last_index = 0
+
+    cast_bool: Callable
+
+    async def init(self):
+        self.cast_bool = get_boolean_function(self.log)
 
     # Events
 
@@ -37,7 +42,7 @@ class Extension(Plugin):
     async def event_activewindowv2(self, _):
         "keep track of focused client"
         if (
-            self.config.get("captive_focus")
+            self.cast_bool(self.config.get("captive_focus"))
             and self.enabled
             and state.active_window != self.main_window_addr
             and len(

@@ -12,7 +12,7 @@ from aiofiles import open as aiopen
 
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
-from ..common import state
+from ..common import state, get_boolean_function
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
@@ -132,6 +132,7 @@ class Animations:  # {{{
 class Scratch:  # {{{
     "A scratchpad state including configuration & client state"
     log = logging.getLogger("scratch")
+    cast_bool: Callable
     get_client_props: Callable
 
     def __init__(self, uid, opts):
@@ -161,7 +162,7 @@ class Scratch:  # {{{
 
     async def isAlive(self) -> bool:
         "is the process running ?"
-        if self.conf.get("process_tracking", True):
+        if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
             if await aios.path.exists(path):
                 async with aiopen(
@@ -333,6 +334,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
 
+    cast_bool: Callable
+
     def __init__(self, name):
         super().__init__(name)
         self._hysteresis_tasks = {}
@@ -341,6 +344,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.get_focused_monitor_props = partial(
             get_focused_monitor_props, logger=self.log
         )
+
+    async def init(self):
+        self.cast_bool = get_boolean_function(self.log)
+        Scratch.cast_bool = self.cast_bool
 
     async def exit(self) -> None:
         "exit hook"
@@ -374,7 +381,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 scratch.conf = scratches[name].conf
             else:
                 self.scratches.register(scratches[name], name)
-                is_lazy = scratches[name].conf.get("lazy", False)
+                is_lazy = self.cast_bool(scratches[name].conf.get("lazy"), False)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
@@ -439,7 +446,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
-                if item.conf.get("class_match"):
+                if self.cast_bool(item.conf.get("class_match")):
                     info = await self.get_client_props(cls=item.conf.get("class"))
                 else:
                     info = await self.get_client_props(pid=item.pid)
@@ -507,7 +514,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         await self._configure_windowrules(item)
         assert item
 
-        if item.conf.get("process_tracking", True):
+        if self.cast_bool(item.conf.get("process_tracking"), True):
             if not await item.isAlive():
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):
@@ -627,7 +634,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         class_lookup_hack = [
             s
             for s in self.scratches.getByState("respawned")
-            if s.conf.get("class_match")
+            if self.cast_bool(s.conf.get("class_match"))
         ]
         if not class_lookup_hack:
             return False
@@ -839,13 +846,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             )
 
         if (
-            animation_type and uid in self.focused_window_tracking
+            not autohide
+            and animation_type
+            and uid in self.focused_window_tracking
+            and self.cast_bool(scratch.conf.get("restore_focus"), True)
         ):  # focus got lost when animating
-            if not autohide and scratch.conf.get("restore_focus", True):
-                await self.hyprctl(
-                    f"focuswindow address:{self.focused_window_tracking[uid]}"
-                )
-                del self.focused_window_tracking[uid]
+            await self.hyprctl(
+                f"focuswindow address:{self.focused_window_tracking[uid]}"
+            )
+            del self.focused_window_tracking[uid]
 
     # }}}
 

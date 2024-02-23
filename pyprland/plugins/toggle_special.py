@@ -13,7 +13,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         aw = cast(dict, await self.hyprctlJSON("activewindow"))
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)
-        if wid < 1:  # special workspace: unminimize
+        if wid < 1:  # special workspace
             await self.hyprctl(
                 [
                     f"togglespecialworkspace {special_workspace}",

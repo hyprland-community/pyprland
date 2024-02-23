@@ -120,3 +120,18 @@ def apply_filter(text, filt_cmd: str):
         (_, base, replacement, opts) = filt_cmd.split(filt_cmd[1])
         return re.sub(base, replacement, text, count=0 if "g" in opts else 1)
     return text
+
+
+def get_boolean_function(logger: logging.Logger):
+    "Returns a function allowing relaxed cast to boolean, will use `logger`"
+
+    def get_boolean(value, default_value=False):
+        if isinstance(value, str):
+            lv = value.lower().strip()
+            r = lv not in ("false", "no", "off")
+            logger.warning(
+                "Invalid value for boolean option: %s, considering it %s", value, r
+            )
+        return default_value if value is None else value
+
+    return staticmethod(get_boolean)
