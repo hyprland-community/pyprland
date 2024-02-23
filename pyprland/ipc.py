@@ -16,7 +16,7 @@ import json
 import os
 from typing import Any
 from logging import Logger
-from functools import partial
+from functools import partial, wraps
 
 from .common import PyprError, get_logger
 
@@ -48,6 +48,25 @@ async def get_event_stream():
     return await asyncio.open_unix_connection(EVENTS)
 
 
+def retry_on_reset(func):
+    "wrapper to retry on reset"
+
+    async def wrapper(*args, logger, **kwargs):
+        exc = None
+        for count in range(3):
+            try:
+                return await func(*args, **kwargs)
+            except ConnectionResetError as e:
+                exc = e
+                logger.warning("ipc connection problem, retrying...")
+                await asyncio.sleep(0.5 * count)
+        logger.error("ipc connection failed.")
+        raise ConnectionResetError() from exc
+
+    return wrapper
+
+
+@retry_on_reset
 async def hyprctlJSON(
     command: str, logger=None
 ) -> list[dict[str, Any]] | dict[str, Any]:
@@ -78,6 +97,7 @@ def _format_command(command_list, default_base_command):
             yield f"{command[1]} {command[0]}"
 
 
+@retry_on_reset
 async def hyprctl(
     command: str | list[str], base_command: str = "dispatch", logger=None
 ) -> bool:
