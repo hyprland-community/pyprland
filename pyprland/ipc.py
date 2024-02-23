@@ -16,7 +16,7 @@ import json
 import os
 from typing import Any
 from logging import Logger
-from functools import partial, wraps
+from functools import partial
 
 from .common import PyprError, get_logger
 
