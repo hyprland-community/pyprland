@@ -44,7 +44,7 @@ echo "RELEASE ID: $rel_id"
 
 pushd scripts
 ./update_get-pypr.sh
-git commit get-pypr.py -m "Update get-pypr script"
+git commit get-pypr -m "Update get-pypr script"
 git push
 popd
 
