@@ -2,10 +2,10 @@
 import asyncio
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, cast, Callable
+from typing import Any, cast
 
 from .interface import Plugin
-from ..common import get_boolean_function
+from ..common import CastBoolMixin
 
 
 def trim_offset(monitors):
@@ -105,13 +105,8 @@ def build_graph(config):
     return graph
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring
+class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring
     _mon_by_pat_cache: dict[str, dict] = {}
-
-    cast_bool: Callable
-
-    async def init(self):
-        self.cast_bool = get_boolean_function(self.log)
 
     async def on_reload(self):
         if self.cast_bool(self.config.get("startup_relayout"), True):

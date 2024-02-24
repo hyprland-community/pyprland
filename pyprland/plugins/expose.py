@@ -1,19 +1,12 @@
 """ expose Brings every client window to screen for selection
 """
 
-import typing
-
 from .interface import Plugin
-from ..common import state, get_boolean_function
+from ..common import state, CastBoolMixin
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring
+class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring
     exposed: list[dict] = []
-
-    cast_bool: typing.Callable
-
-    async def init(self):
-        self.cast_bool = get_boolean_function(self.log)
 
     @property
     def exposed_clients(self):

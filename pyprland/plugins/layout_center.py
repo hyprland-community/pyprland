@@ -6,25 +6,20 @@ Implements a "Centered" layout:
 - layout can be toggled any time
 """
 
-from typing import Any, cast, Callable
+from typing import Any, cast
 from collections import defaultdict
 
 from .interface import Plugin
-from ..common import state, get_boolean_function
+from ..common import state, CastBoolMixin
 
 
-class Extension(Plugin):
+class Extension(CastBoolMixin, Plugin):
     "Manages a layout with one centered window on top of others"
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"enabled": False, "addr": ""}
     )
     last_index = 0
-
-    cast_bool: Callable
-
-    async def init(self):
-        self.cast_bool = get_boolean_function(self.log)
 
     # Events
 

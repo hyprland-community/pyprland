@@ -1,19 +1,13 @@
 " Shortcuts menu "
 import asyncio
-import typing
 
 from .interface import Plugin
 from ..adapters.menus import MenuRequiredMixin
-from ..common import apply_variables, apply_filter, get_boolean_function
+from ..common import apply_variables, apply_filter, CastBoolMixin
 
 
-class Extension(MenuRequiredMixin, Plugin):
+class Extension(CastBoolMixin, MenuRequiredMixin, Plugin):
     "Shows a menu with shortcuts"
-
-    cast_bool: typing.Callable
-
-    async def init(self):
-        self.cast_bool = get_boolean_function(self.log)
 
     # Commands
 

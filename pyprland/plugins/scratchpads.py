@@ -12,7 +12,7 @@ from aiofiles import open as aiopen
 
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
-from ..common import state, get_boolean_function
+from ..common import state, CastBoolMixin
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
@@ -129,10 +129,9 @@ class Animations:  # {{{
 # }}}
 
 
-class Scratch:  # {{{
+class Scratch(CastBoolMixin):  # {{{
     "A scratchpad state including configuration & client state"
     log = logging.getLogger("scratch")
-    cast_bool: Callable
     get_client_props: Callable
 
     def __init__(self, uid, opts):
@@ -323,7 +322,7 @@ class ScratchDB:  # {{{
 # }}}
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
+class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
     procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
     scratches = ScratchDB()
 
@@ -334,8 +333,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
 
     _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
 
-    cast_bool: Callable
-
     def __init__(self, name):
         super().__init__(name)
         self._hysteresis_tasks = {}
@@ -344,10 +341,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.get_focused_monitor_props = partial(
             get_focused_monitor_props, logger=self.log
         )
-
-    async def init(self):
-        self.cast_bool = get_boolean_function(self.log)
-        Scratch.cast_bool = self.cast_bool
 
     async def exit(self) -> None:
         "exit hook"

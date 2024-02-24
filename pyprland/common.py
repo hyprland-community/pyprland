@@ -122,16 +122,17 @@ def apply_filter(text, filt_cmd: str):
     return text
 
 
-def get_boolean_function(logger: logging.Logger):
-    "Returns a function allowing relaxed cast to boolean, will use `logger`"
+class CastBoolMixin:
+    "Adds `cast_bool` method"
 
-    def get_boolean(value, default_value=False):
+    log: logging.Logger
+
+    def cast_bool(self, value, default_value=False):
+        "recovers wrong typing on boolean values"
         if isinstance(value, str):
             lv = value.lower().strip()
             r = lv not in ("false", "no", "off")
-            logger.warning(
+            self.log.warning(
                 "Invalid value for boolean option: %s, considering it %s", value, r
             )
         return default_value if value is None else value
-
-    return staticmethod(get_boolean)
