@@ -76,6 +76,7 @@ class Extension(CastBoolMixin, MenuRequiredMixin, Plugin):
                         [
                             apply_variables(line, variables).strip()
                             for line in option_array
+                            if line.strip()
                         ]
                     )
                 elif option.get("options"):
