@@ -1,5 +1,8 @@
 ![rect](https://github.com/hyprland-community/pyprland/assets/238622/3fab93b6-6445-4e7b-b757-035095b5c8e8)
 
+[![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
+[![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.gg/zzWqvcKRMy)
+
 ## Extending Hyprland's features
 
 Pyprland is a host process for multiple [Hyprland](https://hyprland.org/) extensions,
@@ -13,8 +16,6 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Discussions](https://github.com/hyprland-community/pyprland/discussions)
 
-→ [Contact (Community discord)](https://discord.com/invite/zzWqvcKRMy) (nick: *fab31*)
-
 Share your thoughts and setup bits on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## About Pyprland
@@ -22,6 +23,8 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 🎉 ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
 
 🎉 [You NEED This in your Hyprland Config - LibrePhoenix](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*warning:* now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
 ## Dependencies
 
