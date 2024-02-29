@@ -193,7 +193,7 @@ class Pyprland:
         if not data:
             self.log.critical("Server starved")
             return
-        if data == "exit\n":
+        if data == "exit":
             self.stopped = True
             writer.close()
             await writer.wait_closed()
