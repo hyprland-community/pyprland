@@ -175,6 +175,9 @@ class Pyprland:
         while not self.stopped:
             try:
                 data = (await self.event_reader.readline()).decode()
+            except RuntimeError as e:
+                self.log.error("Aborting event loop: %s", e)
+                return
             except UnicodeDecodeError:
                 self.log.error("Invalid unicode while reading events")
                 continue
@@ -192,14 +195,15 @@ class Pyprland:
         data = (await reader.readline()).decode()
         if not data:
             self.log.critical("Server starved")
-            return
+            data = "exit"
+        data = data.strip()
         if data == "exit":
             self.stopped = True
             writer.close()
             await writer.wait_closed()
             self.server.close()
             return
-        args = data.strip().split(None, 1)
+        args = data.split(None, 1)
         if len(args) == 1:
             cmd = args[0]
             args = []
@@ -228,7 +232,11 @@ class Pyprland:
         q = self.queues[name]
 
         while not self.stopped:
-            task = await q.get()
+            try:
+                task = await q.get()
+            except RuntimeError as e:
+                self.log.error("Aborting [%s] loop: %s", name, e)
+                return
             try:
                 await task()
             except Exception as e:  # pylint: disable=W0718
