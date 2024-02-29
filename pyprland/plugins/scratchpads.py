@@ -659,7 +659,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name" """
         if " " in uid_or_uids:
-            uids = [x.strip() for x in uid_or_uids.split() if x.strip()]
+            uids = list(filter(bool, map(str.strip, uid_or_uids.split())))
         else:
             uids = [uid_or_uids.strip()]
 
