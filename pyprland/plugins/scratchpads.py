@@ -404,12 +404,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
 
-            position = scratch.conf.get("position")
-            if position:
-                margin_x, margin_y = convert_coords(self.log, position, monitor)
-            else:
-                margin_x = (monitor["width"] - width) // 2
-                margin_y = (monitor["height"] - height) // 2
+            margin_x = (monitor["width"] - width) // 2
+            margin_y = (monitor["height"] - height) // 2
 
             t_pos = {
                 "fromtop": f"{margin_x} -200%",
@@ -772,14 +768,21 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 f"alterzorder top,address:{item.full_address}",
             ]
         )
-        await self._fix_size_and_position(item, monitor)
-        if animation_type:
-            margin = item.conf.get("margin", DEFAULT_MARGIN)
-            fn = getattr(Animations, animation_type)
-            command = fn(
-                monitor, item.client_info, "address:" + item.full_address, margin
-            )
-            await self.hyprctl(command)
+        await self._fix_size(item, monitor)
+        await item.updateClientInfo()
+        if not await self._fix_position(item, monitor):
+            # position wasn't provided, use animation + margin
+            if animation_type:
+                margin = item.conf.get("margin", DEFAULT_MARGIN)
+                fn = getattr(Animations, animation_type)
+                command = fn(
+                    monitor, item.client_info, "address:" + item.full_address, margin
+                )
+                await self.hyprctl(command)
+            else:
+                await self.notify_error(
+                    f"No position and no animation provided for {item.uid}, don't know where to place it."
+                )
 
         await self.hyprctl(f"focuswindow address:{item.full_address}")
         await asyncio.sleep(0.2)  # ensure some time for events to propagate
@@ -787,17 +790,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.scratches.clearState(item, "transition")
         item.meta["last_shown"] = time.time()
 
-    async def _fix_size_and_position(self, item, monitor):
-        "fixes the size and position of the scratchpad"
-
+    async def _fix_size(self, item, monitor):
+        "apply the `size` config parameter"
         size = item.conf.get("size")
-        position = item.conf.get("position")
-        if position:
-            x_pos, y_pos = convert_coords(self.log, position, monitor)
-            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await self.hyprctl(
-                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
-            )
         if size:
             width, height = convert_coords(self.log, size, monitor)
             max_size = item.conf.get("max_size")
@@ -808,8 +803,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await self.hyprctl(
                 f"resizewindowpixel exact {width} {height},address:{item.full_address}"
             )
-        if size or position:
-            await item.updateClientInfo()
+
+    async def _fix_position(self, item, monitor):
+        "apply the `position` config parameter"
+
+        position = item.conf.get("position")
+        if position:
+            x_pos, y_pos = convert_coords(self.log, position, monitor)
+            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
+            await self.hyprctl(
+                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
+            )
+            return True
+        return False
 
     async def run_hide(self, uid: str, force=False, autohide=False) -> None:
         """<name> hides scratchpad "name"

@@ -110,6 +110,7 @@ def subprocess_shell_mock(mocker):
     mocked_process.stdout = AsyncMock(return_code="")
     mocked_process.terminate = Mock()
     mocked_process.wait = AsyncMock()
+    mocked_process.kill = Mock()
     mocked_process.return_code = 0
     return mocked_subprocess_shell, mocked_process
 

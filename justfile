@@ -1,5 +1,5 @@
 test_quick:
-    .tox/py311/bin/coverage run -m pytest
+    .tox/py311/bin/coverage run -m pytest --pdb -s
     .tox/py311/bin/coverage report
 
 doc:

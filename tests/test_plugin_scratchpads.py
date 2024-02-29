@@ -73,11 +73,17 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
 @pytest.mark.asyncio
 async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixture):
     mocks.json_commands_result["clients"] = CLIENT_CONFIG
+    mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=4)
-    await asyncio.sleep(0.2)
+    await wait_called(mocks.hyprctl, count=3)
+    assert mocks.hyprctl.call_args_list[-1][0][0].startswith("focuswindow")
+    mocks.hyprctl.reset_mock()
+    await asyncio.sleep(0.3)
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=6)
+    await wait_called(mocks.hyprctl, count=2)
+    assert mocks.hyprctl.call_args[0][0].startswith("focuswindow")
+    await mocks.pypr("reload")
+    await asyncio.sleep(0.3)
 
 
 @pytest.mark.asyncio
