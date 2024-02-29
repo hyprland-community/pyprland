@@ -1,8 +1,9 @@
-default: (test_quick "")
+pyenv := ".tox/py311"
 
-test_quick *params:
-    .tox/py311/bin/coverage run -m pytest --pdb -s {{params}}
-    .tox/py311/bin/coverage report
+test *params='':
+    {{pyenv}}/bin/coverage erase
+    {{pyenv}}/bin/coverage run -m pytest --pdb -s {{params}}
+    {{pyenv}}/bin/coverage report
 
 doc:
     tox run -e doc
@@ -10,7 +11,7 @@ doc:
 wiki:
     tox run -e wiki
 
-test:
+tox:
     tox run
 
 release:
