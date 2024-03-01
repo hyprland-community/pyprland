@@ -138,6 +138,8 @@ class Scratch(CastBoolMixin):  # {{{
         self.uid = uid
         self.pid = 0
         self.conf = opts
+        if self.cast_bool(opts.get("preserve_aspect")):
+            self.conf["lazy"] = True
         if not opts.get("process_tracking", True):
             self.conf["lazy"] = True
             self.conf["class_match"] = True
@@ -414,15 +416,24 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 "fromleft": f"-200% {margin_y}",
             }[animation_type]
 
-            await self.hyprctl(
-                [
-                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
-                    f"windowrule float,^({defined_class})$",
-                    f"windowrule move {t_pos},^({defined_class})$",
-                    f"windowrule size {width} {height},^({defined_class})$",
-                ],
-                "keyword",
-            )
+            ipc_commands = [
+                f"windowrule float,^({defined_class})$",
+            ]
+
+            if not self.cast_bool(scratch.conf.get("lazy")):
+                ipc_commands.append(
+                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$"
+                )
+
+            if not self.cast_bool(scratch.conf.get("preserve_aspect")):
+                ipc_commands.extend(
+                    [
+                        f"windowrule move {t_pos},^({defined_class})$",
+                        f"windowrule size {width} {height},^({defined_class})$",
+                    ]
+                )
+
+            await self.hyprctl(ipc_commands, "keyword")
 
     async def __wait_for_client(self, item, use_proc=True) -> bool:
         """Waits for a client to be up and running
@@ -699,7 +710,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 await self.updateScratchInfo(scratch)
 
             offset = int(1.3 * scratch.client_info["size"][1])
+        await self._slide_animation(animation_type, scratch, offset)
 
+    async def _slide_animation(self, animation_type, scratch, offset):
+        "Slides the window `offset` pixels respecting `animation_type`"
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
             await self.hyprctl(f"movewindowpixel 0 -{offset},{addr}")
@@ -732,6 +746,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
 
         self.log.info("Showing %s", uid)
+        was_alive = await item.isAlive()
         if not await self.ensure_alive(uid):
             self.log.error("Failed to show %s, aborting.", uid)
             return
@@ -755,15 +770,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         assert monitor
         assert item.full_address, "No address !"
 
-        animation_type = item.conf.get("animation", "").lower()
-        wrkspc = monitor["activeWorkspace"]["id"]
-
         self.scratches.setState(item, "transition")
         item.monitor = monitor["name"]
+        await self._show_transition(item, monitor, was_alive)
+
+    async def _show_transition(self, item, monitor, was_alive):
+        "perfoms the transition to visible state"
+        animation_type = item.conf.get("animation", "").lower()
+        wrkspc = monitor["activeWorkspace"]["id"]
         # Start the transition
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor special:scratch_{uid} {item.monitor}",
+                f"moveworkspacetomonitor special:scratch_{item.uid} {item.monitor}",
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
                 f"alterzorder top,address:{item.full_address}",
             ]
@@ -773,12 +791,22 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not await self._fix_position(item, monitor):
             # position wasn't provided, use animation + margin
             if animation_type:
-                margin = item.conf.get("margin", DEFAULT_MARGIN)
-                fn = getattr(Animations, animation_type)
-                command = fn(
-                    monitor, item.client_info, "address:" + item.full_address, margin
-                )
-                await self.hyprctl(command)
+                if self.cast_bool(item.conf.get("preserve_aspect")) and was_alive:
+                    if "size" not in item.client_info:
+                        await self.updateScratchInfo(item)
+
+                    offset = int(1.3 * item.client_info["size"][1])
+                    await self._slide_animation(animation_type, item, -offset)
+                else:
+                    margin = item.conf.get("margin", DEFAULT_MARGIN)
+                    fn = getattr(Animations, animation_type)
+                    command = fn(
+                        monitor,
+                        item.client_info,
+                        "address:" + item.full_address,
+                        margin,
+                    )
+                    await self.hyprctl(command)
             else:
                 await self.notify_error(
                     f"No position and no animation provided for {item.uid}, don't know where to place it."
@@ -792,6 +820,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _fix_size(self, item, monitor):
         "apply the `size` config parameter"
+
+        if self.cast_bool(item.conf.get("preserve_aspect")):
+            return
         size = item.conf.get("size")
         if size:
             width, height = convert_coords(self.log, size, monitor)
@@ -806,6 +837,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _fix_position(self, item, monitor):
         "apply the `position` config parameter"
+
+        if self.cast_bool(item.conf.get("preserve_aspect")):
+            return
 
         position = item.conf.get("position")
         if position:
