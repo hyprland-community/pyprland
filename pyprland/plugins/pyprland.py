@@ -11,7 +11,9 @@ class Extension(Plugin):
         state.active_window = ""
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         state.active_monitor = next(
-            mon for mon in (await self.hyprctlJSON("monitors")) if mon["focused"]
+            mon["name"]
+            for mon in (await self.hyprctlJSON("monitors"))
+            if mon["focused"]
         )
 
     async def event_activewindowv2(self, addr):
