@@ -178,6 +178,15 @@ class Scratch(CastBoolMixin):  # {{{
         self.space_identifier = None
         self.monitor = ""
 
+    async def get_auto_offset(self, monitor=None):
+        "Get au automatic offset value computed from client size"
+        if monitor is None:
+            monitor = await get_focused_monitor_props(self.log)
+        return map(
+            int,
+            [monitor["width"] / monitor["scale"], monitor["height"] / monitor["scale"]],
+        )
+
     async def initialize(self, ex):
         "Initialize the scratchpad"
         if self.initialized:
@@ -739,20 +748,20 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if "size" not in scratch.client_info:
                 await self.updateScratchInfo(scratch)
 
-            offset = int(1.3 * scratch.client_info["size"][1])
-        await self._slide_animation(animation_type, scratch, offset)
+            ox, oy = await scratch.get_auto_offset()
+        await self._slide_animation(animation_type, scratch, ox, oy)
 
-    async def _slide_animation(self, animation_type, scratch, offset):
+    async def _slide_animation(self, animation_type, scratch, ox, oy):
         "Slides the window `offset` pixels respecting `animation_type`"
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
-            await self.hyprctl(f"movewindowpixel 0 -{offset},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 -{oy},{addr}")
         elif animation_type == "frombottom":
-            await self.hyprctl(f"movewindowpixel 0 {offset},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 {oy},{addr}")
         elif animation_type == "fromleft":
-            await self.hyprctl(f"movewindowpixel -{offset} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel -{ox} 0,{addr}")
         elif animation_type == "fromright":
-            await self.hyprctl(f"movewindowpixel {offset} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel {ox} 0,{addr}")
 
         if self.scratches.hasState(scratch, "transition"):
             return  # abort sequence
@@ -825,8 +834,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
 
-                    offset = int(1.3 * item.client_info["size"][1])
-                    await self._slide_animation(animation_type, item, -offset)
+                    ox, oy = await item.get_auto_offset(monitor)
+                    await self._slide_animation(animation_type, item, -ox, -oy)
                 else:
                     margin = item.conf.get("margin", DEFAULT_MARGIN)
                     fn = getattr(Animations, animation_type)
