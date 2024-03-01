@@ -129,6 +129,32 @@ class Animations:  # {{{
 # }}}
 
 
+class OverridableConfig(dict):
+    "A `dict` allowing per-monitor overrides"
+
+    def __init__(self, ref, monitor_override):
+        self.ref = ref
+        self.mon_override = monitor_override
+
+    def __setitem__(self, name, value):
+        self.ref[name] = value
+
+    def __getitem__(self, name):
+        override = self.mon_override.get(state.active_monitor, {})
+        if name in override:
+            return override[name]
+        return self.ref[name]
+
+    def get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
+
+    def __str__(self):
+        return f"{self.ref} {self.mon_override}"
+
+
 class Scratch(CastBoolMixin):  # {{{
     "A scratchpad state including configuration & client state"
     log = logging.getLogger("scratch")
@@ -137,12 +163,12 @@ class Scratch(CastBoolMixin):  # {{{
     def __init__(self, uid, opts):
         self.uid = uid
         self.pid = 0
-        self.conf = opts
         if self.cast_bool(opts.get("preserve_aspect")):
-            self.conf["lazy"] = True
+            opts["lazy"] = True
         if not opts.get("process_tracking", True):
-            self.conf["lazy"] = True
-            self.conf["class_match"] = True
+            opts["lazy"] = True
+            opts["class_match"] = True
+        self.conf = OverridableConfig(opts, opts.get("monitor", {}))
         self.visible = False
         self.client_info = {}
         self.should_hide = False
