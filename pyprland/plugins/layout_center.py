@@ -109,15 +109,21 @@ class Extension(CastBoolMixin, Plugin):
         height = 100
         x, y = self.offset
         margin = self.margin
+        scale = 1
         for monitor in cast(list[dict[str, Any]], await self.hyprctlJSON("monitors")):
+            scale = monitor["scale"]
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin)
                 height = monitor["height"] - (2 * margin)
                 x += monitor["x"] + margin
                 y += monitor["y"] + margin
                 break
-        await self.hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
-        await self.hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
+        await self.hyprctl(
+            f"resizewindowpixel exact {int(width/scale)} {int(height/scale)},address:{addr}"
+        )
+        await self.hyprctl(
+            f"movewindowpixel exact {int(x/scale)} {int(y/scale)},address:{addr}"
+        )
 
     # Subcommands
 
