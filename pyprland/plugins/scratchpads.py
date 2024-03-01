@@ -129,8 +129,8 @@ class Animations:  # {{{
 # }}}
 
 
-class OverridableConfig(dict):
-    "A `dict` allowing per-monitor overrides"
+class OverridableConfig:
+    "A `dict`-like object allowing per-monitor overrides"
 
     def __init__(self, ref, monitor_override):
         self.ref = ref
@@ -146,6 +146,7 @@ class OverridableConfig(dict):
         return self.ref[name]
 
     def get(self, name, default=None):
+        "get the attribute `name`"
         try:
             return self[name]
         except KeyError:
