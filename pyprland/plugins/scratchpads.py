@@ -365,6 +365,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def on_reload(self) -> None:
         "config loader"
+        # Create new scratches with fresh config items
         scratches = {
             name: Scratch(name, options) for name, options in self.config.items()
         }
@@ -373,8 +374,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         for name in scratches:
             scratch = self.scratches.get(name)
             if scratch:
+                # if existing scratch exists, overrides the conf object
                 scratch.conf = scratches[name].conf
             else:
+                # else register it
                 self.scratches.register(scratches[name], name)
                 is_lazy = self.cast_bool(scratches[name].conf.get("lazy"), False)
                 if not is_lazy:
