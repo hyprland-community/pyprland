@@ -663,7 +663,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         else:
             uids = [uid_or_uids.strip()]
 
-        assert len(uids)
+        assert len(uids) > 0
         first_scratch = self.scratches.get(uids[0])
         if not first_scratch:
             self.log.warning("%s doesn't exist, can't toggle.", uids[0])
