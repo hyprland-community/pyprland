@@ -748,20 +748,20 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if "size" not in scratch.client_info:
                 await self.updateScratchInfo(scratch)
 
-            ox, oy = await scratch.get_auto_offset()
-        await self._slide_animation(animation_type, scratch, ox, oy)
+            off_x, off_y = await scratch.get_auto_offset()
+        await self._slide_animation(animation_type, scratch, off_x, off_y)
 
-    async def _slide_animation(self, animation_type, scratch, ox, oy):
+    async def _slide_animation(self, animation_type, scratch, off_x, off_y):
         "Slides the window `offset` pixels respecting `animation_type`"
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
-            await self.hyprctl(f"movewindowpixel 0 -{oy},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 -{off_y},{addr}")
         elif animation_type == "frombottom":
-            await self.hyprctl(f"movewindowpixel 0 {oy},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 {off_y},{addr}")
         elif animation_type == "fromleft":
-            await self.hyprctl(f"movewindowpixel -{ox} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel -{off_x} 0,{addr}")
         elif animation_type == "fromright":
-            await self.hyprctl(f"movewindowpixel {ox} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
 
         if self.scratches.hasState(scratch, "transition"):
             return  # abort sequence
