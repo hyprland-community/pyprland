@@ -83,6 +83,9 @@ class Extension(CastBoolMixin, MenuRequiredMixin, Plugin):
                     choices.extend(
                         apply_variables(txt, variables) for txt in option["options"]
                     )
+                if len(choices) == 0:
+                    await self.notify_info("command didn't return anything")
+                    return
 
                 if autovalidate and len(choices) == 1:
                     variables[var_name] = choices[0]
