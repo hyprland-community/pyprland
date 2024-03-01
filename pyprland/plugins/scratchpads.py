@@ -825,12 +825,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 f"alterzorder top,address:{item.full_address}",
             ]
         )
-        await self._fix_size(item, monitor)
+        preserve_aspect = self.cast_bool(item.conf.get("preserve_aspect"))
+        should_set_aspect = not (
+            preserve_aspect and was_alive
+        )  # not aspect preserving or it's newly spawned
+        if should_set_aspect:
+            await self._fix_size(item, monitor)
         await item.updateClientInfo()
-        if not await self._fix_position(item, monitor):
-            # position wasn't provided, use animation + margin
+        position_fixed = False
+        if should_set_aspect:
+            position_fixed = await self._fix_position(item, monitor)
+        if not position_fixed:
             if animation_type:
-                if self.cast_bool(item.conf.get("preserve_aspect")) and was_alive:
+                if preserve_aspect and was_alive:
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
 
@@ -860,8 +867,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _fix_size(self, item, monitor):
         "apply the `size` config parameter"
 
-        if self.cast_bool(item.conf.get("preserve_aspect")):
-            return
         size = item.conf.get("size")
         if size:
             width, height = convert_coords(self.log, size, monitor)
@@ -876,9 +881,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _fix_position(self, item, monitor):
         "apply the `position` config parameter"
-
-        if self.cast_bool(item.conf.get("preserve_aspect")):
-            return
 
         position = item.conf.get("position")
         if position:
