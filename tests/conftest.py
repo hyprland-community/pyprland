@@ -149,8 +149,8 @@ async def server_fixture(monkeypatch, mocker):
         await asyncio.sleep(0.1)
     yield  # Run the test
     await mocks.hyprctl("exit")
-    print("Closing mock server...")
-    await mocks.pypr("exit")
+    server_task.cancel()
+    await asyncio.sleep(0.01)
     mocks.reset()
 
 
