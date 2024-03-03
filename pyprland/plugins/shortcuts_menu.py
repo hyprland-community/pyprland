@@ -2,11 +2,11 @@
 import asyncio
 
 from .interface import Plugin
-from ..adapters.menus import MenuRequiredMixin
+from ..adapters.menus import MenuMixin
 from ..common import apply_variables, apply_filter, CastBoolMixin
 
 
-class Extension(CastBoolMixin, MenuRequiredMixin, Plugin):
+class Extension(CastBoolMixin, MenuMixin, Plugin):
     "Shows a menu with shortcuts"
 
     # Commands

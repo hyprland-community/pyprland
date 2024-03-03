@@ -1,11 +1,11 @@
 " Select a client window and move it to the active workspace"
 
 from .interface import Plugin
-from ..adapters.menus import MenuRequiredMixin
+from ..adapters.menus import MenuMixin
 from ..common import state
 
 
-class Extension(MenuRequiredMixin, Plugin):
+class Extension(MenuMixin, Plugin):
     "Shows a menu with shortcuts"
 
     # Commands

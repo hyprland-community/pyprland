@@ -7,7 +7,7 @@ from logging import Logger
 from ..common import PyprError, get_logger, apply_variables
 
 
-__all__ = ["MenuRequiredMixin", "MenuEngine"]
+__all__ = ["MenuMixin", "MenuEngine"]
 
 menu_logger = get_logger("menus adapter")
 
@@ -130,7 +130,7 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     raise PyprError("No engine found")
 
 
-class MenuRequiredMixin:
+class MenuMixin:
     """An extension mixin supporting 'engine' and 'parameters' config options to show a menu"""
 
     _menu_configured = False
