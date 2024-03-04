@@ -742,6 +742,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
     async def get_offsets(self, scratch, monitor=None):
+        "Return offset from config or compute one"
         offset = scratch.conf.get("offset")
         if offset:
             return offset, offset
