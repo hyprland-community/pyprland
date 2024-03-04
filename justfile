@@ -16,3 +16,8 @@ tox:
 
 release:
     ./scripts/make_release
+
+htmlcov:
+    {{pyenv}}/bin/coverage html
+    xdg-open ./htmlcov/index.html
+    
