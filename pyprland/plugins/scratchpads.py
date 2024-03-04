@@ -743,10 +743,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _anim_hide(self, animation_type, scratch):
         "animate hiding a scratchpad"
-        if "size" not in scratch.client_info:
-            await self.updateScratchInfo(scratch)
+        offset = scratch.conf.get("offset")
+        if offset is None:
+            if "size" not in scratch.client_info:
+                await self.updateScratchInfo(scratch)
 
-        off_x, off_y = await scratch.get_auto_offset()
+            off_x, off_y = await scratch.get_auto_offset()
+        else:
+            off_y = off_x = offset
         await self._slide_animation(animation_type, scratch, off_x, off_y)
 
     async def _slide_animation(self, animation_type, scratch, off_x, off_y):
