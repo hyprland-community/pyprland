@@ -23,9 +23,9 @@ DEFAULT_HYSTERESIS = 0.4  # In seconds
 invert_dimension = {"width": "height", "height": "width"}
 
 
-def get_space_identifier(obj):
+def get_space_identifier():
     "Returns a unique object for the workspace + monitor combination"
-    return (obj.workspace, obj.monitor)
+    return (state.active_workspace, state.active_monitor)
 
 
 def convert_coords(logger, coords, monitor):
@@ -724,7 +724,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         is_visible = (
             first_scratch.visible
-            and first_scratch.space_identifier == get_space_identifier(self)
+            and first_scratch.space_identifier == get_space_identifier()
         )
 
         tasks = []
@@ -804,14 +804,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await item.initialize(self)
 
         item.visible = True
-        item.space_identifier = get_space_identifier(self)
+        item.space_identifier = get_space_identifier()
         monitor = await get_focused_monitor_props(self.log)
         assert monitor
         assert item.full_address, "No address !"
 
         self.scratches.setState(item, "transition")
-        item.monitor = monitor["name"]
         await self._show_transition(item, monitor, was_alive)
+        item.monitor = monitor["name"]
 
     async def _show_transition(self, item, monitor, was_alive):
         "perfoms the transition to visible state"
