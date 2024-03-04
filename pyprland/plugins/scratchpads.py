@@ -741,16 +741,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     tasks.append(partial(self.run_show, uid))
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
+    async def get_offsets(self, scratch, monitor=None):
+        offset = scratch.conf.get("offset")
+        if offset:
+            return offset, offset
+        return await scratch.get_auto_offset(monitor)
+
     async def _anim_hide(self, animation_type, scratch):
         "animate hiding a scratchpad"
-        offset = scratch.conf.get("offset")
-        if offset is None:
-            if "size" not in scratch.client_info:
-                await self.updateScratchInfo(scratch)
 
-            off_x, off_y = await scratch.get_auto_offset()
-        else:
-            off_y = off_x = offset
+        await self.updateScratchInfo(scratch)
+
+        off_x, off_y = await self.get_offsets(scratch)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
 
     async def _slide_animation(self, animation_type, scratch, off_x, off_y):
@@ -843,7 +845,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
 
-                    ox, oy = await item.get_auto_offset(monitor)
+                    ox, oy = await self.get_offsets(item, monitor)
                     await self._slide_animation(animation_type, item, -ox, -oy)
                 else:
                     margin = item.conf.get("margin", DEFAULT_MARGIN)
