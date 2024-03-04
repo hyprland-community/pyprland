@@ -13,7 +13,7 @@ echo -n "Release name: "
 read title
 
 if [ -z "$title" ]; then
-    title="Version $version"
+    title="$version"
 fi
 
 TOKEN=$(gopass show -o websites/api.github.com/fdev31)
