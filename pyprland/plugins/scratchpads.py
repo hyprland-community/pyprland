@@ -820,14 +820,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         # Start the transition
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor special:scratch_{item.uid} {item.monitor}",
+                f"moveworkspacetomonitor special:scratch_{item.uid} {monitor['name']}",
                 f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
                 f"alterzorder top,address:{item.full_address}",
             ]
         )
         preserve_aspect = self.cast_bool(item.conf.get("preserve_aspect"))
-        should_set_aspect = not (
-            preserve_aspect and was_alive
+        should_set_aspect = (
+            not (preserve_aspect and was_alive) or item.monitor != state.active_monitor
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(item, monitor)
@@ -837,7 +837,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(item, monitor)
         if not position_fixed:
             if animation_type:
-                if preserve_aspect and was_alive:
+                if preserve_aspect and was_alive and not should_set_aspect:
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
 
