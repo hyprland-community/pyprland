@@ -16,6 +16,8 @@ New users need to read the [getting started](https://github.com/hyprland-communi
 
 → [Discussions](https://github.com/hyprland-community/pyprland/discussions)
 
+→ [Changes history](https://github.com/hyprland-community/pyprland/releases)
+
 Share your thoughts and setup bits on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## About Pyprland
