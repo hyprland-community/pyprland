@@ -838,7 +838,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(item, monitor)
         if not position_fixed:
             if animation_type:
-                # TODO: refactor, use single animation method
+                # NOTE: refactor, use single animation method
                 print(preserve_aspect, was_alive, not should_set_aspect)
                 if preserve_aspect and was_alive and not should_set_aspect:
                     if "size" not in item.client_info:
