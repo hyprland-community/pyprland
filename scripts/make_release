@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cd $(git rev-parse --show-toplevel)
 
@@ -42,7 +42,10 @@ rel_id=$(http -b -j POST $URL/releases \
 echo "RELEASE ID: $rel_id"
 
 echo "Waiting 10s for pypi to update..."
-for n in $(seq 10); do ; echo $n; sleep 1; done
+for n in $(seq 10); do
+    echo $n
+    sleep 1
+done
 
 pushd scripts
 ./update_get-pypr.sh
