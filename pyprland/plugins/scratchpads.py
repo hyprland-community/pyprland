@@ -859,8 +859,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     )
                     await self.hyprctl(command)
             else:
-                await self.notify_error(
-                    f"No position and no animation provided for {item.uid}, don't know where to place it."
+                self.log.warning(
+                    f"No position and no animation provided for %s, don't know where to place it.",
+                    item.uid,
                 )
 
         await self.hyprctl(f"focuswindow address:{item.full_address}")
