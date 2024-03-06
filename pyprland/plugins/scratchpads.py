@@ -785,10 +785,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         self.focused_window_tracking[uid] = state.active_window
 
-        if not item:
-            self.log.warning("%s is not configured", uid)
-            return
-
         self.log.info("Showing %s", uid)
         was_alive = await item.isAlive()
         if not await self.ensure_alive(uid):
