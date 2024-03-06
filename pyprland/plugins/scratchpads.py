@@ -760,11 +760,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "Slides the window `offset` pixels respecting `animation_type`"
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
-            await self.hyprctl(f"movewindowpixel 0 -{off_y},{addr}")
+            await self.hyprctl(f"movewindowpixel 0 {-off_y},{addr}")
         elif animation_type == "frombottom":
             await self.hyprctl(f"movewindowpixel 0 {off_y},{addr}")
         elif animation_type == "fromleft":
-            await self.hyprctl(f"movewindowpixel -{off_x} 0,{addr}")
+            await self.hyprctl(f"movewindowpixel {-off_x} 0,{addr}")
         elif animation_type == "fromright":
             await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
 
@@ -838,6 +838,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(item, monitor)
         if not position_fixed:
             if animation_type:
+                # TODO: refactor, use single animation method
+                print(preserve_aspect, was_alive, not should_set_aspect)
                 if preserve_aspect and was_alive and not should_set_aspect:
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
