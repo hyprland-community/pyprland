@@ -860,7 +860,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     await self.hyprctl(command)
             else:
                 self.log.warning(
-                    f"No position and no animation provided for %s, don't know where to place it.",
+                    "No position and no animation provided for %s, don't know where to place it.",
                     item.uid,
                 )
 
