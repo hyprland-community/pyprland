@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 32
+:total-count: 33
 
 --------------------------------------------------------------------------------
 
@@ -158,4 +158,13 @@ preserve_aspect to manage multi-screen setups
 
 :bugid: 30
 :created: 2024-03-04T22:21:41
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+offset & margin: support % and px units
+=======================================
+
+:bugid: 33
+:created: 2024-03-08T00:07:02
 :priority: 0
