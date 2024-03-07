@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 33
+:total-count: 34
 
 --------------------------------------------------------------------------------
 
@@ -168,3 +168,14 @@ offset & margin: support % and px units
 :bugid: 33
 :created: 2024-03-08T00:07:02
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+offset computation (hide anim) rework
+=====================================
+
+:bugid: 34
+:created: 2024-03-08T00:11:31
+:priority: 0
+
+use animation type + margin to do a reverse computation of the placement (out of screen)
