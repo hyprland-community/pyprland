@@ -180,11 +180,13 @@ class Scratch(CastBoolMixin):  # {{{
 
     async def get_auto_offset(self, monitor=None):
         "Get au automatic offset value computed from client size"
+        width, height = self.client_info["size"]
+        margin = self.conf.get("margin", DEFAULT_MARGIN)
         if monitor is None:
             monitor = await get_focused_monitor_props(self.log)
         return map(
             int,
-            [monitor["width"] / monitor["scale"], monitor["height"] / monitor["scale"]],
+            [(width + margin) / monitor["scale"], (height + margin) / monitor["scale"]],
         )
 
     async def initialize(self, ex):
