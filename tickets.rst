@@ -171,17 +171,6 @@ offset & margin: support % and px units
 
 --------------------------------------------------------------------------------
 
-offset computation (hide anim) rework
-=====================================
-
-:bugid: 34
-:created: 2024-03-08T00:11:31
-:priority: 0
-
-use animation type + margin to do a reverse computation of the placement (out of screen)
-
---------------------------------------------------------------------------------
-
 2.1 ?
 =====
 
