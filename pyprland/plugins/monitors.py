@@ -168,9 +168,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 if mon["name"].startswith(monitor_name):
                     mon_info = mon
                     break
-            else:
-                self.log.warning("Monitor %s not found", monitor_name)
-                return
+                else:
+                    self.log.warning("Monitor %s not found", monitor_name)
+                    return
 
             default_command = self.config.get("unknown")
             val = await self._place_single_monitor(mon_info, monitors)
