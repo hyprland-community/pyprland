@@ -18,12 +18,12 @@ repos:
     rev: "v1.33.0"
     hooks:
       - id: yamllint
-#  - repo: local
-#    hooks:
-#      - id: tox
-#        name: tox
-#        entry: tox
-#        language: system
+  - repo: local
+    hooks:
+      - id: versionMgmt
+        name: versionMgmt
+        entry: ./scripts/update_version
+        language: system
 #        types: [python]
 #        pass_filenames: false
 #
