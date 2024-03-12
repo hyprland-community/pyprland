@@ -441,21 +441,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.scratches.setState(scratch, "configured")
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
-        if animation_type and defined_class:
+        if defined_class:
             monitor = await get_focused_monitor_props(self.log)
             width, height = convert_coords(
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
-
-            margin_x = (monitor["width"] - width) // 2
-            margin_y = (monitor["height"] - height) // 2
-
-            t_pos = {
-                "fromtop": f"{margin_x} -200%",
-                "frombottom": f"{margin_x} 200%",
-                "fromright": f"200% {margin_y}",
-                "fromleft": f"-200% {margin_y}",
-            }[animation_type]
 
             ipc_commands = [
                 f"windowrule float,^({defined_class})$",
@@ -467,11 +457,20 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 )
 
             if not self.cast_bool(scratch.conf.get("preserve_aspect")):
-                ipc_commands.extend(
-                    [
-                        f"windowrule move {t_pos},^({defined_class})$",
-                        f"windowrule size {width} {height},^({defined_class})$",
-                    ]
+                if animation_type:
+                    margin_x = (monitor["width"] - width) // 2
+                    margin_y = (monitor["height"] - height) // 2
+
+                    t_pos = {
+                        "fromtop": f"{margin_x} -200%",
+                        "frombottom": f"{margin_x} 200%",
+                        "fromright": f"200% {margin_y}",
+                        "fromleft": f"-200% {margin_y}",
+                    }[animation_type]
+                    ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
+
+                ipc_commands.append(
+                    f"windowrule size {width} {height},^({defined_class})$"
                 )
 
             await self.hyprctl(ipc_commands, "keyword")
