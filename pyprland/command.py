@@ -135,11 +135,23 @@ class Pyprland:
         await self.__open_config()
         assert self.config
         await self.__load_plugins_config(init=init)
+        if self.config["pyprland"].get("colored_handlers_log", True):
+            self.log_handler = self.colored_log_handler
+        else:
+            self.log_handler = self.plain_log_handler
+
+    def plain_log_handler(self, plugin, name, params):
+        "log a handler method without color"
+        plugin.log.debug(f"{name}{params}")
+
+    def colored_log_handler(self, plugin, name, params):
+        "log a handler method with color"
+        color = 33 if name.startswith("run_") else 30
+        plugin.log.debug(f"\033[{color};1m%s%s\033[0m", name, params)
 
     async def _run_plugin_handler(self, plugin, full_name, params):
         "Runs a single handler on a plugin"
-        color = 33 if full_name.startswith("run_") else 30
-        plugin.log.debug(f"\033[{color};1m%s%s\033[0m", full_name, params)
+        self.log_handler(plugin, full_name, params)
         try:
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
@@ -317,7 +329,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.0.8-13-g0ee21a5")  # Automatically updated version
+        print("2.0.8-14-gb5316e3")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
