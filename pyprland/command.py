@@ -315,10 +315,12 @@ async def run_daemon():
 async def run_client():
     "Runs the client (CLI)"
     manager = Pyprland()
+
     if sys.argv[1] == "version":
-        print("2.0.8-12-g684d0cf")  # Automatically updated version
+        print("2.0.8-13-g0ee21a5")  # Automatically updated version
         return
-    elif sys.argv[1] in ("--help", "-h", "help"):
+
+    if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
 
         def format_doc(txt):
