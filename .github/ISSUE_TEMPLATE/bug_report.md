@@ -8,7 +8,7 @@ assignees: fdev31
 ---
 
 **Pyprland version**
-Which version did you use?
+Which version did you use? (copy & paste the string returned by `pypr version`)
 
 **Describe the bug**
 A clear and concise description of what the bug is.
