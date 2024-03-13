@@ -136,13 +136,13 @@ class Pyprland:
         assert self.config
         await self.__load_plugins_config(init=init)
         if self.config["pyprland"].get("colored_handlers_log", True):
-            self.log_handler = (
+            self.log_handler = (  # pylint: disable=attribute-defined-outside-init
                 self.colored_log_handler
-            )  # pylint: disable=attribute-defined-outside-init
+            )
         else:
-            self.log_handler = (
+            self.log_handler = (  # pylint: disable=attribute-defined-outside-init
                 self.plain_log_handler
-            )  # pylint: disable=attribute-defined-outside-init
+            )
 
     def plain_log_handler(self, plugin, name, params):
         "log a handler method without color"
@@ -333,7 +333,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.0.8-16-gcc7def9")  # Automatically updated version
+        print("2.0.8-17-g2d18d2a")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
