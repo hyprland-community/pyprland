@@ -2,6 +2,9 @@
 cd $(git rev-parse --show-toplevel)
 COMMENT='# Automatically updated version'
 V=$(git describe --tags)
+T=$(mktemp)
 if ! grep "$V" pyprland/command.py ; then
-    sed -Ei "s/^( +)print.*$COMMENT/\1print('$V')  $COMMENT/" pyprland/command.py
+    sed -E "s/^( +)print.*$COMMENT/\1print('$V')  $COMMENT/" pyprland/command.py > $T
+    cmp $T pyprland/command.py || cp $T pyprland/command.py
 fi
+rm $T
