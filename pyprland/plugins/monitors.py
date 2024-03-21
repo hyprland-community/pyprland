@@ -110,41 +110,29 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.debug("No configuration item is applicable")
         graph = build_graph(cleaned_config)
         need_change = self._update_positions(monitors, graph, cleaned_config)
+        every_monitor = {v["name"]: v for v in await self.hyprctlJSON("monitors all")}
         if need_change:
             trim_offset(monitors)
 
-            command = ["wlr-randr"]
             for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-                command.extend(
-                    [
-                        "--output",
-                        monitor["name"],
-                        "--pos",
-                        f'{monitor["x"]},{monitor["y"]}',
-                    ]
+                name = monitor["name"]
+                this_mon = every_monitor[name]
+                resolution = f"{this_mon['width']}x{this_mon['height']}@{this_mon['refreshRate']}"
+                scale = this_mon["scale"]
+                position = f"{monitor['x']}x{monitor['y']}"
+
+                await self.hyprctl(
+                    f"monitor {name},{resolution},{position},{scale}", "keyword"
                 )
-            txt_cmd = " ".join(command)
-            self.log.info(txt_cmd)
-            proc = await asyncio.create_subprocess_shell(
-                txt_cmd, stderr=asyncio.subprocess.PIPE
-            )
-            assert proc.stderr
-            err = await proc.stderr.read()
-            if err:
-                self.log.debug(err)
 
     # Event handlers
 
-    async def event_monitoradded(self, monitor_name) -> None:
+    async def event_monitoradded(self, _) -> None:
         "Triggers when a monitor is plugged"
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
         await self.run_relayout()
 
     # Utils
-
-    def _clear_mon_by_pat_cache(self):
-        "clear the cache"
-        self._mon_by_pat_cache = {}
 
     def _get_mon_by_pat(self, pat, database):
         """Returns a (plugged) monitor object given its pattern or none if not found"""
@@ -176,22 +164,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "leftendof": "rightendof",
         "rightendof": "leftendof",
     }
-
-    def _get_rules(self, mon_name, placement):
-        "build a list of matching rules from the config"
-        for pattern, config in placement.items():
-            matched = pattern == mon_name
-            for position, descr_list in config.items():
-                if isinstance(descr_list, str):
-                    descr_list = [descr_list]
-                for descr in descr_list:
-                    lp = clean_pos(position)
-                    if matched or descr == mon_name:
-                        yield (
-                            lp if matched else self._flipped_positions[lp],
-                            descr,
-                            f"{pattern} {config}",
-                        )
 
     def _update_positions(self, monitors, graph, config):
         "Apply configuration to monitors_by_name using graph"
