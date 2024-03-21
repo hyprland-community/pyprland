@@ -73,24 +73,6 @@ def get_XY(place, main_mon, other_mon):
     return (x, y)
 
 
-async def apply_monitor_position(
-    monitors, screenid: str, pos_x: int, pos_y: int, logger=None
-) -> None:
-    "Apply the configuration change"
-
-    command = ["wlr-randr"]
-    monitor = [mon for mon in monitors if mon["name"] == screenid][0]
-
-    monitor["x"] = pos_x
-    monitor["y"] = pos_y
-
-    command.extend(["--output", screenid, "--pos", f"{pos_x},{pos_y}"])
-    txt_command = " ".join(command)
-    if logger:
-        logger.debug(txt_command)
-    await asyncio.create_subprocess_shell(txt_command)
-
-
 def build_graph(config):
     "make a sorted graph based on the cleaned_config"
     graph = defaultdict(list)
@@ -156,26 +138,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def event_monitoradded(self, monitor_name) -> None:
         "Triggers when a monitor is plugged"
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
-
-        if self.cast_bool(self.config.get("full_relayout"), True):
-            await self.run_relayout()
-        else:
-            monitors = cast(list, await self.hyprctlJSON("monitors"))
-
-            assert monitors
-
-            for mon in monitors:
-                if mon["name"].startswith(monitor_name):
-                    mon_info = mon
-                    break
-            else:
-                self.log.warning("Monitor %s not found", monitor_name)
-                return
-
-            default_command = self.config.get("unknown")
-            val = await self._place_single_monitor(mon_info, monitors)
-            if val and default_command:
-                await asyncio.create_subprocess_shell(default_command)
+        await self.run_relayout()
 
     # Utils
 
@@ -229,38 +192,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                             descr,
                             f"{pattern} {config}",
                         )
-
-    async def _place_single_monitor(
-        self,
-        mon_info: dict[str, int | float | str | list],
-        monitors: list[dict[str, Any]],
-    ):
-        "place a given monitor according to config"
-
-        mon_name: str = cast(str, mon_info["name"])
-        monitors_by_name = {m["name"]: m for m in monitors}
-        self._clear_mon_by_pat_cache()
-        matched = False
-
-        cleaned_config = self.resolve_names(monitors)
-        for place, other_screen, rule in self._get_rules(
-            mon_info["name"], cleaned_config
-        ):
-            other_mon = monitors_by_name.get(other_screen)
-
-            if other_mon:
-                matched = True
-                pos = get_XY(place, mon_info, other_mon)
-                if pos:
-                    x, y = pos
-                    self.log.info("Will place %s @ %s,%s (%s)", mon_name, x, y, rule)
-                    await apply_monitor_position(
-                        monitors, mon_name, x, y, logger=self.log
-                    )
-                else:
-                    self.log.error("Unknown position type: %s (%s)", place, rule)
-
-        return matched
 
     def _update_positions(self, monitors, graph, config):
         "Apply configuration to monitors_by_name using graph"
