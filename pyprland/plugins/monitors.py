@@ -91,6 +91,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     _mon_by_pat_cache: dict[str, dict] = {}
 
     async def on_reload(self):
+        self._clear_mon_by_pat_cache()
         if self.cast_bool(self.config.get("startup_relayout"), True):
             await self.run_relayout()
 
@@ -100,6 +101,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self,
     ):
         "Recompute & apply every monitors's layout"
+
+        self._clear_mon_by_pat_cache()
 
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
 
