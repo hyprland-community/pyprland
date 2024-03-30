@@ -134,16 +134,22 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Utils
 
-    def _get_mon_by_pat(self, pat, database):
+    def _clear_mon_by_pat_cache(self):
+        "clear the cache"
+        self._mon_by_pat_cache = {}
+
+    def _get_mon_by_pat(self, pat, description_db, name_db):
         """Returns a (plugged) monitor object given its pattern or none if not found"""
         cached = self._mon_by_pat_cache.get(pat)
-        if cached:
-            return cached
-        for full_descr in database:
-            if pat in full_descr:
-                cached = database[full_descr]
+        if cached is None:
+            cached = name_db.get(pat)
+            if cached is None:
+                for full_descr in description_db:
+                    if pat in full_descr:
+                        cached = description_db[full_descr]
+                        break
+            if cached:
                 self._mon_by_pat_cache[pat] = cast(dict[str, dict], cached)
-                break
         return cached
 
     _flipped_positions = {
@@ -209,9 +215,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         placement_rules = deepcopy(self.config.get("placement", {}))
         monitors_by_descr = {m["description"]: m for m in monitors}
         cleaned_config: dict[str, dict[str, Any]] = {}
-        plugged_monitors = {m["name"] for m in monitors}
+        plugged_monitors = {m["name"]: m for m in monitors}
         for descr1, placement in placement_rules.items():
-            mon = self._get_mon_by_pat(descr1, monitors_by_descr)
+            mon = self._get_mon_by_pat(descr1, monitors_by_descr, plugged_monitors)
             if not mon:
                 continue
             name1 = mon["name"]
@@ -223,7 +229,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     descr_list = [descr_list]
                 resolved = []
                 for p in descr_list:
-                    r = self._get_mon_by_pat(p, monitors_by_descr)
+                    r = self._get_mon_by_pat(p, monitors_by_descr, plugged_monitors)
                     if r:
                         resolved.append(r["name"])
                 if resolved:

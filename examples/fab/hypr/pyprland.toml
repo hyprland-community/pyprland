@@ -56,9 +56,9 @@ unfocus = "hide"
 unknown = "wlrlui"
 
 [monitors.placement.BenQ]
-Top_Center_Of = "(DP-1)" # projo
+Top_Center_Of = "DP-1" # projo
 
-[monitors.placement."(dDP-1)"]
+[monitors.placement."eDP-1"]
 bottom_Center_Of = "DELL" # work
 
 [layout_center]
