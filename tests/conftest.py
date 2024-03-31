@@ -90,7 +90,7 @@ async def sample1_config(monkeypatch):
 async def mocked_hyprctlJSON(command, logger=None):
     if command in mocks.json_commands_result:
         return mocks.json_commands_result[command]
-    if command == "monitors":
+    if command.startswith("monitors"):
         return deepcopy(MONITORS)
     if command == "activeworkspace":
         return {"name": "1", "id": 1}

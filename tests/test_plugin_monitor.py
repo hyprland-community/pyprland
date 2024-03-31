@@ -75,8 +75,8 @@ startup_relayout = false
 new_monitor_delay = 0
 
 [monitors.placement]
-"(eDP-1)".topOf = "(DP-1)"
-"(DP-1)".topOf = "(HDMI-A-1)"
+"eDP-1".topOf = "DP-1"
+"DP-1".topOf = "HDMI-A-1"
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield
@@ -94,8 +94,8 @@ startup_relayout = false
 new_monitor_delay = 0
 
 [monitors.placement]
-"(eDP-1)".bottomCenterOf = "(DP-1)"
-"(DP-1)".bottomCenterOf = "(HDMI-A-1)"
+"eDP-1".bottomCenterOf = "DP-1"
+"DP-1".bottomCenterOf = "HDMI-A-1"
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield
@@ -117,146 +117,202 @@ startup_relayout = false
 new_monitor_delay = 0
 
 [monitors.placement]
-"(eDP-1)".leftOf = "(DP-1)"
-"(DP-1)".leftOf = "(HDMI-A-1)"
+"eDP-1".leftOf = "DP-1"
+"DP-1".leftOf = "HDMI-A-1"
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield
 
 
+def assert_modes(call_list, expected=[], allow_empty=False):
+    ref_str = {x[0][0] for x in call_list}
+    for e in expected:
+        ref_str.remove(e)
+
+    if not allow_empty:
+        assert len(list(ref_str)) == 0
+
+
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_relayout(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_relayout():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-
-    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("third_monitor", "sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_3screens_relayout(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_3screens_relayout():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-
-    calls.remove(
-        "wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0 --output eDP-1 --pos 5360,0"
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+            "monitor eDP-1,640x480@59.999,5360x0,1.0",
+        ],
     )
 
 
 @pytest.mark.usefixtures("third_monitor", "bottomup_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_3screens_relayout_b(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_3screens_relayout_b():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-    calls.remove(
-        "wlr-randr --output HDMI-A-1 --pos 760,0 --output DP-1 --pos 0,1080 --output eDP-1 --pos 1400,2520"
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0",
+            "monitor DP-1,3440x1440@59.999,0x1080,1.0",
+            "monitor eDP-1,640x480@59.999,1400x2520,1.0",
+        ],
     )
 
 
 @pytest.mark.usefixtures("third_monitor", "shapeL_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_shape_l(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_shape_l():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-
-    calls.remove(
-        "wlr-randr --output eDP-1 --pos 0,0 --output HDMI-A-1 --pos 0,480 --output DP-1 --pos 1920,480"
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x480,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x480,1.0",
+            "monitor eDP-1,640x480@59.999,0x0,1.0",
+        ],
     )
 
 
 @pytest.mark.usefixtures("third_monitor", "flipped_shapeL_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_flipped_shape_l(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_flipped_shape_l():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-
-    calls.remove(
-        "wlr-randr --output HDMI-A-1 --pos 0,0 --output eDP-1 --pos 0,1080 --output DP-1 --pos 640,1080"
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
+            "monitor DP-1,3440x1440@59.999,640x1080,1.0",
+            "monitor eDP-1,640x480@59.999,0x1080,1.0",
+        ],
     )
 
 
 @pytest.mark.usefixtures("third_monitor", "reversed_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_3screens_rev_relayout(subprocess_shell_mock):
-    mocked_subprocess_shell, mocked_process = subprocess_shell_mock
+async def test_3screens_rev_relayout():
     await tst.pypr("relayout")
-    await wait_called(mocked_subprocess_shell)
-    calls = get_xrandr_calls(mocked_subprocess_shell)
-
-    calls.remove(
-        "wlr-randr --output eDP-1 --pos 0,0 --output DP-1 --pos 640,0 --output HDMI-A-1 --pos 4080,0"
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,4080x0,1.0",
+            "monitor DP-1,3440x1440@59.999,640x0,1.0",
+            "monitor eDP-1,640x480@59.999,0x0,1.0",
+        ],
     )
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events(subprocess_shell_mock):
+async def test_events():
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("descr_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events_d(subprocess_shell_mock):
+async def test_events_d():
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,180 --output DP-1 --pos 1920,0")
+    await wait_called(tst.hyprctl)
+
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x180,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("reversed_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events2(subprocess_shell_mock):
+async def test_events2():
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 0,0 --output HDMI-A-1 --pos 3440,0")
+
+    await wait_called(tst.hyprctl)
+
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,3440x0,1.0",
+            "monitor DP-1,3440x1440@59.999,0x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("topdown_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events3(subprocess_shell_mock):
+async def test_events3():
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output DP-1 --pos 0,0 --output HDMI-A-1 --pos 0,1440")
+
+    await wait_called(tst.hyprctl)
+
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x1440,1.0",
+            "monitor DP-1,3440x1440@59.999,0x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events3b(subprocess_shell_mock):
+async def test_events3b():
     await tst.send_event("monitoradded>>HDMI-A-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output HDMI-A-1 --pos 0,0 --output DP-1 --pos 1920,0")
+
+    await wait_called(tst.hyprctl)
+
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("bottomup_config", "server_fixture")
 @pytest.mark.asyncio
-async def test_events4(subprocess_shell_mock):
+async def test_events4():
     await tst.send_event("monitoradded>>DP-1")
-    await wait_called(subprocess_shell_mock[0])
-    calls = get_xrandr_calls(subprocess_shell_mock[0])
-    print(calls)
-    calls.remove("wlr-randr --output HDMI-A-1 --pos 760,0 --output DP-1 --pos 0,1080")
+
+    await wait_called(tst.hyprctl)
+
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0",
+            "monitor DP-1,3440x1440@59.999,0x1080,1.0",
+        ],
+    )
 
 
 @pytest.mark.usefixtures("empty_config", "server_fixture")
