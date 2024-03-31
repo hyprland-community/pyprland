@@ -631,11 +631,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         del self._hysteresis_tasks[scratch.uid]
                     self.log.debug("Canceled previous task for %s", uid)
             else:
-                if (
-                    scratch.visible
-                    and scratch.conf.get("unfocus") == "hide"
-                    and not self.scratches.hasState(scratch, "transition")
-                ):
+                if scratch.visible and scratch.conf.get("unfocus") == "hide":
                     last_shown = scratch.meta.get("last_shown", 0)
                     if last_shown + AFTER_SHOW_INHIBITION > time.time():
                         self.log.debug(
@@ -774,8 +770,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         elif animation_type == "fromright":
             await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
 
-        if self.scratches.hasState(scratch, "transition"):
-            return  # abort sequence
         await asyncio.sleep(0.2)  # await for animation to finish
 
     async def run_show(self, uid) -> None:
@@ -819,7 +813,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         assert monitor
         assert item.full_address, "No address !"
 
-        self.scratches.setState(item, "transition")
         await self._show_transition(item, monitor, was_alive)
         item.monitor = monitor["name"]
 
@@ -871,9 +864,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 )
 
         await self.hyprctl(f"focuswindow address:{item.full_address}")
-        await asyncio.sleep(0.2)  # ensure some time for events to propagate
-        # Transition ended
-        self.scratches.clearState(item, "transition")
         item.meta["last_shown"] = time.time()
 
     async def _fix_size(self, item, monitor):
@@ -926,10 +916,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if animation_type:
             await self._anim_hide(animation_type, scratch)
 
-        if not self.scratches.hasState(scratch, "transition"):
-            await self.hyprctl(
-                f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
-            )
+        await self.hyprctl(
+            f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
+        )
 
         if (
             not autohide
