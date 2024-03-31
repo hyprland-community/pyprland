@@ -41,7 +41,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 ### 2.1
 
-- Requires Hyprland 0.37 or better
+- Requires Hyprland >= 0.37
 - [monitors](https://github.com/hyprland-community/pyprland/wiki//monitors)
   - Drops the `wlr-randr` dependency
   - simplified the syntax, no need for `()` around a screen name (will try matching the exact name first, then partial description)
