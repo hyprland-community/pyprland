@@ -1,10 +1,29 @@
 #!/bin/sh
-cd $(git rev-parse --show-toplevel)
+
+# Change directory to the root of the Git repository
+cd "$(git rev-parse --show-toplevel)"
+
+# Define comment string to identify the line to be replaced
 COMMENT='# Automatically updated version'
-V=$(git describe --tags)
+
+# Get the version from Git tags
+V=$(git describe --tags | sed -E 's/-[^-]+$//')
+
+# Create a temporary file
 T=$(mktemp)
+
+# Check if the version is already present in the source file
 if ! grep "$V" pyprland/command.py ; then
-    sed -E "s/^( +)print.*$COMMENT/\1print('$V')  $COMMENT/" pyprland/command.py > $T
-    cmp $T pyprland/command.py || cp $T pyprland/command.py
+    # If not present, replace the line containing the comment with the new version
+    sed -E "s/^( +)print.*$COMMENT/\1print('$V')  $COMMENT/" pyprland/command.py > "$T"
+    # Check if the file has changed
+    cmp "$T" pyprland/command.py || {
+        # If changed, overwrite the original file with the modified file
+        cp "$T" pyprland/command.py
+        # Add the modified file back to the staging area
+        git add pyprland/command.py
+    }
 fi
-rm $T
+
+# Remove the temporary file
+rm "$T"
