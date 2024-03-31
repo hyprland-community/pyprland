@@ -100,3 +100,4 @@ Check the [creating a pull request](https://docs.github.com/fr/pull-requests/col
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
   </picture>
 </a>
+
