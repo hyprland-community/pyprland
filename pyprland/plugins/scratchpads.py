@@ -655,8 +655,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         )
 
                         async def _task(scratch, uid):
-                            await self._hysteresis_tasks[scratch.uid]
-                            del self._hysteresis_tasks[scratch.uid]
+                            if scratch.uid in self._hysteresis_tasks:
+                                await self._hysteresis_tasks[scratch.uid]
+                                del self._hysteresis_tasks[scratch.uid]
                             if state.active_window == scratch.full_address:
                                 self.log.debug(
                                     "Skipped hidding %s because client got the focus back",
