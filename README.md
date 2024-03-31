@@ -30,7 +30,7 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 
 ## Dependencies
 
-- **Hyprland** >= 0.30 (versions < 1.8 can run on Hyprland 0.25)
+- **Hyprland** >= 0.37 (< 2.1 requires Hyprland >= 0.30, < 1.8 can run on Hyprland 0.25)
 - **Python** >= 3.11
 - **aiofiles** python package (since Pyprland >= 2.0)
 
