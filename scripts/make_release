@@ -19,7 +19,25 @@ fi
 TOKEN=$(gopass show -o websites/api.github.com/fdev31)
 URL=https://api.github.com/repos/hyprland-community/pyprland
 
-echo $version | bumpPyProject.sh
+
+# Bump py project {{{
+ver_line=$(grep version pyproject.toml | head -n 1)
+echo "Current $ver_line"
+echo -n "New version: "
+read version
+
+sed -i "s#$ver_line#version = \"$version\"#" pyproject.toml
+git tag $version
+git add pyproject.toml
+git commit -m "Version $version"  --no-verify
+./scripts/update_version
+git add pyprland/command.py
+git commit --amend --no-verify
+git push
+
+poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
+# }}}
+
 
 tox || exit -1
 
