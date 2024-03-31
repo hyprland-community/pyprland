@@ -484,8 +484,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if `class_match` is enabled, will use the class, else the process's PID will be used.
         """
         self.log.info("==> Wait for %s spawning", item.uid)
-        for loop_count in range(1, 8):
-            await asyncio.sleep(loop_count**2 / 10.0)
+        interval_range = [0.1] * 10 + [0.2] * 20 + [0.5] * 15
+        for interval in interval_range:
+            await asyncio.sleep(interval)
             is_alive = await item.isAlive()
 
             # skips the checks if the process isn't started (just wait)
