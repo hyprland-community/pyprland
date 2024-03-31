@@ -39,6 +39,11 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
 
+### 2.1
+
+- Requires Hyprland 0.37 or better
+- Drops the `wlr-randr` dependency for [monitors](https://github.com/hyprland-community/pyprland/wiki//monitors)
+
 ### 2.0
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)

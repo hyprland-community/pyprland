@@ -333,7 +333,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.1.0-2-g492cb03")  # Automatically updated version
+        print("2.1.0-3-g777b51f")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
