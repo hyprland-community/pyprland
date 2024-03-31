@@ -136,19 +136,30 @@ async def hyprctl(
     return r
 
 
-async def get_focused_monitor_props(logger=None) -> dict[str, Any]:
-    """Returns focused monitor data
+async def get_focused_monitor_props(logger=None, name=None) -> dict[str, Any]:
+    """Returns focused monitor data if `name` is not defined, else use monitor's name
 
     Args:
         logger: logger to use in case of error
+        name [optional]: monitor name
 
     Returns:
 
         dict() with the focused monitor properties
     """
+    if name:
+
+        def match_fn(mon):
+            return mon["name"] == name
+
+    else:
+
+        def match_fn(mon):
+            return mon.get("focused")
+
     for monitor in await hyprctlJSON("monitors", logger=logger):
         assert isinstance(monitor, dict)
-        if monitor.get("focused"):
+        if match_fn(monitor):
             return monitor
     raise RuntimeError("no focused monitor")
 

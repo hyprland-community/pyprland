@@ -183,7 +183,9 @@ class Scratch(CastBoolMixin):  # {{{
         width, height = self.client_info["size"]
         margin = self.conf.get("margin", DEFAULT_MARGIN)
         if monitor is None:
-            monitor = await get_focused_monitor_props(self.log)
+            monitor = await get_focused_monitor_props(
+                self.log, name=self.conf.get("force_monitor")
+            )
         return map(
             int,
             [(width + margin) / monitor["scale"], (height + margin) / monitor["scale"]],
@@ -442,7 +444,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
         if defined_class:
-            monitor = await get_focused_monitor_props(self.log)
+            monitor = await self.get_focused_monitor_props(
+                name=scratch.conf.get("force_monitor")
+            )
             width, height = convert_coords(
                 self.log, scratch.conf.get("size", "80% 80%"), monitor
             )
@@ -807,7 +811,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         item.visible = True
         item.space_identifier = get_space_identifier()
-        monitor = await get_focused_monitor_props(self.log)
+        monitor = await self.get_focused_monitor_props(
+            name=item.conf.get("force_monitor")
+        )
+
         assert monitor
         assert item.full_address, "No address !"
 
