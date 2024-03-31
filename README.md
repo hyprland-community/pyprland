@@ -30,7 +30,7 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 
 ## Dependencies
 
-- **Hyprland** >= 0.37 (< 2.1 requires Hyprland >= 0.30, < 1.8 can run on Hyprland 0.25)
+- **Hyprland** >= 0.37
 - **Python** >= 3.11
 - **aiofiles** python package (since Pyprland >= 2.0)
 
@@ -66,6 +66,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 ### 1.8
 
+- Requires Hyprland >= 0.30
 - `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
   - add the [toggle_special](https://github.com/hyprland-community/pyprland/wiki/toggle_special) plugin to your config and rename the command in your `hyprland.conf` & scripts!
   - was provided by [expose](https://github.com/hyprland-community/pyprland/wiki/expose)
