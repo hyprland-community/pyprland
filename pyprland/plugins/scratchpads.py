@@ -724,11 +724,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             )
             return
 
-        is_visible = (
-            first_scratch.visible
-            and first_scratch.space_identifier == get_space_identifier()
+        is_visible = first_scratch.visible and (
+            first_scratch.conf.get("force_monitor")
+            or first_scratch.space_identifier == get_space_identifier()
         )
-
         tasks = []
 
         for uid in uids:
