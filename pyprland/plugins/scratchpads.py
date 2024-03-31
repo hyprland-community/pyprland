@@ -735,7 +735,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if not item:
                 self.log.warning("%s is not configured", uid)
             else:
-                self.log.debug("%s is visible = %s", uid, item.visible)
+                self.log.debug(
+                    "%s is visible = %s (but %s)", uid, item.visible, is_visible
+                )
                 if is_visible and await item.isAlive():
                     tasks.append(partial(self.run_hide, uid))
                 else:
@@ -819,6 +821,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "perfoms the transition to visible state"
         animation_type = item.conf.get("animation", "").lower()
         wrkspc = monitor["activeWorkspace"]["id"]
+        item.meta["last_shown"] = time.time()
         # Start the transition
         await self.hyprctl(
             [
