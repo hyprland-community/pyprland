@@ -49,8 +49,7 @@ done
 
 pushd scripts
 ./update_get-pypr.sh
-git commit get-pypr ../pyprland/command.py -m "Update get-pypr script" # updates the version
-git commit get-pypr ../pyprland/command.py -m "Update get-pypr script"
+git commit get-pypr ../pyprland/command.py -m "Update get-pypr script" --no-verify
 git push
 popd
 
