@@ -15,7 +15,7 @@ from .interface import Plugin
 from ..common import state, CastBoolMixin
 
 DEFAULT_MARGIN = 60  # in pixels
-AFTER_SHOW_INHIBITION = 0.2  # 200ms of ignorance after a show
+AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_HYSTERESIS = 0.4  # In seconds
 
 # Helper functions {{{
