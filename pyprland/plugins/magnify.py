@@ -20,8 +20,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 self.cur_factor = value
 
             # sanity check
-            if self.cur_factor <= 1.0:
-                self.cur_factor = 1
+            self.cur_factor = max(self.cur_factor, 1)
 
             # apply the factor
             self.zoomed = self.cur_factor != 1
