@@ -752,13 +752,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return offset, offset
         return await scratch.get_auto_offset(monitor)
 
-    async def _anim_hide(self, animation_type, scratch):
+    async def _hide_transition(self, scratch, monitor):
         "animate hiding a scratchpad"
+
+        animation_type: str = scratch.conf.get("animation", "").lower()
+        if not animation_type:
+            return False
 
         await self.updateScratchInfo(scratch)
 
-        off_x, off_y = await self.get_offsets(scratch)
+        off_x, off_y = await self.get_offsets(scratch, monitor)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
+        return True
 
     async def _slide_animation(self, animation_type, scratch, off_x, off_y):
         "Slides the window `offset` pixels respecting `animation_type`"
@@ -868,6 +873,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         await self.hyprctl(f"focuswindow address:{item.full_address}")
         item.meta["last_shown"] = time.time()
+        item.meta["monitor_info"] = monitor
 
     async def _fix_size(self, item, monitor):
         "apply the `size` config parameter"
@@ -915,9 +921,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
         scratch.visible = False
         self.log.info("Hiding %s", uid)
-        animation_type: str = scratch.conf.get("animation", "").lower()
-        if animation_type:
-            await self._anim_hide(animation_type, scratch)
+        animated = await self._hide_transition(scratch, scratch.meta["monitor_info"])
 
         await self.hyprctl(
             f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
@@ -925,7 +929,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         if (
             not autohide
-            and animation_type
+            and animated
             and uid in self.focused_window_tracking
             and self.cast_bool(scratch.conf.get("restore_focus"), True)
         ):  # focus got lost when animating
