@@ -21,11 +21,6 @@ URL=https://api.github.com/repos/hyprland-community/pyprland
 
 
 # Bump py project {{{
-ver_line=$(grep version pyproject.toml | head -n 1)
-echo "Current $ver_line"
-echo -n "New version: "
-read version
-
 sed -i "s#$ver_line#version = \"$version\"#" pyproject.toml
 git tag $version
 git add pyproject.toml

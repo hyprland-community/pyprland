@@ -7,7 +7,7 @@ cd "$(git rev-parse --show-toplevel)"
 COMMENT='# Automatically updated version'
 
 # Get the version from Git tags
-V=$(git describe --tags | sed -E 's/-[^-]+$//')
+V=$(git describe --tags | sed -E -e 's/-[^-]+$//' -e 's/-1$//')
 
 # Create a temporary file
 T=$(mktemp)
