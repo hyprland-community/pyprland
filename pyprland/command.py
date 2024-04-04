@@ -96,7 +96,12 @@ class Pyprland:
         init_pyprland = "pyprland" not in self.plugins
         for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
             if name not in self.plugins:
-                modname = name if "." in name else f"pyprland.plugins.{name}"
+                if "." in name:
+                    modname = name
+                elif "external:" in name:
+                    modname = name.replace("external:", "")
+                else:
+                    modname = f"pyprland.plugins.{name}"
                 try:
                     plug = importlib.import_module(modname).Extension(name)
                     if init:
