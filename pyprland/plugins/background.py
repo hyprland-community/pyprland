@@ -54,7 +54,7 @@ class Extension(Plugin):
         cmd_prefix = self.config.get("command", "swaybg -m fill -i")
         while self.running:
             self.next_background_event.clear()
-            filename = self.select_next_image().replace("'", r"\'")
+            filename = self.select_next_image().replace("'", r"""'"'"'""")
             cmd = f"{cmd_prefix} '{filename}'"
             self.log.info("Running %s", cmd)
             self.proc = await asyncio.create_subprocess_shell(cmd)
