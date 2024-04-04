@@ -13,7 +13,7 @@ class Extension(Plugin):
 
     valid_extensions = set(("png", "jpg", "jpeg"))
     running = True
-    image_list = []
+    image_list: list[str] = []
     proc = None
     loop = None
 
@@ -37,7 +37,8 @@ class Extension(Plugin):
     async def exit(self):
         "terminates gracefully"
         self.running = False
-        self.loop.cancel()
+        if self.loop:
+            self.loop.cancel()
         await self.terminate()
 
     def select_next_image(self):
