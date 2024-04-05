@@ -22,12 +22,11 @@ URL=https://api.github.com/repos/hyprland-community/pyprland
 
 # Bump py project {{{
 sed -i "s#$ver_line#version = \"$version\"#" pyproject.toml
-git tag $version
 git add pyproject.toml
-git commit -m "Version $version"  --no-verify
-./scripts/update_version
+V="$version" ./scripts/update_version
 git add pyprland/command.py
-git commit --amend --no-verify
+git commit -m "Version $version"  --no-verify
+git tag $version
 git push
 
 poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
