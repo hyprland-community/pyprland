@@ -90,8 +90,8 @@ class Pyprland:
         """Loads the plugins mentioned in the config.
         If init is `True`, call the `init()` method on each plugin.
         """
-        if "plugin_paths" in self.config["pyprland"]:
-            for plugin_path in self.config["pyprland"]["plugin_paths"]:
+        if "plugins_paths" in self.config["pyprland"]:
+            for plugin_path in self.config["pyprland"]["plugins_paths"]:
                 sys.path.append(plugin_path)
         init_pyprland = "pyprland" not in self.plugins
         for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
