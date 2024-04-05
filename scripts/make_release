@@ -6,7 +6,8 @@ cd $(git rev-parse --show-toplevel)
 
 glow RELEASE_NOTES.md || exit "Can't find the release notes"
 
-grep version pyproject.toml | v
+ver_line=$(grep version pyproject.toml | head -n 1)
+echo $ver_line
 echo -n "New version: "
 read version
 echo -n "Release name: "
