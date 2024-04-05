@@ -38,6 +38,9 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
+### 2.2
+
+- Adds `wallpapers` and `system_notifier` plugins
 
 ### 2.1
 
