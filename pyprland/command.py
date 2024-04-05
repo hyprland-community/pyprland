@@ -86,40 +86,47 @@ class Pyprland:
             self.log.critical("No Config file found ! Please create %s", CONFIG_FILE)
             raise PyprError()
 
+    async def _load_single_plugin(self, name, init) -> bool:
+        "Load a single plugin, optionally calling `init`"
+        if "." in name:
+            modname = name
+        elif "external:" in name:
+            modname = name.replace("external:", "")
+        else:
+            modname = f"pyprland.plugins.{name}"
+        try:
+            plug = importlib.import_module(modname).Extension(name)
+            if init:
+                await plug.init()
+                self.queues[name] = asyncio.Queue()
+                if self.tasks:
+                    self.tasks.create_task(self._plugin_runner_loop(name))
+            self.plugins[name] = plug
+        except ModuleNotFoundError as e:
+            self.log.error("Unable to locate plugin called '%s'", name)
+            await notify_info(
+                f'Config requires plugin "{name}" but pypr can\'t find it: {e}'
+            )
+            return False
+        except Exception as e:
+            await notify_info(f"Error loading plugin {name}: {e}")
+            self.log.error("Error loading plugin %s:", name, exc_info=True)
+            raise PyprError() from e
+        return True
+
     async def __load_plugins_config(self, init=True):
         """Loads the plugins mentioned in the config.
         If init is `True`, call the `init()` method on each plugin.
         """
-        if "plugins_paths" in self.config["pyprland"]:
-            for plugin_path in self.config["pyprland"]["plugins_paths"]:
-                sys.path.append(plugin_path)
+
+        sys.path.extend(self.config["pyprland"].get("plugins_paths", []))
+
         init_pyprland = "pyprland" not in self.plugins
+
         for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
             if name not in self.plugins:
-                if "." in name:
-                    modname = name
-                elif "external:" in name:
-                    modname = name.replace("external:", "")
-                else:
-                    modname = f"pyprland.plugins.{name}"
-                try:
-                    plug = importlib.import_module(modname).Extension(name)
-                    if init:
-                        await plug.init()
-                        self.queues[name] = asyncio.Queue()
-                        if self.tasks:
-                            self.tasks.create_task(self._plugin_runner_loop(name))
-                    self.plugins[name] = plug
-                except ModuleNotFoundError as e:
-                    self.log.error("Unable to locate plugin called '%s'", name)
-                    await notify_info(
-                        f'Config requires plugin "{name}" but pypr can\'t find it: {e}'
-                    )
+                if not await self._load_single_plugin(name, init):
                     continue
-                except Exception as e:
-                    await notify_info(f"Error loading plugin {name}: {e}")
-                    self.log.error("Error loading plugin %s:", name, exc_info=True)
-                    raise PyprError() from e
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)
@@ -133,7 +140,7 @@ class Pyprland:
                     raise PyprError() from e
         if init_pyprland:
             plug = self.plugins["pyprland"]
-            plug.set_commands(reload=self.load_config)
+            plug.set_commands(reload=self.load_config)  # type: ignore
 
     async def load_config(self, init=True):
         """loads the configuration (new plugins will be added & config updated)
@@ -341,7 +348,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.1.4-18")  # Automatically updated version
+        print("2.1.4-19")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
