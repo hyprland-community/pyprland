@@ -6,14 +6,27 @@ import os.path
 from aiofiles.os import listdir
 
 from .interface import Plugin
+from ..common import CastBoolMixin
 
 
-class Extension(Plugin):
+async def iter_dir(path, extensions, recurse=True):
+    "Returns files matching `extension` in given `path`. Can optionally `recurse` subfolders."
+    for fname in await listdir(path):
+        ext = fname.rsplit(".", 1)[-1]
+        full_path = os.path.join(path, fname)
+        if ext.lower() in extensions:
+            yield full_path
+        elif recurse and os.path.isdir(full_path):
+            async for v in iter_dir(full_path, True):
+                yield v
+
+
+class Extension(CastBoolMixin, Plugin):
     "Manages the background image"
 
-    valid_extensions = set(("png", "jpg", "jpeg"))
-    running = True
+    default_extensions: set[str] | list[str] = set(("png", "jpg", "jpeg"))
     image_list: list[str] = []
+    running = True
     proc = None
     loop = None
 
@@ -25,12 +38,14 @@ class Extension(Plugin):
         image_list = []
         cfg_path = self.config["path"]
         paths = [cfg_path] if isinstance(cfg_path, str) else list(cfg_path)
+        extensions = self.config.get("extensions", self.default_extensions)
         for path in paths:
-            for fname in await listdir(path):
-                ext = fname.rsplit(".", 1)[-1]
-                if ext.lower() in self.valid_extensions:
-                    image_list.append(os.path.join(path, fname))
+            async for fname in iter_dir(
+                path, extensions, recurse=self.cast_bool(self.config.get("recurse"))
+            ):
+                image_list.append(os.path.join(path, fname))
         self.image_list = image_list
+        # start the main loop if it's the first load of the config
         if self.loop is None:
             self.loop = asyncio.create_task(self.main_loop())
 
@@ -55,8 +70,8 @@ class Extension(Plugin):
         cmd_prefix = self.config.get("command", "swaybg -m fill -i")
         while self.running:
             self.next_background_event.clear()
-            filename = self.select_next_image().replace("'", r"""'"'"'""")
-            cmd = f"{cmd_prefix} '{filename}'"
+            filename = self.select_next_image().replace('"', '\\"')
+            cmd = f'{cmd_prefix} "{filename}"'
             self.log.info("Running %s", cmd)
             self.proc = await asyncio.create_subprocess_shell(cmd)
 
@@ -79,10 +94,16 @@ class Extension(Plugin):
             await self.proc.wait()
             self.proc = None
 
-    async def run_next_background(self):
-        "Changes the current background image"
-        self.next_background_event.set()
-
-    async def run_clear_background(self):
-        "Clear the current background image"
-        await self.terminate()
+    async def run_wall(self, arg):
+        "<next|clear> skip the current background image or stop displaying it"
+        if arg.startswith("n"):
+            self.next_background_event.set()
+        elif arg.startswith("c"):
+            clear_command = self.config.get("clear_command")
+            if clear_command:
+                # call clear_command subprocess
+                proc = await asyncio.create_subprocess_shell(clear_command)
+                # wait for it to finish
+                await proc.wait()
+            else:
+                await self.terminate()
