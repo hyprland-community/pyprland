@@ -74,7 +74,8 @@ class Extension(Plugin):
     async def terminate(self):
         "Exits existing process if any"
         if self.proc:
-            self.proc.terminate()
+            if self.proc.returncode is None:
+                self.proc.terminate()
             await self.proc.wait()
             self.proc = None
 

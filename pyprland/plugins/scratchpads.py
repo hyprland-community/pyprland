@@ -453,12 +453,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
             ipc_commands = [
                 f"windowrule float,^({defined_class})$",
+                f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
             ]
-
-            if not self.cast_bool(scratch.conf.get("lazy")):
-                ipc_commands.append(
-                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$"
-                )
 
             if not self.cast_bool(scratch.conf.get("preserve_aspect")):
                 if animation_type:
