@@ -57,11 +57,8 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 ### 1.8
 
+- Requires Hyprland >= 0.30
 - Added [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin.
-
-### 1.7
-
-- **BREAKING CHANGE**: [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin syntax update.
 
 ## Developers
 
