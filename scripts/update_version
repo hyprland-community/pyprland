@@ -23,7 +23,7 @@ if ! grep "$V" pyprland/command.py ; then
         # If changed, overwrite the original file with the modified file
         cp "$T" pyprland/command.py
         # Add the modified file back to the staging area
-        git add pyprland/command.py
+        # git add pyprland/command.py
     }
 fi
 
