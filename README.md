@@ -31,7 +31,8 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 
 ## Latest major changes
 
-Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information:
+> [!note]
+> Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
 ### 2.2
 
