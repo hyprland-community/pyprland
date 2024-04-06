@@ -27,7 +27,7 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 
 - **Hyprland** >= 0.37
 - **Python** >= 3.11
-- **aiofiles** python package (since Pyprland >= 2.0)
+- **aiofiles** (python package)
 
 ## Latest major changes
 
