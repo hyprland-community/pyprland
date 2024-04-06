@@ -8,7 +8,7 @@
 Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/). Pyprland offers a plethora of plugins designed for simplicity and efficiency, allowing you to supercharge your productivity and customize your user experience.
 
 - Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) to tailor your Hyprland setup to your liking.
-- New users, get started with our [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
+- New users, check the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
 
 
 [Documentation](https://github.com/hyprland-community/pyprland/wiki) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
