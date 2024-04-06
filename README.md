@@ -3,30 +3,25 @@
 [![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
 [![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.gg/zzWqvcKRMy)
 
-## Extending Hyprland's features
+## Enhance your Hyprland experience with Pyprland
 
-Pyprland is a host process for multiple [Hyprland](https://hyprland.org/) extensions,
-aiming at simplicity and efficiency.
+Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/). Pyprland offers a plethora of plugins designed for simplicity and efficiency, allowing you to supercharge your productivity and customize your user experience.
 
-It provides a variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) you can enable to your liking.
+- Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) to tailor your Hyprland setup to your liking.
+- New users, get started with our [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
 
-New users need to read the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) page.
 
-→ [Documentation](https://github.com/hyprland-community/pyprland/wiki)
+[Documentation](https://github.com/hyprland-community/pyprland/wiki) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
-→ [Discussions](https://github.com/hyprland-community/pyprland/discussions)
-
-→ [Changes history](https://github.com/hyprland-community/pyprland/releases)
-
-Share your thoughts and setup bits on [discuss anything](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## About Pyprland
 
-🎉 ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
+[![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
-🎉 [You NEED This in your Hyprland Config - LibrePhoenix (video)](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*warning:* now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
+🎉 Hear What Others Are Saying:
+- ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
+- [You NEED This in your Hyprland Config - LibrePhoenix (video)](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*Now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
 ## Dependencies
 
@@ -36,71 +31,47 @@ Share your thoughts and setup bits on [discuss anything](https://github.com/hypr
 
 ## Latest major changes
 
-Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
+Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information:
 
 ### 2.2
 
-- Adds [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins
+- Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
 
 ### 2.1
 
 - Requires Hyprland >= 0.37
-- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors)
-  - Drops the `wlr-randr` dependency (used in `monitors` plugin)
-  - simplified the syntax, no need for `()` around a screen name (will try matching the exact name first, then partial description)
+- [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin improvements.
 
 ### 2.0
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
-    - fully asynchronous plugins, including file operations
-- Added [hysteresis](https://github.com/hyprland-community/pyprland/wiki/scratchpads#hysteresis-optional) support for [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) in 2.0.1, only active if `unfocus="hide"` is set.
-
-  If it feels too slow for you, set a lower value or `hysteresis=0` to completely disable it.
-
+- Added [hysteresis](https://github.com/hyprland-community/pyprland/wiki/scratchpads#hysteresis-optional) support for [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads).
 
 ### 1.10
 
-- New [fetch_client_menu](https://github.com/hyprland-community/pyprland/wiki/fetch_client_menu) plugin (shows a menu to bring a window to the active desktop)
-- Dynamic menus can be achieved by [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu)
+- New [fetch_client_menu](https://github.com/hyprland-community/pyprland/wiki/fetch_client_menu) and [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugins.
 
 ### 1.9
 
-- New [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugin
+- Introduced [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugin.
 
 ### 1.8
 
-- Requires Hyprland >= 0.30
-- `toggle_minimized` command renamed to `toggle_special` and moved to a separate plugin for clarity
-  - add the [toggle_special](https://github.com/hyprland-community/pyprland/wiki/toggle_special) plugin to your config and rename the command in your `hyprland.conf` & scripts!
-  - was provided by [expose](https://github.com/hyprland-community/pyprland/wiki/expose)
-- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin improved a lot. If you were disappointed with a previous experience, give another chance to the latest `1.8` version.
-- New [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin
-
-- Automated testing have improved a lot
+- Added [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin.
 
 ### 1.7
 
-- **BREAKING CHANGE** [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin uses now a new syntax - full rewrite (expect a behavior change)
+- **BREAKING CHANGE**: [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin syntax update.
 
 ## Developers
 
-If you feel like contributing, you are welcome. It can be done in many different ways:
+Contribute to Pyprland in various ways:
+- Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues).
+- Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki) or write new plugins.
+- Enhance test coverage in our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
 
-- [bug reporting](https://github.com/hyprland-community/pyprland/issues) or proposing solid feature requests
-- Improving the [wiki](https://github.com/hyprland-community/pyprland/wiki) (catching/fixing mistakes, helping with the formal structure, additional content, better wording, etc...)
-- Writing [new plugins](https://github.com/hyprland-community/pyprland/wiki/Development)
-- Improving existing [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins)
-- Improving [test coverage](https://github.com/hyprland-community/pyprland/tree/main/tests)
-
-Check the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document if you are not familiar with it
+Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
 
 ## Star History
 
-<a href="https://star-history.com/#fdev31/pyprland&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline" />
-  </picture>
-</a>
-
+[![Star History Chart](https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline)](https://star-history.com/#fdev31/pyprland&Date)
