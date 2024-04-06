@@ -8,7 +8,7 @@ COMMENT='# Automatically updated version'
 
 # Get the version from Git tags if not provided
 if [ -z "$V" ]; then
-    V=$(git describe --tags | sed -E -e 's/-[^-]+$//' -e 's/-1$//')
+    V=$(git describe --tags | sed -E -e 's/-[^-]+$//')
 fi
 
 # Create a temporary file
