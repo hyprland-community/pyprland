@@ -3,7 +3,7 @@
 import os
 import re
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 __all__ = ["DEBUG", "get_logger", "state", "PyprError", "apply_variables"]
 
@@ -85,6 +85,7 @@ class SharedState:
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address
+    variables: dict = field(default_factory=dict)
 
 
 state = SharedState()

@@ -16,6 +16,9 @@ class Extension(Plugin):
             if mon["focused"]
         )
 
+    async def on_reload(self):
+        state.variables = self.config.get("variables", {})
+
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
         state.active_window = "0x" + addr

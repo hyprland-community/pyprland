@@ -12,7 +12,7 @@ from aiofiles import open as aiopen
 
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
-from ..common import state, CastBoolMixin
+from ..common import state, CastBoolMixin, apply_variables
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
@@ -571,7 +571,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         assert scratch
         self.scratches.setState(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
-        proc = await asyncio.create_subprocess_shell(scratch.conf["command"])
+        command = apply_variables(scratch.conf["command"], state.variables)
+        proc = await asyncio.create_subprocess_shell(command)
         self.procs[name] = proc
         pid = proc.pid
         scratch.reset(pid)

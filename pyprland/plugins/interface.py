@@ -67,7 +67,7 @@ class Plugin:
         try:
             self.config.update(config[self.name])
         except KeyError:
-            self.config = {}
+            pass
 
     async def get_clients(self, mapped=True, workspace=None, workspace_bl=None):
         "Return the client list, optionally returns only mapped clients or from a given workspace"

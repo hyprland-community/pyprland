@@ -3,7 +3,7 @@ import asyncio
 
 from .interface import Plugin
 from ..adapters.menus import MenuMixin
-from ..common import apply_variables, apply_filter, CastBoolMixin
+from ..common import state, apply_variables, apply_filter, CastBoolMixin
 
 
 class Extension(CastBoolMixin, MenuMixin, Plugin):
@@ -57,7 +57,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
 
     async def _handle_chain(self, options):
         "Handles a chain of special objects + final command string"
-        variables: dict[str, str] = {}
+        variables: dict[str, str] = state.variables.copy()
         autovalidate = self.cast_bool(self.config.get("skip_single"), True)
         for option in options:
             if isinstance(option, str):
