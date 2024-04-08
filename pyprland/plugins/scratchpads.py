@@ -13,6 +13,7 @@ from aiofiles import open as aiopen
 from ..ipc import notify_error, get_client_props, get_focused_monitor_props
 from .interface import Plugin
 from ..common import state, CastBoolMixin, apply_variables
+from ..adapters.units import convert_coords, convert_monitor_dimension
 
 DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
@@ -20,49 +21,10 @@ DEFAULT_HYSTERESIS = 0.4  # In seconds
 
 # Helper functions {{{
 
-invert_dimension = {"width": "height", "height": "width"}
-
 
 def get_space_identifier():
     "Returns a unique object for the workspace + monitor combination"
     return (state.active_workspace, state.active_monitor)
-
-
-def convert_coords(logger, coords, monitor):
-    """
-    Converts a string like "X Y" to coordinates relative to monitor
-    Supported formats for X, Y:
-    - Percentage: "V%". V in [0; 100]
-    - Pixels: "Vpx". V should fit in your screen and not be zero
-
-    Example:
-    "10% 20%", monitor 800x600 => 80, 120
-    """
-
-    assert coords, "coords must be non null"
-
-    def convert(size, dimension):
-        scale = float(monitor["scale"])
-        if monitor["transform"] in (1, 3):
-            dimension = invert_dimension[dimension]
-        if size[-1] == "%":
-            p = int(size[:-1])
-            if p < 0 or p > 100:
-                raise ValueError(f"Percentage must be in range [0; 100], got {p}")
-            return int(monitor[dimension] / scale * p / 100)
-        if size[-2:] == "px":
-            return int(size[:-2])
-        raise ValueError(
-            f"Unsupported format for dimension {dimension} size, got {size}"
-        )
-
-    try:
-        x_str, y_str = coords.split()
-
-        return convert(x_str, "width"), convert(y_str, "height")
-    except Exception as e:
-        logger.error(f"Failed to read coordinates: {e}")
-        raise e
 
 
 # }}}
@@ -82,7 +44,11 @@ class Animations:  # {{{
         client_width = client["size"][0]
         margin_x = int((mon_width - client_width) / 2) + mon_x
 
-        return f"movewindowpixel exact {margin_x} {mon_y + margin},{client_uid}"
+        corrected_margin = convert_monitor_dimension(margin, monitor["height"], monitor)
+
+        return (
+            f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
+        )
 
     @staticmethod
     def frombottom(monitor, client, client_uid, margin):
@@ -96,7 +62,10 @@ class Animations:  # {{{
         client_width = client["size"][0]
         client_height = client["size"][1]
         margin_x = int((mon_width - client_width) / 2) + mon_x
-        return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - margin},{client_uid}"
+
+        corrected_margin = convert_monitor_dimension(margin, monitor["height"], monitor)
+
+        return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
 
     @staticmethod
     def fromleft(monitor, client, client_uid, margin):
@@ -109,7 +78,11 @@ class Animations:  # {{{
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
 
-        return f"movewindowpixel exact {margin + mon_x} {margin_y},{client_uid}"
+        corrected_margin = convert_monitor_dimension(margin, monitor["width"], monitor)
+
+        return (
+            f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
+        )
 
     @staticmethod
     def fromright(monitor, client, client_uid, margin):
@@ -123,7 +96,10 @@ class Animations:  # {{{
         client_width = client["size"][0]
         client_height = client["size"][1]
         margin_y = int((mon_height - client_height) / 2) + mon_y
-        return f"movewindowpixel exact {mon_width - client_width - margin + mon_x } {margin_y},{client_uid}"
+
+        corrected_margin = convert_monitor_dimension(margin, monitor["width"], monitor)
+
+        return f"movewindowpixel exact {mon_width - client_width - corrected_margin + mon_x } {margin_y},{client_uid}"
 
 
 # }}}
@@ -177,19 +153,6 @@ class Scratch(CastBoolMixin):  # {{{
         self.meta = {}
         self.space_identifier = None
         self.monitor = ""
-
-    async def get_auto_offset(self, monitor=None):
-        "Get au automatic offset value computed from client size"
-        width, height = self.client_info["size"]
-        margin = self.conf.get("margin", DEFAULT_MARGIN)
-        if monitor is None:
-            monitor = await get_focused_monitor_props(
-                self.log, name=self.conf.get("force_monitor")
-            )
-        return map(
-            int,
-            [(width + margin) / monitor["scale"], (height + margin) / monitor["scale"]],
-        )
 
     async def initialize(self, ex):
         "Initialize the scratchpad"
@@ -447,9 +410,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             monitor = await self.get_focused_monitor_props(
                 name=scratch.conf.get("force_monitor")
             )
-            width, height = convert_coords(
-                self.log, scratch.conf.get("size", "80% 80%"), monitor
-            )
+            width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
 
             ipc_commands = [
                 f"windowrule float,^({defined_class})$",
@@ -743,11 +704,34 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
     async def get_offsets(self, scratch, monitor=None):
-        "Return offset from config or compute one"
+        "Return offset from config or use margin as a ref"
         offset = scratch.conf.get("offset")
+        rotated = monitor["transform"] in (1, 3)
+        aspect = (
+            reversed(scratch.client_info["size"])
+            if rotated
+            else scratch.client_info["size"]
+        )
+
+        if monitor is None:
+            monitor = await get_focused_monitor_props(
+                self.log, name=scratch.conf.get("force_monitor")
+            )
+
         if offset:
-            return offset, offset
-        return await scratch.get_auto_offset(monitor)
+            return [convert_monitor_dimension(offset, ref, monitor) for ref in aspect]
+
+        # compute from client size & margin
+        margin = scratch.conf.get("margin", DEFAULT_MARGIN)
+
+        mon_size = (
+            [monitor["height"], monitor["width"]]
+            if rotated
+            else [monitor["width"], monitor["height"]]
+        )
+
+        margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
+        return map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins)])
 
     async def _hide_transition(self, scratch, monitor):
         "animate hiding a scratchpad"
@@ -877,10 +861,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         size = item.conf.get("size")
         if size:
-            width, height = convert_coords(self.log, size, monitor)
+            width, height = convert_coords(size, monitor)
             max_size = item.conf.get("max_size")
             if max_size:
-                max_width, max_height = convert_coords(self.log, max_size, monitor)
+                max_width, max_height = convert_coords(max_size, monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
             await self.hyprctl(
@@ -892,7 +876,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         position = item.conf.get("position")
         if position:
-            x_pos, y_pos = convert_coords(self.log, position, monitor)
+            x_pos, y_pos = convert_coords(position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
             await self.hyprctl(
                 f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
