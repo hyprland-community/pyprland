@@ -744,6 +744,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         off_x, off_y = await self.get_offsets(scratch, monitor)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
+        await asyncio.sleep(
+            self.config.get("hide_delay", 0.2)
+        )  # await for animation to finish
         return True
 
     async def _slide_animation(self, animation_type, scratch, off_x, off_y):
@@ -757,8 +760,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await self.hyprctl(f"movewindowpixel {-off_x} 0,{addr}")
         elif animation_type == "fromright":
             await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
-
-        await asyncio.sleep(0.2)  # await for animation to finish
 
     async def run_show(self, uid) -> None:
         """<name> shows scratchpad "name" """
