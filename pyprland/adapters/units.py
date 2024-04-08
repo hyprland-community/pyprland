@@ -1,7 +1,10 @@
 " Unit conversion & co "
+from typing import Any
 
 
-def convert_monitor_dimension(size, ref_value, monitor: dict[str]) -> int:
+def convert_monitor_dimension(
+    size: int | str, ref_value, monitor: dict[str, Any]
+) -> int:
     """Convert `size` into pixels (given a reference value applied to a `monitor`)
     if size is an integer, assumed pixels & return it
     if size is a string, expects a "%" or "px" suffix
@@ -21,7 +24,7 @@ def convert_monitor_dimension(size, ref_value, monitor: dict[str]) -> int:
     raise ValueError(f"Unsupported format: {size} (applied to {ref_value})")
 
 
-def convert_coords(coords: str | int, monitor: dict[str]):
+def convert_coords(coords: str, monitor: dict[str, Any]):
     """
     Converts a string like "X Y" to coordinates relative to monitor
     Supported formats for X, Y:
