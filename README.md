@@ -61,14 +61,17 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 - Requires Hyprland >= 0.30
 - Added [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin.
 
-## Developers
-
-Contribute to Pyprland in various ways:
-- Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues).
-- Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki) or write new plugins.
-- Enhance coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
+## Contributing
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
+
+- Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues).
+- Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki)
+
+and if you have coding skills you can also
+
+- Enhance test coverage in our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
+- Write new plugins
 
 ## Star History
 
