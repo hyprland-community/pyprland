@@ -17,7 +17,7 @@ async def iter_dir(path, extensions, recurse=True):
         if ext.lower() in extensions:
             yield full_path
         elif recurse and os.path.isdir(full_path):
-            async for v in iter_dir(full_path, True):
+            async for v in iter_dir(full_path, extensions, True):
                 yield v
 
 
