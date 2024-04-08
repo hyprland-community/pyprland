@@ -66,7 +66,7 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 Contribute to Pyprland in various ways:
 - Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues).
 - Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki) or write new plugins.
-- Enhance test coverage in our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
+- Enhance coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
 
