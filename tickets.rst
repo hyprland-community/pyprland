@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 35
+:total-count: 36
 
 --------------------------------------------------------------------------------
 
@@ -114,3 +114,31 @@ offset & margin: support % and px units
 - #34 done
 - #33 done
 - VISUAL REGRESSION TESTS
+
+--------------------------------------------------------------------------------
+
+Add "satellite" scratchpads
+===========================
+
+:bugid: 36
+:created: 2024-04-08T23:42:26
+:priority: 0
+
+- add a "scratch" command that sets the focused window into the currently focused scratchpad window
+
+Eg: open a terminal, hover it + "scratch" it while a scratchpad is open.
+Behind the hood, it creates attached "ghost scratchpads" for each attached window. They use "perserve_aspect" by default.
+
+**Alternative**
+
+Move focused client into the named scratchpad's special workspace.
+Rework pyprland's scratchpad to keep track of every window added to the special workspace and attach it to the last used scratch then hide it if the scratchpad is hidden.
+If called on a scratchpad window, will "de-attach" this window.
+
+Every attached window should be synchronized with the main one.
+
+
+**Option**
+
+Prepare / Simplify this dev by adding support for "ScratchGroups" (contains multiple Scratches which are synchronized).
+Would generalize the current feature: passing multiple scratches to the toggle command.
