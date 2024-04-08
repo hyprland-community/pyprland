@@ -14,8 +14,6 @@ def convert_monitor_dimension(size, ref_value, monitor: dict[str]) -> int:
     if isinstance(size, str):
         if size.endswith("%"):
             p = int(size[:-1])
-            if p < 0 or p > 100:
-                raise ValueError(f"Percentage must be in range [0; 100], got {p}")
             return int(ref_value / monitor["scale"] * p / 100)
         if size.endswith("px"):
             return int(size[:-2])
