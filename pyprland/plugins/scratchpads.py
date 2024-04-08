@@ -15,8 +15,9 @@ from .interface import Plugin
 from ..common import state, CastBoolMixin, apply_variables
 from ..adapters.units import convert_coords, convert_monitor_dimension
 
-DEFAULT_MARGIN = 60  # in pixels
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
+DEFAULT_MARGIN = 60  # in pixels
+DEFAULT_HIDE_DELAY = 0.2
 DEFAULT_HYSTERESIS = 0.4  # In seconds
 
 # Helper functions {{{
@@ -745,7 +746,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         off_x, off_y = await self.get_offsets(scratch, monitor)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
         await asyncio.sleep(
-            self.config.get("hide_delay", 0.2)
+            scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY)
         )  # await for animation to finish
         return True
 
