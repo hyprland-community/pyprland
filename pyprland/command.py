@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-from pyprland.common import PyprError, get_logger, init_logger
+from pyprland.common import PyprError, get_logger, init_logger, merge
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
@@ -55,18 +55,23 @@ class Pyprland:
         "Initializes the main structures"
         await self.load_config()  # ensure sockets are connected first
 
-    async def __open_config(self):
+    async def __open_config(self, config_filename=""):
         """Loads config file as self.config"""
-        if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
-            self.log.warning("Consider changing your configuration to TOML format.")
+        if config_filename:
+            fname = config_filename
+        else:
+            if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
+                self.log.warning("Consider changing your configuration to TOML format.")
 
-        self.config.clear()
-        fname = os.path.expanduser(CONFIG_FILE)
+            self.config.clear()
+            fname = os.path.expanduser(CONFIG_FILE)
+
+        config = {}
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
             try:
                 with open(fname, "rb") as f:
-                    self.config.update(tomllib.load(f))
+                    config = tomllib.load(f)
             except FileNotFoundError as e:
                 self.log.critical(
                     "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
@@ -76,15 +81,21 @@ class Pyprland:
             self.log.info("Loading %s", OLD_CONFIG_FILE)
             try:
                 with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
-                    self.config.update(json.loads(f.read()))
+                    config = json.loads(f.read())
             except FileNotFoundError as e:
                 self.log.critical(
                     "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
                 )
                 raise PyprError() from e
         else:
-            self.log.critical("No Config file found ! Please create %s", CONFIG_FILE)
+            self.log.critical("Config file not found! Please create %s", fname)
             raise PyprError()
+
+        if not config_filename:
+            for extra_config in list(config["pyprland"].get("include", [])):
+                merge(config, await self.__open_config(extra_config))
+            self.config.update(config)
+        return config
 
     async def _load_single_plugin(self, name, init) -> bool:
         "Load a single plugin, optionally calling `init`"
@@ -348,7 +359,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.3-16")  # Automatically updated version
+        print("2.2.3-17")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
