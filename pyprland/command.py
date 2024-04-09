@@ -10,7 +10,13 @@ import json
 import os
 import sys
 
-from pyprland.common import PyprError, get_logger, init_logger, merge
+from pyprland.common import (
+    PyprError,
+    get_logger,
+    init_logger,
+    merge,
+    run_interactive_program,
+)
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
@@ -359,8 +365,14 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.3-19")  # Automatically updated version
+        print("2.2.3-21")  # Automatically updated version
         return
+
+    if sys.argv[1] == "edit":
+        editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
+        filename = os.path.expanduser(CONFIG_FILE)
+        run_interactive_program(f'{editor} "{filename}"')
+        sys.argv[1] = "reload"
 
     if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
