@@ -13,6 +13,7 @@ __all__ = [
 
 import asyncio
 import json
+import time
 import os
 from typing import Any
 from logging import Logger
@@ -66,12 +67,24 @@ def retry_on_reset(func):
     return wrapper
 
 
+cached_responses = {
+    # <command name>: [expiration_date, payload, retention_time]
+    "monitors": [0, None, 0.1],
+    # "clients": [0, None, 0.02],
+}
+
+
 @retry_on_reset
 async def hyprctlJSON(
     command: str, logger=None
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
     logger = logger or log
+    now = time.time()
+    cached = command in cached_responses and cached_responses[command][0] > now
+    if cached:
+        logger.debug(f"{command} (CACHE HIT)")
+        return cached_responses[command][1]
     logger.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -85,6 +98,9 @@ async def hyprctlJSON(
     await ctl_writer.wait_closed()
     ret = json.loads(resp)
     assert isinstance(ret, (list, dict))
+    if command in cached_responses:  # should fill the cache
+        cached_responses[command][0] = now + cached_responses[command][2]
+        cached_responses[command][1] = ret
     return ret
 
 
