@@ -767,8 +767,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not animation_type:
             return False
 
-        await self.updateScratchInfo(scratch)
-
         off_x, off_y = await self.get_offsets(scratch, monitor)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
         await asyncio.sleep(
