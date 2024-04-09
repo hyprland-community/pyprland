@@ -58,7 +58,7 @@ class Pyprland:
     async def __open_config(self, config_filename=""):
         """Loads config file as self.config"""
         if config_filename:
-            fname = config_filename
+            fname = os.path.expandvars(os.path.expanduser(config_filename))
         else:
             if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
                 self.log.warning("Consider changing your configuration to TOML format.")
@@ -359,7 +359,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.3-17")  # Automatically updated version
+        print("2.2.3-18")  # Automatically updated version
         return
 
     if sys.argv[1] in ("--help", "-h", "help"):
