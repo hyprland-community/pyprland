@@ -12,31 +12,33 @@ import logging
 import subprocess
 from dataclasses import dataclass, field
 
-__all__ = ["DEBUG", "get_logger", "state", "PyprError", "apply_variables", "merge"]
+__all__ = ["DEBUG", "get_logger", "state", "PyprError", "apply_variables", "merge", "run_interactive_program"]
 
 DEBUG = os.environ.get("DEBUG", False)
 
 
-def set_terminal_size(fd, rows, cols):
-    # Set the terminal size
-    fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+def set_terminal_size(descriptor, rows, cols):
+    "Set the terminal size"
+    fcntl.ioctl(descriptor, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
-def set_raw_mode(fd):
+def set_raw_mode(descriptor):
+    "Set a file descriptor in raw mode"
     # Get the current terminal attributes
-    attrs = termios.tcgetattr(fd)
+    attrs = termios.tcgetattr(descriptor)
     # Set the terminal to raw mode
     attrs[3] &= ~termios.ICANON  # Disable canonical mode (line buffering)
     attrs[3] &= ~termios.ECHO  # Disable echoing of input characters
-    termios.tcsetattr(fd, termios.TCSANOW, attrs)
+    termios.tcsetattr(descriptor, termios.TCSANOW, attrs)
 
 
 def run_interactive_program(command):
+    "Run an interactive program in a blocking way"
     # Create a pseudo-terminal
     master, slave = pty.openpty()
 
     # Start the program in the pseudo-terminal
-    process = subprocess.Popen(
+    process = subprocess.Popen(  # pylint: disable=consider-using-with
         command, shell=True, stdin=slave, stdout=slave, stderr=slave
     )
 
