@@ -102,21 +102,6 @@ offset & margin: support % and px units
 
 --------------------------------------------------------------------------------
 
-2.1 ?
-=====
-
-:bugid: 35
-:created: 2024-03-08T00:22:35
-:priority: 0
-
-- lazy = true
-- positions in % and px (defaults to px if no unit is provided)
-- #34 done
-- #33 done
-- VISUAL REGRESSION TESTS
-
---------------------------------------------------------------------------------
-
 Add "satellite" scratchpads
 ===========================
 
