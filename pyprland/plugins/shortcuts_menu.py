@@ -33,7 +33,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
             selection = name
             if isinstance(options, str):
                 self.log.info("running %s", options)
-                await self._run_command(options.strip())
+                await self._run_command(options.strip(), state.variables)
                 break
             if isinstance(options, list):
                 self.log.info("interpreting %s", options)
@@ -94,7 +94,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                     variables[var_name] = apply_filter(selection, option.get("filter"))
                     self.log.debug("set %s = %s", var_name, variables[var_name])
 
-    async def _run_command(self, command, variables=None):
+    async def _run_command(self, command, variables):
         "Runs a shell `command`, optionally replacing `variables`"
         final_command = apply_variables(command, variables)
         self.log.info("Executing %s", final_command)
