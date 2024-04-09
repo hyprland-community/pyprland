@@ -67,7 +67,7 @@ def retry_on_reset(func):
     return wrapper
 
 
-cached_responses = {
+cached_responses: dict[str, list[Any]] = {
     # <command name>: [expiration_date, payload, retention_time]
     "monitors": [0, None, 0.1],
     # "clients": [0, None, 0.02],
@@ -84,7 +84,7 @@ async def hyprctlJSON(
     cached = command in cached_responses and cached_responses[command][0] > now
     if cached:
         logger.debug(f"{command} (CACHE HIT)")
-        return cached_responses[command][1]
+        return cached_responses[command][1]  # type: ignore
     logger.debug(command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
