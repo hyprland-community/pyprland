@@ -74,8 +74,12 @@ class Extension(CastBoolMixin, Plugin):
             cmd = f'{cmd_prefix} "{filename}"'
             self.log.info("Running %s", cmd)
             self.proc = await asyncio.create_subprocess_shell(cmd)
+            await asyncio.sleep(1)  # wait for the command to start
+            # check if the command failed
+            if self.proc.returncode:
+                await self.notify_error(f"wallpaper command failed: {cmd}")
 
-            interval = asyncio.sleep(60 * self.config.get("interval", 10))
+            interval = asyncio.sleep(60 * self.config.get("interval", 10) - 1)
             await asyncio.wait(
                 [
                     asyncio.create_task(interval),
