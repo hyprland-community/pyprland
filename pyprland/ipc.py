@@ -56,7 +56,7 @@ def retry_on_reset(func):
         exc = None
         for count in range(3):
             try:
-                return await func(*args, **kwargs)
+                return await func(*args, **kwargs, logger=logger)
             except ConnectionResetError as e:
                 exc = e
                 logger.warning("ipc connection problem, retrying...")
