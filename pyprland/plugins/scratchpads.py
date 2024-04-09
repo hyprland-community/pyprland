@@ -23,9 +23,16 @@ DEFAULT_HYSTERESIS = 0.4  # In seconds
 # Helper functions {{{
 
 
-def get_space_identifier():
+def get_active_space_identifier():
     "Returns a unique object for the workspace + monitor combination"
     return (state.active_workspace, state.active_monitor)
+
+
+async def get_all_space_identifiers(monitors):
+    "Returns a list of every space identifiers (workspace + monitor) on active screens"
+    return [
+        (monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors
+    ]
 
 
 # }}}
@@ -684,9 +691,23 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             )
             return
 
+        if self.cast_bool(first_scratch.conf.get("alt_toggle")):
+            # Needs to be on any monitor (if workspace matches)
+            extra_visibility_check = (
+                first_scratch.space_identifier
+                in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
+            )
+        else:
+            # Needs to be on the active monitor+workspace
+            extra_visibility_check = (
+                first_scratch.space_identifier == get_active_space_identifier()
+            )  # visible on the currently focused monitor
+
         is_visible = first_scratch.visible and (
-            first_scratch.conf.get("force_monitor")
-            or first_scratch.space_identifier == get_space_identifier()
+            first_scratch.conf.get(
+                "force_monitor"
+            )  # always showing on the same monitor
+            or extra_visibility_check
         )
         tasks = []
 
@@ -795,7 +816,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await item.initialize(self)
 
         item.visible = True
-        item.space_identifier = get_space_identifier()
+        item.space_identifier = get_active_space_identifier()
         monitor = await self.get_focused_monitor_props(
             name=item.conf.get("force_monitor")
         )
@@ -831,21 +852,21 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(item, monitor)
         if not position_fixed:
             if animation_type:
-                # NOTE: refactor, use single animation method
                 if preserve_aspect and was_alive and not should_set_aspect:
+                    # Relative positioning
                     if "size" not in item.client_info:
                         await self.updateScratchInfo(item)
 
                     ox, oy = await self.get_offsets(item, monitor)
                     await self._slide_animation(animation_type, item, -ox, -oy)
                 else:
-                    margin = item.conf.get("margin", DEFAULT_MARGIN)
+                    # Absolute positioning
                     fn = getattr(Animations, animation_type)
                     command = fn(
                         monitor,
                         item.client_info,
                         "address:" + item.full_address,
-                        margin,
+                        item.conf.get("margin", DEFAULT_MARGIN),
                     )
                     await self.hyprctl(command)
             else:
