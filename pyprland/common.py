@@ -12,7 +12,15 @@ import logging
 import subprocess
 from dataclasses import dataclass, field
 
-__all__ = ["DEBUG", "get_logger", "state", "PyprError", "apply_variables", "merge", "run_interactive_program"]
+__all__ = [
+    "DEBUG",
+    "get_logger",
+    "state",
+    "PyprError",
+    "apply_variables",
+    "merge",
+    "run_interactive_program",
+]
 
 DEBUG = os.environ.get("DEBUG", False)
 
