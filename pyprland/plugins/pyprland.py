@@ -22,14 +22,17 @@ class Extension(Plugin):
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
         state.active_window = "0x" + addr
+        self.log.debug("active_window = %s", state.active_window)
 
     async def event_workspace(self, wrkspace):
         "track the active workspace"
         state.active_workspace = wrkspace
+        self.log.debug("active_workspace = %s", state.active_workspace)
 
     async def event_focusedmon(self, mon):
         "track the active workspace"
         state.active_monitor, state.active_workspace = mon.rsplit(",", 1)
+        self.log.debug("active_monitor = %s", state.active_monitor)
 
     def set_commands(self, **cmd_map):
         "Set some commands, made available as run_`name` methods"
