@@ -31,7 +31,7 @@ Check out the [creating a pull request](https://docs.github.com/fr/pull-requests
 
 and if you have coding skills you can also
 
-- Enhance test coverage in our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
+- Enhance the coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
 - Propose & write new plugins or enhancements
 
 ## Dependencies
