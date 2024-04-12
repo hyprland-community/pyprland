@@ -26,12 +26,12 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
 
-- Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues).
+- Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues)
 - Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki)
 
 and if you have coding skills you can also
 
-- Enhance the coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests).
+- Enhance the coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests)
 - Propose & write new plugins or enhancements
 
 ## Dependencies
