@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# stale merges
+*.orig
+
+# random crap
+*.out
+
 # C extensions
 *.so
 
