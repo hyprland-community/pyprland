@@ -48,6 +48,7 @@ and if you have coding skills you can also
 ### 2.2
 
 - Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
+- Deprecates `class_match`
 
 ### 2.1
 
