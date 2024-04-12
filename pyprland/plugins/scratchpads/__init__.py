@@ -1,338 +1,26 @@
 " Scratchpads addon "
-import os
 import time
-import logging
 import asyncio
-from typing import Any, cast, Callable
 from functools import partial
-from collections import defaultdict
 
-from aiofiles import os as aios
-from aiofiles import open as aiopen
+from ...ipc import notify_error, get_client_props, get_focused_monitor_props
+from ..interface import Plugin
+from ...common import state, CastBoolMixin, apply_variables
+from ...adapters.units import convert_coords, convert_monitor_dimension
 
-from ..ipc import notify_error, get_client_props, get_focused_monitor_props
-from .interface import Plugin
-from ..common import state, CastBoolMixin, apply_variables
-from ..adapters.units import convert_coords, convert_monitor_dimension
+from .animations import Animations
+from .objects import Scratch
+from .lookup import ScratchDB
+from .helpers import (
+    get_active_space_identifier,
+    get_all_space_identifiers,
+    get_match_fn,
+)
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0.2
 DEFAULT_HYSTERESIS = 0.4  # In seconds
-
-# Helper functions {{{
-
-
-def get_active_space_identifier():
-    "Returns a unique object for the workspace + monitor combination"
-    return (state.active_workspace, state.active_monitor)
-
-
-async def get_all_space_identifiers(monitors):
-    "Returns a list of every space identifiers (workspace + monitor) on active screens"
-    return [
-        (monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors
-    ]
-
-
-# }}}
-
-
-class Animations:  # {{{
-    "Animation store"
-
-    @staticmethod
-    def fromtop(monitor, client, client_uid, margin):
-        "Slide from/to top"
-        scale = float(monitor["scale"])
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_width = int(monitor["width"] / scale)
-
-        client_width = client["size"][0]
-        margin_x = int((mon_width - client_width) / 2) + mon_x
-
-        corrected_margin = convert_monitor_dimension(margin, monitor["height"], monitor)
-
-        return (
-            f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
-        )
-
-    @staticmethod
-    def frombottom(monitor, client, client_uid, margin):
-        "Slide from/to bottom"
-        scale = float(monitor["scale"])
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_width = int(monitor["width"] / scale)
-        mon_height = int(monitor["height"] / scale)
-
-        client_width = client["size"][0]
-        client_height = client["size"][1]
-        margin_x = int((mon_width - client_width) / 2) + mon_x
-
-        corrected_margin = convert_monitor_dimension(margin, monitor["height"], monitor)
-
-        return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
-
-    @staticmethod
-    def fromleft(monitor, client, client_uid, margin):
-        "Slide from/to left"
-        scale = float(monitor["scale"])
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_height = int(monitor["height"] / scale)
-
-        client_height = client["size"][1]
-        margin_y = int((mon_height - client_height) / 2) + mon_y
-
-        corrected_margin = convert_monitor_dimension(margin, monitor["width"], monitor)
-
-        return (
-            f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
-        )
-
-    @staticmethod
-    def fromright(monitor, client, client_uid, margin):
-        "Slide from/to right"
-        scale = float(monitor["scale"])
-        mon_x = monitor["x"]
-        mon_y = monitor["y"]
-        mon_width = int(monitor["width"] / scale)
-        mon_height = int(monitor["height"] / scale)
-
-        client_width = client["size"][0]
-        client_height = client["size"][1]
-        margin_y = int((mon_height - client_height) / 2) + mon_y
-
-        corrected_margin = convert_monitor_dimension(margin, monitor["width"], monitor)
-
-        return f"movewindowpixel exact {mon_width - client_width - corrected_margin + mon_x } {margin_y},{client_uid}"
-
-
-# }}}
-
-
-class OverridableConfig:
-    "A `dict`-like object allowing per-monitor overrides"
-
-    def __init__(self, ref, monitor_override):
-        self.ref = ref
-        self.mon_override = monitor_override
-
-    def __setitem__(self, name, value):
-        self.ref[name] = value
-
-    def __getitem__(self, name):
-        override = self.mon_override.get(state.active_monitor, {})
-        if name in override:
-            return override[name]
-        return self.ref[name]
-
-    def get(self, name, default=None):
-        "get the attribute `name`"
-        try:
-            return self[name]
-        except KeyError:
-            return default
-
-    def __str__(self):
-        return f"{self.ref} {self.mon_override}"
-
-
-class Scratch(CastBoolMixin):  # {{{
-    "A scratchpad state including configuration & client state"
-    log = logging.getLogger("scratch")
-    get_client_props: Callable
-
-    def __init__(self, uid, opts):
-        self.uid = uid
-        self.pid = 0
-        if self.cast_bool(opts.get("preserve_aspect")):
-            opts["lazy"] = True
-        if not opts.get("process_tracking", True):
-            opts["lazy"] = True
-            opts["class_match"] = True
-        self.conf = OverridableConfig(opts, opts.get("monitor", {}))
-        self.visible = False
-        self.client_info = {}
-        self.should_hide = False
-        self.initialized = False
-        self.meta = {}
-        self.space_identifier = None
-        self.monitor = ""
-
-    async def initialize(self, ex):
-        "Initialize the scratchpad"
-        if self.initialized:
-            return
-        self.initialized = True
-        await self.updateClientInfo()
-        await ex.hyprctl(
-            f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
-        )
-
-    async def isAlive(self) -> bool:
-        "is the process running ?"
-        if self.cast_bool(self.conf.get("process_tracking"), True):
-            path = f"/proc/{self.pid}"
-            if await aios.path.exists(path):
-                async with aiopen(
-                    os.path.join(path, "status"), mode="r", encoding="utf-8"
-                ) as f:
-                    for line in await f.readlines():
-                        if line.startswith("State"):
-                            proc_state = line.split()[1]
-                            return (
-                                proc_state not in "ZX"
-                            )  # not "Z (zombie)"or "X (dead)"
-        else:
-            if getattr(self, "bogus_pid", False):
-                return bool(await self.get_client_props(cls=self.conf["class"]))
-            return False
-
-        return False
-
-    def reset(self, pid: int) -> None:
-        "clear the object"
-        self.pid = pid
-        self.visible = False
-        self.client_info = {}
-        self.initialized = False
-
-    @property
-    def address(self) -> str:
-        "Returns the client address"
-        return str(self.client_info.get("address", ""))[2:]
-
-    @property
-    def full_address(self) -> str:
-        "Returns the client address"
-        return cast(str, self.client_info.get("address", ""))
-
-    async def updateClientInfo(self, client_info=None) -> None:
-        "update the internal client info property, if not provided, refresh based on the current address"
-        if client_info is None:
-            client_info = await self.get_client_props(addr=self.full_address)
-        if not isinstance(client_info, dict):
-            self.log.error(
-                "client_info of %s must be a dict: %s", self.address, client_info
-            )
-            raise AssertionError(f"Not a dict: {client_info}")
-
-        self.client_info.update(client_info)
-
-    def __str__(self):
-        return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
-
-
-# }}}
-
-
-class ScratchDB:  # {{{
-    """Single storage for every Scratch allowing a boring lookup & update API"""
-
-    _by_addr: dict[str, Scratch] = {}
-    _by_pid: dict[int, Scratch] = {}
-    _by_name: dict[str, Scratch] = {}
-    _states: defaultdict[str, set[Scratch]] = defaultdict(set)
-
-    # State management {{{
-    def getByState(self, status: str):
-        "get a set of `Scratch` being in `status`"
-        return self._states[status]
-
-    def hasState(self, scratch: Scratch, status: str):
-        "Returns true if `scratch` has state `status`"
-        return scratch in self._states[status]
-
-    def setState(self, scratch: Scratch, status: str):
-        "Sets `scratch` in the provided status"
-        self._states[status].add(scratch)
-
-    def clearState(self, scratch: Scratch, status: str):
-        "Unsets the the provided status from the scratch"
-        self._states[status].remove(scratch)
-
-    # }}}
-
-    # dict-like {{{
-    def __iter__(self):
-        "return all Scratch name"
-        return iter(self._by_name.keys())
-
-    def values(self):
-        "returns every Scratch"
-        return self._by_name.values()
-
-    def items(self):
-        "return an iterable list of (name, Scratch)"
-        return self._by_name.items()
-
-    # }}}
-
-    def reset(self, scratch: Scratch):
-        "clears registered address & pid"
-        if scratch.address in self._by_addr:
-            del self._by_addr[scratch.address]
-        if scratch.pid in self._by_pid:
-            del self._by_pid[scratch.pid]
-
-    def clear(self, name=None, pid=None, addr=None):
-        "clears the index by name, pid or address"
-        # {{{
-
-        assert any((name, pid, addr))
-        if name is not None and name in self._by_name:
-            del self._by_name[name]
-        if pid is not None and pid in self._by_pid:
-            del self._by_pid[pid]
-        if addr is not None and addr in self._by_addr:
-            del self._by_addr[addr]
-        # }}}
-
-    def register(self, scratch: Scratch, name=None, pid=None, addr=None):
-        "set the Scratch index by name, pid or address, or update every index of only `scratch` is provided"
-        # {{{
-        if not any((name, pid, addr)):
-            self._by_name[scratch.uid] = scratch
-            self._by_pid[scratch.pid] = scratch
-            self._by_addr[scratch.address] = scratch
-        else:
-            if name is not None:
-                d: dict[Any, Scratch] = cast(dict[str, Scratch], self._by_name)
-                v = name
-            elif pid is not None:
-                d = self._by_pid
-                v = pid
-            elif addr is not None:
-                d = self._by_addr
-                v = addr
-            d[v] = scratch
-        # }}}
-
-    def get(self, name=None, pid=None, addr=None) -> Scratch | None:
-        "return the Scratch matching given name, pid or address"
-        # {{{
-        assert 1 == len(list(filter(bool, (name, pid, addr)))), (
-            name,
-            pid,
-            addr,
-        )
-        if name is not None:
-            d: dict[Any, Scratch] = self._by_name
-            v = name
-        elif pid is not None:
-            d = self._by_pid
-            v = pid
-        elif addr is not None:
-            d = self._by_addr
-            v = addr
-        return d.get(v)
-        # }}}
-
-
-# }}}
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
@@ -384,9 +72,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         scratches_to_spawn = set()
         for name in scratches:
             scratch = self.scratches.get(name)
-            if scratch:
-                # if existing scratch exists, overrides the conf object
-                scratch.conf = scratches[name].conf
+            if scratch:  # if existing scratch exists, overrides the conf object
+                scratch.set_config(scratches[name].conf)
             else:
                 # else register it
                 self.scratches.register(scratches[name], name)
@@ -398,7 +85,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if await self.ensure_alive(name):
                 scratch = self.scratches.get(name)
                 assert scratch
-                scratch.should_hide = True
+                scratch.meta["should_hide"] = True
             else:
                 self.log.error("Failure starting %s", name)
 
@@ -425,28 +112,25 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
             ]
 
-            if not self.cast_bool(scratch.conf.get("preserve_aspect")):
-                if animation_type:
-                    margin_x = (monitor["width"] - width) // 2
-                    margin_y = (monitor["height"] - height) // 2
+            if animation_type:
+                margin_x = (monitor["width"] - width) // 2
+                margin_y = (monitor["height"] - height) // 2
 
-                    t_pos = {
-                        "fromtop": f"{margin_x} -200%",
-                        "frombottom": f"{margin_x} 200%",
-                        "fromright": f"200% {margin_y}",
-                        "fromleft": f"-200% {margin_y}",
-                    }[animation_type]
-                    ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
+                t_pos = {
+                    "fromtop": f"{margin_x} -200%",
+                    "frombottom": f"{margin_x} 200%",
+                    "fromright": f"200% {margin_y}",
+                    "fromleft": f"-200% {margin_y}",
+                }[animation_type]
+                ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
 
-                ipc_commands.append(
-                    f"windowrule size {width} {height},^({defined_class})$"
-                )
+            ipc_commands.append(f"windowrule size {width} {height},^({defined_class})$")
 
             await self.hyprctl(ipc_commands, "keyword")
 
     async def __wait_for_client(self, item, use_proc=True) -> bool:
         """Waits for a client to be up and running
-        if `class_match` is enabled, will use the class, else the process's PID will be used.
+        if `match_by=` is used, will use the match criteria, else the process's PID will be used.
         """
         self.log.info("==> Wait for %s spawning", item.uid)
         interval_range = [0.1] * 10 + [0.2] * 20 + [0.5] * 15
@@ -456,8 +140,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
-                if self.cast_bool(item.conf.get("class_match")):
-                    info = await self.get_client_props(cls=item.conf.get("class"))
+                match_by = item.conf.get("match_by", "pid")
+                if match_by != "pid":
+                    info = await self.get_client_props(
+                        match_fn=get_match_fn(match_by, item.conf[match_by]),
+                        **{match_by: item.conf[match_by]},
+                    )
                 else:
                     info = await self.get_client_props(pid=item.pid)
                 if info:
@@ -475,17 +163,17 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 return False
         return False
 
-    async def _start_scratch_classbased(self, item) -> bool:
+    async def _start_scratch_nopid(self, item) -> bool:
         "Ensure alive, PWA version"
         uid = item.uid
-        started = getattr(item, "bogus_pid", False)
+        started = "nopid" in item.meta
         if not await item.isAlive():
             started = False
         if not started:
             self.scratches.reset(item)
             await self.start_scratch_command(uid)
             r = await self.__wait_for_client(item, use_proc=False)
-            item.bogus_pid = True
+            item.meta["nopid"] = r
             return r
         return True
 
@@ -532,7 +220,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     return False
             return True
 
-        return await self._start_scratch_classbased(item)
+        return await self._start_scratch_nopid(item)
 
     async def start_scratch_command(self, name: str) -> None:
         "spawns a given scratchpad's process"
@@ -591,12 +279,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if not scratch.client_info:
                 continue
             if scratch.address == addr:
-                task = self._hysteresis_tasks.get(scratch.uid)
-                if task:
-                    task.cancel()
-                    if scratch.uid in self._hysteresis_tasks:
-                        del self._hysteresis_tasks[scratch.uid]
-                    self.log.debug("Canceled previous task for %s", uid)
+                self.cancel_task(uid)
             else:
                 if scratch.visible and scratch.conf.get("unfocus") == "hide":
                     last_shown = scratch.meta.get("last_shown", 0)
@@ -609,49 +292,52 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
                     hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
                     if hysteresis:
-                        task = self._hysteresis_tasks.get(scratch.uid)
-                        if task:
-                            task.cancel()
-                            self.log.debug("Canceled previous task for %s", uid)
-                        self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
-                            asyncio.sleep(hysteresis)
-                        )
+                        self.cancel_task(uid)
 
-                        async def _task(scratch, uid):
-                            if scratch.uid in self._hysteresis_tasks:
-                                await self._hysteresis_tasks[scratch.uid]
-                                del self._hysteresis_tasks[scratch.uid]
+                        async def _task(scratch, delay):
+                            await asyncio.sleep(delay)
                             if state.active_window == scratch.full_address:
                                 self.log.debug(
                                     "Skipped hidding %s because client got the focus back",
-                                    uid,
+                                    scratch.uid,
                                 )
                                 return
                             self.log.debug(
-                                "hide %s because another client is active", uid
+                                "hide %s because another client is active", scratch.uid
                             )
-                            await self.run_hide(uid, autohide=True)
+                            await self.run_hide(scratch.uid, autohide=True)
 
-                        asyncio.create_task(_task(scratch, uid))
+                            try:
+                                del self._hysteresis_tasks[scratch.uid]
+                            except KeyError:
+                                pass
+
+                        self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
+                            _task(scratch, hysteresis)
+                        )
                     else:
                         self.log.debug("hide %s because another client is active", uid)
                         await self.run_hide(uid, autohide=True)
 
     async def _alternative_lookup(self):
-        "if class_match attribute is defined, use class matching and return True"
+        "if not matching by pid, use specific matching and return True"
         class_lookup_hack = [
             s
             for s in self.scratches.getByState("respawned")
-            if self.cast_bool(s.conf.get("class_match"))
+            if s.conf.get("match_by", "pid") != "pid"
         ]
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
-        # hack to update the client info from the provided class
-        for client in await self.hyprctlJSON("clients"):
-            assert isinstance(client, dict)
-            for pending_scratch in class_lookup_hack:
-                if pending_scratch.conf["class"] == client["class"]:
+        # hack to update the client info from the provided match_by attribute
+        clients = await self.hyprctlJSON("clients")
+        for pending_scratch in class_lookup_hack:
+            match_by = pending_scratch.conf["match_by"]
+            match_value = pending_scratch.conf[match_by]
+            match_fn = get_match_fn(match_by, match_value)
+            for client in clients:
+                assert isinstance(client, dict)
+                if match_fn(client[match_by], match_value):
                     self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.updateClientInfo(client)
@@ -668,12 +354,23 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.info("Updating Scratch info")
                 await self.updateScratchInfo()
             item = self.scratches.get(addr=addr)
-            if item and item.should_hide:
+            if item and item.meta["should_hide"]:
                 await self.run_hide(item.uid, force=True)
         if item:
             await item.initialize(self)
 
     # }}}
+    def cancel_task(self, uid):
+        "cancel a task"
+        task = self._hysteresis_tasks.get(uid)
+        if task:
+            task.cancel()
+            self.log.debug("Canceled previous task for %s", uid)
+            if uid in self._hysteresis_tasks:
+                del self._hysteresis_tasks[uid]
+            return True
+        return False
+
     # Commands {{{
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name" """
@@ -682,38 +379,37 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         else:
             uids = [uid_or_uids.strip()]
 
+        for uid in uids:
+            self.cancel_task(uid)
+
         assert len(uids) > 0
         first_scratch = self.scratches.get(uids[0])
         if not first_scratch:
             self.log.warning("%s doesn't exist, can't toggle.", uids[0])
             await notify_error(
-                f"Scratchpad '{uids[0]}' not found, check your configuration or the toggle parameter"
+                f"Scratchpad '{uids[0]}' not found, check your configuration & the toggle parameter"
             )
             return
 
         if self.cast_bool(first_scratch.conf.get("alt_toggle")):
             # Needs to be on any monitor (if workspace matches)
-            extra_visibility_check = (
-                first_scratch.space_identifier
-                in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
-            )
+            extra_visibility_check = first_scratch.meta[
+                "space_identifier"
+            ] in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
         else:
             self.log.debug(
                 "visibility_check: %s == %s",
-                first_scratch.space_identifier,
+                first_scratch.meta["space_identifier"],
                 get_active_space_identifier(),
             )
             # Needs to be on the active monitor+workspace
             extra_visibility_check = (
-                first_scratch.space_identifier == get_active_space_identifier()
+                first_scratch.meta["space_identifier"] == get_active_space_identifier()
             )  # visible on the currently focused monitor
 
         is_visible = first_scratch.visible and (
-            first_scratch.conf.get(
-                "force_monitor"
-            )  # always showing on the same monitor
-            or extra_visibility_check
-        )
+            first_scratch.conf.get("force_monitor") or extra_visibility_check
+        )  # always showing on the same monitor
         tasks = []
 
         for uid in uids:
@@ -799,6 +495,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         self.focused_window_tracking[uid] = state.active_window
 
+        self.cancel_task(uid)
+
         self.log.info("Showing %s", uid)
         was_alive = await item.isAlive()
         if not await self.ensure_alive(uid):
@@ -819,7 +517,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await item.initialize(self)
 
         item.visible = True
-        item.space_identifier = get_active_space_identifier()
+        item.meta["space_identifier"] = get_active_space_identifier()
         monitor = await self.get_focused_monitor_props(
             name=item.conf.get("force_monitor")
         )
@@ -927,6 +625,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.warning("%s is already hidden", uid)
             return
         scratch.visible = False
+        scratch.meta["should_hide"] = False
         self.log.info("Hiding %s", uid)
         animated = await self._hide_transition(scratch, scratch.meta["monitor_info"])
 

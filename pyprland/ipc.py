@@ -180,37 +180,50 @@ async def get_focused_monitor_props(logger=None, name=None) -> dict[str, Any]:
     raise RuntimeError("no focused monitor")
 
 
-async def get_client_props(
-    addr: str | None = None, pid: int | None = None, cls: str | None = None, logger=None
-):
+async def get_client_props(logger=None, match_fn=None, **kw):
     """
-    Returns client properties
+    Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments
+
+    Eg.
+        # will return the properties of the client with address "0x1234"
+        get_client_props(logger, addr="0x1234")
+
+        # will return the properties of the client with initialClass containing "fooBar"
+        get_client_props(logger, match_fn=lambda x, y: y in x), initialClass="fooBar")
 
     Args:
-        addr (str): address of the client (includes "0x" prefix)
-        pid (int): PID of the client
-        cls (str): class of the client
-        logger: logger to use in case of error
-    """
-    assert addr or pid or cls
 
-    prop_value: int | str
+        logger: logger to use in case of error
+        match_fn: function to match the client properties, takes 2 arguments (client_value, config_value)
+
+        Any other keyword argument will be used to match the client properties. Only one keyword argument is allowed.
+        `addr` aliases `address` and `cls` aliases `class`
+
+        Note: the address of the client must include the "0x" prefix
+    """
+    assert kw
+
+    addr = kw.get("addr")
+    klass = kw.get("cls")
 
     if addr:
         assert len(addr) > 2, "Client address is invalid"
         prop_name = "address"
         prop_value = addr
-    elif cls:
+    elif klass:
         prop_name = "class"
-        prop_value = cls
+        prop_value = klass
     else:
-        assert pid, "Client pid is invalid"
-        prop_name = "pid"
-        prop_value = pid
+        prop_name, prop_value = next(iter(kw.items()))
+
+    if match_fn is None:
+
+        def match_fn(value1, value2):
+            return value1 == value2
 
     for client in await hyprctlJSON("clients", logger=logger):
         assert isinstance(client, dict)
-        if client.get(prop_name) == prop_value:
+        if match_fn(client.get(prop_name), prop_value):
             return client
 
 
