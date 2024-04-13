@@ -56,6 +56,10 @@ class Extension(CastBoolMixin, Plugin):
             self.loop.cancel()
         await self.terminate()
 
+    async def event_monitoradded(self, _):
+        "When a new monitor is added, set the background"
+        self.next_background_event.set()
+
     def select_next_image(self):
         "Returns the next image (random is supported for now)"
         choice = random.choice(self.image_list)
