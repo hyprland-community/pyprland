@@ -199,6 +199,11 @@ Exposes most-commonly accessed attributes to avoid specific IPC requests
 """
 
 
+def prepare_for_quotes(text: str):
+    "Escapes double quotes in text"
+    return text.replace('"', '\\"')
+
+
 def apply_variables(template: str, variables: dict[str, str]):
     """Replace [var_name] with content from supplied variables
     Args:

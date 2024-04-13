@@ -4,7 +4,7 @@ import asyncio
 import importlib
 import itertools
 from functools import partial
-from typing import Self
+from typing import Self, Callable
 import tomllib
 import json
 import os
@@ -44,6 +44,7 @@ class Pyprland:
     config: dict[str, dict] = {}
     tasks: None | asyncio.TaskGroup = None
     instance: Self | None = None
+    log_handler: Callable[[Plugin, str, tuple], None]
 
     @classmethod
     def _set_instance(cls, instance):
@@ -70,10 +71,19 @@ class Pyprland:
         else:
             if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
                 self.log.warning("Consider changing your configuration to TOML format.")
-
             self.config.clear()
             fname = os.path.expanduser(CONFIG_FILE)
 
+        config = self.__load_config_file(fname)
+
+        if not config_filename:
+            for extra_config in list(config["pyprland"].get("include", [])):
+                merge(config, await self.__open_config(extra_config))
+            self.config.update(config)
+        return config
+
+    def __load_config_file(self, fname):
+        """Loads a configuration file and returns it as a dictionary"""
         config = {}
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
@@ -94,11 +104,6 @@ class Pyprland:
         else:
             self.log.critical("Config file not found! Please create %s", fname)
             raise PyprError()
-
-        if not config_filename:
-            for extra_config in list(config["pyprland"].get("include", [])):
-                merge(config, await self.__open_config(extra_config))
-            self.config.update(config)
         return config
 
     async def _load_single_plugin(self, name, init) -> bool:
@@ -166,9 +171,9 @@ class Pyprland:
         assert self.config
         await self.__load_plugins_config(init=init)
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
-        self.log_handler = (  # pylint: disable=attribute-defined-outside-init
+        self.log_handler = (
             self.colored_log_handler if colored_logs else self.plain_log_handler
-        )
+        )  # pylint: disable=attribute-defined-outside-init
 
     def plain_log_handler(self, plugin, name, params):
         "log a handler method without color"
@@ -390,7 +395,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.5-6")  # Automatically updated version
+        print("2.2.5-7")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":

@@ -223,10 +223,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             mon = self._get_mon_by_pat(descr1, monitors_by_descr, plugged_monitors)
             if not mon:
                 continue
-            name1 = mon["name"]
-            if name1 not in plugged_monitors:
+            name = mon["name"]
+            if name not in plugged_monitors:
                 continue
-            cleaned_config[name1] = {}
+            cleaned_config[name] = {}
             for position, descr_list in placement.items():
                 if isinstance(descr_list, str):
                     descr_list = [descr_list]
@@ -236,7 +236,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     if r:
                         resolved.append(r["name"])
                 if resolved:
-                    cleaned_config[name1][clean_pos(position)] = [
+                    cleaned_config[name][clean_pos(position)] = [
                         r for r in resolved if r in plugged_monitors
                     ]
         return cleaned_config
