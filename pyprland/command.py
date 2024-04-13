@@ -81,9 +81,7 @@ class Pyprland:
                 with open(fname, "rb") as f:
                     config = tomllib.load(f)
             except FileNotFoundError as e:
-                self.log.critical(
-                    "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
-                )
+                self.log.critical("Problem reading %s: %s", fname, e)
                 raise PyprError() from e
         elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
             self.log.info("Loading %s", OLD_CONFIG_FILE)
@@ -91,9 +89,7 @@ class Pyprland:
                 with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
                     config = json.loads(f.read())
             except FileNotFoundError as e:
-                self.log.critical(
-                    "No config file found, create one at ~/.config/hypr/pyprland.json with a valid pyprland.plugins list"
-                )
+                self.log.critical("Problem reading %s: %s", fname, e)
                 raise PyprError() from e
         else:
             self.log.critical("Config file not found! Please create %s", fname)
@@ -169,14 +165,10 @@ class Pyprland:
         await self.__open_config()
         assert self.config
         await self.__load_plugins_config(init=init)
-        if self.config["pyprland"].get("colored_handlers_log", True):
-            self.log_handler = (  # pylint: disable=attribute-defined-outside-init
-                self.colored_log_handler
-            )
-        else:
-            self.log_handler = (  # pylint: disable=attribute-defined-outside-init
-                self.plain_log_handler
-            )
+        colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
+        self.log_handler = (  # pylint: disable=attribute-defined-outside-init
+            self.colored_log_handler if colored_logs else self.plain_log_handler
+        )
 
     def plain_log_handler(self, plugin, name, params):
         "log a handler method without color"
@@ -369,12 +361,36 @@ async def run_daemon():
         await manager.server.wait_closed()
 
 
+def show_help(manager):
+    "show the documentation"
+
+    def format_doc(txt):
+        return txt.split("\n")[0]
+
+    print(
+        """Syntax: pypr [command]
+
+If the command is ommited, runs the daemon which will start every configured plugin.
+
+Available commands:
+"""
+    )
+    for plug in manager.plugins.values():
+        for name in dir(plug):
+            if not name.startswith("run_"):
+                continue
+            fn = getattr(plug, name)
+            if callable(fn):
+                doc_txt = format_doc(fn.__doc__) if fn.__doc__ else "N/A"
+                print(f" {name[4:]:20s} {doc_txt} [{plug.name}]")
+
+
 async def run_client():
     "Runs the client (CLI)"
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.5-5")  # Automatically updated version
+        print("2.2.5-6")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
@@ -385,28 +401,7 @@ async def run_client():
 
     if sys.argv[1] in ("--help", "-h", "help"):
         await manager.load_config(init=False)
-
-        def format_doc(txt):
-            return txt.split("\n")[0]
-
-        print(
-            """Syntax: pypr [command]
-
-If the command is ommited, runs the daemon which will start every configured plugin.
-
-Available commands:
-"""
-        )
-        for plug in manager.plugins.values():
-            for name in dir(plug):
-                if name.startswith("run_"):
-                    fn = getattr(plug, name)
-                    if callable(fn):
-                        print(
-                            f" {name[4:]:20s} {format_doc(fn.__doc__) if fn.__doc__ else 'N/A'} [{plug.name}]"
-                        )
-
-        return
+        return show_help(manager)
 
     try:
         _, writer = await asyncio.open_unix_connection(CONTROL)
