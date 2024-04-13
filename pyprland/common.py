@@ -188,6 +188,7 @@ class SharedState:
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address
     variables: dict = field(default_factory=dict)
+    monitors: list[str] = field(default_factory=list)
 
 
 state = SharedState()

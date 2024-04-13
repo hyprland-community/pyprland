@@ -10,11 +10,17 @@ class Extension(Plugin):
         "initializes the plugin"
         state.active_window = ""
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
-        state.active_monitor = next(
-            mon["name"]
-            for mon in (await self.hyprctlJSON("monitors"))
-            if mon["focused"]
-        )
+        monitors = await self.hyprctlJSON("monitors")
+        state.monitors = [mon["name"] for mon in monitors]
+        state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
+
+    async def event_monitoradded(self, name):
+        "track monitor"
+        state.monitors.append(name)
+
+    async def event_monitorremoved(self, name):
+        "track monitor"
+        state.monitors.remove(name)
 
     async def on_reload(self):
         state.variables = self.config.get("variables", {})
