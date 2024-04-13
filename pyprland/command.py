@@ -51,6 +51,8 @@ class Pyprland:
         cls.instance = instance
 
     def __init__(self):
+        self.pyprland_mutex_event = asyncio.Event()
+        self.pyprland_mutex_event.set()
         self.config = {}
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
@@ -278,10 +280,15 @@ class Pyprland:
     async def _plugin_runner_loop(self, name):
         "Runs tasks for a given plugin indefinitely"
         q = self.queues[name]
+        is_pyprland = name == "pyprland"
 
         while not self.stopped:
+            if not is_pyprland:
+                await self.pyprland_mutex_event.wait()
             try:
                 task = await q.get()
+                if is_pyprland:
+                    self.pyprland_mutex_event.clear()
             except RuntimeError as e:
                 self.log.error("Aborting [%s] loop: %s", name, e)
                 return
@@ -291,6 +298,8 @@ class Pyprland:
                 self.log.error(
                     "Unhandled error running plugin %s::%s: %s", name, task, e
                 )
+            if is_pyprland and q.empty():
+                self.pyprland_mutex_event.set()
 
     async def plugins_runner(self):
         "Runs plugins' task using the created `tasks` TaskGroup attribute"
@@ -365,7 +374,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.5")  # Automatically updated version
+        print("2.2.5-4")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
