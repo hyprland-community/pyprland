@@ -10,9 +10,22 @@ class Extension(Plugin):
     "Manage gBar application"
     monitors: set[str]
     proc = None
+    cur_monitor = ""
 
-    async def init(self):
-        self.proc = None
+    async def on_reload(self):
+        "Initializes if not done"
+        if not self.proc:
+            self.cur_monitor = await self.get_best_monitor()
+            if not self.cur_monitor:
+                first_mon = next(iter(state.monitors))
+                await self.notify_info(
+                    f"gBar: No preferred monitor found, using {first_mon}"
+                )
+                cmd = f"gBar bar {first_mon}"
+            else:
+                cmd = f"gBar bar {self.cur_monitor}"
+            self.log.info("starting gBar: %s", cmd)
+            self.proc = await asyncio.create_subprocess_shell(cmd)
 
     async def get_best_monitor(self):
         "get best monitor according to preferred list"
@@ -20,12 +33,15 @@ class Extension(Plugin):
         for monitor in preferred:
             if monitor in state.monitors:
                 return monitor
-        first_mon = next(iter(state.monitors))
-        await self.notify_info(f"gBar: No preferred monitor found, using {first_mon}")
-        return first_mon
 
-    async def on_reload(self):
-        if not self.proc:
-            cmd = f"gBar bar {await self.get_best_monitor()}"
-            self.log.info("starting gBar: %s", cmd)
-            self.proc = await asyncio.create_subprocess_shell(cmd)
+    async def event_monitoradded(self, monitor):
+        "Switch bar in case the monitor is preferred"
+        if self.cur_monitor:
+            preferred = self.config.get("monitors", [])
+            cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999
+            new_idx = preferred.index(monitor)
+            if 0 <= new_idx < cur_idx:
+                if self.proc:
+                    self.proc.kill()
+                    self.proc = None
+                await self.on_reload()
