@@ -537,7 +537,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self.hyprctl(
             [
                 f"moveworkspacetomonitor special:scratch_{item.uid} {monitor['name']}",
-                f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
+                f"movetoworkspacesilent name:{wrkspc},address:{item.full_address}",
                 f"alterzorder top,address:{item.full_address}",
             ]
         )

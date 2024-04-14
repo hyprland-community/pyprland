@@ -12,27 +12,26 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "rebuild workspaces list"
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
-    async def event_focusedmon(self, screenid_index):
+    async def event_focusedmon(self, screenid_name):
         "reacts to monitor changes"
-        monitor_id, workspace_id = screenid_index.split(",")
-        workspace_id = int(workspace_id)
+        monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = set(
-            mon["activeWorkspace"]["id"]
+            mon["activeWorkspace"]["name"]
             for mon in cast(list[dict], await self.hyprctlJSON("monitors"))
             if mon["name"] != monitor_id
         )
         workspaces = [
-            w["id"]
+            w["name"]
             for w in cast(list[dict], await self.hyprctlJSON("workspaces"))
             if w["id"] > 0
         ]
 
         batch: list[str | list[str]] = []
         for n in workspaces:
-            if n in busy_workspaces or n == workspace_id:
+            if n in busy_workspaces or n == workspace_name:
                 continue
-            batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
+            batch.append(f"moveworkspacetomonitor name:{n} {monitor_id}")
         await self.hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
