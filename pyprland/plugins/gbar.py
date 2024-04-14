@@ -53,5 +53,8 @@ class Extension(Plugin):
     def kill(self):
         "Kill the process"
         if self.proc:
-            self.proc.kill()
+            try:
+                self.proc.kill()
+            except ProcessLookupError:
+                pass
             self.proc = None
