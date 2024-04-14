@@ -531,7 +531,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _show_transition(self, item, monitor, was_alive):
         "perfoms the transition to visible state"
         animation_type = item.conf.get("animation", "").lower()
-        wrkspc = monitor["activeWorkspace"]["id"]
+        wrkspc = monitor["activeWorkspace"]["name"]
         item.meta["last_shown"] = time.time()
         # Start the transition
         await self.hyprctl(
