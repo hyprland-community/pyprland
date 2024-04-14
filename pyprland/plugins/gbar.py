@@ -50,6 +50,10 @@ class Extension(Plugin):
                 self.kill()
                 await self.on_reload()
 
+    async def exit(self):
+        "Kill the process"
+        self.kill()
+
     def kill(self):
         "Kill the process"
         if self.proc:
