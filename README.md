@@ -51,7 +51,7 @@ and if you have coding skills you can also
 - Refactor in 2.2.5
   - updated the syntax for [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers)
   - deprecated `class_match` in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
-
+- Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
 ### 2.1
 
 - Requires Hyprland >= 0.37
