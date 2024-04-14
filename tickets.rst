@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 36
+:total-count: 37
 
 --------------------------------------------------------------------------------
 
@@ -127,3 +127,17 @@ Every attached window should be synchronized with the main one.
 
 Prepare / Simplify this dev by adding support for "ScratchGroups" (contains multiple Scratches which are synchronized).
 Would generalize the current feature: passing multiple scratches to the toggle command.
+
+--------------------------------------------------------------------------------
+
+improve groups support
+======================
+
+:bugid: 37
+:created: 2024-04-15T00:27:52
+:priority: 0
+
+Add it to "layout_center" overriding prev & next
+if groupped, toggle over groups, when at the limit, really changes the focus
+
+Option: think about a "chaining" in handlers, (eg: "pypr 'groups prev | layout_center prev'") in case of a separate plugin called "groups"
