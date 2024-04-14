@@ -12,6 +12,12 @@ class Extension(Plugin):
     proc = None
     cur_monitor = ""
 
+    async def run_gbar(self, args):
+        "Starts gBar on the first available monitor"
+        if args.startswith("re"):
+            self.kill()
+            await self.on_reload()
+
     async def on_reload(self):
         "Initializes if not done"
         if not self.proc:
@@ -41,7 +47,11 @@ class Extension(Plugin):
             cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999
             new_idx = preferred.index(monitor)
             if 0 <= new_idx < cur_idx:
-                if self.proc:
-                    self.proc.kill()
-                    self.proc = None
+                self.kill()
                 await self.on_reload()
+
+    def kill(self):
+        "Kill the process"
+        if self.proc:
+            self.proc.kill()
+            self.proc = None
