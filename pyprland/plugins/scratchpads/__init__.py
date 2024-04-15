@@ -531,13 +531,15 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _show_transition(self, item, monitor, was_alive):
         "perfoms the transition to visible state"
         animation_type = item.conf.get("animation", "").lower()
-        wrkspc = monitor["activeWorkspace"]["name"]
+        wrkspc = monitor["specialWorkspace"]["name"]
+        if wrkspc == "":
+            wrkspc = monitor["activeWorkspace"]["name"]
         item.meta["last_shown"] = time.time()
         # Start the transition
         await self.hyprctl(
             [
                 f"moveworkspacetomonitor special:scratch_{item.uid} {monitor['name']}",
-                f"movetoworkspacesilent name:{wrkspc},address:{item.full_address}",
+                f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
                 f"alterzorder top,address:{item.full_address}",
             ]
         )
