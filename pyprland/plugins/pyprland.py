@@ -1,6 +1,6 @@
 " Not a real Plugin - provides some core features and some caching of commonly requested structures "
 from .interface import Plugin
-from ..common import state
+from ..common import state, VersionInfo
 
 
 class Extension(Plugin):
@@ -9,6 +9,14 @@ class Extension(Plugin):
     async def init(self):
         "initializes the plugin"
         state.active_window = ""
+        version = (await self.hyprctlJSON("version"))["tag"]
+        try:
+            state.hyprland_version = VersionInfo(
+                *(int(i) for i in version[1:].split(".")[:3])
+            )
+        except Exception:
+            self.log.error("Fail to parse hyprctl version.")
+
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         monitors = await self.hyprctlJSON("monitors")
         state.monitors = [mon["name"] for mon in monitors]
