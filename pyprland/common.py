@@ -85,22 +85,23 @@ def run_interactive_program(command):
         termios.tcsetattr(sys.stdin, termios.TCSANOW, termios.tcgetattr(0))
 
 
-def merge(obj1, obj2):
+def merge(merged, obj2):
     """
     Merges the content of d2 into d1
+    Eg:
+        merge({"a": {"b": 1}}, {"a": {"c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     Args:
-    - obj1 (dict): First dictionary to merge (will be updated).
+    - merged (dict): First dictionary to merge (will be updated).
     - obj2 (dict): Second dictionary to merge
 
     Returns:
     - dict: Merged dictionary
     """
-    merged = obj1.copy()  # Make a shallow copy of the first dictionary
     for key, value in obj2.items():
         if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
             # If both values are dictionaries, recursively merge them
-            merged[key] = merge(merged[key], value)
+            merge(merged[key], value)
         elif (
             key in merged and isinstance(merged[key], list) and isinstance(value, list)
         ):
