@@ -60,11 +60,14 @@ class Extension(Plugin):
             self.tasks.append(asyncio.create_task(self.start_source(props)))
 
     async def exit(self):
-        "empty exit function"
+        "exit function"
         self.running = False
         for task in self.tasks:
             task.cancel()
-            await task
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         for source in self.sources.values():
             if source.pid is not None:
                 source.kill()
