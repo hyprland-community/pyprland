@@ -150,14 +150,17 @@ class Pyprland:
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)
-                    await self.plugins[name].on_reload()
-                    self.plugins[name].log.info("configured")
+                    await asyncio.wait_for(self.plugins[name].on_reload(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    self.plugins[name].log.info("timed out on reload")
                 except PyprError:
                     raise
                 except Exception as e:
                     await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.error("Error initializing plugin %s:", name, exc_info=True)
                     raise PyprError() from e
+                else:
+                    self.plugins[name].log.info("configured")
         if init_pyprland:
             plug = self.plugins["pyprland"]
             plug.set_commands(reload=self.load_config)  # type: ignore
@@ -290,7 +293,9 @@ class Pyprland:
                 self.log.error("Aborting [%s] loop: %s", name, e)
                 return
             try:
-                await task()
+                await asyncio.wait_for(task(), timeout=10.0)
+            except asyncio.TimeoutError:
+                self.log.error("Timeout running plugin %s::%s", name, task)
             except Exception as e:  # pylint: disable=W0718
                 self.log.error(
                     "Unhandled error running plugin %s::%s: %s", name, task, e
@@ -395,7 +400,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.8-1")  # Automatically updated version
+        print("2.2.8-2")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
