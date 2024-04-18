@@ -293,7 +293,7 @@ class Pyprland:
                 self.log.error("Aborting [%s] loop: %s", name, e)
                 return
             try:
-                await asyncio.wait_for(task(), timeout=10.0)
+                await asyncio.wait_for(task(), timeout=12.0)
             except asyncio.TimeoutError:
                 self.log.error("Timeout running plugin %s::%s", name, task)
             except Exception as e:  # pylint: disable=W0718
@@ -364,7 +364,7 @@ async def run_daemon():
         print("Interrupted")
     except asyncio.CancelledError:
         manager.log.critical("cancelled")
-    finally:
+    else:
         events_writer.close()
         await events_writer.wait_closed()
         manager.server.close()
@@ -400,7 +400,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.8-2")  # Automatically updated version
+        print("2.2.8-3")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
