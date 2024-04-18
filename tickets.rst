@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 37
+:total-count: 39
 
 --------------------------------------------------------------------------------
 
@@ -147,3 +147,21 @@ else: Add it to "layout_center" overriding prev & next
 if groupped, toggle over groups, when at the limit, really changes the focus
 
 Option: think about a "chaining" in handlers, (eg: "pypr groups prev OR layout_center prev") in case of a separate plugin called "groups"
+
+--------------------------------------------------------------------------------
+
+review CanceledError handling
+=============================
+
+:bugid: 38
+:created: 2024-04-17T23:24:13
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+preserve_aspect could recall aspect per screen resolution/size
+==============================================================
+
+:bugid: 39
+:created: 2024-04-17T23:55:01
+:priority: 0
