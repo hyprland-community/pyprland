@@ -1,6 +1,7 @@
 " Toggles workspace zooming "
-from .interface import Plugin
 import asyncio
+
+from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
@@ -20,7 +21,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_zoom(self, *args):
         """[factor] zooms to "factor" or toggles zoom level if factor is ommited"""
-        animated = self.config.get("animated", True)
+        duration = self.config.get("duration", 15)
+        animated = bool(duration)
         prev_factor = self.cur_factor
         if args:  # set or update the factor
             relative = args[0][0] in "+-"
@@ -43,9 +45,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if animated:
             start = prev_factor * 10
             end = self.cur_factor * 10
-            for i in self.animated_eased_zoom(
-                start, end, self.config.get("duration", 15)
-            ):
+            for i in self.animated_eased_zoom(start, end, duration):
                 await self.hyprctl(f"misc:cursor_zoom_factor {i/10}", "keyword")
                 await asyncio.sleep(1.0 / 60)
         self.zoomed = self.cur_factor != 1
