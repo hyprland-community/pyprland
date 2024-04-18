@@ -137,7 +137,13 @@ improve groups support
 :created: 2024-04-15T00:27:52
 :priority: 0
 
-Add it to "layout_center" overriding prev & next
+Instead of making it in "layout_center" by lack of choice, refactor:
+
+- make run_command return a code compatible with shell (0 = success, < 0 = error)
+- by default it returns 0
+
+else: Add it to "layout_center" overriding prev & next
+
 if groupped, toggle over groups, when at the limit, really changes the focus
 
 Option: think about a "chaining" in handlers, (eg: "pypr groups prev OR layout_center prev") in case of a separate plugin called "groups"
