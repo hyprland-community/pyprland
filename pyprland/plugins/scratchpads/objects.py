@@ -11,7 +11,7 @@ from aiofiles import os as aios
 from aiofiles import open as aiopen
 
 from ...ipc import notify_error
-from ...common import CastBoolMixin
+from ...common import CastBoolMixin, state
 from .helpers import OverridableConfig, get_match_fn
 
 
@@ -39,6 +39,11 @@ class Scratch(CastBoolMixin):  # {{{
             opts["lazy"] = True
             if "match_by" not in opts:
                 opts["match_by"] = "class"
+        if state.hyprland_version < (0, 39, 0):
+            opts["close_special_workspace"] = True
+        elif opts.get("close_special_workspace", None) is None:
+            opts["close_special_workspace"] = False
+
         self.conf = opts
 
     async def initialize(self, ex):

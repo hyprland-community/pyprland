@@ -181,6 +181,10 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
     return logger
 
 
+class VersionInfo(tuple[int, int, int]):
+    pass
+
+
 @dataclass
 class SharedState:
     "Stores commonly requested properties"
@@ -189,6 +193,7 @@ class SharedState:
     active_window: str = ""  # window address
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
+    hyprland_version: VersionInfo = VersionInfo((0, 0, 0))
 
 
 state = SharedState()
