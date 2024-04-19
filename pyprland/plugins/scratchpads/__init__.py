@@ -531,7 +531,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _show_transition(self, item, monitor, was_alive):
         "perfoms the transition to visible state"
         animation_type = item.conf.get("animation", "").lower()
-        close_special_workspace = item.conf.get("close_special_workspace")
+        close_special_workspace = item.conf.get("close_special_workspace", False)
         wrkspc = monitor["specialWorkspace"]["name"]
         if wrkspc == "" or close_special_workspace:
             wrkspc = monitor["activeWorkspace"]["name"]

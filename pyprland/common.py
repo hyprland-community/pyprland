@@ -182,8 +182,11 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
     return logger
 
 
-class VersionInfo(tuple[int, int, int]):
-    pass
+@dataclass(order=True)
+class VersionInfo:
+    major: int = 0
+    minor: int = 0
+    micro: int = 0
 
 
 @dataclass
@@ -194,7 +197,7 @@ class SharedState:
     active_window: str = ""  # window address
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
-    hyprland_version: VersionInfo = VersionInfo((0, 0, 0))
+    hyprland_version: VersionInfo = field(default_factory=VersionInfo)
 
 
 state = SharedState()

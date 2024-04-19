@@ -12,10 +12,11 @@ class Extension(Plugin):
         version = (await self.hyprctlJSON("version"))["tag"]
         try:
             state.hyprland_version = VersionInfo(
-                (int(i) for i in version[1:].split("."))
+                *(int(i) for i in version[1:].split(".")[:3])
             )
         except Exception:
-            pass
+            self.log.error("Fail to parse hyprctl version.")
+
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         monitors = await self.hyprctlJSON("monitors")
         state.monitors = [mon["name"] for mon in monitors]
