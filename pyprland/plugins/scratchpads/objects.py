@@ -40,7 +40,7 @@ class Scratch(CastBoolMixin):  # {{{
             if "match_by" not in opts:
                 opts["match_by"] = "class"
         if state.hyprland_version < VersionInfo(0, 39, 0):
-            opts["close_special_workspace"] = True
+            opts["allow_special_workspace"] = False
 
         self.conf = opts
 
