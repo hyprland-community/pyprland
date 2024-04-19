@@ -14,8 +14,10 @@ class Extension(Plugin):
             state.hyprland_version = VersionInfo(
                 *(int(i) for i in version[1:].split(".")[:3])
             )
-        except Exception:
-            self.log.error("Fail to parse hyprctl version.")
+        except Exception as e:  # pylint: disable=broad-except
+            self.log.error("Fail to parse hyprctl version: %s", e)
+            await self.notify_error("Fail to parse hyprctl version")
+            state.hyprland_version = VersionInfo(0, 0, 0)
 
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
         monitors = await self.hyprctlJSON("monitors")

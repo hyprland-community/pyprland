@@ -184,9 +184,10 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
 
 @dataclass(order=True)
 class VersionInfo:
-    major: int = 0
-    minor: int = 0
-    micro: int = 0
+    "Stores version information"
+    major: int = 0  # noqa: F841
+    minor: int = 0  # noqa: F841
+    micro: int = 0  # noqa: F841
 
 
 @dataclass

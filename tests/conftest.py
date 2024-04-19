@@ -94,6 +94,17 @@ async def mocked_hyprctlJSON(command, logger=None):
         return deepcopy(MONITORS)
     if command == "activeworkspace":
         return {"name": "1", "id": 1}
+    if command == "version":
+        return {
+            "branch": "",
+            "commit": "fe7b748eb668136dd0558b7c8279bfcd7ab4d759",
+            "dirty": False,
+            "commit_message": "props: bump version to 0.39.1",
+            "commit_date": "Tue Apr 16 16:01:03 2024",
+            "tag": "v0.39.1",
+            "commits": 4460,
+            "flags": [],
+        }
     raise NotImplementedError()
 
 
