@@ -74,7 +74,16 @@ class Pyprland:
             self.config.clear()
             fname = os.path.expanduser(CONFIG_FILE)
 
-        config = self.__load_config_file(fname)
+        try:
+            config = self.__load_config_file(fname)
+        except tomllib.TOMLDecodeError as e:
+            self.log.critical("Problem reading %s: %s", fname, e)
+            await notify_error(f"Pyprland failed to read config: {e}")
+            raise PyprError() from e
+        except FileNotFoundError as e:
+            self.log.critical("Unable to open %s: %s", fname, e)
+            await notify_error(f"Pyprland failed to read config: {e}")
+            raise PyprError() from e
 
         if not config_filename:
             for extra_config in list(config["pyprland"].get("include", [])):
@@ -87,20 +96,12 @@ class Pyprland:
         config = {}
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
-            try:
-                with open(fname, "rb") as f:
-                    config = tomllib.load(f)
-            except FileNotFoundError as e:
-                self.log.critical("Problem reading %s: %s", fname, e)
-                raise PyprError() from e
+            with open(fname, "rb") as f:
+                config = tomllib.load(f)
         elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
             self.log.info("Loading %s", OLD_CONFIG_FILE)
-            try:
-                with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
-                    config = json.loads(f.read())
-            except FileNotFoundError as e:
-                self.log.critical("Problem reading %s: %s", fname, e)
-                raise PyprError() from e
+            with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
+                config = json.loads(f.read())
         else:
             self.log.critical("Config file not found! Please create %s", fname)
             raise PyprError()
@@ -400,7 +401,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.8-11")  # Automatically updated version
+        print("2.2.8-12")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
