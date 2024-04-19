@@ -27,7 +27,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if w["id"] > 0
         ]
 
-        batch: list[str | list[str]] = []
+        batch: list[str] = []
         for n in workspaces:
             if n in busy_workspaces or n == workspace_name:
                 continue
