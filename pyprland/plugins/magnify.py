@@ -44,8 +44,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             else:
                 self.cur_factor = float(self.config.get("factor", 2.0))
 
-        if self.cur_factor < 1.0:
-            self.cur_factor = 1.0
+        self.cur_factor = max(self.cur_factor, 1)
 
         if animated:
             start = (2.0 ** (prev_factor - 1) if expo else prev_factor) * 10
