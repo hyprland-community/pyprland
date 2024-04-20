@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-URL="https://files.pythonhosted.org/packages/8b/d6/72df803934ded2158f3190292519bfe47312e41e37adf244aa0f5d851630/pyprland-2.2.9-py3-none-any.whl"
+URL="https://files.pythonhosted.org/packages/ee/61/44a0f0911fa3f2ed5fc41a1424148edbb12bb9410a88636a90bdcceda2c0/pyprland-2.2.10-py3-none-any.whl"
 SUDO=sudo
 PROGRAM=/usr/local/bin/pypr
 CACHEDIR=/var/cache/pypr
