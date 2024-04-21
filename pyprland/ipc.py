@@ -19,7 +19,7 @@ from typing import Any
 from logging import Logger
 from functools import partial
 
-from .common import PyprError, get_logger
+from .common import PyprError, get_logger, MonitorInfo, ClientInfo
 
 log: Logger | None = None
 
@@ -153,7 +153,7 @@ async def hyprctl(
     return r
 
 
-async def get_focused_monitor_props(logger=None, name=None) -> dict[str, Any]:
+async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
     """Returns focused monitor data if `name` is not defined, else use monitor's name
 
     Args:
@@ -177,11 +177,11 @@ async def get_focused_monitor_props(logger=None, name=None) -> dict[str, Any]:
     for monitor in await hyprctlJSON("monitors", logger=logger):
         assert isinstance(monitor, dict)
         if match_fn(monitor):
-            return monitor
+            return monitor  # type: ignore
     raise RuntimeError("no focused monitor")
 
 
-async def get_client_props(logger=None, match_fn=None, **kw):
+async def get_client_props(logger=None, match_fn=None, **kw) -> ClientInfo:
     """
     Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments
 
@@ -225,7 +225,8 @@ async def get_client_props(logger=None, match_fn=None, **kw):
     for client in await hyprctlJSON("clients", logger=logger):
         assert isinstance(client, dict)
         if match_fn(client.get(prop_name), prop_value):
-            return client
+            return client  # type: ignore
+    raise ValueError(f"no client with {prop_name}={prop_value}")
 
 
 def init():

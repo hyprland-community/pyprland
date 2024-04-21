@@ -11,7 +11,7 @@ from aiofiles import os as aios
 from aiofiles import open as aiopen
 
 from ...ipc import notify_error
-from ...common import CastBoolMixin, VersionInfo, state
+from ...common import CastBoolMixin, VersionInfo, state, ClientInfo
 from .helpers import OverridableConfig, get_match_fn
 
 
@@ -19,15 +19,17 @@ class Scratch(CastBoolMixin):  # {{{
     "A scratchpad state including configuration & client state"
     log = logging.getLogger("scratch")
     get_client_props: Callable
+    client_info: ClientInfo
+    visible = False
+    uid = ""
+    monitor = ""
+    pid = -1
 
     def __init__(self, uid, opts):
         self.uid = uid
-        self.pid = 0
         self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
-        self.visible = False
-        self.client_info = {}
+        self.client_info: ClientInfo = {}  # type: ignore
         self.meta = defaultdict(lambda: False)
-        self.monitor = ""
 
     def set_config(self, opts):
         "Apply constraints to the configuration"
@@ -91,20 +93,20 @@ class Scratch(CastBoolMixin):  # {{{
         "clear the object"
         self.pid = pid
         self.visible = False
-        self.client_info = {}
+        self.client_info = {}  # type: ignore
         self.meta["initialized"] = False
 
     @property
     def address(self) -> str:
         "Returns the client address"
-        return str(self.client_info.get("address", ""))[2:]
+        return self.client_info.get("address", "")[2:]
 
     @property
     def full_address(self) -> str:
         "Returns the client address"
         return cast(str, self.client_info.get("address", ""))
 
-    async def updateClientInfo(self, client_info=None) -> None:
+    async def updateClientInfo(self, client_info: ClientInfo | None = None) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
             client_info = await self.get_client_props(addr=self.full_address)

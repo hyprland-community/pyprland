@@ -3,13 +3,14 @@
 __all__ = ["Animations"]
 
 from ...adapters.units import convert_monitor_dimension
+from ...common import MonitorInfo, ClientInfo
 
 
 class Animations:  # {{{
     "Animation store"
 
     @staticmethod
-    def fromtop(monitor, client, client_uid, margin):
+    def fromtop(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
         "Slide from/to top"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -26,7 +27,9 @@ class Animations:  # {{{
         )
 
     @staticmethod
-    def frombottom(monitor, client, client_uid, margin):
+    def frombottom(
+        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
+    ):
         "Slide from/to bottom"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -43,7 +46,9 @@ class Animations:  # {{{
         return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
 
     @staticmethod
-    def fromleft(monitor, client, client_uid, margin):
+    def fromleft(
+        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
+    ):
         "Slide from/to left"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]
@@ -60,7 +65,9 @@ class Animations:  # {{{
         )
 
     @staticmethod
-    def fromright(monitor, client, client_uid, margin):
+    def fromright(
+        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
+    ):
         "Slide from/to right"
         scale = float(monitor["scale"])
         mon_x = monitor["x"]

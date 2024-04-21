@@ -12,6 +12,9 @@ import logging
 import subprocess
 from dataclasses import dataclass, field
 
+
+from typing import TypedDict
+
 __all__ = [
     "DEBUG",
     "get_logger",
@@ -255,3 +258,61 @@ class CastBoolMixin:
                 "Invalid value for boolean option: %s, considering it %s", value, r
             )
         return default_value if value is None else value
+
+
+class WorkspaceDf(TypedDict):
+    "Workspace definition"
+    id: int
+    name: str
+
+
+class ClientInfo(TypedDict):
+    "Client information as returned by Hyprland"
+    address: str
+    mapped: bool
+    hidden: bool
+    at: list[int]
+    size: list[int]
+    workspace: WorkspaceDf
+    floating: bool
+    monitor: int
+    class_: str
+    title: str
+    initialClass: str
+    initialTitle: str
+    pid: int
+    xwayland: bool
+    pinned: bool
+    fullscreen: bool
+    fullscreenMode: int
+    fakeFullscreen: bool
+    grouped: list[str]
+    swallowing: str
+    focusHistoryID: int
+
+
+class MonitorInfo(TypedDict):
+    "Monitor information as returned by Hyprland"
+    id: int
+    name: str
+    description: str
+    make: str
+    model: str
+    serial: str
+    width: int
+    height: int
+    refreshRate: float
+    x: int
+    y: int
+    activeWorkspace: WorkspaceDf
+    specialWorkspace: WorkspaceDf
+    reserved: list[int]
+    scale: float
+    transform: int
+    focused: bool
+    dpmsStatus: bool
+    vrr: bool
+    activelyTearing: bool
+    disabled: bool
+    currentFormat: str
+    availableModes: list[str]

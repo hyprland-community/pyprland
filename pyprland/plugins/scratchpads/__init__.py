@@ -2,10 +2,11 @@
 import time
 import asyncio
 from functools import partial
+from typing import cast
 
 from ...ipc import notify_error, get_client_props, get_focused_monitor_props
 from ..interface import Plugin
-from ...common import state, CastBoolMixin, apply_variables
+from ...common import state, CastBoolMixin, apply_variables, MonitorInfo, ClientInfo
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
 from .animations import Animations
@@ -93,7 +94,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             assert scratch
             self.scratches.clearState(scratch, "configured")
 
-    async def _configure_windowrules(self, scratch):
+    async def _configure_windowrules(self, scratch: Scratch):
         "Setting up initial client window state (sets windowrules)"
         configured = self.scratches.hasState(scratch, "configured")
         if configured:
@@ -128,69 +129,69 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
             await self.hyprctl(ipc_commands, "keyword")
 
-    async def __wait_for_client(self, item, use_proc=True) -> bool:
+    async def __wait_for_client(self, scratch: Scratch, use_proc=True) -> bool:
         """Waits for a client to be up and running
         if `match_by=` is used, will use the match criteria, else the process's PID will be used.
         """
-        self.log.info("==> Wait for %s spawning", item.uid)
+        self.log.info("==> Wait for %s spawning", scratch.uid)
         interval_range = [0.1] * 10 + [0.2] * 20 + [0.5] * 15
         for interval in interval_range:
             await asyncio.sleep(interval)
-            is_alive = await item.isAlive()
+            is_alive = await scratch.isAlive()
 
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
-                match_by = item.conf.get("match_by", "pid")
+                match_by = scratch.conf.get("match_by", "pid")
                 if match_by != "pid":
                     info = await self.get_client_props(
-                        match_fn=get_match_fn(match_by, item.conf[match_by]),
-                        **{match_by: item.conf[match_by]},
+                        match_fn=get_match_fn(match_by, scratch.conf[match_by]),
+                        **{match_by: scratch.conf[match_by]},
                     )
                 else:
-                    info = await self.get_client_props(pid=item.pid)
+                    info = await self.get_client_props(pid=scratch.pid)
                 if info:
-                    await item.updateClientInfo(info)
+                    await scratch.updateClientInfo(info)
                     self.log.info(
                         "=> %s client (proc:%s, addr:%s) detected on time",
-                        item.uid,
-                        item.pid,
-                        item.full_address,
+                        scratch.uid,
+                        scratch.pid,
+                        scratch.full_address,
                     )
-                    self.scratches.register(item)
-                    self.scratches.clearState(item, "respawned")
+                    self.scratches.register(scratch)
+                    self.scratches.clearState(scratch, "respawned")
                     return True
             if use_proc and not is_alive:
                 return False
         return False
 
-    async def _start_scratch_nopid(self, item) -> bool:
+    async def _start_scratch_nopid(self, scratch: Scratch) -> bool:
         "Ensure alive, PWA version"
-        uid = item.uid
-        started = "nopid" in item.meta
-        if not await item.isAlive():
+        uid = scratch.uid
+        started = "nopid" in scratch.meta
+        if not await scratch.isAlive():
             started = False
         if not started:
-            self.scratches.reset(item)
+            self.scratches.reset(scratch)
             await self.start_scratch_command(uid)
-            r = await self.__wait_for_client(item, use_proc=False)
-            item.meta["nopid"] = r
+            r = await self.__wait_for_client(scratch, use_proc=False)
+            scratch.meta["nopid"] = r
             return r
         return True
 
-    async def _start_scratch(self, item):
+    async def _start_scratch(self, scratch: Scratch):
         "Ensure alive, standard version"
-        uid = item.uid
+        uid = scratch.uid
         if uid in self.procs:
             try:
                 self.procs[uid].kill()
             except ProcessLookupError:
                 pass
-        self.scratches.reset(item)
+        self.scratches.reset(scratch)
         await self.start_scratch_command(uid)
         self.log.info("starting %s", uid)
-        if not await self.__wait_for_client(item):
-            self.log.error("⚠ Failed spawning %s as proc %s", uid, item.pid)
-            if await item.isAlive():
+        if not await self.__wait_for_client(scratch):
+            self.log.error("⚠ Failed spawning %s as proc %s", uid, scratch.pid)
+            if await scratch.isAlive():
                 error = "The command didn't open a window"
             else:
                 await self.procs[uid].communicate()
@@ -199,18 +200,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     error = f"The command failed with code {code}"
                 else:
                     error = "The command terminated sucessfully, is it already running?"
-            self.log.error('"%s": %s', item.conf["command"], error)
+            self.log.error('"%s": %s', scratch.conf["command"], error)
             await notify_error(error)
             return False
         return True
 
-    async def ensure_alive(self, uid):
+    async def ensure_alive(self, uid: str):
         """Ensure the scratchpad is started
         Returns true if started
         """
         item = self.scratches.get(name=uid)
-        await self._configure_windowrules(item)
         assert item
+        await self._configure_windowrules(item)
 
         if self.cast_bool(item.conf.get("process_tracking"), True):
             if not await item.isAlive():
@@ -255,13 +256,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
                 self.scratches.register(scratch, addr=client["address"][2:])
-                await scratch.updateClientInfo(client)
+                await scratch.updateClientInfo(cast(ClientInfo, client))
                 break
         else:
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
-    async def event_monitorremoved(self, monitor_name) -> None:
+    async def event_monitorremoved(self, monitor_name: str) -> None:
         "Hides scratchpads on the removed screen"
         for scratch in self.scratches.values():
             if scratch.monitor == monitor_name:
@@ -290,34 +291,30 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         )
                         continue
 
-                    hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
-                    if hysteresis:
-                        self.cancel_task(uid)
+                    await self._hysteresis_handling(scratch)
 
-                        async def _task(scratch, delay):
-                            await asyncio.sleep(delay)
-                            if state.active_window == scratch.full_address:
-                                self.log.debug(
-                                    "Skipped hidding %s because client got the focus back",
-                                    scratch.uid,
-                                )
-                                return
-                            self.log.debug(
-                                "hide %s because another client is active", scratch.uid
-                            )
-                            await self.run_hide(scratch.uid, autohide=True)
+    async def _hysteresis_handling(self, scratch):
+        "hysteresis handling"
+        hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
+        if hysteresis:
+            self.cancel_task(scratch.uid)
 
-                            try:
-                                del self._hysteresis_tasks[scratch.uid]
-                            except KeyError:
-                                pass
+            async def _task(scratch, delay):
+                await asyncio.sleep(delay)
+                self.log.debug("hide %s because another client is active", scratch.uid)
+                await self.run_hide(scratch.uid, autohide=True)
 
-                        self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
-                            _task(scratch, hysteresis)
-                        )
-                    else:
-                        self.log.debug("hide %s because another client is active", uid)
-                        await self.run_hide(uid, autohide=True)
+                try:
+                    del self._hysteresis_tasks[scratch.uid]
+                except KeyError:
+                    pass
+
+            self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
+                _task(scratch, hysteresis)
+            )
+        else:
+            self.log.debug("hide %s because another client is active", scratch.uid)
+            await self.run_hide(scratch.uid, autohide=True)
 
     async def _alternative_lookup(self):
         "if not matching by pid, use specific matching and return True"
@@ -360,7 +357,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await item.initialize(self)
 
     # }}}
-    def cancel_task(self, uid):
+    def cancel_task(self, uid: str):
         "cancel a task"
         task = self._hysteresis_tasks.get(uid)
         if task:
@@ -426,20 +423,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     tasks.append(partial(self.run_show, uid))
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
-    async def get_offsets(self, scratch, monitor=None):
+    async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None):
         "Return offset from config or use margin as a ref"
         offset = scratch.conf.get("offset")
+        if monitor is None:
+            monitor = await get_focused_monitor_props(
+                self.log, name=scratch.conf.get("force_monitor")
+            )
         rotated = monitor["transform"] in (1, 3)
         aspect = (
             reversed(scratch.client_info["size"])
             if rotated
             else scratch.client_info["size"]
         )
-
-        if monitor is None:
-            monitor = await get_focused_monitor_props(
-                self.log, name=scratch.conf.get("force_monitor")
-            )
 
         if offset:
             return [convert_monitor_dimension(offset, ref, monitor) for ref in aspect]
@@ -456,7 +452,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
         return map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins)])
 
-    async def _hide_transition(self, scratch, monitor):
+    async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         "animate hiding a scratchpad"
 
         animation_type: str = scratch.conf.get("animation", "").lower()
@@ -470,7 +466,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         )  # await for animation to finish
         return True
 
-    async def _slide_animation(self, animation_type, scratch, off_x, off_y):
+    async def _slide_animation(
+        self, animation_type: str, scratch: Scratch, off_x: int, off_y: int
+    ):
         "Slides the window `offset` pixels respecting `animation_type`"
         addr = "address:" + scratch.full_address
         if animation_type == "fromtop":
@@ -482,11 +480,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         elif animation_type == "fromright":
             await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
 
-    async def run_show(self, uid) -> None:
+    async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name" """
-        item = self.scratches.get(uid)
+        scratch = self.scratches.get(uid)
 
-        if not item:
+        if not scratch:
             self.log.warning("%s doesn't exist, can't hide.", uid)
             await notify_error(
                 f"Scratchpad '{uid}' not found, check your configuration or the show parameter"
@@ -498,118 +496,122 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.cancel_task(uid)
 
         self.log.info("Showing %s", uid)
-        was_alive = await item.isAlive()
+        was_alive = await scratch.isAlive()
         if not await self.ensure_alive(uid):
             self.log.error("Failed to show %s, aborting.", uid)
             return
 
-        excluded = item.conf.get("excludes", [])
-        if excluded == "*":
-            excluded = [
-                scratch.uid for scratch in self.scratches.values() if scratch.uid != uid
+        excluded_ids = scratch.conf.get("excludes", [])
+        if excluded_ids == "*":
+            excluded_ids = [
+                excluded.uid
+                for excluded in self.scratches.values()
+                if scratch.uid != uid
             ]
-        for e_uid in excluded:
-            scratch = self.scratches.get(e_uid)
-            assert scratch
-            if scratch.visible:
+        for e_uid in excluded_ids:
+            excluded = self.scratches.get(e_uid)
+            assert excluded
+            if excluded.visible:
                 await self.run_hide(e_uid, autohide=True)
-        await item.updateClientInfo()
-        await item.initialize(self)
+        await scratch.updateClientInfo()
+        await scratch.initialize(self)
 
-        item.visible = True
-        item.meta["space_identifier"] = get_active_space_identifier()
+        scratch.visible = True
+        scratch.meta["space_identifier"] = get_active_space_identifier()
         monitor = await self.get_focused_monitor_props(
-            name=item.conf.get("force_monitor")
+            name=scratch.conf.get("force_monitor")
         )
 
         assert monitor
-        assert item.full_address, "No address !"
+        assert scratch.full_address, "No address !"
 
-        await self._show_transition(item, monitor, was_alive)
-        item.monitor = monitor["name"]
+        await self._show_transition(scratch, monitor, was_alive)
+        scratch.monitor = monitor["name"]
 
-    async def _show_transition(self, item, monitor, was_alive):
+    async def _show_transition(
+        self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool
+    ):
         "perfoms the transition to visible state"
-        animation_type = item.conf.get("animation", "").lower()
-        forbid_special = not item.conf.get("allow_special_workspace", True)
+        animation_type = scratch.conf.get("animation", "").lower()
+        forbid_special = not scratch.conf.get("allow_special_workspace", True)
         wrkspc = (
             monitor["activeWorkspace"]["name"]
             if forbid_special or not monitor["specialWorkspace"]["name"]
             else monitor["specialWorkspace"]["name"]
         )
 
-        item.meta["last_shown"] = time.time()
+        scratch.meta["last_shown"] = time.time()
         # Start the transition
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor special:scratch_{item.uid} {monitor['name']}",
-                f"movetoworkspacesilent {wrkspc},address:{item.full_address}",
-                f"alterzorder top,address:{item.full_address}",
+                f"moveworkspacetomonitor special:scratch_{scratch.uid} {monitor['name']}",
+                f"movetoworkspacesilent {wrkspc},address:{scratch.full_address}",
+                f"alterzorder top,address:{scratch.full_address}",
             ]
         )
-        preserve_aspect = self.cast_bool(item.conf.get("preserve_aspect"))
+        preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
         should_set_aspect = (
-            not (preserve_aspect and was_alive) or item.monitor != state.active_monitor
+            not (preserve_aspect and was_alive)
+            or scratch.monitor != state.active_monitor
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
-            await self._fix_size(item, monitor)
-        await item.updateClientInfo()
+            await self._fix_size(scratch, monitor)
+        await scratch.updateClientInfo()
         position_fixed = False
         if should_set_aspect:
-            position_fixed = await self._fix_position(item, monitor)
+            position_fixed = await self._fix_position(scratch, monitor)
         if not position_fixed:
             if animation_type:
                 if preserve_aspect and was_alive and not should_set_aspect:
                     # Relative positioning
-                    if "size" not in item.client_info:
-                        await self.updateScratchInfo(item)
+                    if "size" not in scratch.client_info:
+                        await self.updateScratchInfo(scratch)  # type: ignore
 
-                    ox, oy = await self.get_offsets(item, monitor)
-                    await self._slide_animation(animation_type, item, -ox, -oy)
+                    ox, oy = await self.get_offsets(scratch, monitor)
+                    await self._slide_animation(animation_type, scratch, -ox, -oy)
                 else:
                     # Absolute positioning
                     fn = getattr(Animations, animation_type)
                     command = fn(
                         monitor,
-                        item.client_info,
-                        "address:" + item.full_address,
-                        item.conf.get("margin", DEFAULT_MARGIN),
+                        scratch.client_info,
+                        "address:" + scratch.full_address,
+                        scratch.conf.get("margin", DEFAULT_MARGIN),
                     )
                     await self.hyprctl(command)
             else:
                 self.log.warning(
                     "No position and no animation provided for %s, don't know where to place it.",
-                    item.uid,
+                    scratch.uid,
                 )
 
-        await self.hyprctl(f"focuswindow address:{item.full_address}")
-        item.meta["last_shown"] = time.time()
-        item.meta["monitor_info"] = monitor
+        await self.hyprctl(f"focuswindow address:{scratch.full_address}")
+        scratch.meta["last_shown"] = time.time()
+        scratch.meta["monitor_info"] = monitor
 
-    async def _fix_size(self, item, monitor):
-        "apply the `size` config parameter"
-
-        size = item.conf.get("size")
+    async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo):
+        "apply the size from config"
+        size = scratch.conf.get("size")
         if size:
             width, height = convert_coords(size, monitor)
-            max_size = item.conf.get("max_size")
+            max_size = scratch.conf.get("max_size")
             if max_size:
                 max_width, max_height = convert_coords(max_size, monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
             await self.hyprctl(
-                f"resizewindowpixel exact {width} {height},address:{item.full_address}"
+                f"resizewindowpixel exact {width} {height},address:{scratch.full_address}"
             )
 
-    async def _fix_position(self, item, monitor):
+    async def _fix_position(self, scratch: Scratch, monitor: MonitorInfo):
         "apply the `position` config parameter"
 
-        position = item.conf.get("position")
+        position = scratch.conf.get("position")
         if position:
             x_pos, y_pos = convert_coords(position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
             await self.hyprctl(
-                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{item.full_address}"
+                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}"
             )
             return True
         return False
@@ -653,4 +655,5 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     # }}}
 
 
+# }}}
 # }}}

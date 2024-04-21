@@ -21,3 +21,6 @@ htmlcov:
     {{pyenv}}/bin/coverage html
     xdg-open ./htmlcov/index.html
     
+types:
+    {{pyenv}}/bin/mypy --check-untyped-defs pyprland
+

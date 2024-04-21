@@ -1,10 +1,9 @@
-" Unit conversion & co "
-from typing import Any
+" Conversion functions for units used in Pyprland & plugins "
+
+from ..common import MonitorInfo
 
 
-def convert_monitor_dimension(
-    size: int | str, ref_value, monitor: dict[str, Any]
-) -> int:
+def convert_monitor_dimension(size: int | str, ref_value, monitor: MonitorInfo) -> int:
     """Convert `size` into pixels (given a reference value applied to a `monitor`)
     if size is an integer, assumed pixels & return it
     if size is a string, expects a "%" or "px" suffix
@@ -24,7 +23,7 @@ def convert_monitor_dimension(
     raise ValueError(f"Unsupported format: {size} (applied to {ref_value})")
 
 
-def convert_coords(coords: str, monitor: dict[str, Any]):
+def convert_coords(coords: str, monitor: MonitorInfo) -> list[int]:
     """
     Converts a string like "X Y" to coordinates relative to monitor
     Supported formats for X, Y:
@@ -36,7 +35,7 @@ def convert_coords(coords: str, monitor: dict[str, Any]):
     """
 
     return [
-        convert_monitor_dimension(name, monitor[ref], monitor)
+        convert_monitor_dimension(name, monitor[ref], monitor)  # type: ignore
         for (name, ref) in zip(
             [coord.strip() for coord in coords.split()],
             (
