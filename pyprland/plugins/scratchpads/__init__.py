@@ -6,7 +6,7 @@ from typing import cast
 
 from ...ipc import notify_error, get_client_props, get_focused_monitor_props
 from ..interface import Plugin
-from ...common import state, CastBoolMixin, apply_variables, MonitorInfo, ClientInfo
+from ...common import state, CastBoolMixin, apply_variables, MonitorInfo, ClientInfo, is_rotated
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
 from .animations import Animations
@@ -449,7 +449,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             monitor = await get_focused_monitor_props(
                 self.log, name=scratch.conf.get("force_monitor")
             )
-        rotated = monitor["transform"] in (1, 3)
+        rotated = is_rotated(monitor)
         aspect = (
             reversed(scratch.client_info["size"])
             if rotated

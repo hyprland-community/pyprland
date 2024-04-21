@@ -316,3 +316,8 @@ class MonitorInfo(TypedDict):
     disabled: bool
     currentFormat: str
     availableModes: list[str]
+
+
+def is_rotated(monitor: MonitorInfo) -> bool:
+    "Returns True if the monitor is rotated"
+    return monitor["transform"] in (1, 3)
