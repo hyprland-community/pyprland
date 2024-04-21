@@ -558,7 +558,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "perfoms the transition to visible state"
         animation_type = scratch.conf.get("animation", "").lower()
         forbid_special = not self.cast_bool(
-            scratch.conf.get("allow_special_workspace"), False
+            scratch.conf.get("allow_special_workspace"), True
         )
         wrkspc = (
             monitor["activeWorkspace"]["name"]
