@@ -67,11 +67,10 @@ def gen_call_set(call_list: list) -> set[str]:
     "Generate a set of calls from a list of calls"
     call_set: set[str] = set()
     for item in call_list:
-        if isinstance(item[0][0], list):
-            for x in item[0][0]:
-                call_set.add(x[0])
+        if isinstance(item, str):
+            call_set.add(item)
         else:
-            call_set.add(item[0][0])
+            call_set.update(gen_call_set(item))
     return call_set
 
 
@@ -84,7 +83,6 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
     # check if it matches the hide calls
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
-    call_set.remove("focuswindow address:0x12345677890")
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=4)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
@@ -96,13 +94,14 @@ async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixt
     mocks.json_commands_result["clients"] = CLIENT_CONFIG
     mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=3)
-    assert mocks.hyprctl.call_args_list[-1][0][0].startswith("focuswindow")
+    await wait_called(mocks.hyprctl, count=2)
+    call_set = gen_call_set(mocks.hyprctl.call_args_list)
+    call_set.remove("movetoworkspacesilent 1,address:0x12345677890")
+    call_set.remove("focuswindow address:0x12345677890")
     mocks.hyprctl.reset_mock()
     await asyncio.sleep(0.2)
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=2)
-    assert mocks.hyprctl.call_args[0][0].startswith("focuswindow")
     await asyncio.sleep(0.2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
@@ -111,18 +110,19 @@ async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixt
 
 @pytest.mark.asyncio
 async def test_no_proc(no_proc_scratchpads, subprocess_shell_mock, server_fixture):
+    mocks.hyprctl.reset_mock()
     mocks.json_commands_result["clients"] = CLIENT_CONFIG
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=4)
+    await wait_called(mocks.hyprctl, count=2)
     await asyncio.sleep(0.2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
-    call_set.remove("focuswindow address:0x12345677890")
+
+    mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=6)
+    await wait_called(mocks.hyprctl, count=2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
-    call_set.remove("focuswindow address:0x12345677890")
     assert any(x.startswith("movewindowpixel") for x in call_set)
 
 

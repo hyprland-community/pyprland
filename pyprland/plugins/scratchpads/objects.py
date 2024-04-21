@@ -30,6 +30,7 @@ class Scratch(CastBoolMixin):  # {{{
         self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = defaultdict(lambda: False)
+        self.extra_addr: set[str] = set()  # additional client addresses
 
     def set_config(self, opts):
         "Apply constraints to the configuration"
