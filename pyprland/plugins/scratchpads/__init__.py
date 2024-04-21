@@ -6,7 +6,14 @@ from typing import cast
 
 from ...ipc import notify_error, get_client_props, get_focused_monitor_props
 from ..interface import Plugin
-from ...common import state, CastBoolMixin, apply_variables, MonitorInfo, ClientInfo, is_rotated
+from ...common import (
+    state,
+    CastBoolMixin,
+    apply_variables,
+    MonitorInfo,
+    ClientInfo,
+    is_rotated,
+)
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
 from .animations import Animations
@@ -494,17 +501,21 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         only_secondary=False,
     ):
         "Slides the window `offset` pixels respecting `animation_type`"
-        addresses = [] if only_secondary else ["address:" + scratch.full_address]
-        addresses.extend(("address:" + addr for addr in scratch.extra_addr))
+        addresses = [] if only_secondary else [scratch.full_address]
+        addresses.extend(scratch.extra_addr)
+
+        animation_actions = {
+            "fromright": f"movewindowpixel {off_x} 0",
+            "fromleft": f"movewindowpixel {-off_x} 0",
+            "frombottom": f"movewindowpixel 0 {off_y}",
+            "fromtop": f"movewindowpixel 0 {-off_y}",
+        }
+
         for addr in addresses:
-            if animation_type == "fromtop":
-                await self.hyprctl(f"movewindowpixel 0 {-off_y},{addr}")
-            elif animation_type == "frombottom":
-                await self.hyprctl(f"movewindowpixel 0 {off_y},{addr}")
-            elif animation_type == "fromleft":
-                await self.hyprctl(f"movewindowpixel {-off_x} 0,{addr}")
-            elif animation_type == "fromright":
-                await self.hyprctl(f"movewindowpixel {off_x} 0,{addr}")
+            if animation_type in animation_actions:
+                await self.hyprctl(
+                    f"{animation_actions[animation_type]},address:{addr}"
+                )
 
     async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name" """
