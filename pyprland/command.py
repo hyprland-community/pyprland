@@ -386,6 +386,16 @@ If the command is ommited, runs the daemon which will start every configured plu
 Available commands:
 """
     )
+    builtins_docs = {
+        "help": "Shows this help",
+        "version": "Shows the version",
+        "edit": "Edit the configuration file",
+        "dumpjson": "Dumps the configuration in JSON format",
+        "exit": "Exits the daemon",
+    }
+    for name, doc in builtins_docs.items():
+        print(f" {name:20s} {doc}")
+
     for plug in manager.plugins.values():
         for name in dir(plug):
             if not name.startswith("run_"):
@@ -401,7 +411,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.10-12")  # Automatically updated version
+        print("2.2.10-13")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
