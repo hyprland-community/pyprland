@@ -387,11 +387,11 @@ Available commands:
 """
     )
     builtins_docs = {
+        "dumpjson": "Dumps the configuration in JSON format",
+        "edit": "Edit the configuration file",
+        "exit": "Exits the daemon",
         "help": "Shows this help",
         "version": "Shows the version",
-        "edit": "Edit the configuration file",
-        "dumpjson": "Dumps the configuration in JSON format",
-        "exit": "Exits the daemon",
     }
     for name, doc in builtins_docs.items():
         print(f" {name:20s} {doc}")
@@ -411,7 +411,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.10-13")  # Automatically updated version
+        print("2.2.10-14")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
