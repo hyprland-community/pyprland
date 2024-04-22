@@ -5,7 +5,6 @@ import importlib
 import itertools
 from functools import partial
 from typing import Self, Callable
-from pprint import pprint
 import tomllib
 import json
 import os
@@ -402,7 +401,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.10-11")  # Automatically updated version
+        print("2.2.10-12")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
