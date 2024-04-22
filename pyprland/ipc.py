@@ -69,7 +69,7 @@ def retry_on_reset(func):
 
 cached_responses: dict[str, list[Any]] = {
     # <command name>: [expiration_date, payload, retention_time]
-    "monitors": [0, None, 0.3],
+    "monitors": [0, None, 0.03],
     # "workspaces": [0, None, 0.1],
     # "clients": [0, None, 0.02],
 }
