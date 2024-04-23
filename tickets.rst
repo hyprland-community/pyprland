@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 39
+:total-count: 40
 
 --------------------------------------------------------------------------------
 
@@ -164,4 +164,13 @@ preserve_aspect could recall aspect per screen resolution/size
 
 :bugid: 39
 :created: 2024-04-17T23:55:01
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+CHECK / fix multi-monitor & attach command
+==========================================
+
+:bugid: 40
+:created: 2024-04-23T22:01:39
 :priority: 0
