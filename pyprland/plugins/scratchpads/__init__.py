@@ -13,6 +13,7 @@ from ...common import (
     MonitorInfo,
     ClientInfo,
     is_rotated,
+    is_flipped,
 )
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
@@ -29,6 +30,19 @@ AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0.2
 DEFAULT_HYSTERESIS = 0.4  # In seconds
+
+
+def get_animation_type(scratch: Scratch, monitor: MonitorInfo) -> str:
+    "Get the animation type"
+    animation_type: str = scratch.conf.get("animation", "").lower()
+    if is_flipped(monitor):
+        animation_type = {
+            "fromright": "fromleft",
+            "fromleft": "fromright",
+            "frombottom": "fromtop",
+            "fromtop": "frombottom",
+        }[animation_type]
+    return animation_type
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
@@ -484,7 +498,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         "animate hiding a scratchpad"
 
-        animation_type: str = scratch.conf.get("animation", "").lower()
+        animation_type: str = get_animation_type(scratch, monitor)
+
         if not animation_type:
             return False
 
@@ -570,7 +585,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool
     ):
         "perfoms the transition to visible state"
-        animation_type = scratch.conf.get("animation", "").lower()
         forbid_special = not self.cast_bool(
             scratch.conf.get("allow_special_workspace"), True
         )
@@ -607,6 +621,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
         await scratch.updateClientInfo()  # update position, size & workspace information (workspace properties have been created)
+
+        animation_type = get_animation_type(scratch, monitor)
         if not position_fixed:
             if animation_type:
                 ox, oy = await self.get_offsets(scratch, monitor)
