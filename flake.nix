@@ -11,7 +11,10 @@
     systems,
     poetry2nix,
   }: let
+    inherit (nixpkgs.lib) cleanSource;
     inherit (poetry2nix.lib) mkPoetry2Nix;
+
+    selfClean = cleanSource self;
 
     supportedSystems = nixpkgs.lib.genAttrs (import systems);
     pkgsFor = system: nixpkgs.legacyPackages.${system};
@@ -20,7 +23,7 @@
       inherit (mkPoetry2Nix {pkgs = pkgsFor system;}) mkPoetryApplication;
     in {
       default = mkPoetryApplication {
-        projectDir = self;
+        projectDir = selfClean;
         checkGroups = [];
       };
     });
@@ -30,7 +33,7 @@
     in {
       default = (pkgsFor system).mkShellNoCC {
         packages = with (pkgsFor system); [
-          (mkPoetryEnv {projectDir = self;})
+          (mkPoetryEnv {projectDir = selfClean;})
           poetry
         ];
       };
