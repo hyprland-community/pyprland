@@ -8,17 +8,12 @@ from ...common import MonitorInfo, ClientInfo, is_rotated
 
 def get_size(monitor: MonitorInfo):
     "Get the (width, height) size of the monitor"
-    return (
-        (
-            int(monitor["height"] / monitor["scale"]),
-            int(monitor["width"] / monitor["scale"]),
-        )
-        if is_rotated(monitor)
-        else (
-            int(monitor["width"] / monitor["scale"]),
-            int(monitor["height"] / monitor["scale"]),
-        )
+    h, w = int(monitor["height"] / monitor["scale"]), int(
+        monitor["width"] / monitor["scale"]
     )
+    if is_rotated(monitor):
+        return (h, w)
+    return (w, h)
 
 
 class Animations:  # {{{
