@@ -559,6 +559,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         assert monitor
         assert scratch.full_address, "No address !"
+
         await self._show_transition(scratch, monitor, was_alive)
         scratch.monitor = monitor["name"]
 
@@ -599,6 +600,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
+        await scratch.updateClientInfo()
         position_fixed = False
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
