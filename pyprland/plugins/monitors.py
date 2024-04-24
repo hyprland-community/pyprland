@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any, cast
 
 from .interface import Plugin
-from ..common import CastBoolMixin
+from ..common import CastBoolMixin, is_rotated
 
 
 def trim_offset(monitors):
@@ -39,8 +39,12 @@ def get_XY(place, main_mon, other_mon):
     align_x = False
     scaled_m_w = int(main_mon["width"] / main_mon["scale"])
     scaled_m_h = int(main_mon["height"] / main_mon["scale"])
+    if is_rotated(main_mon):
+        scaled_m_w, scaled_m_h = scaled_m_h, scaled_m_w
     scaled_om_w = int(other_mon["width"] / other_mon["scale"])
     scaled_om_h = int(other_mon["height"] / other_mon["scale"])
+    if is_rotated(other_mon):
+        scaled_om_w, scaled_om_h = scaled_om_h, scaled_om_w
     if place.startswith("top"):
         x = other_mon["x"]
         y = other_mon["y"] - scaled_m_h
@@ -123,9 +127,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 resolution = f"{this_mon['width']}x{this_mon['height']}@{this_mon['refreshRate']}"
                 scale = this_mon["scale"]
                 position = f"{monitor['x']}x{monitor['y']}"
+                transform = this_mon["transform"]
 
                 await self.hyprctl(
-                    f"monitor {name},{resolution},{position},{scale}", "keyword"
+                    f"monitor {name},{resolution},{position},{scale},transform,{transform}",
+                    "keyword",
                 )
 
     # Event handlers
