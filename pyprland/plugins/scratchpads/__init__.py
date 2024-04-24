@@ -603,7 +603,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         position_fixed = False
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
-        await scratch.updateClientInfo()
+        await scratch.updateClientInfo()  # update position, size & workspace information (workspace properties have been created)
         if not position_fixed:
             if animation_type:
                 ox, oy = await self.get_offsets(scratch, monitor)
