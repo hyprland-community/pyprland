@@ -11,19 +11,25 @@ class Extension(Plugin):
         "initializes the plugin"
         state.active_window = ""
         try:
-            version = (await self.hyprctlJSON("version"))["tag"].split("-", 1)[0]
+            version_info = await self.hyprctlJSON("version")
         except json.JSONDecodeError as e:
             self.log.error("Fail to parse hyprctl version: %s", e)
             await self.notify_error("Error: 'hyprctl version': incorrect JSON data")
             version = "v0.0.0"
+        else:
+            if version_info.get("tag"):
+                version = version_info["tag"].split("-", 1)[0]
+            else:
+                version = "v9.9.9"
+                self.log.warning("No tag available, assuming a recent git version.")
 
         try:
             state.hyprland_version = VersionInfo(
                 *(int(i) for i in version[1:].split(".")[:3])
             )
         except Exception as e:  # pylint: disable=broad-except
-            self.log.error('Fail to parse hyprctl version "%s": %s', version, e)
-            await self.notify_error("Failed to parse hyprctl version")
+            self.log.error('Fail to parse version tag "%s": %s', version, e)
+            await self.notify_error(f"Failed to parse hyprctl version tag: {version}")
             state.hyprland_version = VersionInfo(0, 0, 0)
 
         state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
