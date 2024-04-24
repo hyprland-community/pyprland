@@ -8,9 +8,8 @@ from ...common import MonitorInfo, ClientInfo, is_rotated
 
 def get_size(monitor: MonitorInfo):
     "Get the (width, height) size of the monitor"
-    h, w = int(monitor["height"] / monitor["scale"]), int(
-        monitor["width"] / monitor["scale"]
-    )
+    s = monitor["scale"]
+    h, w = int(monitor["height"] / s), int(monitor["width"] / s)
     if is_rotated(monitor):
         return (h, w)
     return (w, h)
