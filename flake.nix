@@ -1,8 +1,12 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+    # <https://github.com/nix-community/poetry2nix>
     poetry2nix.url = "github:nix-community/poetry2nix";
-    systems.url = "github:nix-systems/default";
+
+    # <https://github.com/nix-systems/nix-systems>
+    systems.url = "github:nix-systems/default-linux";
   };
 
   outputs = {
@@ -11,29 +15,27 @@
     systems,
     poetry2nix,
   }: let
-    inherit (nixpkgs.lib) cleanSource;
     inherit (poetry2nix.lib) mkPoetry2Nix;
 
-    selfClean = cleanSource self;
-
-    supportedSystems = nixpkgs.lib.genAttrs (import systems);
-    pkgsFor = system: nixpkgs.legacyPackages.${system};
+    eachSystem = nixpkgs.lib.genAttrs (import systems);
+    pkgsFor = eachSystem (system: import nixpkgs {localSystem = system;});
   in {
-    packages = supportedSystems (system: let
-      inherit (mkPoetry2Nix {pkgs = pkgsFor system;}) mkPoetryApplication;
+    packages = eachSystem (system: let
+      inherit (mkPoetry2Nix {pkgs = pkgsFor.${system};}) mkPoetryApplication;
     in {
-      default = mkPoetryApplication {
-        projectDir = selfClean;
+      default = self.packages.${system}.pyprland;
+      pyprland = mkPoetryApplication {
+        projectDir = ./.;
         checkGroups = [];
       };
     });
 
-    devShells = supportedSystems (system: let
-      inherit (mkPoetry2Nix {pkgs = pkgsFor system;}) mkPoetryEnv;
+    devShells = eachSystem (system: let
+      inherit (mkPoetry2Nix {pkgs = pkgsFor.${system};}) mkPoetryEnv;
     in {
-      default = (pkgsFor system).mkShellNoCC {
-        packages = with (pkgsFor system); [
-          (mkPoetryEnv {projectDir = selfClean;})
+      default = pkgsFor.${system}.mkShellNoCC {
+        packages = with pkgsFor.${system}; [
+          (mkPoetryEnv {projectDir = ./.;})
           poetry
         ];
       };
