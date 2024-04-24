@@ -548,7 +548,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             assert excluded
             if excluded.visible:
                 await self.run_hide(e_uid, autohide=True)
-        await scratch.updateClientInfo()
+
         await scratch.initialize(self)
 
         scratch.visible = True
@@ -600,10 +600,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
-        await scratch.updateClientInfo()
         position_fixed = False
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
+        await scratch.updateClientInfo()
         if not position_fixed:
             if animation_type:
                 ox, oy = await self.get_offsets(scratch, monitor)

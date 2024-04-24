@@ -411,7 +411,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.11-3")  # Automatically updated version
+        print("2.2.11-6")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
