@@ -1,0 +1,53 @@
+# This is a re-usable workflow that is used by .github/workflows/check.yml to handle necessary setup
+# before running Nix commands. E.g. this will install Nix and set up Magic Nix Cache
+name: "Nix Setup"
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        required: false
+        type: string
+      platform:
+        default: "ubuntu"
+        required: false
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+
+jobs:
+  nix:
+    runs-on: "${{ inputs.platform }}-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          token: "${{ secrets.GH_TOKEN }}"
+
+      - name: "Set up QEMU support"
+        run: |
+          # This will allow for cross-compilation using Nix
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -q -y
+          sudo apt-get install -q -y binfmt-support qemu-efi qemu-system-aarch64 qemu-user-static
+
+      - name: "Install nix"
+        uses: cachix/install-nix-action@master
+        with:
+          install_url: https://nixos.org/nix/install
+          extra_nix_config: |
+            experimental-features = nix-command flakes fetch-tree
+            allow-import-from-derivation = false
+            extra-platforms = aarch64-linux
+
+            # extra substituters
+            # nix-community
+            extra-substituters = https://nix-community.cachix.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+
+      - name: "Nix Magic Cache"
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: "Run Input: ${{ inputs.command }}"
+        run: "${{ inputs.command }}"
