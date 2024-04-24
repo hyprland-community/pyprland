@@ -33,7 +33,8 @@
     devShells = eachSystem (system: let
       inherit (mkPoetry2Nix {pkgs = pkgsFor.${system};}) mkPoetryEnv;
     in {
-      default = pkgsFor.${system}.mkShellNoCC {
+      default = self.devShells.${system}.pyprland;
+      pyprland = pkgsFor.${system}.mkShellNoCC {
         packages = with pkgsFor.${system}; [
           (mkPoetryEnv {projectDir = ./.;})
           poetry
