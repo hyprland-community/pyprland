@@ -27,14 +27,13 @@ from .helpers import (
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
-DEFAULT_HIDE_DELAY = 0.2
-DEFAULT_HYSTERESIS = 0.4  # In seconds
+DEFAULT_HIDE_DELAY = 0.2  # in seconds
+DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
 def get_animation_type(scratch: Scratch) -> str:
-    "Get the animation type"
-    animation_type: str = scratch.conf.get("animation", "").lower()
-    return animation_type
+    "Get the animation type or an empty string if not set"
+    return (scratch.conf.get("animation") or "").lower()
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
