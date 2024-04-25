@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 40
+:total-count: 41
 
 --------------------------------------------------------------------------------
 
@@ -174,3 +174,14 @@ CHECK / fix multi-monitor & attach command
 :bugid: 40
 :created: 2024-04-23T22:01:39
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+Re-introduce focus tracking with a twist
+========================================
+
+:bugid: 41
+:created: 2024-04-25T23:54:53
+:priority: 0
+
+Only enable it if the focuse changed the active workspace
