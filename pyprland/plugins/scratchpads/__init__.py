@@ -13,7 +13,6 @@ from ...common import (
     MonitorInfo,
     ClientInfo,
     is_rotated,
-    is_flipped,
 )
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
@@ -35,13 +34,6 @@ DEFAULT_HYSTERESIS = 0.4  # In seconds
 def get_animation_type(scratch: Scratch, monitor: MonitorInfo) -> str:
     "Get the animation type"
     animation_type: str = scratch.conf.get("animation", "").lower()
-    if is_flipped(monitor):
-        animation_type = {
-            "fromright": "fromleft",
-            "fromleft": "fromright",
-            "frombottom": "fromtop",
-            "fromtop": "frombottom",
-        }[animation_type]
     return animation_type
 
 

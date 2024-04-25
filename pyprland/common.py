@@ -321,8 +321,3 @@ class MonitorInfo(TypedDict):
 def is_rotated(monitor: MonitorInfo) -> bool:
     "Returns True if the monitor is rotated"
     return monitor["transform"] in (1, 3, 5, 7)
-
-
-def is_flipped(monitor: MonitorInfo) -> bool:
-    "Returns True if the monitor is flipped"
-    return monitor["transform"] in (3, 4, 5)
