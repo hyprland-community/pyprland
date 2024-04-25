@@ -5,6 +5,9 @@ test *params='':
     {{pyenv}}/bin/coverage run -m pytest --pdb -s {{params}}
     {{pyenv}}/bin/coverage report
 
+vreg:
+    tox run -e vreg
+
 doc:
     tox run -e doc
 
