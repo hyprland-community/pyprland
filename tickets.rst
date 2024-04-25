@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 41
+:total-count: 42
 
 --------------------------------------------------------------------------------
 
@@ -185,3 +185,14 @@ Re-introduce focus tracking with a twist
 :priority: 0
 
 Only enable it if the focuse changed the active workspace
+
+--------------------------------------------------------------------------------
+
+Check behavior of monitors when no match is found
+=================================================
+
+:bugid: 42
+:created: 2024-04-26T00:26:22
+:priority: 0
+
+Should ignore applying any rule
