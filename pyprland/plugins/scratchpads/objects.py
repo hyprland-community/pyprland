@@ -112,6 +112,9 @@ class Scratch(CastBoolMixin):  # {{{
         if client_info is None:
             client_info = await self.get_client_props(addr=self.full_address)
         if not isinstance(client_info, dict):
+            if client_info is None:
+                self.log.error("The client window %s vanished", self.full_address)
+                raise AssertionError(f"Client window {self.full_address} not found")
             self.log.error(
                 "client_info of %s must be a dict: %s", self.address, client_info
             )
