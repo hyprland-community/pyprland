@@ -141,8 +141,8 @@ async def test_relayout():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0,transform,0",
         ],
     )
 
@@ -155,9 +155,9 @@ async def test_3screens_relayout():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
-            "monitor eDP-1,640x480@59.999,5360x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0,transform,0",
+            "monitor eDP-1,640x480@59.999,5360x0,1.0,transform,0",
         ],
     )
 
@@ -170,9 +170,9 @@ async def test_3screens_relayout_b():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0",
-            "monitor DP-1,3440x1440@59.999,0x1080,1.0",
-            "monitor eDP-1,640x480@59.999,1400x2520,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,0x1080,1.0,transform,0",
+            "monitor eDP-1,640x480@59.999,1400x2520,1.0,transform,0",
         ],
     )
 
@@ -185,9 +185,9 @@ async def test_shape_l():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x480,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x480,1.0",
-            "monitor eDP-1,640x480@59.999,0x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x480,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x480,1.0,transform,0",
+            "monitor eDP-1,640x480@59.999,0x0,1.0,transform,0",
         ],
     )
 
@@ -200,9 +200,9 @@ async def test_flipped_shape_l():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
-            "monitor DP-1,3440x1440@59.999,640x1080,1.0",
-            "monitor eDP-1,640x480@59.999,0x1080,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,640x1080,1.0,transform,0",
+            "monitor eDP-1,640x480@59.999,0x1080,1.0,transform,0",
         ],
     )
 
@@ -215,9 +215,9 @@ async def test_3screens_rev_relayout():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,4080x0,1.0",
-            "monitor DP-1,3440x1440@59.999,640x0,1.0",
-            "monitor eDP-1,640x480@59.999,0x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,4080x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,640x0,1.0,transform,0",
+            "monitor eDP-1,640x480@59.999,0x0,1.0,transform,0",
         ],
     )
 
@@ -230,8 +230,8 @@ async def test_events():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0,transform,0",
         ],
     )
 
@@ -245,8 +245,8 @@ async def test_events_d():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x180,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x180,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0,transform,0",
         ],
     )
 
@@ -261,8 +261,8 @@ async def test_events2():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,3440x0,1.0",
-            "monitor DP-1,3440x1440@59.999,0x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,3440x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,0x0,1.0,transform,0",
         ],
     )
 
@@ -277,8 +277,8 @@ async def test_events3():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x1440,1.0",
-            "monitor DP-1,3440x1440@59.999,0x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x1440,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,0x0,1.0,transform,0",
         ],
     )
 
@@ -293,8 +293,8 @@ async def test_events3b():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0",
-            "monitor DP-1,3440x1440@59.999,1920x0,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,0x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,1920x0,1.0,transform,0",
         ],
     )
 
@@ -309,8 +309,8 @@ async def test_events4():
     assert_modes(
         tst.hyprctl.call_args_list,
         [
-            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0",
-            "monitor DP-1,3440x1440@59.999,0x1080,1.0",
+            "monitor HDMI-A-1,1920x1080@60.0,760x0,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,0x1080,1.0,transform,0",
         ],
     )
 
