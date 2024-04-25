@@ -129,8 +129,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 margin_x = (monitor["width"] - width) // 2
                 margin_y = (monitor["height"] - height) // 2
 
-            if is_rotated(monitor):
-                margin_x, margin_y = margin_y, margin_x
+                if is_rotated(monitor):
+                    margin_x, margin_y = margin_y, margin_x
 
                 t_pos = {
                     "fromtop": f"{margin_x} -200%",
