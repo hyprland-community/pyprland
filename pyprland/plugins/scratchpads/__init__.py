@@ -31,7 +31,7 @@ DEFAULT_HIDE_DELAY = 0.2
 DEFAULT_HYSTERESIS = 0.4  # In seconds
 
 
-def get_animation_type(scratch: Scratch, monitor: MonitorInfo) -> str:
+def get_animation_type(scratch: Scratch) -> str:
     "Get the animation type"
     animation_type: str = scratch.conf.get("animation", "").lower()
     return animation_type
@@ -490,7 +490,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         "animate hiding a scratchpad"
 
-        animation_type: str = get_animation_type(scratch, monitor)
+        animation_type: str = get_animation_type(scratch)
 
         if not animation_type:
             return False
@@ -614,7 +614,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(scratch, monitor)
         await scratch.updateClientInfo()  # update position, size & workspace information (workspace properties have been created)
 
-        animation_type = get_animation_type(scratch, monitor)
+        animation_type = get_animation_type(scratch)
         if not position_fixed:
             if animation_type:
                 ox, oy = await self.get_offsets(scratch, monitor)
