@@ -108,7 +108,9 @@ class Scratch(CastBoolMixin):  # {{{
         return cast(str, self.client_info.get("address", ""))
 
     async def updateClientInfo(
-        self, client_info: ClientInfo | None = None, clients: list[dict] | None = None
+        self,
+        client_info: ClientInfo | None = None,
+        clients: list[ClientInfo] | None = None,
     ) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
@@ -118,7 +120,7 @@ class Scratch(CastBoolMixin):  # {{{
         if not isinstance(client_info, dict):
             if client_info is None:
                 self.log.error("The client window %s vanished", self.full_address)
-                raise AssertionError(f"Client window {self.full_address} not found")
+                raise KeyError(f"Client window {self.full_address} not found")
             self.log.error(
                 "client_info of %s must be a dict: %s", self.address, client_info
             )

@@ -572,6 +572,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._show_transition(scratch, monitor, was_alive)
         scratch.monitor = monitor["name"]
 
+    async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]):
+        "Collects every matching client for the scratchpad and add them to extra_addr if needed"
+        if not self.cast_bool(scratch.conf.get("multi_window")):
+            return
+        match_by = scratch.conf.get("match_by", "pid")
+        match_value = scratch.conf[match_by] if match_by != "pid" else scratch.pid
+        match_fn = get_match_fn(match_by, match_value)
+        for client in clients:
+            if match_fn(client[match_by], match_value):  # type: ignore
+                address = client["address"][2:]
+                if address not in scratch.extra_addr:
+                    scratch.extra_addr.add(address)
+
     async def _show_transition(
         self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool
     ):
@@ -587,6 +600,20 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         scratch.meta["last_shown"] = time.time()
         # Start the transition
+        preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
+        should_set_aspect = (
+            not (preserve_aspect and was_alive)
+            or scratch.monitor != state.active_monitor
+        )  # not aspect preserving or it's newly spawned
+        if should_set_aspect:
+            await self._fix_size(scratch, monitor)
+        position_fixed = False
+        if should_set_aspect:
+            position_fixed = await self._fix_position(scratch, monitor)
+
+        clients = await self.hyprctlJSON("clients")
+        await self._handle_multiwindow(scratch, clients)
+        # move
         move_commands = [
             f"moveworkspacetomonitor special:scratch_{scratch.uid} {monitor['name']}",
             f"movetoworkspacesilent {wrkspc},address:{scratch.full_address}",
@@ -601,27 +628,39 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             )
 
         await self.hyprctl(move_commands)
-        preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
-        should_set_aspect = (
-            not (preserve_aspect and was_alive)
-            or scratch.monitor != state.active_monitor
-        )  # not aspect preserving or it's newly spawned
-        if should_set_aspect:
-            await self._fix_size(scratch, monitor)
-        position_fixed = False
-        if should_set_aspect:
-            position_fixed = await self._fix_position(scratch, monitor)
+        await self._update_infos(scratch, clients)
 
-        clients = await self.hyprctlJSON("clients")
-        await scratch.updateClientInfo(
-            clients=clients
-        )  # update position, size & workspace information (workspace properties have been created)
         if not position_fixed:
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
             await self._animate_show(scratch, monitor, relative_animation)
         await self.hyprctl(f"focuswindow address:{scratch.full_address}")
         scratch.meta["last_shown"] = time.time()
         scratch.meta["monitor_info"] = monitor
+
+    async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]):
+        "update the client info"
+        try:
+            await scratch.updateClientInfo(
+                clients=clients
+            )  # update position, size & workspace information (workspace properties have been created)
+        except KeyError:
+            for alt_addr in scratch.extra_addr:
+                # get the client info for the extra addresses
+                try:
+                    client_info = await self.get_client_props(
+                        addr="0x" + alt_addr, clients=clients
+                    )
+                    if not client_info:
+                        continue
+                    await scratch.updateClientInfo(
+                        clients=clients, client_info=client_info
+                    )
+                except KeyError:
+                    pass
+                else:
+                    break
+            else:
+                self.log.error("Lost the client info for %s", scratch.uid)
 
     async def _animate_show(
         self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool
