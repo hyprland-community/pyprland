@@ -774,6 +774,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self, scratch: Scratch, active_window: str, active_workspace: str
     ):
         "handle focus tracking"
+        if not self.cast_bool(scratch.conf.get("smart_focus"), True):
+            return
         for track in self.focused_window_tracking.values():
             if scratch.have_address(track.prev_focused_window):
                 track.clear()
