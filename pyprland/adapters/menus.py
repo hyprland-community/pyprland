@@ -4,7 +4,8 @@ import asyncio
 from typing import Iterable
 from logging import Logger
 
-from ..common import PyprError, get_logger, apply_variables
+from ..common import get_logger, apply_variables
+from ..types import PyprError
 
 
 __all__ = ["MenuMixin", "MenuEngine"]

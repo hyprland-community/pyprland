@@ -12,14 +12,13 @@ import logging
 import subprocess
 from dataclasses import dataclass, field
 
+from .types import MonitorInfo, VersionInfo
 
-from typing import TypedDict
 
 __all__ = [
     "DEBUG",
     "get_logger",
     "state",
-    "PyprError",
     "apply_variables",
     "merge",
     "run_interactive_program",
@@ -116,10 +115,6 @@ def merge(merged, obj2):
     return merged
 
 
-class PyprError(Exception):
-    """Used for errors which already triggered logging"""
-
-
 class LogObjects:
     """Reusable objects for loggers"""
 
@@ -183,14 +178,6 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
         logger.addHandler(handler)
     logger.info('Logger "%s" initialized', name)
     return logger
-
-
-@dataclass(order=True)
-class VersionInfo:
-    "Stores version information"
-    major: int = 0  # noqa: F841
-    minor: int = 0  # noqa: F841
-    micro: int = 0  # noqa: F841
 
 
 @dataclass
@@ -258,64 +245,6 @@ class CastBoolMixin:
                 "Invalid value for boolean option: %s, considering it %s", value, r
             )
         return default_value if value is None else value
-
-
-class WorkspaceDf(TypedDict):
-    "Workspace definition"
-    id: int
-    name: str
-
-
-class ClientInfo(TypedDict):
-    "Client information as returned by Hyprland"
-    address: str
-    mapped: bool
-    hidden: bool
-    at: list[int]
-    size: list[int]
-    workspace: WorkspaceDf
-    floating: bool
-    monitor: int
-    class_: str
-    title: str
-    initialClass: str
-    initialTitle: str
-    pid: int
-    xwayland: bool
-    pinned: bool
-    fullscreen: bool
-    fullscreenMode: int
-    fakeFullscreen: bool
-    grouped: list[str]
-    swallowing: str
-    focusHistoryID: int
-
-
-class MonitorInfo(TypedDict):
-    "Monitor information as returned by Hyprland"
-    id: int
-    name: str
-    description: str
-    make: str
-    model: str
-    serial: str
-    width: int
-    height: int
-    refreshRate: float
-    x: int
-    y: int
-    activeWorkspace: WorkspaceDf
-    specialWorkspace: WorkspaceDf
-    reserved: list[int]
-    scale: float
-    transform: int
-    focused: bool
-    dpmsStatus: bool
-    vrr: bool
-    activelyTearing: bool
-    disabled: bool
-    currentFormat: str
-    availableModes: list[str]
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:

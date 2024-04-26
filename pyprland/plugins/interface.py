@@ -2,6 +2,7 @@
 from typing import Any, cast, Callable
 
 from ..common import get_logger
+from ..types import ClientInfo
 from ..ipc import getCtrlObjects
 
 
@@ -73,7 +74,7 @@ class Plugin:
         "Return the client list, optionally returns only mapped clients or from a given workspace"
         return [
             client
-            for client in cast(list[dict[str, Any]], await self.hyprctlJSON("clients"))
+            for client in cast(list[ClientInfo], await self.hyprctlJSON("clients"))
             if (not mapped or client["mapped"])
             and (
                 workspace is None or cast(str, client["workspace"]["name"]) == workspace

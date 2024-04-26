@@ -11,7 +11,8 @@ from aiofiles import os as aios
 from aiofiles import open as aiopen
 
 from ...ipc import notify_error
-from ...common import CastBoolMixin, VersionInfo, state, ClientInfo, MonitorInfo
+from ...common import CastBoolMixin, state
+from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import OverridableConfig, get_match_fn
 
 

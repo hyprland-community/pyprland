@@ -10,10 +10,9 @@ from ...common import (
     state,
     CastBoolMixin,
     apply_variables,
-    MonitorInfo,
-    ClientInfo,
     is_rotated,
 )
+from ...types import MonitorInfo, ClientInfo
 from ...adapters.units import convert_coords, convert_monitor_dimension
 
 from .animations import Animations

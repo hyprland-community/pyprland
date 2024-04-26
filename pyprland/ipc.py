@@ -19,7 +19,8 @@ from typing import Any
 from logging import Logger
 from functools import partial
 
-from .common import PyprError, get_logger, MonitorInfo, ClientInfo
+from .common import get_logger
+from .types import MonitorInfo, ClientInfo, PyprError
 
 log: Logger | None = None
 
@@ -182,7 +183,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
 
 
 async def get_client_props(
-    logger=None, match_fn=None, clients: list[dict] | None = None, **kw
+    logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw
 ) -> ClientInfo | None:
     """
     Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments

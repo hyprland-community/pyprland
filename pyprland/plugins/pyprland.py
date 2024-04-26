@@ -1,7 +1,8 @@
 " Not a real Plugin - provides some core features and some caching of commonly requested structures "
 import json
 from .interface import Plugin
-from ..common import state, VersionInfo
+from ..common import state
+from ..types import VersionInfo
 
 
 class Extension(Plugin):

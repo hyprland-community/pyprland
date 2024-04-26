@@ -3,7 +3,8 @@
 __all__ = ["Animations"]
 
 from ...adapters.units import convert_monitor_dimension
-from ...common import MonitorInfo, ClientInfo, is_rotated
+from ...common import is_rotated
+from ...types import MonitorInfo, ClientInfo
 
 
 def get_size(monitor: MonitorInfo):

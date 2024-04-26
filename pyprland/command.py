@@ -11,12 +11,12 @@ import os
 import sys
 
 from pyprland.common import (
-    PyprError,
     get_logger,
     init_logger,
     merge,
     run_interactive_program,
 )
+from pyprland.types import PyprError
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
@@ -411,7 +411,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.12-31")  # Automatically updated version
+        print("2.2.12-32")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
