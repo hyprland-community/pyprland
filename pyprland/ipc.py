@@ -181,7 +181,9 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
     raise RuntimeError("no focused monitor")
 
 
-async def get_client_props(logger=None, match_fn=None, **kw) -> ClientInfo | None:
+async def get_client_props(
+    logger=None, match_fn=None, clients: list[dict] | None = None, **kw
+) -> ClientInfo | None:
     """
     Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments
 
@@ -222,7 +224,7 @@ async def get_client_props(logger=None, match_fn=None, **kw) -> ClientInfo | Non
         def match_fn(value1, value2):
             return value1 == value2
 
-    for client in await hyprctlJSON("clients", logger=logger):
+    for client in clients or await hyprctlJSON("clients", logger=logger):
         assert isinstance(client, dict)
         if match_fn(client.get(prop_name), prop_value):
             return client  # type: ignore

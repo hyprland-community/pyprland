@@ -611,39 +611,48 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         position_fixed = False
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
-        await scratch.updateClientInfo()  # update position, size & workspace information (workspace properties have been created)
 
-        animation_type = get_animation_type(scratch)
+        clients = await self.hyprctlJSON("clients")
+        await scratch.updateClientInfo(
+            clients=clients
+        )  # update position, size & workspace information (workspace properties have been created)
         if not position_fixed:
-            if animation_type:
-                ox, oy = await self.get_offsets(scratch, monitor)
-                if preserve_aspect and was_alive and not should_set_aspect:
-                    # Relative positioning
-                    if "size" not in scratch.client_info:
-                        await self.updateScratchInfo(scratch)  # type: ignore
-
-                    await self._slide_animation(animation_type, scratch, -ox, -oy)
-                else:
-                    # Absolute positioning
-                    command = getattr(Animations, animation_type)(
-                        monitor,
-                        scratch.client_info,
-                        "address:" + scratch.full_address,
-                        scratch.conf.get("margin", DEFAULT_MARGIN),
-                    )
-                    await self.hyprctl(command)
-                    await self._slide_animation(
-                        animation_type, scratch, -ox, -oy, only_secondary=True
-                    )
-            else:
-                self.log.warning(
-                    "No position and no animation provided for %s, don't know where to place it.",
-                    scratch.uid,
-                )
-
+            relative_animation = preserve_aspect and was_alive and not should_set_aspect
+            await self._animate_show(scratch, monitor, relative_animation)
         await self.hyprctl(f"focuswindow address:{scratch.full_address}")
         scratch.meta["last_shown"] = time.time()
         scratch.meta["monitor_info"] = monitor
+
+    async def _animate_show(
+        self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool
+    ):
+        "animate the show transition"
+        animation_type = get_animation_type(scratch)
+        if animation_type:
+            ox, oy = await self.get_offsets(scratch, monitor)
+            if relative_animation:
+                # Relative positioning
+                if "size" not in scratch.client_info:
+                    await self.updateScratchInfo(scratch)  # type: ignore
+
+                await self._slide_animation(animation_type, scratch, -ox, -oy)
+            else:
+                # Absolute positioning
+                command = getattr(Animations, animation_type)(
+                    monitor,
+                    scratch.client_info,
+                    "address:" + scratch.full_address,
+                    scratch.conf.get("margin", DEFAULT_MARGIN),
+                )
+                await self.hyprctl(command)
+                await self._slide_animation(
+                    animation_type, scratch, -ox, -oy, only_secondary=True
+                )
+        else:
+            self.log.warning(
+                "No position and no animation provided for %s, don't know where to place it.",
+                scratch.uid,
+            )
 
     async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo):
         "apply the size from config"
