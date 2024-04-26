@@ -59,6 +59,10 @@ class Scratch(CastBoolMixin):  # {{{
 
         self.conf = opts
 
+    def have_address(self, addr):
+        "Check if the address is the same as the client"
+        return addr == self.full_address or addr in self.extra_addr
+
     async def initialize(self, ex):
         "Initialize the scratchpad"
         if self.meta.initialized:

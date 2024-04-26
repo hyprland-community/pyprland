@@ -1,8 +1,9 @@
 " Scratchpads addon "
 import time
 import asyncio
-from functools import partial
 from typing import cast
+from functools import partial
+from dataclasses import dataclass
 
 from ...ipc import notify_error, get_client_props, get_focused_monitor_props
 from ..interface import Plugin
@@ -30,6 +31,13 @@ DEFAULT_HIDE_DELAY = 0.2  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
+@dataclass
+class FocusTracker:
+    "Focus tracking object"
+    previously_focused_window: str
+    previously_focused_window_workspace: str
+
+
 def get_animation_type(scratch: Scratch) -> str:
     "Get the animation type or an empty string if not set"
     return (scratch.conf.get("animation") or "").lower()
@@ -43,6 +51,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     monitor = ""  # Currently active monitor
 
     _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
+    focused_window_tracking: dict[str, FocusTracker] = {}
+    previously_focused_window: str = ""
     last_focused: Scratch | None = None
 
     def __init__(self, name):
@@ -282,11 +292,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
+        if not addr:
+            return
+        full_address = "0x" + addr
         for uid, scratch in self.scratches.items():
             if not scratch.client_info:
                 continue
-            if scratch.address == addr or f"0x{addr}" in scratch.extra_addr:
+            if scratch.have_address(full_address):
                 self.last_focused = scratch
+                if self.previously_focused_window:
+                    self.focused_window_tracking[uid] = FocusTracker(
+                        self.previously_focused_window, state.active_workspace
+                    )
                 self.cancel_task(uid)
             else:
                 if scratch.visible and scratch.conf.get("unfocus") == "hide":
@@ -299,6 +316,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         continue
 
                     await self._hysteresis_handling(scratch)
+        self.previously_focused_window = full_address
 
     async def _hysteresis_handling(self, scratch):
         "hysteresis handling"
@@ -718,6 +736,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if `autohide` is True, skips focus tracking
         `force` ignores the visibility check"""
         scratch = self.scratches.get(uid)
+        active_window = state.active_window
+        active_workspace = state.active_workspace
 
         if not scratch:
             await notify_error(
@@ -743,6 +763,21 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 f"movetoworkspacesilent special:scratch_{uid},address:{addr}"
             )
             await asyncio.sleep(0.01)
+        await self._handle_focus_tracking(scratch, active_window, active_workspace)
+
+    async def _handle_focus_tracking(
+        self, scratch: Scratch, active_window: str, active_workspace: str
+    ):
+        tracker = self.focused_window_tracking.get(scratch.uid)
+        if tracker:
+            same_workspace = (
+                tracker.previously_focused_window_workspace == active_workspace
+            )
+            if scratch.have_address(active_window) and same_workspace:
+                if not scratch.have_address(tracker.previously_focused_window):
+                    await self.hyprctl(
+                        f"focuswindow address:{tracker.previously_focused_window}"
+                    )
 
     # }}}
 
