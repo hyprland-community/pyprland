@@ -5,14 +5,25 @@ __all__ = ["Scratch"]
 import os
 import logging
 from typing import Callable, cast
-from collections import defaultdict
+from dataclasses import dataclass
 
 from aiofiles import os as aios
 from aiofiles import open as aiopen
 
 from ...ipc import notify_error
-from ...common import CastBoolMixin, VersionInfo, state, ClientInfo
+from ...common import CastBoolMixin, VersionInfo, state, ClientInfo, MonitorInfo
 from .helpers import OverridableConfig, get_match_fn
+
+
+@dataclass
+class MetaInfo:
+    "Meta properties"
+    initialized: bool = False
+    should_hide: bool = False
+    no_pid: bool = False
+    last_shown: float | int = 0
+    space_identifier: tuple[str, str] = ("", "")
+    monitor_info: MonitorInfo = None  # type: ignore
 
 
 class Scratch(CastBoolMixin):  # {{{
@@ -29,7 +40,7 @@ class Scratch(CastBoolMixin):  # {{{
         self.uid = uid
         self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
         self.client_info: ClientInfo = {}  # type: ignore
-        self.meta = defaultdict(lambda: False)
+        self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
 
     def set_config(self, opts):
@@ -49,9 +60,9 @@ class Scratch(CastBoolMixin):  # {{{
 
     async def initialize(self, ex):
         "Initialize the scratchpad"
-        if self.meta["initialized"]:
+        if self.meta.initialized:
             return
-        self.meta["initialized"] = True
+        self.meta.initialized = True
         await self.updateClientInfo()
         await ex.hyprctl(
             f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
@@ -77,8 +88,8 @@ class Scratch(CastBoolMixin):  # {{{
                                 proc_state not in "ZX"
                             )  # not "Z (zombie)"or "X (dead)"
         else:
-            if "nopid" in self.meta:
-                return bool(self.fetch_matching_client())
+            if self.meta.no_pid:
+                return bool(await self.fetch_matching_client())
             return False
 
         return False
@@ -102,7 +113,7 @@ class Scratch(CastBoolMixin):  # {{{
         self.pid = pid
         self.visible = False
         self.client_info = {}  # type: ignore
-        self.meta["initialized"] = False
+        self.meta.initialized = False
 
     @property
     def address(self) -> str:
@@ -139,4 +150,5 @@ class Scratch(CastBoolMixin):  # {{{
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 
 
+# }}}
 # }}}

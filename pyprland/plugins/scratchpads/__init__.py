@@ -97,7 +97,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if await self.ensure_alive(name):
                 scratch = self.scratches.get(name)
                 assert scratch
-                scratch.meta["should_hide"] = True
+                scratch.meta.should_hide = True
             else:
                 self.log.error("Failure starting %s", name)
 
@@ -174,14 +174,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _start_scratch_nopid(self, scratch: Scratch) -> bool:
         "Ensure alive, PWA version"
         uid = scratch.uid
-        started = "nopid" in scratch.meta
+        started = scratch.meta.no_pid
         if not await scratch.isAlive():
             started = False
         if not started:
             self.scratches.reset(scratch)
             await self.start_scratch_command(uid)
             r = await self.__wait_for_client(scratch, use_proc=False)
-            scratch.meta["nopid"] = r
+            scratch.meta.no_pid = r
             return r
         return True
 
@@ -291,7 +291,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.cancel_task(uid)
             else:
                 if scratch.visible and scratch.conf.get("unfocus") == "hide":
-                    last_shown = scratch.meta.get("last_shown", 0)
+                    last_shown = scratch.meta.last_shown
                     if last_shown + AFTER_SHOW_INHIBITION > time.time():
                         self.log.debug(
                             "(SKIPPED) hide %s because another client is active",
@@ -358,7 +358,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.info("Updating Scratch info")
                 await self.updateScratchInfo()
             item = self.scratches.get(addr=addr)
-            if item and item.meta["should_hide"]:
+            if item and item.meta.should_hide:
                 await self.run_hide(item.uid, force=True)
         if item:
             await item.initialize(self)
@@ -416,18 +416,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         if self.cast_bool(first_scratch.conf.get("alt_toggle")):
             # Needs to be on any monitor (if workspace matches)
-            extra_visibility_check = first_scratch.meta[
-                "space_identifier"
-            ] in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
+            extra_visibility_check = (
+                first_scratch.meta.space_identifier
+                in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
+            )
         else:
             self.log.debug(
                 "visibility_check: %s == %s",
-                first_scratch.meta["space_identifier"],
+                first_scratch.meta.space_identifier,
                 get_active_space_identifier(),
             )
             # Needs to be on the active monitor+workspace
             extra_visibility_check = (
-                first_scratch.meta["space_identifier"] == get_active_space_identifier()
+                first_scratch.meta.space_identifier == get_active_space_identifier()
             )  # visible on the currently focused monitor
 
         is_visible = first_scratch.visible and (
@@ -553,7 +554,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await scratch.initialize(self)
 
         scratch.visible = True
-        scratch.meta["space_identifier"] = get_active_space_identifier()
+        scratch.meta.space_identifier = get_active_space_identifier()
         monitor = await self.get_focused_monitor_props(
             name=scratch.conf.get("force_monitor")
         )
@@ -589,7 +590,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else monitor["specialWorkspace"]["name"]
         )
 
-        scratch.meta["last_shown"] = time.time()
+        scratch.meta.last_shown = time.time()
         # Start the transition
         preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
         should_set_aspect = (
@@ -625,8 +626,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
             await self._animate_show(scratch, monitor, relative_animation)
         await self.hyprctl(f"focuswindow address:{scratch.full_address}")
-        scratch.meta["last_shown"] = time.time()
-        scratch.meta["monitor_info"] = monitor
+        scratch.meta.last_shown = time.time()
+        scratch.meta.monitor_info = monitor
 
     async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]):
         "update the client info"
@@ -728,9 +729,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.warning("%s is already hidden", uid)
             return
         scratch.visible = False
-        scratch.meta["should_hide"] = False
+        scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)
-        await self._hide_transition(scratch, scratch.meta["monitor_info"])
+        await self._hide_transition(scratch, scratch.meta.monitor_info)
 
         await self.hyprctl(
             f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
