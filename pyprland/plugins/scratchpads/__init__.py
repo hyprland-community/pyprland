@@ -567,11 +567,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]):
         "Collects every matching client for the scratchpad and add them to extra_addr if needed"
-        if not self.cast_bool(scratch.conf.get("multi")):
+        if not self.cast_bool(scratch.conf.get("multi"), True):
             return
         match_by, match_value = scratch.get_match_props()
         match_fn = get_match_fn(match_by, match_value)
         for client in clients:
+            if client["address"] == scratch.full_address:
+                continue
             if match_fn(client[match_by], match_value):  # type: ignore
                 address = client["address"][2:]
                 if address not in scratch.extra_addr:
