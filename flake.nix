@@ -7,6 +7,12 @@
 
     # <https://github.com/nix-systems/nix-systems>
     systems.url = "github:nix-systems/default-linux";
+
+    # <https://github.com/edolstra/flake-compat>
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
   outputs = {
