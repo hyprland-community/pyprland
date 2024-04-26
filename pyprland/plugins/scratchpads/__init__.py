@@ -34,8 +34,13 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 @dataclass
 class FocusTracker:
     "Focus tracking object"
-    previously_focused_window: str
-    previously_focused_window_workspace: str
+    prev_focused_window: str
+    prev_focused_window_wrkspc: str
+
+    def clear(self):
+        "clear the tracking"
+        self.prev_focused_window = ""
+        self.prev_focused_window_wrkspc = ""
 
 
 def get_animation_type(scratch: Scratch) -> str:
@@ -601,7 +606,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     ):
         "perfoms the transition to visible state"
         forbid_special = not self.cast_bool(
-            scratch.conf.get("allow_special_workspace"), True
+            scratch.conf.get("allow_special_workspace"), False
         )
         wrkspc = (
             monitor["activeWorkspace"]["name"]
@@ -768,15 +773,17 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _handle_focus_tracking(
         self, scratch: Scratch, active_window: str, active_workspace: str
     ):
+        "handle focus tracking"
+        for track in self.focused_window_tracking.values():
+            if scratch.have_address(track.prev_focused_window):
+                track.clear()
         tracker = self.focused_window_tracking.get(scratch.uid)
         if tracker:
-            same_workspace = (
-                tracker.previously_focused_window_workspace == active_workspace
-            )
+            same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
             if scratch.have_address(active_window) and same_workspace:
-                if not scratch.have_address(tracker.previously_focused_window):
+                if not scratch.have_address(tracker.prev_focused_window):
                     await self.hyprctl(
-                        f"focuswindow address:{tracker.previously_focused_window}"
+                        f"focuswindow address:{tracker.prev_focused_window}"
                     )
 
     # }}}
