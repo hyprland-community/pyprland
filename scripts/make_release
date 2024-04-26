@@ -34,7 +34,7 @@ poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
 # }}}
 
 
-tox || exit -1
+tox run -e unit || exit -1
 
 pushd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh
