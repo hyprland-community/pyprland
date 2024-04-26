@@ -51,8 +51,8 @@ and if you have coding skills you can also
 - Updated the syntax for [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers)
 - Deprecated `class_match` in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
 - Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
-- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows
-- Add support for monitor rotation (in [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads))
+- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (in 2.2.11 and 2.2.13)
+- Add support for monitor rotation (in [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)) in 2.2.13
 
 
 ### 2.1
