@@ -78,17 +78,24 @@ class Scratch(CastBoolMixin):  # {{{
                             )  # not "Z (zombie)"or "X (dead)"
         else:
             if "nopid" in self.meta:
-                match_by = self.conf["match_by"]
-                match_value = self.conf[match_by]
-                match_fn = get_match_fn(match_by, match_value)
-                return bool(
-                    await self.get_client_props(
-                        match_fn=match_fn, **{match_by: match_value}
-                    )
-                )
+                return bool(self.fetch_matching_client())
             return False
 
         return False
+
+    async def fetch_matching_client(self, clients=None):
+        "Fetch the first matching client properties"
+        match_by, match_val = self.get_match_props()
+        return await self.get_client_props(
+            match_fn=get_match_fn(match_by, match_val),
+            clients=clients,
+            **{match_by: match_val},
+        )
+
+    def get_match_props(self):
+        "Returns the match properties for the scratchpad"
+        match_by = self.conf.get("match_by", "pid")
+        return match_by, self.pid if match_by == "pid" else self.conf[match_by]
 
     def reset(self, pid: int) -> None:
         "clear the object"

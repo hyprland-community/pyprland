@@ -155,14 +155,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
-                match_by = scratch.conf.get("match_by", "pid")
-                if match_by != "pid":
-                    info = await self.get_client_props(
-                        match_fn=get_match_fn(match_by, scratch.conf[match_by]),
-                        **{match_by: scratch.conf[match_by]},
-                    )
-                else:
-                    info = await self.get_client_props(pid=scratch.pid)
+                info = await scratch.fetch_matching_client()
                 if info:
                     await scratch.updateClientInfo(info)
                     self.log.info(
@@ -344,8 +337,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         # hack to update the client info from the provided match_by attribute
         clients = await self.hyprctlJSON("clients")
         for pending_scratch in class_lookup_hack:
-            match_by = pending_scratch.conf["match_by"]
-            match_value = pending_scratch.conf[match_by]
+            match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
             for client in clients:
                 assert isinstance(client, dict)
@@ -576,8 +568,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "Collects every matching client for the scratchpad and add them to extra_addr if needed"
         if not self.cast_bool(scratch.conf.get("multi")):
             return
-        match_by = scratch.conf.get("match_by", "pid")
-        match_value = scratch.conf[match_by] if match_by != "pid" else scratch.pid
+        match_by, match_value = scratch.get_match_props()
         match_fn = get_match_fn(match_by, match_value)
         for client in clients:
             if match_fn(client[match_by], match_value):  # type: ignore
