@@ -1,10 +1,12 @@
 import asyncio
-from typing import cast
-import pytest
 import tomllib
+from typing import cast
+from unittest.mock import Mock
+
+import pytest
+
 from .conftest import mocks as tst
 from .testtools import wait_called
-from unittest.mock import Mock
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")

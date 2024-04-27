@@ -1,9 +1,10 @@
-import pytest
 import tomllib
+
+import pytest
+from pytest_asyncio import fixture
+
 from .conftest import mocks as tst
 from .testtools import wait_called
-
-from pytest_asyncio import fixture
 
 
 @fixture

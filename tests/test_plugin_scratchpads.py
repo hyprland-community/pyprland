@@ -1,7 +1,8 @@
 " Scratchpad plugin (smoke) tests "
 import asyncio
-import pytest
 from pprint import pprint
+
+import pytest
 from pytest_asyncio import fixture
 
 from .conftest import mocks
@@ -74,10 +75,14 @@ def gen_call_set(call_list: list) -> set[str]:
             call_set.update(gen_call_set(item))
     return call_set
 
-async def _send_window_events(address="12345677890", klass="kitty-dropterm", title="my fake terminal"):
+
+async def _send_window_events(
+    address="12345677890", klass="kitty-dropterm", title="my fake terminal"
+):
     await mocks.send_event(f"openwindow>>address:0x{address},1,{klass},{title}")
     await mocks.send_event(f"activewindowv2>>address:44444677890")
     await mocks.send_event(f"activewindowv2>>address:{address}")
+
 
 @pytest.mark.asyncio
 async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
@@ -88,7 +93,14 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
     await asyncio.sleep(0.1)
     await wait_called(mocks.hyprctl, count=3)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    for expected in {'movetoworkspacesilent special:scratch_term,address:0x12345677890', 'moveworkspacetomonitor special:scratch_term DP-1', 'alterzorder top,address:0x12345677890', 'focuswindow address:0x12345677890', 'logger', 'movetoworkspacesilent 1,address:0x12345677890'}:
+    for expected in {
+        "movetoworkspacesilent special:scratch_term,address:0x12345677890",
+        "moveworkspacetomonitor special:scratch_term DP-1",
+        "alterzorder top,address:0x12345677890",
+        "focuswindow address:0x12345677890",
+        "logger",
+        "movetoworkspacesilent 1,address:0x12345677890",
+    }:
         assert expected in call_set
 
     # check if it matches the hide calls
@@ -101,7 +113,14 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
     await mocks.send_event("activewindowv2>>address:44444677890")
     await asyncio.sleep(0.1)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    for expected in {'moveworkspacetomonitor special:scratch_term DP-1', 'alterzorder top,address:0x12345677890', 'focuswindow address:0x12345677890', 'movetoworkspacesilent special:scratch_term,address:0x12345677890', 'logger', 'movetoworkspacesilent 1,address:0x12345677890'}:
+    for expected in {
+        "moveworkspacetomonitor special:scratch_term DP-1",
+        "alterzorder top,address:0x12345677890",
+        "focuswindow address:0x12345677890",
+        "movetoworkspacesilent special:scratch_term,address:0x12345677890",
+        "logger",
+        "movetoworkspacesilent 1,address:0x12345677890",
+    }:
         assert expected in call_set
 
 
@@ -139,7 +158,6 @@ async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixt
     mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=2)
-    
 
 
 @pytest.mark.asyncio

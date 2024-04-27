@@ -1,11 +1,13 @@
 " generic fixtures "
-from typing import Callable
-from unittest.mock import AsyncMock, Mock, MagicMock
-from copy import deepcopy
 import asyncio
-from dataclasses import dataclass, field
-from pytest_asyncio import fixture
 import tomllib
+from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import Callable
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+from pytest_asyncio import fixture
+
 from .testtools import MockReader, MockWriter
 
 CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
@@ -143,8 +145,8 @@ async def server_fixture(monkeypatch, mocker):
     monkeypatch.setattr("pyprland.ipc.hyprctlJSON", mocked_hyprctlJSON)
     monkeypatch.setattr("pyprland.ipc.hyprctl", mocks.hyprctl)
 
-    from pyprland.command import run_daemon
     from pyprland import ipc
+    from pyprland.command import run_daemon
 
     ipc.init()
 

@@ -1,8 +1,10 @@
 import asyncio
+
+import pytest
 from pytest_asyncio import fixture
+
 from .conftest import mocks
 from .testtools import wait_called
-import pytest
 
 
 @fixture
