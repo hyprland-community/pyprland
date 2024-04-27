@@ -53,6 +53,7 @@ and if you have coding skills you can also
 - Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (in 2.2.11 and 2.2.13)
 - [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
+- Improve [Nix support](https://github.com/hyprland-community/pyprland/wiki/Nix)
 
 
 ### 2.1
