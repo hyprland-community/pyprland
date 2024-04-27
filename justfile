@@ -5,6 +5,13 @@ test *params='':
     {{pyenv}}/bin/coverage run -m pytest --pdb -s {{params}}
     {{pyenv}}/bin/coverage report
 
+
+all:
+    tox run -e unit,linting,wiki
+
+lint:
+    tox run -e linting
+
 vreg:
     tox run -e vreg
 
@@ -13,9 +20,6 @@ doc:
 
 wiki:
     tox run -e wiki
-
-tox:
-    tox run
 
 release:
     ./scripts/make_release
