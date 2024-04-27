@@ -606,11 +606,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     ):
         "perfoms the transition to visible state"
         forbid_special = not self.cast_bool(
-            scratch.conf.get("allow_special_workspace"), False
+            scratch.conf.get("allow_special_workspace"), True
         )
         wrkspc = (
             monitor["activeWorkspace"]["name"]
-            if forbid_special or not monitor["specialWorkspace"]["name"]
+            if forbid_special
+            or not monitor["specialWorkspace"]["name"]
+            or monitor["specialWorkspace"]["name"].startswith("special:scratch")
             else monitor["specialWorkspace"]["name"]
         )
 
