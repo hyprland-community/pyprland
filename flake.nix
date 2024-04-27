@@ -20,6 +20,7 @@
     nixpkgs,
     systems,
     poetry2nix,
+    ...
   }: let
     inherit (poetry2nix.lib) mkPoetry2Nix;
 
