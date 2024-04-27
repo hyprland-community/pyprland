@@ -464,7 +464,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.warning("%s is not configured", uid)
             else:
                 self.log.debug(
-                    "%s is visible = %s (but %s)", uid, item.visible, is_visible
+                    "%s visibility: %s and %s", uid, is_visible, item.visible
                 )
                 if is_visible and await item.isAlive():
                     tasks.append(partial(self.run_hide, uid))
@@ -656,9 +656,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]):
         "update the client info"
         try:
-            await scratch.updateClientInfo(
-                clients=clients
-            )  # update position, size & workspace information (workspace properties have been created)
+            # update position, size & workspace information (workspace properties have been created)
+            await scratch.updateClientInfo(clients=clients)
         except KeyError:
             for alt_addr in scratch.extra_addr:
                 # get the client info for the extra addresses
