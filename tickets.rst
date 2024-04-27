@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 43
+:total-count: 44
 
 --------------------------------------------------------------------------------
 
@@ -204,4 +204,13 @@ Review smart_focus when toggling on a special workspace
 
 :bugid: 43
 :created: 2024-04-27T18:25:47
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+AUR: add zsh completion file
+============================
+
+:bugid: 44
+:created: 2024-04-27T23:54:28
 :priority: 0
