@@ -48,7 +48,6 @@ and if you have coding skills you can also
 ### 2.2
 
 - Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
-- Updated the syntax for [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers)
 - Deprecated `class_match` in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
 - Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (in 2.2.11 and 2.2.13)
