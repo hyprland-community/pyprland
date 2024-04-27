@@ -597,7 +597,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if client["address"] == scratch.full_address:
                 continue
             if match_fn(client[match_by], match_value):  # type: ignore
-                address = client["address"][2:]
+                address = client["address"]
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
 
