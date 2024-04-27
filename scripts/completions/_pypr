@@ -1,5 +1,5 @@
 #compdef pypr
-#
+
 local commands
 
 commands=('dumpjson: Dumps the configuration in JSON format'
