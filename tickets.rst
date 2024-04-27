@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 42
+:total-count: 43
 
 --------------------------------------------------------------------------------
 
@@ -196,3 +196,12 @@ Check behavior of monitors when no match is found
 :priority: 0
 
 Should ignore applying any rule
+
+--------------------------------------------------------------------------------
+
+Review smart_focus when toggling on a special workspace
+=======================================================
+
+:bugid: 43
+:created: 2024-04-27T18:25:47
+:priority: 0
