@@ -4,8 +4,8 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Any, cast
 
-from .interface import Plugin
 from ..common import CastBoolMixin, is_rotated
+from .interface import Plugin
 
 
 def trim_offset(monitors):

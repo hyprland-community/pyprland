@@ -1,29 +1,23 @@
 " Scratchpads addon "
-import time
 import asyncio
-from typing import cast
-from functools import partial
+import time
 from dataclasses import dataclass
+from functools import partial
+from typing import cast
 
-from ...ipc import notify_error, get_client_props, get_focused_monitor_props
-from ..interface import Plugin
-from ...common import (
-    state,
-    CastBoolMixin,
-    apply_variables,
-    is_rotated,
-)
-from ...types import MonitorInfo, ClientInfo
 from ...adapters.units import convert_coords, convert_monitor_dimension
-
+from ...common import CastBoolMixin, apply_variables, is_rotated, state
+from ...ipc import get_client_props, get_focused_monitor_props, notify_error
+from ...types import ClientInfo, MonitorInfo
+from ..interface import Plugin
 from .animations import Animations
-from .objects import Scratch
-from .lookup import ScratchDB
 from .helpers import (
     get_active_space_identifier,
     get_all_space_identifiers,
     get_match_fn,
 )
+from .lookup import ScratchDB
+from .objects import Scratch
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels

@@ -1,12 +1,12 @@
 " Plugin template "
-import random
 import asyncio
 import os.path
+import random
 
 from aiofiles.os import listdir
 
+from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
-from ..common import CastBoolMixin, apply_variables, state, prepare_for_quotes
 
 
 async def get_files_with_ext(path, extensions, recurse=True):

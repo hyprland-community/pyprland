@@ -3,8 +3,8 @@
 
 from typing import cast
 
-from .interface import Plugin
 from ..common import state
+from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring

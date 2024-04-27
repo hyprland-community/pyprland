@@ -1,8 +1,8 @@
 " Select a client window and move it to the active workspace"
 
-from .interface import Plugin
 from ..adapters.menus import MenuMixin
 from ..common import state
+from .interface import Plugin
 
 
 class Extension(MenuMixin, Plugin):

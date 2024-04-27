@@ -1,6 +1,6 @@
 " Lookup & update API for Scratch objects "
-from typing import Any, cast
 from collections import defaultdict
+from typing import Any, cast
 
 from .objects import Scratch
 

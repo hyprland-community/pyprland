@@ -1,9 +1,9 @@
 " Common plugin interface "
-from typing import Any, cast, Callable
+from typing import Any, Callable, cast
 
 from ..common import get_logger
-from ..types import ClientInfo
 from ..ipc import getCtrlObjects
+from ..types import ClientInfo
 
 
 class Plugin:

@@ -6,11 +6,11 @@ Implements a "Centered" layout:
 - layout can be toggled any time
 """
 
-from typing import Any, cast
 from collections import defaultdict
+from typing import Any, cast
 
+from ..common import CastBoolMixin, state
 from .interface import Plugin
-from ..common import state, CastBoolMixin
 
 
 class Extension(CastBoolMixin, Plugin):

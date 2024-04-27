@@ -1,12 +1,11 @@
 " Menu engine adapter "
-import subprocess
 import asyncio
-from typing import Iterable
+import subprocess
 from logging import Logger
+from typing import Iterable
 
-from ..common import get_logger, apply_variables
+from ..common import apply_variables, get_logger
 from ..types import PyprError
-
 
 __all__ = ["MenuMixin", "MenuEngine"]
 

@@ -2,8 +2,8 @@
 
 import asyncio
 
-from .interface import Plugin
 from ..common import state
+from .interface import Plugin
 
 
 class Extension(Plugin):

@@ -1,13 +1,18 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.5.0"
+    rev: "v4.6.0"
     hooks:
       - id: check-yaml
       - id: check-json
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys']
+  - repo: https://github.com/pycqa/isort
+    rev: "5.13.2"
+    hooks:
+      - id: isort
+        name: isort (python)
   - repo: https://github.com/ambv/black
-    rev: "23.11.0"
+    rev: "24.4.2"
     hooks:
       - id: black
   - repo: https://github.com/lovesegfault/beautysh
@@ -15,7 +20,7 @@ repos:
     hooks:
       - id: beautysh
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.33.0"
+    rev: "v1.35.1"
     hooks:
       - id: yamllint
   - repo: local
@@ -26,4 +31,3 @@ repos:
         language: system
 #        types: [python]
 #        pass_filenames: false
-#

@@ -3,23 +3,19 @@
 import asyncio
 import importlib
 import itertools
-from functools import partial
-from typing import Self, Callable
-import tomllib
 import json
 import os
 import sys
+import tomllib
+from functools import partial
+from typing import Callable, Self
 
-from pyprland.common import (
-    get_logger,
-    init_logger,
-    merge,
-    run_interactive_program,
-)
-from pyprland.types import PyprError
-from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
+from pyprland.common import get_logger, init_logger, merge, run_interactive_program
+from pyprland.ipc import get_event_stream
 from pyprland.ipc import init as ipc_init
+from pyprland.ipc import notify_error, notify_fatal, notify_info
 from pyprland.plugins.interface import Plugin
+from pyprland.types import PyprError
 
 try:
     CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
@@ -411,7 +407,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.14-7")  # Automatically updated version
+        print("2.2.14-10")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":

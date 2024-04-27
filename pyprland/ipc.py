@@ -13,14 +13,14 @@ __all__ = [
 
 import asyncio
 import json
-import time
 import os
-from typing import Any
-from logging import Logger
+import time
 from functools import partial
+from logging import Logger
+from typing import Any
 
 from .common import get_logger
-from .types import MonitorInfo, ClientInfo, PyprError
+from .types import ClientInfo, MonitorInfo, PyprError
 
 log: Logger | None = None
 

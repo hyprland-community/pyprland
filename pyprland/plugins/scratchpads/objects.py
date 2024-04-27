@@ -2,16 +2,16 @@
 
 __all__ = ["Scratch"]
 
-import os
 import logging
-from typing import Callable, cast
+import os
 from dataclasses import dataclass
+from typing import Callable, cast
 
-from aiofiles import os as aios
 from aiofiles import open as aiopen
+from aiofiles import os as aios
 
-from ...ipc import notify_error
 from ...common import CastBoolMixin, state
+from ...ipc import notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import OverridableConfig, get_match_fn
 

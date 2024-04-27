@@ -1,11 +1,12 @@
 " Add system notifications based on journal logs "
-import re
 import asyncio
-from typing import cast
+import re
 from copy import deepcopy
-from .interface import Plugin
-from ..common import apply_filter
+from typing import cast
+
 from ..adapters.colors import convert_color
+from ..common import apply_filter
+from .interface import Plugin
 
 builtin_parsers = {
     "journal": [

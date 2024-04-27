@@ -1,7 +1,7 @@
 " Common types from Hyprland API"
 
-from typing import TypedDict
 from dataclasses import dataclass
+from typing import TypedDict
 
 
 class WorkspaceDf(TypedDict):

@@ -1,8 +1,8 @@
 """ expose Brings every client window to screen for selection
 """
 
+from ..common import CastBoolMixin, state
 from .interface import Plugin
-from ..common import state, CastBoolMixin
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring

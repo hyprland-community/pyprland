@@ -1,19 +1,18 @@
 """ Shared utilities: logging """
 
-import os
-import re
-import pty
-import sys
 import fcntl
-import struct
-import select
-import termios
 import logging
+import os
+import pty
+import re
+import select
+import struct
 import subprocess
+import sys
+import termios
 from dataclasses import dataclass, field
 
 from .types import MonitorInfo, VersionInfo
-
 
 __all__ = [
     "DEBUG",
