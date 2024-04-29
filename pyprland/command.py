@@ -212,7 +212,8 @@ class Pyprland:
                 if plugin == "pyprland":
                     await task()
                 else:
-                    await self.queues[plugin.name].put(task)
+                    if not plugin.aborted:
+                        await self.queues[plugin.name].put(task)
         if notify and not handled:
             await notify_info(f'"{notify}" not found')
         return handled
@@ -247,14 +248,24 @@ class Pyprland:
         if data == "exit":
 
             async def _abort():
-                self.stopped = True
+                for plugin in self.plugins.values():
+                    plugin.aborted = True
+                    await asyncio.wait_for(plugin.exit(), timeout=2.0)
+                # cancel the task group
+                for task in self.tasks._tasks:
+                    task.cancel()
                 writer.close()
                 await writer.wait_closed()
                 for q in self.queues.values():
                     await q.put(None)
                 self.server.close()
-                # terminate every asyncio job & stop process
+                # Ensure the process exits
+                await asyncio.sleep(1)
+                if os.path.exists(CONTROL):
+                    os.unlink(CONTROL)
+                os._exit(0)
 
+            self.stopped = True
             asyncio.create_task(_abort())
             return
         args = data.split(None, 1)
@@ -275,11 +286,8 @@ class Pyprland:
 
     async def serve(self):
         "Runs the server"
-        try:
-            async with self.server:
-                await self.server.serve_forever()
-        finally:
-            await asyncio.gather(*(plugin.exit() for plugin in self.plugins.values()))
+        async with self.server:
+            await self.server.serve_forever()
 
     async def _plugin_runner_loop(self, name):
         "Runs tasks for a given plugin indefinitely"
@@ -416,7 +424,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-3")  # Automatically updated version
+        print("2.2.15-4")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":

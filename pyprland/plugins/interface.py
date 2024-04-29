@@ -9,6 +9,8 @@ from ..types import ClientInfo
 class Plugin:
     """Base class for any pyprland plugin"""
 
+    aborted = False
+
     hyprctlJSON: Callable
     " `pyprland.ipc.hyprctlJSON` using the pluggin's logger "
 
