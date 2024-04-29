@@ -10,20 +10,20 @@ import tomllib
 from functools import partial
 from typing import Callable, Self
 
-from pyprland.common import get_logger, init_logger, merge, run_interactive_program
+from pyprland.common import (
+    IPC_FOLDER,
+    get_logger,
+    init_logger,
+    merge,
+    run_interactive_program,
+)
 from pyprland.ipc import get_event_stream
 from pyprland.ipc import init as ipc_init
 from pyprland.ipc import notify_error, notify_fatal, notify_info
 from pyprland.plugins.interface import Plugin
 from pyprland.types import PyprError
 
-try:
-    CONTROL = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
-except KeyError:
-    print(
-        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
-    )
-
+CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
@@ -407,7 +407,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.14-10")  # Automatically updated version
+        print("2.2.14-20")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":

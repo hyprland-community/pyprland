@@ -13,24 +13,18 @@ __all__ = [
 
 import asyncio
 import json
-import os
 import time
 from functools import partial
 from logging import Logger
 from typing import Any
 
-from .common import get_logger
+from .common import IPC_FOLDER, get_logger
 from .types import ClientInfo, MonitorInfo, PyprError
 
 log: Logger | None = None
 
-try:
-    HYPRCTL = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
-    EVENTS = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
-except KeyError:
-    print(
-        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
-    )
+HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
+EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 
 async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):

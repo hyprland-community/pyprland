@@ -25,6 +25,22 @@ __all__ = [
 
 DEBUG = os.environ.get("DEBUG", False)
 
+HYPRLAND_INSTANCE_SIGNATURE = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
+
+try:
+    IPC_FOLDER = (
+        f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
+        if os.path.exists(
+            f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
+        )
+        else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
+    )
+except KeyError:
+    print(
+        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
+    )
+    IPC_FOLDER = "/fake"
+
 
 def set_terminal_size(descriptor, rows, cols):
     "Set the terminal size"
