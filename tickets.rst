@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 44
+:total-count: 45
 
 --------------------------------------------------------------------------------
 
@@ -214,3 +214,16 @@ AUR: add zsh completion file
 :bugid: 44
 :created: 2024-04-27T23:54:28
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+Rework focus
+============
+
+:bugid: 45
+:created: 2024-04-29T00:01:27
+:priority: 0
+
+
+Save workspace before hide,
+when hide is done, after processing some events (use a task), focus the workspace again
