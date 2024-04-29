@@ -736,6 +736,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if `autohide` is True, skips focus tracking
         `force` ignores the visibility check"""
         scratch = self.scratches.get(uid)
+        active_window = state.active_window
         active_workspace = state.active_workspace
 
         if not scratch:
@@ -762,9 +763,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 f"movetoworkspacesilent special:scratch_{uid},address:{addr}"
             )
             await asyncio.sleep(0.01)
-        await self._handle_focus_tracking(scratch, active_workspace)
+        await self._handle_focus_tracking(scratch, active_window, active_workspace)
 
-    async def _handle_focus_tracking(self, scratch: Scratch, active_workspace: str):
+    async def _handle_focus_tracking(
+        self, scratch: Scratch, active_window: str, active_workspace: str
+    ):
         "handle focus tracking"
         if not self.cast_bool(scratch.conf.get("smart_focus"), True):
             return
@@ -773,7 +776,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 track.clear()
         tracker = self.focused_window_tracking.get(scratch.uid)
         if tracker:
-            await self.hyprctl(f"workspace {active_workspace}")
+            same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
+            if scratch.have_address(active_window) and same_workspace:
+                if not scratch.have_address(tracker.prev_focused_window):
+                    await self.hyprctl(
+                        f"focuswindow address:{tracker.prev_focused_window}"
+                    )
 
     # }}}
 
