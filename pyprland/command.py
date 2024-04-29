@@ -38,7 +38,8 @@ class Pyprland:
     event_reader: asyncio.StreamReader
     stopped = False
     config: dict[str, dict] = {}
-    tasks: None | asyncio.TaskGroup = None
+    tasks: list[asyncio.Task] = []
+    tasks_group: None | asyncio.TaskGroup = None
     instance: Self | None = None
     log_handler: Callable[[Plugin, str, tuple], None]
 
@@ -116,8 +117,8 @@ class Pyprland:
             if init:
                 await plug.init()
                 self.queues[name] = asyncio.Queue()
-                if self.tasks:
-                    self.tasks.create_task(self._plugin_runner_loop(name))
+                if self.tasks_group:
+                    self.tasks_group.create_task(self._plugin_runner_loop(name))
             self.plugins[name] = plug
         except ModuleNotFoundError as e:
             self.log.error("Unable to locate plugin called '%s'", name)
@@ -252,7 +253,7 @@ class Pyprland:
                     plugin.aborted = True
                     await asyncio.wait_for(plugin.exit(), timeout=2.0)
                 # cancel the task group
-                for task in self.tasks._tasks:
+                for task in self.tasks:
                     task.cancel()
                 writer.close()
                 await writer.wait_closed()
@@ -320,9 +321,9 @@ class Pyprland:
     async def plugins_runner(self):
         "Runs plugins' task using the created `tasks` TaskGroup attribute"
         async with asyncio.TaskGroup() as group:
-            self.tasks = group
+            self.tasks_group = group
             for name in self.plugins:
-                group.create_task(self._plugin_runner_loop(name))
+                self.tasks.append(group.create_task(self._plugin_runner_loop(name)))
 
     async def run(self):
         "Runs the server and the event listener"
@@ -424,7 +425,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-4")  # Automatically updated version
+        print("2.2.15-5")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
