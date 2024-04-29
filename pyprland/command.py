@@ -245,10 +245,17 @@ class Pyprland:
             data = "exit"
         data = data.strip()
         if data == "exit":
-            self.stopped = True
-            writer.close()
-            await writer.wait_closed()
-            self.server.close()
+
+            async def _abort():
+                self.stopped = True
+                writer.close()
+                await writer.wait_closed()
+                for q in self.queues.values():
+                    await q.put(None)
+                self.server.close()
+                # terminate every asyncio job & stop process
+
+            asyncio.create_task(_abort())
             return
         args = data.split(None, 1)
         if len(args) == 1:
@@ -284,6 +291,8 @@ class Pyprland:
                 await self.pyprland_mutex_event.wait()
             try:
                 task = await q.get()
+                if task is None:
+                    return
                 if is_pyprland:
                     self.pyprland_mutex_event.clear()
             except RuntimeError as e:
@@ -407,7 +416,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-1")  # Automatically updated version
+        print("2.2.15-2")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
