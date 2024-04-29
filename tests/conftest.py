@@ -1,5 +1,6 @@
 " generic fixtures "
 import asyncio
+import os
 import tomllib
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -9,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 from pytest_asyncio import fixture
 
 from .testtools import MockReader, MockWriter
+
+os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = "ABCD"
 
 CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
