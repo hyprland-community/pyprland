@@ -105,8 +105,8 @@ command_start = "󰜎"
 [shortcuts_menu.entries.Hypr]
 Relayout = "pypr relayout"
 Reload = "pypr reload"
-"Hyprland socket" = 'kitty  socat - "UNIX-CONNECT:/tmp/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"'
-"Hyprland logs" = 'kitty tail -f /tmp/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log'
+"Hyprland socket" = 'kitty  socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"'
+"Hyprland logs" = 'kitty tail -f $XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log'
 
 [shortcuts_menu.entries.Sound]
 "Network ready" = "pactl load-module module-zeroconf-discover"

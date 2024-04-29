@@ -25,8 +25,8 @@ from .types import ClientInfo, MonitorInfo, PyprError
 log: Logger | None = None
 
 try:
-    HYPRCTL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
-    EVENTS = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
+    HYPRCTL = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket.sock'
+    EVENTS = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.socket2.sock'
 except KeyError:
     print(
         "This is a fatal error, assuming we are running documentation generation hence ignoring it"

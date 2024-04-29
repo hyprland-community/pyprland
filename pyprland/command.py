@@ -18,7 +18,7 @@ from pyprland.plugins.interface import Plugin
 from pyprland.types import PyprError
 
 try:
-    CONTROL = f'/tmp/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
+    CONTROL = f'{ os.environ["XDG_RUNTIME_DIR"] }/hypr/{ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] }/.pyprland.sock'
 except KeyError:
     print(
         "This is a fatal error, assuming we are running documentation generation hence ignoring it"
