@@ -239,6 +239,13 @@ class Pyprland:
             # self.log.debug("[%s] %s", cmd, params.strip())
             await self._callHandler(full_name, params.rstrip("\n"))
 
+    async def exit_plugins(self):
+        "Exits all plugins"
+        for plugin in self.plugins.values():
+            if not plugin.aborted:
+                plugin.aborted = True
+                await asyncio.wait_for(plugin.exit(), timeout=2.0)
+
     async def read_command(self, reader, writer) -> None:
         "Receives a socket command"
         data = (await reader.readline()).decode()
@@ -249,9 +256,7 @@ class Pyprland:
         if data == "exit":
 
             async def _abort():
-                for plugin in self.plugins.values():
-                    plugin.aborted = True
-                    await asyncio.wait_for(plugin.exit(), timeout=2.0)
+                await self.exit_plugins()
                 # cancel the task group
                 for task in self.tasks:
                     task.cancel()
@@ -380,6 +385,7 @@ async def run_daemon():
     except asyncio.CancelledError:
         manager.log.critical("cancelled")
     else:
+        await manager.exit_plugins()
         events_writer.close()
         await events_writer.wait_closed()
         manager.server.close()
@@ -425,7 +431,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-10")  # Automatically updated version
+        print("2.2.15-12")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
