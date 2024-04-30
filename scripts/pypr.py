@@ -36,14 +36,15 @@ def get_parser():
         help="Enable debug mode and log to a file",
         metavar="filename",
     ).complete = shtab.FILE
-    config = parser.add_argument(
+    parser.add_argument(
         "--config",
         help="Use a different configuration file",
         metavar="filename",
         type=pathlib.Path,
     ).complete = TOML_FILE
     shtab.add_argument_to(parser, preamble=PREAMBLE)
-    # Base commands:Warning
+
+    # Base commands
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("dumpjson", help="Dump the current state in JSON format")
     subparsers.add_parser("edit", help="Edit the configuration file")
