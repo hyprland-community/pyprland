@@ -288,7 +288,7 @@ class Pyprland:
     async def serve(self):
         "Runs the server"
         async with self.server:
-            await self.server.serve_forever()
+            await self.server.wait_closed()
 
     async def _plugin_runner_loop(self, name):
         "Runs tasks for a given plugin indefinitely"
@@ -425,7 +425,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-7")  # Automatically updated version
+        print("2.2.15-9")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
