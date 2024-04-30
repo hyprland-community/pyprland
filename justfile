@@ -9,6 +9,9 @@ test *params='':
 all:
     tox run -e unit,linting,wiki
 
+compgen:
+    tox run -e shellgen
+
 lint:
     tox run -e linting
 

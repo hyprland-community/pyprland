@@ -1,0 +1,112 @@
+import argparse
+import os
+
+
+def get_parser():
+    "Parses the command line arguments"
+    parser = argparse.ArgumentParser(
+        description="Pyprland CLI", add_help=False, allow_abbrev=False
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        help="Enable debug mode and log to a file",
+        metavar="filename",
+        nargs="?",
+        const="pyprland.log",
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        help="Use a different configuration file",
+        metavar="filename",
+    )
+    # Base commands:Warning
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("dumpjson", help="Dump the current state in JSON format")
+    subparsers.add_parser("edit", help="Edit the configuration file")
+    subparsers.add_parser("exit", help="Exit the currently running daemon")
+    subparsers.add_parser("help", help="Prints this help message")
+    subparsers.add_parser("version", help="Prints the current version")
+    subparsers.add_parser("reload", help="Reload the configuration file")
+
+    # Scratchpads
+    subparsers.add_parser(
+        "attach", help="Attach the focused window to the last focused scratchpad"
+    )
+    show = subparsers.add_parser("show", help="Show the given scratchpad")
+    show.add_argument("Scratchpad", help="scratchpad name")
+    hide = subparsers.add_parser("hide", help="Hide the given scratchpad")
+    hide.add_argument("Scratchpad", help="scratchpad name")
+    toggle = subparsers.add_parser("toggle", help="Toggle the given scratchpad")
+    toggle.add_argument("Scratchpad", help="scratchpad name")
+    # gbar
+    gbar = subparsers.add_parser(
+        "gbar", help="Starts gBar on the first available monitor"
+    )
+    gbar.add_argument(
+        "command",
+        help="Starts gBar on the first available monitor",
+        nargs="?",
+        choices=["restart"],
+    )
+    # shortcuts_menu
+    menu = subparsers.add_parser("menu", help="Shows the menu")
+    menu.add_argument("name", help="submenu to show", nargs="?")
+    # toggle_special
+    toggle_special = subparsers.add_parser(
+        "toggle_special",
+        help="Toggle switching the focused window to the special workspace",
+    )
+    toggle_special.add_argument("name", help="special workspace name")
+    # layout_center
+    layout_center = subparsers.add_parser(
+        "layout_center", help="Change the active window"
+    )
+    layout_center.add_argument(
+        "command", help="Change the active window", choices=["toggle", "next", "prev"]
+    )
+    # lost_windows
+    subparsers.add_parser(
+        "attract_lost", help="Brings lost floating windows to the current workspace"
+    )
+    # shift_monitors
+    shift_monitors = subparsers.add_parser(
+        "shift_monitors", help="Swaps monitors' workspaces in the given direction"
+    )
+    shift_monitors.add_argument(
+        "direction", help="Swaps monitors' workspaces in the given direction"
+    )
+    # toggle_dpms
+    subparsers.add_parser("toggle_dpms", help="Toggles dpms on/off for every monitor")
+    # magnify
+    zoom = subparsers.add_parser("zoom", help="Zoom to the given factor")
+    zoom.add_argument("factor", help="Zoom to the given factor", nargs="?")
+    # Expose
+    subparsers.add_parser("expose", help="Expose every client on the active workspace")
+    # workspaces_follow_focus
+    change_workspace = subparsers.add_parser(
+        "change_workspace", help="Switch workspaces of current monitor"
+    )
+    change_workspace.add_argument(
+        "direction", help="direction to switch workspaces", choices=["-1", "+1"]
+    )
+    # wallpapers
+    wall = subparsers.add_parser("wall", help="Skip the current background image")
+    wall.add_argument(
+        "action", help="Skip the current background image", choices=["next", "clear"]
+    )
+    # fetch_client_menu
+    subparsers.add_parser(
+        "fetch_client_menu",
+        help="Select a client window and move it to the active workspace",
+    )
+    subparsers.add_parser("unfetch_client", help="Returns a window back to its origin")
+    # monitors
+    subparsers.add_parser("relayout", help="Recompute & apply every monitors's layout")
+
+    return parser
+
+
+if "RUN" in os.environ:
+    get_parser().parse_args()
