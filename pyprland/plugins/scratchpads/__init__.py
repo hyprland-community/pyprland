@@ -299,10 +299,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 continue
             if scratch.have_address(full_address):
                 self.last_focused = scratch
-                if self.previously_focused_window:
-                    self.focused_window_tracking[uid] = FocusTracker(
-                        self.previously_focused_window, state.active_workspace
-                    )
                 self.cancel_task(uid)
             else:
                 if scratch.visible and scratch.conf.get("unfocus") == "hide":
@@ -609,6 +605,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             or monitor["specialWorkspace"]["name"].startswith("special:scratch")
             else monitor["specialWorkspace"]["name"]
         )
+        if self.previously_focused_window:
+            self.focused_window_tracking[scratch.uid] = FocusTracker(
+                self.previously_focused_window, wrkspc
+            )
 
         scratch.meta.last_shown = time.time()
         # Start the transition
@@ -775,7 +775,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if scratch.have_address(track.prev_focused_window):
                 track.clear()
         tracker = self.focused_window_tracking.get(scratch.uid)
-        if tracker:
+        if tracker and not tracker.prev_focused_window_wrkspc.startswith("special:"):
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
             if scratch.have_address(active_window) and same_workspace:
                 if not scratch.have_address(tracker.prev_focused_window):
