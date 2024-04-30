@@ -34,8 +34,9 @@ _shtab_pypr_commands() {
 }
 
 _shtab_pypr_options=(
-    {-d,--debug}"[Enable debug mode and log to a file]:debug:"
-    {-c,--config}"[Use a different configuration file]:config:"
+    "--debug[Enable debug mode and log to a file]:debug:_files"
+    "--config[Use a different configuration file]:config:_files -g '(*.toml|*.TOML)'"
+    "(- : *)--print-completion[print shell completion script]:print_completion:(bash zsh tcsh)"
 )
 
 _shtab_pypr_attach_options=(

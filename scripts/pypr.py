@@ -1,5 +1,29 @@
+""" Fake pypr CLI to generate auto-completion scripts """
+
 import argparse
 import os
+import pathlib
+
+import shtab
+
+TOML_FILE = {
+    "bash": "_shtab_greeter_compgen_TOMLFiles",
+    "zsh": "_files -g '(*.toml|*.TOML)'",
+    "tcsh": "f:*.toml",
+}
+
+PREAMBLE = {
+    "bash": """
+# $1=COMP_WORDS[1]
+_shtab_greeter_compgen_TOMLFiles() {
+  compgen -d -- $1  # recurse into subdirs
+  compgen -f -X '!*?.toml' -- $1
+  compgen -f -X '!*?.TOML' -- $1
+}
+""",
+    "zsh": "",
+    "tcsh": "",
+}
 
 
 def get_parser():
@@ -8,19 +32,17 @@ def get_parser():
         description="Pyprland CLI", add_help=False, allow_abbrev=False
     )
     parser.add_argument(
-        "-d",
         "--debug",
         help="Enable debug mode and log to a file",
         metavar="filename",
-        nargs="?",
-        const="pyprland.log",
-    )
-    parser.add_argument(
-        "-c",
+    ).complete = shtab.FILE
+    config = parser.add_argument(
         "--config",
         help="Use a different configuration file",
         metavar="filename",
-    )
+        type=pathlib.Path,
+    ).complete = TOML_FILE
+    shtab.add_argument_to(parser, preamble=PREAMBLE)
     # Base commands:Warning
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("dumpjson", help="Dump the current state in JSON format")

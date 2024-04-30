@@ -2,19 +2,19 @@
 
 _shtab_pypr_subparsers=('dumpjson' 'edit' 'exit' 'help' 'version' 'reload' 'attach' 'show' 'hide' 'toggle' 'gbar' 'menu' 'toggle_special' 'layout_center' 'attract_lost' 'shift_monitors' 'toggle_dpms' 'zoom' 'expose' 'change_workspace' 'wall' 'fetch_client_menu' 'unfetch_client' 'relayout')
 
-_shtab_pypr_option_strings=('-d' '--debug' '-c' '--config')
+_shtab_pypr_option_strings=('--debug' '--config' '--print-completion')
 
-
+_shtab_pypr___debug_COMPGEN=_shtab_compgen_files
+_shtab_pypr___config_COMPGEN=_shtab_greeter_compgen_TOMLFiles
 
 _shtab_pypr_pos_0_choices=('dumpjson' 'edit' 'exit' 'help' 'version' 'reload' 'attach' 'show' 'hide' 'toggle' 'gbar' 'menu' 'toggle_special' 'layout_center' 'attract_lost' 'shift_monitors' 'toggle_dpms' 'zoom' 'expose' 'change_workspace' 'wall' 'fetch_client_menu' 'unfetch_client' 'relayout')
+_shtab_pypr___print_completion_choices=('bash' 'zsh' 'tcsh')
 _shtab_pypr_gbar_pos_0_choices=('restart')
 _shtab_pypr_layout_center_pos_0_choices=('toggle' 'next' 'prev')
 _shtab_pypr_change_workspace_pos_0_choices=('-1' '+1')
 _shtab_pypr_wall_pos_0_choices=('next' 'clear')
 
 _shtab_pypr_pos_0_nargs=A...
-_shtab_pypr__d_nargs=?
-_shtab_pypr___debug_nargs=?
 _shtab_pypr_dumpjson__h_nargs=0
 _shtab_pypr_dumpjson___help_nargs=0
 _shtab_pypr_edit__h_nargs=0
