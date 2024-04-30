@@ -1,9 +1,11 @@
 pyenv := ".tox/py311"
 
-test *params='':
-    {{pyenv}}/bin/coverage erase
-    {{pyenv}}/bin/coverage run -m pytest --pdb -s {{params}}
-    {{pyenv}}/bin/coverage report
+testenv := ".tox/coverage"
+
+test *params='tests':
+    {{testenv}}/bin/coverage erase
+    {{testenv}}/bin/coverage run -m pytest --pdb -s {{params}}
+    {{testenv}}/bin/coverage report
 
 
 all:
