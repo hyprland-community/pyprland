@@ -425,7 +425,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-9")  # Automatically updated version
+        print("2.2.15-10")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
@@ -507,7 +507,7 @@ If that's not the case, delete this file and run again.""",
         except Exception:  # pylint: disable=W0718
             log.critical("Unhandled exception:", exc_info=True)
         finally:
-            if invoke_daemon:
+            if invoke_daemon and os.path.exists(CONTROL):
                 os.unlink(CONTROL)
 
 
