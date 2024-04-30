@@ -52,8 +52,8 @@ class Extension(Plugin):
 
     async def event_activewindowv2(self, addr):
         "keep track of focused client"
-        if not addr or addr == ",":
-            self.log.warning("Active window is not defined")
+        if not addr or len(addr) < 10:
+            self.log.warning("Active window is incorrect: %s.", addr)
             return
         state.active_window = "0x" + addr
         self.log.debug("active_window = %s", state.active_window)
