@@ -44,20 +44,20 @@ def make_client(**kw):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("layout_config", "server_fixture")
 async def test_layout_center():
-    await mocks.send_event("activewindowv2>>123456789")
+    await mocks.send_event("activewindowv2>>1234567890")
     import asyncio
 
     await asyncio.sleep(0.1)
     mocks.json_commands_result["clients"] = [
-        make_client(address="0x123456789"),
-        make_client(address="0x987654321"),
+        make_client(address="0x1234567890"),
+        make_client(address="0x9876543210"),
     ]
 
     print("toggle:")
     await mocks.pypr("layout_center toggle")
     await wait_called(mocks.hyprctl, count=3)  # Toggle + resize + move
     cmd = mocks.hyprctl.call_args[0][0]
-    assert cmd.startswith("movewindowpixel") and "123456789" in cmd
+    assert cmd.startswith("movewindowpixel") and "1234567890" in cmd
     print(mocks.hyprctl.call_args_list)
     mocks.hyprctl.reset_mock()
     mocks.json_commands_result["clients"][0]["floating"] = True
@@ -66,7 +66,7 @@ async def test_layout_center():
     await mocks.pypr("layout_center next")
     await wait_called(mocks.hyprctl, count=4)
     print(mocks.hyprctl.call_args_list)
-    await mocks.send_event("activewindowv2>>987654321")
+    await mocks.send_event("activewindowv2>>9876543210")
     mocks.hyprctl.reset_mock()
     mocks.json_commands_result["clients"][0]["floating"] = False
     mocks.json_commands_result["clients"][1]["floating"] = True
