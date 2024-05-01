@@ -292,8 +292,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def event_activewindowv2(self, addr) -> None:
         "active windows hook"
         if not addr or len(addr) < 10:
-            return
-        full_address = "0x" + addr
+            full_address = ""
+        else:
+            full_address = "0x" + addr
         for uid, scratch in self.scratches.items():
             if not scratch.client_info:
                 continue
