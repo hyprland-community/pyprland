@@ -143,7 +143,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         monitors = cast(list[MonitorInfo], await self.hyprctlJSON("monitors"))
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
-        for descr, command in self.config.get("added", {}).items():
+        for descr, command in self.config.get("hotplug_commands", {}).items():
             mon = self._get_mon_by_pat(descr, monitors_by_descr, monitors_by_name)
             if mon and mon["name"] == name:
                 await asyncio.create_subprocess_shell(command)
