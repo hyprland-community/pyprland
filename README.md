@@ -55,8 +55,7 @@ Dependencies
 Latest major changes
 </summary>
 
-> [!note]
-> Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
+Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
 ### 2.2
 
