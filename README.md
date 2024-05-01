@@ -25,7 +25,7 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 <details>
 
 <summary>
-## Contributing
+󰡏 **Contributing**
 </summary>
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
