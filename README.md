@@ -22,7 +22,11 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 - ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
 - [You NEED This in your Hyprland Config - LibrePhoenix (video)](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*Now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
 
+<details>
+
+<summary>
 ## Contributing
+</summary>
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
 
@@ -33,6 +37,8 @@ and if you have coding skills you can also
 
 - Enhance the coverage of our [tests](https://github.com/hyprland-community/pyprland/tree/main/tests)
 - Propose & write new plugins or enhancements
+
+</details>
 
 ## Dependencies
 
