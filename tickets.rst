@@ -1,30 +1,7 @@
 Tickets
 =======
 
-:total-count: 45
-
---------------------------------------------------------------------------------
-
-Add a command to update config
-==============================
-
-:bugid: 22
-:created: 2024-02-18T17:53:17
-:priority: 0
-
-cfg_set and cfg_toggle commands
-eg::
-
-  pypr cfg_toggle scratchpads.term.unfocus (toggles will toggle strings to "" and back - keeping a memory)
-
---------------------------------------------------------------------------------
-
-TESTS: ensure commands are completed (push the proper events in the queue)
-==========================================================================
-
-:bugid: 27
-:created: 2024-02-29T23:30:02
-:priority: 0
+:total-count: 47
 
 --------------------------------------------------------------------------------
 
@@ -156,6 +133,7 @@ review CanceledError handling
 :bugid: 38
 :created: 2024-04-17T23:24:13
 :priority: 0
+:started: 2024-05-01T23:40:59
 
 --------------------------------------------------------------------------------
 
@@ -177,17 +155,6 @@ CHECK / fix multi-monitor & attach command
 
 --------------------------------------------------------------------------------
 
-Re-introduce focus tracking with a twist
-========================================
-
-:bugid: 41
-:created: 2024-04-25T23:54:53
-:priority: 0
-
-Only enable it if the focuse changed the active workspace
-
---------------------------------------------------------------------------------
-
 Check behavior of monitors when no match is found
 =================================================
 
@@ -205,25 +172,22 @@ Review smart_focus when toggling on a special workspace
 :bugid: 43
 :created: 2024-04-27T18:25:47
 :priority: 0
+:started: 2024-05-01T23:39:30
 
 --------------------------------------------------------------------------------
 
-AUR: add zsh completion file
-============================
+Test a configuration with zero initial command/window
+=====================================================
 
-:bugid: 44
-:created: 2024-04-27T23:54:28
+:bugid: 46
+:created: 2024-05-01T23:37:31
 :priority: 0
 
 --------------------------------------------------------------------------------
 
-Rework focus
-============
+scratchpads: experiment handling manual scratchpad workspace change
+===================================================================
 
-:bugid: 45
-:created: 2024-04-29T00:01:27
+:bugid: 47
+:created: 2024-05-01T23:38:51
 :priority: 0
-
-
-Save workspace before hide,
-when hide is done, after processing some events (use a task), focus the workspace again
