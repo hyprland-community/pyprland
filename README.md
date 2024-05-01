@@ -96,8 +96,6 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 </details>
 
-## Star History
-
 <a href="https://star-history.com/#fdev31/pyprland&Date">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=fdev31/pyprland&type=Timeline&theme=dark" />
