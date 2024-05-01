@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import Any, cast
 
 from ..common import CastBoolMixin, is_rotated
+from ..types import MonitorInfo
 from .interface import Plugin
 
 
@@ -101,14 +102,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(
-        self,
-    ):
+    async def run_relayout(self, monitors: list[MonitorInfo] = None):
         "Recompute & apply every monitors's layout"
 
         self._clear_mon_by_pat_cache()
 
-        monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
+        if monitors is None:
+            monitors = cast(list[MonitorInfo], await self.hyprctlJSON("monitors"))
 
         cleaned_config = self.resolve_names(monitors)
         if cleaned_config:
@@ -136,10 +136,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Event handlers
 
-    async def event_monitoradded(self, _) -> None:
+    async def event_monitoradded(self, name) -> None:
         "Triggers when a monitor is plugged"
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
-        await self.run_relayout()
+
+        monitors = cast(list[MonitorInfo], await self.hyprctlJSON("monitors"))
+        monitors_by_descr = {m["description"]: m for m in monitors}
+        monitors_by_name = {m["name"]: m for m in monitors}
+        for descr, command in self.config.get("added", {}).items():
+            mon = self._get_mon_by_pat(descr, monitors_by_descr, monitors_by_name)
+            if mon and mon["name"] == name:
+                await asyncio.create_subprocess_shell(command)
+                break
+        await self.run_relayout(monitors)
 
     # Utils
 
