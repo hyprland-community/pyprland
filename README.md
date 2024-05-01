@@ -10,7 +10,7 @@
 
 Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/). Pyprland offers a plethora of plugins designed for simplicity and efficiency, allowing you to supercharge your productivity and customize your user experience.
 
-You can think of it as a *Gnome tweak tool* but for Hyprland users (involves editing text files). With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use. It's the perfect companion for those who want to take their Hyprland setup to the next level.
+You can think of it as a *Gnome tweak tool* but for Hyprland users (involves editing text files). With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use.
 
 Contributions, bug reports and comments are welcome.
 
