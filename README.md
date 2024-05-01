@@ -25,7 +25,7 @@ Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](ht
 <details>
 
 <summary>
-󰕏 Contributing
+Contributing
 </summary>
 
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
@@ -40,13 +40,20 @@ and if you have coding skills you can also
 
 </details>
 
-## Dependencies
+<details>
+<summary>
+Dependencies
+</summary>
 
 - **Hyprland** >= 0.37
 - **Python** >= 3.11
     - **aiofiles**
+</details>
 
-## Latest major changes
+<details>
+<summary>
+Latest major changes
+</summary>
 
 > [!note]
 > Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
@@ -83,6 +90,8 @@ and if you have coding skills you can also
 
 - Requires Hyprland >= 0.30
 - Added [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin.
+
+</details>
 
 ## Star History
 
