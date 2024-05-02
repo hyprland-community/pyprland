@@ -102,7 +102,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(self, monitors: list[MonitorInfo] = None):
+    async def run_relayout(self, monitors: list[MonitorInfo] | None = None):
         "Recompute & apply every monitors's layout"
 
         self._clear_mon_by_pat_cache()
