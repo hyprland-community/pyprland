@@ -427,6 +427,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             )
             return
 
+        self.log.debug(
+            "visibility_check: %s == %s",
+            first_scratch.meta.space_identifier,
+            get_active_space_identifier(),
+        )
         if self.cast_bool(first_scratch.conf.get("alt_toggle")):
             # Needs to be on any monitor (if workspace matches)
             extra_visibility_check = (
@@ -434,11 +439,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
             )
         else:
-            self.log.debug(
-                "visibility_check: %s == %s",
-                first_scratch.meta.space_identifier,
-                get_active_space_identifier(),
-            )
             # Needs to be on the active monitor+workspace
             extra_visibility_check = (
                 first_scratch.meta.space_identifier == get_active_space_identifier()
