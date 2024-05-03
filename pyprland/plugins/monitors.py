@@ -4,7 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Any, cast
 
-from ..common import CastBoolMixin, is_rotated
+from ..common import CastBoolMixin, is_rotated, state
 from ..types import MonitorInfo
 from .interface import Plugin
 
@@ -97,8 +97,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def on_reload(self):
         self._clear_mon_by_pat_cache()
+        monitors = await self.hyprctlJSON("monitors")
         if self.cast_bool(self.config.get("startup_relayout"), True):
-            await self.run_relayout()
+            await self.run_relayout(monitors)
+
+        for mon in state.monitors:
+            await self._hotplug_command(name=mon, monitors=monitors)
 
     # Command
 
@@ -139,8 +143,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def event_monitoradded(self, name) -> None:
         "Triggers when a monitor is plugged"
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
+        monitors = await self.hyprctlJSON("monitors")
+        await self._hotplug_command(monitors, name)
+        await self.run_relayout(monitors)
 
-        monitors = cast(list[MonitorInfo], await self.hyprctlJSON("monitors"))
+    # Utils
+
+    async def _hotplug_command(self, monitors: list[MonitorInfo], name: str):
+        "Run the hotplug command for the monitor"
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
         for descr, command in self.config.get("hotplug_commands", {}).items():
@@ -148,9 +158,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if mon and mon["name"] == name:
                 await asyncio.create_subprocess_shell(command)
                 break
-        await self.run_relayout(monitors)
-
-    # Utils
 
     def _clear_mon_by_pat_cache(self):
         "clear the cache"
