@@ -102,6 +102,12 @@ command_start = "󰜎"
     "cliphist decode '[entry]' | wl-copy"
 ]
 
+"Color picker" = [
+    {name="format", options=["hex", "rgb", "hsv", "hsl", "cmyk"]},
+    "sleep 0.2; hyprpicker --format [format] | wl-copy" # sleep to let the menu close before the picker opens
+]
+
+
 [shortcuts_menu.entries.Hypr]
 Relayout = "pypr relayout"
 Reload = "pypr reload"
