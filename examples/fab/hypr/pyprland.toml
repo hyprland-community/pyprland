@@ -17,6 +17,10 @@ plugins = [
   "fetch_client_menu"
 ]
 
+[pyprland.variables]
+term = "kitty"
+term_classed = "kitty --class"
+
 [workspaces_follow_focus]
 max_workspaces = 9
 
@@ -25,21 +29,21 @@ include_special = false
 
 [scratchpads.stb]
 animation = "fromBottom"
-command = "kitty --class kitty-stb sstb"
+command = "[term_classed] kitty-stb sstb"
 class = "kitty-stb"
 lazy = true
 size = "75% 45%"
 
 [scratchpads.stb-logs]
 animation = "fromTop"
-command = "kitty --class kitty-stb-logs stbLog"
+command = "[term_classed] kitty-stb-logs stbLog"
 class = "kitty-stb-logs"
 lazy = true
 size = "75% 40%"
 
 [scratchpads.term]
 animation = "fromTop"
-command = "kitty --class kitty-dropterm"
+command = "[term_classed] kitty-dropterm"
 class = "kitty-dropterm"
 size = "75% 60%"
 max_size = "1920px 100%"
@@ -81,7 +85,7 @@ command_start = "󰜎"
 "Serial USB Term" = [
     {name="speed", options=["115200", "9600", "38400", "115200", "25600", "512000"] },
     {name="device", command="ls -1 /dev/ttyUSB*; ls -1 /dev/ttyACM*" },
-    "kitty miniterm --raw --eol LF [device] [speed]"
+    "[term] miniterm --raw --eol LF [device] [speed]"
 ]
 
 "Fetch window" = "pypr fetch_client_menu"
@@ -95,7 +99,7 @@ command_start = "󰜎"
 ]
 "Update/Change password" = [
     {name="what", command="gopass ls --flat"},
-    "kitty -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
+    "[term] -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
 ]
 
 "Clip" = [
@@ -112,8 +116,8 @@ command_start = "󰜎"
 [shortcuts_menu.entries.Hypr]
 Relayout = "pypr relayout"
 Reload = "pypr reload"
-"Hyprland socket" = 'kitty  socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"'
-"Hyprland logs" = 'kitty tail -f $XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log'
+"Hyprland socket" = '[term]  socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"'
+"Hyprland logs" = '[term] tail -f $XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log'
 
 [shortcuts_menu.entries.Sound]
 "Network ready" = "pactl load-module module-zeroconf-discover"
