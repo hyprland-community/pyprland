@@ -28,8 +28,8 @@ _shtab_greeter_compgen_TOMLFiles() {
 
 def get_parser():
     "Parses the command line arguments"
-    parser = argparse.ArgumentParser(prog="pypr",
-        description="Pyprland CLI", add_help=True, allow_abbrev=False
+    parser = argparse.ArgumentParser(
+        prog="pypr", description="Pyprland CLI", add_help=False, allow_abbrev=False
     )
     parser.add_argument(
         "--debug",
