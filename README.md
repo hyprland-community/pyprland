@@ -14,7 +14,7 @@ You can think of it as a *Gnome tweak tool* but for Hyprland users (involves edi
 
 Note that usage of Python and architecture of the software encourages using many plugins with little impact on the footprint and performance.
 
-Contributions, bug reports and comments are welcome.
+Contributions, suggestions, bug reports and comments are welcome.
 
 - Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) to tailor your Hyprland setup to your liking.
 - New users, check the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
