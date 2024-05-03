@@ -1,5 +1,6 @@
 [pyprland]
 plugins = [
+  "gbar",
   "shortcuts_menu",
   "toggle_special",
   "scratchpads",
@@ -126,3 +127,6 @@ Reload = "pypr reload"
 "Play in a window" = '''
     mpv --cache=no --demuxer-lavf-format=video4linux2 --demuxer-lavf-o-set=input_format=mjpeg av://v4l2:$(v4l2-ctl --list-devices |grep -A1 USB3.0 | tail -n 1  | sed -E 's/^\s*//g')
     '''
+
+[gbar]
+ monitors = ["eDP-1", "DP-1", "HDMI-A-1"]
