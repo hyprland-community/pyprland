@@ -9,6 +9,11 @@ from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
 
+def expand_path(path):
+    "Expands the path"
+    return os.path.expanduser(os.path.expandvars(path))
+
+
 async def get_files_with_ext(path, extensions, recurse=True):
     "Returns files matching `extension` in given `path`. Can optionally `recurse` subfolders."
     for fname in await listdir(path):
@@ -36,7 +41,11 @@ class Extension(CastBoolMixin, Plugin):
     async def on_reload(self):
         "Re-build the image list"
         cfg_path = self.config["path"]
-        paths = [cfg_path] if isinstance(cfg_path, str) else list(cfg_path)
+        paths = (
+            [expand_path(cfg_path)]
+            if isinstance(cfg_path, str)
+            else [expand_path(p) for p in cfg_path]
+        )
         extensions = self.config.get("extensions", self.default_image_ext)
 
         self.image_list = [
