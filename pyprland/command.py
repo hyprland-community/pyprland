@@ -8,7 +8,7 @@ import os
 import sys
 import tomllib
 from functools import partial
-from typing import Callable, Self
+from typing import Any, Callable, Self
 
 from pyprland.common import (
     IPC_FOLDER,
@@ -65,22 +65,20 @@ class Pyprland:
         """Loads config file as self.config"""
         if config_filename:
             fname = os.path.expandvars(os.path.expanduser(config_filename))
+            if os.path.isdir(fname):
+                config: dict[str, Any] = {}
+                for toml_file in sorted(os.listdir(fname)):
+                    if not toml_file.endswith(".toml"):
+                        continue
+                    merge(config, self.__load_config_file(f"{fname}/{toml_file}"))
+                return config
         else:
             if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
                 self.log.warning("Consider changing your configuration to TOML format.")
             self.config.clear()
             fname = os.path.expanduser(CONFIG_FILE)
 
-        try:
-            config = self.__load_config_file(fname)
-        except tomllib.TOMLDecodeError as e:
-            self.log.critical("Problem reading %s: %s", fname, e)
-            await notify_error(f"Pyprland failed to read config: {e}")
-            raise PyprError() from e
-        except FileNotFoundError as e:
-            self.log.critical("Unable to open %s: %s", fname, e)
-            await notify_error(f"Pyprland failed to read config: {e}")
-            raise PyprError() from e
+        config = self.__load_config_file(fname)
 
         if not config_filename:
             for extra_config in list(config["pyprland"].get("include", [])):
@@ -94,7 +92,11 @@ class Pyprland:
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
             with open(fname, "rb") as f:
-                config = tomllib.load(f)
+                try:
+                    config = tomllib.load(f)
+                except tomllib.TOMLDecodeError as e:
+                    self.log.critical("Problem reading %s: %s", fname, e)
+                    raise PyprError() from e
         elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
             self.log.info("Loading %s", OLD_CONFIG_FILE)
             with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
@@ -431,7 +433,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.15-49")  # Automatically updated version
+        print("2.2.15-50")  # Automatically updated version
         return
 
     if sys.argv[1] == "edit":
