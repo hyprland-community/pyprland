@@ -12,6 +12,21 @@ class Extension(Plugin):
     proc = None
     cur_monitor = ""
 
+    ongoing_task: asyncio.Task | None = None
+
+    def _run_gbar(self, cmd):
+        "create ongoing task restarting gbar in case of crash"
+
+        async def _run_loop():
+            while True:
+                self.proc = await asyncio.create_subprocess_shell(cmd)
+                await self.proc.wait()
+                self.notify_error("gBar crashed, restarting")
+
+        if self.ongoing_task:
+            self.ongoing_task.cancel()
+        self.ongoing_task = asyncio.create_task(_run_loop())
+
     async def run_gbar(self, args):
         "Starts gBar on the first available monitor"
         if args.startswith("re"):
@@ -31,7 +46,7 @@ class Extension(Plugin):
             else:
                 cmd = f"gBar bar {self.cur_monitor}"
             self.log.info("starting gBar: %s", cmd)
-            self.proc = await asyncio.create_subprocess_shell(cmd)
+            self._run_gbar(cmd)
 
     async def get_best_monitor(self):
         "get best monitor according to preferred list"
@@ -57,6 +72,9 @@ class Extension(Plugin):
     def kill(self):
         "Kill the process"
         if self.proc:
+            if self.ongoing_task:
+                self.ongoing_task.cancel()
+                self.ongoing_task = None
             try:
                 self.proc.kill()
             except ProcessLookupError:
