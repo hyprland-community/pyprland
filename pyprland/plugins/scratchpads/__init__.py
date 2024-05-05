@@ -750,6 +750,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
+        # collects window which have been created by the app
+        if self.cast_bool(scratch.conf.get("multi"), True):
+            await self._handle_multiwindow(scratch, await self.hyprctlJSON("clients"))
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)
