@@ -287,6 +287,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+    async def event_closewindow(self, addr: str) -> None:
+        "close window hook"
+        # removes this address from the extra_addr
+        addr = "0x" + addr
+        for scratch in self.scratches.values():
+            if addr in scratch.extra_addr:
+                scratch.extra_addr.remove(addr)
+
     async def event_monitorremoved(self, monitor_name: str) -> None:
         "Hides scratchpads on the removed screen"
         for scratch in self.scratches.values():
@@ -635,7 +643,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(scratch, monitor)
 
         clients = await self.hyprctlJSON("clients")
-        await self._handle_multiwindow(scratch, clients)
+        await self._handle_multiwindow(scratch, clients)  # not very useful but cheap
         # move
         move_commands = [
             f"moveworkspacetomonitor special:scratch_{scratch.uid} {monitor['name']}",
