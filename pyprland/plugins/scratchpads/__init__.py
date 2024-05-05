@@ -121,16 +121,22 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.scratches.setState(scratch, "configured")
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
+        skipped_windowrules = scratch.conf.get("skip_windowrules", [])
         if defined_class:
             monitor = await self.get_focused_monitor_props(
                 name=scratch.conf.get("force_monitor")
             )
             width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
 
-            ipc_commands = [
-                f"windowrule float,^({defined_class})$",
-                f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$",
-            ]
+            ipc_commands = []
+
+            if "float" not in skipped_windowrules:
+                ipc_commands.append(f"windowrule float,^({defined_class})$")
+            if "workspace" not in skipped_windowrules:
+                ipc_commands.append(
+                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$"
+                )
+            set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
                 margin_x = (monitor["width"] - width) // 2
@@ -145,9 +151,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     "fromright": f"200% {margin_y}",
                     "fromleft": f"-200% {margin_y}",
                 }[animation_type]
-                ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
+                if set_aspect:
+                    ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
 
-            ipc_commands.append(f"windowrule size {width} {height},^({defined_class})$")
+            if set_aspect:
+                ipc_commands.append(
+                    f"windowrule size {width} {height},^({defined_class})$"
+                )
 
             await self.hyprctl(ipc_commands, "keyword")
 
