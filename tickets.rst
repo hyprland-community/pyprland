@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 47
+:total-count: 48
 
 --------------------------------------------------------------------------------
 
@@ -191,3 +191,14 @@ scratchpads: experiment handling manual scratchpad workspace change
 :bugid: 47
 :created: 2024-05-01T23:38:51
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+monitors: allow "screen descr".transform = 3
+============================================
+
+:bugid: 48
+:created: 2024-05-07T00:50:34
+:priority: 0
+
+also allow `.scale = <something>` 
