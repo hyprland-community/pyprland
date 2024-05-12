@@ -72,7 +72,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 - Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
 - Deprecated [class_match](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard) in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
 - Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
-- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (in 2.2.11 and 2.2.13)
+- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (started in 2.2.11. 2.2.19 is recommended)
 - [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
 - Improve [Nix support](https://github.com/hyprland-community/pyprland/wiki/Nix)
 
