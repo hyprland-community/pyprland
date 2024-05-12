@@ -98,7 +98,13 @@ class BemenuMenu(MenuEngine):
     proc_extra_parameters = "-c"
 
 
-every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu]
+class AnyrunMenu(MenuEngine):
+    "A bemenu based menu"
+    proc_name = "anyrun"
+    proc_extra_parameters = "--plugins libstdin.so"
+
+
+every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu]
 
 
 async def init(force_engine=False, extra_parameters="") -> MenuEngine:
