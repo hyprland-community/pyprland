@@ -574,7 +574,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             excluded_ids = [
                 excluded.uid
                 for excluded in self.scratches.values()
-                if scratch.uid != uid
+                if excluded.uid != uid
             ]
         for e_uid in excluded_ids:
             excluded = self.scratches.get(e_uid)
