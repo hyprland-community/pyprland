@@ -121,9 +121,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _configure_windowrules(self, scratch: Scratch):
         "Setting up initial client window state (sets windowrules)"
-        configured = self.scratches.hasState(scratch, "configured")
-        if configured:
-            return
         self.scratches.setState(scratch, "configured")
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
@@ -242,10 +239,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """
         item = self.scratches.get(name=uid)
         assert item
-        await self._configure_windowrules(item)
 
         if self.cast_bool(item.conf.get("process_tracking"), True):
             if not await item.isAlive():
+                await self._configure_windowrules(item)
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):
                     await notify_error(f'Failed to show scratch "{item.uid}"')
@@ -311,7 +308,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def event_configreloaded(self, _nothing):
         "Re-apply windowrules when hyprland is restarted"
         for scratch in list(self.scratches.getByState("configured")):
-            self.scratches.clearState(scratch, "configured")
             await self._configure_windowrules(scratch)
 
     async def event_activewindowv2(self, addr) -> None:
