@@ -113,6 +113,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             assert scratch
             self.scratches.clearState(scratch, "configured")
 
+    async def _unset_windowrules(self, scratch: Scratch):
+        "Unset the windowrules"
+        defined_class = scratch.conf.get("class", "")
+        if defined_class:
+            await self.hyprctl(f"windowrule unset,^({defined_class})$", "keyword")
+
     async def _configure_windowrules(self, scratch: Scratch):
         "Setting up initial client window state (sets windowrules)"
         configured = self.scratches.hasState(scratch, "configured")
@@ -244,6 +250,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 if not await self._start_scratch(item):
                     await notify_error(f'Failed to show scratch "{item.uid}"')
                     return False
+            await self._unset_windowrules(item)
             return True
 
         return await self._start_scratch_nopid(item)
