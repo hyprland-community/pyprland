@@ -22,6 +22,7 @@ from pyprland.ipc import init as ipc_init
 from pyprland.ipc import notify_error, notify_fatal, notify_info
 from pyprland.plugins.interface import Plugin
 from pyprland.types import PyprError
+from pyprland.version import VERSION
 
 CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
@@ -433,7 +434,7 @@ async def run_client():
     manager = Pyprland()
 
     if sys.argv[1] == "version":
-        print("2.2.19-1")  # Automatically updated version
+        print(VERSION)
         return
 
     if sys.argv[1] == "edit":
