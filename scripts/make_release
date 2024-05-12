@@ -20,21 +20,19 @@ fi
 TOKEN=$(gopass show -o websites/api.github.com/fdev31)
 URL=https://api.github.com/repos/hyprland-community/pyprland
 
+tox run -e unit || exit -1
 
 # Bump py project {{{
 sed -i "s#$ver_line#version = \"$version\"#" pyproject.toml
 git add pyproject.toml
 V="$version" ./scripts/update_version
-git add pyprland/command.py
+git add pyprland/version.py
 git commit -m "Version $version"  --no-verify
 git tag $version
 git push
 
 poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
 # }}}
-
-
-tox run -e unit || exit -1
 
 pushd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh

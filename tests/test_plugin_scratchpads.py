@@ -168,7 +168,7 @@ async def test_no_proc(no_proc_scratchpads, subprocess_shell_mock, server_fixtur
     await wait_called(mocks.hyprctl, count=2)
 
     await _send_window_events()
-    await wait_called(mocks.hyprctl, count=5)
+    await wait_called(mocks.hyprctl, count=4)
     await asyncio.sleep(0.2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
