@@ -399,11 +399,11 @@ Available commands:
 """
     )
     builtins_docs = {
-        "dumpjson": "Dumps the configuration in JSON format",
-        "edit": "Edit the configuration file",
-        "exit": "Exits the daemon",
-        "help": "Shows this help",
-        "version": "Shows the version",
+        "dumpjson": "Dump the configuration in JSON format.",
+        "edit": "Edit the configuration file.",
+        "exit": "Exit the daemon.",
+        "help": "Show this help.",
+        "version": "Show the version.",
     }
     for name, doc in builtins_docs.items():
         print(f" {name:20s} {doc}")
