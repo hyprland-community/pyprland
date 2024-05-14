@@ -11,13 +11,7 @@ from typing import Any, Callable, Self
 
 import tomllib
 
-from pyprland.common import (
-    IPC_FOLDER,
-    get_logger,
-    init_logger,
-    merge,
-    run_interactive_program,
-)
+from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
