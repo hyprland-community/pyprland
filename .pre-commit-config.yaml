@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v4.6.0"
@@ -6,16 +7,15 @@ repos:
       - id: check-json
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys']
-  - repo: https://github.com/pycqa/isort
-    rev: "5.13.2"
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: "v0.4.4"
     hooks:
-      - id: isort
-        name: isort (python)
-        args: ["--profile", "black"]
-  - repo: https://github.com/ambv/black
-    rev: "24.4.2"
-    hooks:
-      - id: black
+      # Run the linter.
+      - id: ruff
+        args: ['--fix']
+      # Run the formatter.
+      - id: ruff-format
   - repo: https://github.com/lovesegfault/beautysh
     rev: "v6.2.1"
     hooks:
