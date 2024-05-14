@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "pyprland"
 version = "2.2.20"
@@ -15,24 +19,32 @@ pypr = "pyprland.command:main"
 python = "^3.11"
 aiofiles = "^23.2.1"
 
-
 [tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+coverage = "^7.4.1"
+mypy = "^1.8.0"
+pdoc = "^14.4.0"
+pycodestyle = "^2.11.0"
+pydantic = "^2.6.1"
+pylint = "^3.0.3"
 pytest = "^7.4.3"
 pytest-asyncio = "^0.23.2"
 pytest-mock = "^3.12.0"
-pdoc = "^14.4.0"
-mypy = "^1.8.0"
+ruff = "^0.4.2"
 vulture = "^2.11"
-pylint = "^3.0.3"
-coverage = "^7.4.1"
-pydantic = "^2.6.1"
-black = "^24.1.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
 pytest-asyncio = "^0.23.2"
 pytest-mock = "^3.12.0"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+line-length = 140
+preview = true
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
