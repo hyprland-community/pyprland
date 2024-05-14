@@ -1,6 +1,6 @@
-" Scratchpad plugin (smoke) tests "
+"Scratchpad plugin (smoke) tests"
+
 import asyncio
-from pprint import pprint
 
 import pytest
 from pytest_asyncio import fixture
@@ -80,7 +80,7 @@ async def _send_window_events(
     address="12345677890", klass="kitty-dropterm", title="my fake terminal"
 ):
     await mocks.send_event(f"openwindow>>address:0x{address},1,{klass},{title}")
-    await mocks.send_event(f"activewindowv2>>address:44444677890")
+    await mocks.send_event("activewindowv2>>address:44444677890")
     await mocks.send_event(f"activewindowv2>>address:{address}")
 
 
