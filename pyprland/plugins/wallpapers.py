@@ -1,4 +1,5 @@
-" Plugin template "
+"Plugin template"
+
 import asyncio
 import os.path
 import random

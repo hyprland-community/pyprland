@@ -1,4 +1,4 @@
-" Common types from Hyprland API"
+"Common types from Hyprland API"
 
 from dataclasses import dataclass
 from typing import TypedDict
@@ -6,12 +6,14 @@ from typing import TypedDict
 
 class WorkspaceDf(TypedDict):
     "Workspace definition"
+
     id: int
     name: str
 
 
 class ClientInfo(TypedDict):
     "Client information as returned by Hyprland"
+
     address: str
     mapped: bool
     hidden: bool
@@ -37,6 +39,7 @@ class ClientInfo(TypedDict):
 
 class MonitorInfo(TypedDict):
     "Monitor information as returned by Hyprland"
+
     id: int
     name: str
     description: str
@@ -65,6 +68,7 @@ class MonitorInfo(TypedDict):
 @dataclass(order=True)
 class VersionInfo:
     "Stores version information"
+
     major: int = 0  # noqa: F841
     minor: int = 0  # noqa: F841
     micro: int = 0  # noqa: F841

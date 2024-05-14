@@ -1,4 +1,5 @@
-" Add system notifications based on journal logs "
+"Add system notifications based on journal logs"
+
 import asyncio
 import re
 from copy import deepcopy

@@ -1,4 +1,5 @@
-" Lookup & update API for Scratch objects "
+"Lookup & update API for Scratch objects"
+
 from collections import defaultdict
 from typing import Any, cast
 

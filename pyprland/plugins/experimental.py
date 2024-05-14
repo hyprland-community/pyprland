@@ -1,4 +1,5 @@
-" Plugin template "
+"Plugin template"
+
 from .interface import Plugin
 
 

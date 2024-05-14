@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
-" The monitors plugin "
+"The monitors plugin"
+
 import asyncio
 import subprocess
 from typing import Any, cast

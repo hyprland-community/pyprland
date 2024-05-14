@@ -1,4 +1,5 @@
-" Toggle monitors on or off "
+"Toggle monitors on or off"
+
 from typing import Any, cast
 
 from .interface import Plugin

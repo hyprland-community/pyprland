@@ -1,4 +1,5 @@
-" Toggles workspace zooming "
+"Toggles workspace zooming"
+
 import asyncio
 
 from .interface import Plugin

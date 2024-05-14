@@ -1,4 +1,4 @@
-" Animations for absolute window positioning "
+"Animations for absolute window positioning"
 
 __all__ = ["Animations"]
 

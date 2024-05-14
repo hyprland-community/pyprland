@@ -1,5 +1,6 @@
 #!/bin/env python
-""" Pyprland - an Hyprland companion app (cli client & daemon) """
+"""Pyprland - an Hyprland companion app (cli client & daemon)"""
+
 import asyncio
 import importlib
 import itertools
@@ -35,6 +36,7 @@ __all__: list[str] = []
 
 class Pyprland:
     "Main app object"
+
     server: asyncio.Server
     event_reader: asyncio.StreamReader
     stopped = False

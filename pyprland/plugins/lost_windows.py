@@ -1,4 +1,5 @@
-" Moves unreachable client windows to the currently focused workspace"
+"Moves unreachable client windows to the currently focused workspace"
+
 from typing import Any, cast
 
 from .interface import Plugin

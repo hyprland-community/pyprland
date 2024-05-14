@@ -1,4 +1,5 @@
-" Menu engine adapter "
+"Menu engine adapter"
+
 import asyncio
 import subprocess
 from logging import Logger
@@ -14,6 +15,7 @@ menu_logger = get_logger("menus adapter")
 
 class MenuEngine:
     "Menu backend interface"
+
     proc_name: str
     " process name for this engine "
     proc_extra_parameters: str = ""
@@ -70,36 +72,42 @@ class MenuEngine:
 
 class TofiMenu(MenuEngine):
     "A tofi based menu"
+
     proc_name = "tofi"
     proc_extra_parameters: str = "--prompt-text '[prompt]'"
 
 
 class RofiMenu(MenuEngine):
     "A rofi based menu"
+
     proc_name = "rofi"
     proc_extra_parameters = "-dmenu -matching fuzzy -i -p '[prompt]'"
 
 
 class WofiMenu(MenuEngine):
     "A wofi based menu"
+
     proc_name = "wofi"
     proc_extra_parameters = "-dmenu -i -p '[prompt]'"
 
 
 class DmenuMenu(MenuEngine):
     "A dmenu based menu"
+
     proc_name = "dmenu"
     proc_extra_parameters = "-i"
 
 
 class BemenuMenu(MenuEngine):
     "A bemenu based menu"
+
     proc_name = "bemenu"
     proc_extra_parameters = "-c"
 
 
 class AnyrunMenu(MenuEngine):
     "A bemenu based menu"
+
     proc_name = "anyrun"
     proc_extra_parameters = "--plugins libstdin.so"
 

@@ -1,4 +1,4 @@
-" Color conversion & misc color related helpers "
+"Color conversion & misc color related helpers"
 
 
 def convert_color(description: str) -> str:

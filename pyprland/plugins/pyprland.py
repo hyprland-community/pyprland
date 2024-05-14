@@ -1,4 +1,5 @@
-" Not a real Plugin - provides some core features and some caching of commonly requested structures "
+"Not a real Plugin - provides some core features and some caching of commonly requested structures"
+
 import json
 
 from ..common import state

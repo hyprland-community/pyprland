@@ -1,4 +1,4 @@
-" Select a client window and move it to the active workspace"
+"Select a client window and move it to the active workspace"
 
 from ..adapters.menus import MenuMixin
 from ..common import state

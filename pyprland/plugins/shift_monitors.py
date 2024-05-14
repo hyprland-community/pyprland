@@ -1,4 +1,5 @@
-" shift workspaces across monitors "
+"shift workspaces across monitors"
+
 from typing import cast
 
 from .interface import Plugin

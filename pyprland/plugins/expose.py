@@ -1,5 +1,4 @@
-""" expose Brings every client window to screen for selection
-"""
+"""expose Brings every client window to screen for selection"""
 
 from ..common import CastBoolMixin, state
 from .interface import Plugin

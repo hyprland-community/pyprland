@@ -1,5 +1,4 @@
-""" toggle_special allows having an "expose" like selection of windows in a special group
-"""
+"""toggle_special allows having an "expose" like selection of windows in a special group"""
 
 from typing import cast
 

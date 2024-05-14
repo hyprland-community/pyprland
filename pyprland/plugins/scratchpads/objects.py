@@ -1,4 +1,4 @@
-" Scratchpad object definition "
+"Scratchpad object definition"
 
 __all__ = ["Scratch"]
 
@@ -19,6 +19,7 @@ from .helpers import OverridableConfig, get_match_fn
 @dataclass
 class MetaInfo:
     "Meta properties"
+
     initialized: bool = False
     should_hide: bool = False
     no_pid: bool = False
@@ -29,6 +30,7 @@ class MetaInfo:
 
 class Scratch(CastBoolMixin):  # {{{
     "A scratchpad state including configuration & client state"
+
     log = logging.getLogger("scratch")
     get_client_props: Callable
     client_info: ClientInfo

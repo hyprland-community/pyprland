@@ -1,4 +1,4 @@
-" Helper functions for the scratchpads plugin "
+"Helper functions for the scratchpads plugin"
 
 __all__ = [
     "get_active_space_identifier",

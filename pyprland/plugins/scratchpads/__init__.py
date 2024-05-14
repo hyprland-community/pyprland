@@ -1,4 +1,5 @@
-" Scratchpads addon "
+"Scratchpads addon"
+
 import asyncio
 import time
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 @dataclass
 class FocusTracker:
     "Focus tracking object"
+
     prev_focused_window: str
     prev_focused_window_wrkspc: str
 

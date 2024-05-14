@@ -1,4 +1,4 @@
-" Conversion functions for units used in Pyprland & plugins "
+"Conversion functions for units used in Pyprland & plugins"
 
 from ..common import is_rotated
 from ..types import MonitorInfo

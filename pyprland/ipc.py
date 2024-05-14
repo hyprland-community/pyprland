@@ -1,5 +1,5 @@
 #!/bin/env python
-""" Interact with hyprland using sockets """
+"""Interact with hyprland using sockets"""
 
 __all__ = [
     "get_focused_monitor_props",

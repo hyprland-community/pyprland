@@ -1,4 +1,5 @@
-" Common plugin interface "
+"Common plugin interface"
+
 from typing import Any, Callable, cast
 
 from ..common import get_logger

@@ -1,4 +1,4 @@
-""" Force workspaces to follow the focus / mouse """
+"""Force workspaces to follow the focus / mouse"""
 
 from typing import cast
 

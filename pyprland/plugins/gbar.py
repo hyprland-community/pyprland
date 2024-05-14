@@ -1,4 +1,4 @@
-" Run gbar on the first available display from a list of displays"
+"Run gbar on the first available display from a list of displays"
 
 import asyncio
 
@@ -8,6 +8,7 @@ from .interface import Plugin
 
 class Extension(Plugin):
     "Manage gBar application"
+
     monitors: set[str]
     proc = None
     cur_monitor = ""

@@ -1,4 +1,4 @@
-""" Shared utilities: logging """
+"""Shared utilities: logging"""
 
 import fcntl
 import logging
@@ -144,6 +144,7 @@ def init_logger(filename=None, force_debug=False):
 
     class ScreenLogFormatter(logging.Formatter):
         "A custom formatter, adding colors"
+
         LOG_FORMAT = (
             r"%(name)25s - %(message)s // %(filename)s:%(lineno)d"
             if DEBUG
@@ -198,6 +199,7 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
 @dataclass
 class SharedState:
     "Stores commonly requested properties"
+
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address

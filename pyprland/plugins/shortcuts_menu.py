@@ -1,4 +1,5 @@
-" Shortcuts menu "
+"Shortcuts menu"
+
 import asyncio
 
 from ..adapters.menus import MenuMixin

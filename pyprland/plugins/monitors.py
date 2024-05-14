@@ -1,4 +1,5 @@
-" The monitors plugin "
+"The monitors plugin"
+
 import asyncio
 from collections import defaultdict
 from copy import deepcopy
