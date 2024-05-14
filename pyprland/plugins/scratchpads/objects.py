@@ -71,9 +71,7 @@ class Scratch(CastBoolMixin):  # {{{
             return
         self.meta.initialized = True
         await self.updateClientInfo()
-        await ex.hyprctl(
-            f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}"
-        )
+        await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
         if "class_match" in self.conf:  # NOTE: legacy, to be removed
             await notify_error(
                 f'scratchpad {self.uid} should use match_by="class" instead of the deprecated class_match',
@@ -85,15 +83,11 @@ class Scratch(CastBoolMixin):  # {{{
         if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
             if await aios.path.exists(path):
-                async with aiopen(
-                    os.path.join(path, "status"), mode="r", encoding="utf-8"
-                ) as f:
+                async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
                     for line in await f.readlines():
                         if line.startswith("State"):
                             proc_state = line.split()[1]
-                            return (
-                                proc_state not in "ZX"
-                            )  # not "Z (zombie)"or "X (dead)"
+                            return proc_state not in "ZX"  # not "Z (zombie)"or "X (dead)"
         else:
             if self.meta.no_pid:
                 return bool(await self.fetch_matching_client())
@@ -139,16 +133,12 @@ class Scratch(CastBoolMixin):  # {{{
     ) -> None:
         "update the internal client info property, if not provided, refresh based on the current address"
         if client_info is None:
-            client_info = await self.get_client_props(
-                addr=self.full_address, clients=clients
-            )
+            client_info = await self.get_client_props(addr=self.full_address, clients=clients)
         if not isinstance(client_info, dict):
             if client_info is None:
                 self.log.error("The client window %s vanished", self.full_address)
                 raise KeyError(f"Client window {self.full_address} not found")
-            self.log.error(
-                "client_info of %s must be a dict: %s", self.address, client_info
-            )
+            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)
             raise AssertionError(f"Not a dict: {client_info}")
 
         self.client_info.update(client_info)

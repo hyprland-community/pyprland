@@ -118,11 +118,7 @@ every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, Anyrun
 async def init(force_engine=False, extra_parameters="") -> MenuEngine:
     "initializes the module"
     try:
-        engines = (
-            [next(e for e in every_menu_engine if e.proc_name == force_engine)]
-            if force_engine
-            else every_menu_engine
-        )
+        engines = [next(e for e in every_menu_engine if e.proc_name == force_engine)] if force_engine else every_menu_engine
     except StopIteration:
         engines = []
 
@@ -158,9 +154,7 @@ class MenuMixin:
     async def ensure_menu_configured(self):
         "If not configured, init the menu system"
         if not self._menu_configured:
-            self.menu = await init(
-                self.config.get("engine"), self.config.get("parameters", "")
-            )
+            self.menu = await init(self.config.get("engine"), self.config.get("parameters", ""))
             self.log.info("Using %s engine", self.menu.proc_name)
             self._menu_configured = True
 

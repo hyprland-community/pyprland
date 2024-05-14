@@ -61,9 +61,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self._hysteresis_tasks = {}
         self.get_client_props = partial(get_client_props, logger=self.log)
         Scratch.get_client_props = self.get_client_props
-        self.get_focused_monitor_props = partial(
-            get_focused_monitor_props, logger=self.log
-        )
+        self.get_focused_monitor_props = partial(get_focused_monitor_props, logger=self.log)
 
     async def exit(self) -> None:
         "exit hook"
@@ -80,16 +78,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     proc.kill()
                 await proc.wait()
 
-        await asyncio.gather(
-            *(die_in_piece(scratch) for scratch in self.scratches.values())
-        )
+        await asyncio.gather(*(die_in_piece(scratch) for scratch in self.scratches.values()))
 
     async def on_reload(self) -> None:
         "config loader"
         # Create new scratches with fresh config items
-        scratches = {
-            name: Scratch(name, options) for name, options in self.config.items()
-        }
+        scratches = {name: Scratch(name, options) for name, options in self.config.items()}
 
         scratches_to_spawn = set()
         for name in scratches:
@@ -128,9 +122,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         defined_class: str = scratch.conf.get("class", "")
         skipped_windowrules = scratch.conf.get("skip_windowrules", [])
         if defined_class:
-            monitor = await self.get_focused_monitor_props(
-                name=scratch.conf.get("force_monitor")
-            )
+            monitor = await self.get_focused_monitor_props(name=scratch.conf.get("force_monitor"))
             width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
 
             ipc_commands = []
@@ -138,9 +130,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if "float" not in skipped_windowrules:
                 ipc_commands.append(f"windowrule float,^({defined_class})$")
             if "workspace" not in skipped_windowrules:
-                ipc_commands.append(
-                    f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$"
-                )
+                ipc_commands.append(f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$")
             set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
@@ -160,9 +150,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
 
             if set_aspect:
-                ipc_commands.append(
-                    f"windowrule size {width} {height},^({defined_class})$"
-                )
+                ipc_commands.append(f"windowrule size {width} {height},^({defined_class})$")
 
             await self.hyprctl(ipc_commands, "keyword")
 
@@ -266,9 +254,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         pid = proc.pid
         scratch.reset(pid)
         self.scratches.register(scratch, pid=pid)
-        self.log.info(
-            "scratch %s (%s) has pid %s", scratch.uid, scratch.conf.get("command"), pid
-        )
+        self.log.info("scratch %s (%s) has pid %s", scratch.uid, scratch.conf.get("command"), pid)
         if old_pid:
             self.scratches.clear(pid=old_pid)
 
@@ -353,20 +339,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 except KeyError:
                     pass
 
-            self._hysteresis_tasks[scratch.uid] = asyncio.create_task(
-                _task(scratch, hysteresis)
-            )
+            self._hysteresis_tasks[scratch.uid] = asyncio.create_task(_task(scratch, hysteresis))
         else:
             self.log.debug("hide %s because another client is active", scratch.uid)
             await self.run_hide(scratch.uid, autohide=True)
 
     async def _alternative_lookup(self):
         "if not matching by pid, use specific matching and return True"
-        class_lookup_hack = [
-            s
-            for s in self.scratches.getByState("respawned")
-            if s.conf.get("match_by", "pid") != "pid"
-        ]
+        class_lookup_hack = [s for s in self.scratches.getByState("respawned") if s.conf.get("match_by", "pid") != "pid"]
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
@@ -445,9 +425,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         first_scratch = self.scratches.get(uids[0])
         if not first_scratch:
             self.log.warning("%s doesn't exist, can't toggle.", uids[0])
-            await notify_error(
-                f"Scratchpad '{uids[0]}' not found, check your configuration & the toggle parameter"
-            )
+            await notify_error(f"Scratchpad '{uids[0]}' not found, check your configuration & the toggle parameter")
             return
 
         self.log.debug(
@@ -457,9 +435,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         )
         if self.cast_bool(first_scratch.conf.get("alt_toggle")):
             # Needs to be on any monitor (if workspace matches)
-            extra_visibility_check = (
-                first_scratch.meta.space_identifier
-                in await get_all_space_identifiers(await self.hyprctlJSON("monitors"))
+            extra_visibility_check = first_scratch.meta.space_identifier in await get_all_space_identifiers(
+                await self.hyprctlJSON("monitors")
             )
         else:
             # Needs to be on the active monitor+workspace
@@ -477,9 +454,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if not item:
                 self.log.warning("%s is not configured", uid)
             else:
-                self.log.debug(
-                    "%s visibility: %s and %s", uid, is_visible, item.visible
-                )
+                self.log.debug("%s visibility: %s and %s", uid, is_visible, item.visible)
                 if is_visible and await item.isAlive():
                     tasks.append(partial(self.run_hide, uid))
                 else:
@@ -490,15 +465,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "Return offset from config or use margin as a ref"
         offset = scratch.conf.get("offset")
         if monitor is None:
-            monitor = await get_focused_monitor_props(
-                self.log, name=scratch.conf.get("force_monitor")
-            )
+            monitor = await get_focused_monitor_props(self.log, name=scratch.conf.get("force_monitor"))
         rotated = is_rotated(monitor)
-        aspect = (
-            reversed(scratch.client_info["size"])
-            if rotated
-            else scratch.client_info["size"]
-        )
+        aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
         if offset:
             return [convert_monitor_dimension(offset, ref, monitor) for ref in aspect]
@@ -506,11 +475,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         # compute from client size & margin
         margin = scratch.conf.get("margin", DEFAULT_MARGIN)
 
-        mon_size = (
-            [monitor["height"], monitor["width"]]
-            if rotated
-            else [monitor["width"], monitor["height"]]
-        )
+        mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
 
         margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
         return map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins)])
@@ -525,9 +490,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         off_x, off_y = await self.get_offsets(scratch, monitor)
         await self._slide_animation(animation_type, scratch, off_x, off_y)
-        await asyncio.sleep(
-            scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY)
-        )  # await for animation to finish
+        await asyncio.sleep(scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY))  # await for animation to finish
         return True
 
     async def _slide_animation(
@@ -551,9 +514,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         for addr in addresses:
             if animation_type in animation_actions:
-                await self.hyprctl(
-                    f"{animation_actions[animation_type]},address:{addr}"
-                )
+                await self.hyprctl(f"{animation_actions[animation_type]},address:{addr}")
 
     async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name" """
@@ -561,9 +522,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         if not scratch:
             self.log.warning("%s doesn't exist, can't hide.", uid)
-            await notify_error(
-                f"Scratchpad '{uid}' not found, check your configuration or the show parameter"
-            )
+            await notify_error(f"Scratchpad '{uid}' not found, check your configuration or the show parameter")
             return
 
         self.cancel_task(uid)
@@ -576,11 +535,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         excluded_ids = scratch.conf.get("excludes", [])
         if excluded_ids == "*":
-            excluded_ids = [
-                excluded.uid
-                for excluded in self.scratches.values()
-                if excluded.uid != uid
-            ]
+            excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != uid]
         for e_uid in excluded_ids:
             excluded = self.scratches.get(e_uid)
             assert excluded
@@ -591,9 +546,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         scratch.visible = True
         scratch.meta.space_identifier = get_active_space_identifier()
-        monitor = await self.get_focused_monitor_props(
-            name=scratch.conf.get("force_monitor")
-        )
+        monitor = await self.get_focused_monitor_props(name=scratch.conf.get("force_monitor"))
 
         assert monitor
         assert scratch.full_address, "No address !"
@@ -615,13 +568,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
 
-    async def _show_transition(
-        self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool
-    ):
+    async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool):
         "perfoms the transition to visible state"
-        forbid_special = not self.cast_bool(
-            scratch.conf.get("allow_special_workspace"), True
-        )
+        forbid_special = not self.cast_bool(scratch.conf.get("allow_special_workspace"), True)
         wrkspc = (
             monitor["activeWorkspace"]["name"]
             if forbid_special
@@ -630,16 +579,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else monitor["specialWorkspace"]["name"]
         )
         if self.previously_focused_window:
-            self.focused_window_tracking[scratch.uid] = FocusTracker(
-                self.previously_focused_window, wrkspc
-            )
+            self.focused_window_tracking[scratch.uid] = FocusTracker(self.previously_focused_window, wrkspc)
 
         scratch.meta.last_shown = time.time()
         # Start the transition
         preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
         should_set_aspect = (
-            not (preserve_aspect and was_alive)
-            or scratch.monitor != state.active_monitor
+            not (preserve_aspect and was_alive) or scratch.monitor != state.active_monitor
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
@@ -656,12 +602,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             f"alterzorder top,address:{scratch.full_address}",
         ]
         for addr in scratch.extra_addr:
-            move_commands.extend(
-                [
-                    f"movetoworkspacesilent {wrkspc},address:{addr}",
-                    f"alterzorder top,address:{addr}",
-                ]
-            )
+            move_commands.extend([
+                f"movetoworkspacesilent {wrkspc},address:{addr}",
+                f"alterzorder top,address:{addr}",
+            ])
 
         await self.hyprctl(move_commands)
         await self._update_infos(scratch, clients)
@@ -682,14 +626,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             for alt_addr in scratch.extra_addr:
                 # get the client info for the extra addresses
                 try:
-                    client_info = await self.get_client_props(
-                        addr="0x" + alt_addr, clients=clients
-                    )
+                    client_info = await self.get_client_props(addr="0x" + alt_addr, clients=clients)
                     if not client_info:
                         continue
-                    await scratch.updateClientInfo(
-                        clients=clients, client_info=client_info
-                    )
+                    await scratch.updateClientInfo(clients=clients, client_info=client_info)
                 except KeyError:
                     pass
                 else:
@@ -697,9 +637,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 self.log.error("Lost the client info for %s", scratch.uid)
 
-    async def _animate_show(
-        self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool
-    ):
+    async def _animate_show(self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool):
         "animate the show transition"
         animation_type = get_animation_type(scratch)
         if animation_type:
@@ -719,9 +657,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     scratch.conf.get("margin", DEFAULT_MARGIN),
                 )
                 await self.hyprctl(command)
-                await self._slide_animation(
-                    animation_type, scratch, -ox, -oy, only_secondary=True
-                )
+                await self._slide_animation(animation_type, scratch, -ox, -oy, only_secondary=True)
         else:
             self.log.warning(
                 "No position and no animation provided for %s, don't know where to place it.",
@@ -738,9 +674,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 max_width, max_height = convert_coords(max_size, monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
-            await self.hyprctl(
-                f"resizewindowpixel exact {width} {height},address:{scratch.full_address}"
-            )
+            await self.hyprctl(f"resizewindowpixel exact {width} {height},address:{scratch.full_address}")
 
     async def _fix_position(self, scratch: Scratch, monitor: MonitorInfo):
         "apply the `position` config parameter"
@@ -749,9 +683,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if position:
             x_pos, y_pos = convert_coords(position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await self.hyprctl(
-                f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}"
-            )
+            await self.hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}")
             return True
         return False
 
@@ -764,9 +696,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         active_workspace = state.active_workspace
 
         if not scratch:
-            await notify_error(
-                f"Scratchpad '{uid}' not found, check your configuration or the hide parameter"
-            )
+            await notify_error(f"Scratchpad '{uid}' not found, check your configuration or the hide parameter")
             self.log.warning("%s is not configured", uid)
             return
         if not scratch.visible and not force and not autohide:
@@ -781,20 +711,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.log.info("Hiding %s", uid)
         await self._hide_transition(scratch, scratch.meta.monitor_info)
 
-        await self.hyprctl(
-            f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}"
-        )
+        await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
 
         for addr in scratch.extra_addr:
-            await self.hyprctl(
-                f"movetoworkspacesilent special:scratch_{uid},address:{addr}"
-            )
+            await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{addr}")
             await asyncio.sleep(0.01)
         await self._handle_focus_tracking(scratch, active_window, active_workspace)
 
-    async def _handle_focus_tracking(
-        self, scratch: Scratch, active_window: str, active_workspace: str
-    ):
+    async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str):
         "handle focus tracking"
         if not self.cast_bool(scratch.conf.get("smart_focus"), True):
             return
@@ -806,9 +730,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
             if scratch.have_address(active_window) and same_workspace:
                 if not scratch.have_address(tracker.prev_focused_window):
-                    await self.hyprctl(
-                        f"focuswindow address:{tracker.prev_focused_window}"
-                    )
+                    await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
 
     # }}}
 

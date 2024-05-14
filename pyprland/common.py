@@ -30,15 +30,11 @@ HYPRLAND_INSTANCE_SIGNATURE = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
 try:
     IPC_FOLDER = (
         f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
-        if os.path.exists(
-            f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
-        )
+        if os.path.exists(f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}')
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
     )
 except KeyError:
-    print(
-        "This is a fatal error, assuming we are running documentation generation hence ignoring it"
-    )
+    print("This is a fatal error, assuming we are running documentation generation hence ignoring it")
     IPC_FOLDER = "/fake"
 
 
@@ -119,9 +115,7 @@ def merge(merged, obj2):
         if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
             # If both values are dictionaries, recursively merge them
             merge(merged[key], value)
-        elif (
-            key in merged and isinstance(merged[key], list) and isinstance(value, list)
-        ):
+        elif key in merged and isinstance(merged[key], list) and isinstance(value, list):
             # If both values are lists, concatenate them
             merged[key] += value
         else:
@@ -145,11 +139,7 @@ def init_logger(filename=None, force_debug=False):
     class ScreenLogFormatter(logging.Formatter):
         "A custom formatter, adding colors"
 
-        LOG_FORMAT = (
-            r"%(name)25s - %(message)s // %(filename)s:%(lineno)d"
-            if DEBUG
-            else r"%(message)s"
-        )
+        LOG_FORMAT = r"%(name)25s - %(message)s // %(filename)s:%(lineno)d" if DEBUG else r"%(message)s"
         RESET_ANSI = "\x1b[0m"
 
         FORMATTERS = {
@@ -166,11 +156,7 @@ def init_logger(filename=None, force_debug=False):
     logging.basicConfig()
     if filename:
         file_handler = logging.FileHandler(filename)
-        file_handler.setFormatter(
-            logging.Formatter(
-                fmt=r"%(asctime)s [%(levelname)s] %(name)s :: %(message)s :: %(filename)s:%(lineno)d"
-            )
-        )
+        file_handler.setFormatter(logging.Formatter(fmt=r"%(asctime)s [%(levelname)s] %(name)s :: %(message)s :: %(filename)s:%(lineno)d"))
         LogObjects.handlers.append(file_handler)
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(ScreenLogFormatter())
@@ -258,9 +244,7 @@ class CastBoolMixin:
         if isinstance(value, str):
             lv = value.lower().strip()
             r = lv not in ("false", "no", "off")
-            self.log.warning(
-                "Invalid value for boolean option: %s, considering it %s", value, r
-            )
+            self.log.warning("Invalid value for boolean option: %s, considering it %s", value, r)
         return default_value if value is None else value
 
 

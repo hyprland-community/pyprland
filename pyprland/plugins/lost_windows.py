@@ -7,15 +7,9 @@ from .interface import Plugin
 
 def contains(monitor, window):
     "Tell if a window is visible in a monitor"
-    if not (
-        window["at"][0] > monitor["x"]
-        and window["at"][0] < monitor["x"] + monitor["width"]
-    ):
+    if not (window["at"][0] > monitor["x"] and window["at"][0] < monitor["x"] + monitor["width"]):
         return False
-    if not (
-        window["at"][1] > monitor["y"]
-        and window["at"][1] < monitor["y"] + monitor["height"]
-    ):
+    if not (window["at"][1] > monitor["y"] and window["at"][1] < monitor["y"] + monitor["height"]):
         return False
     return True
 
@@ -25,11 +19,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """Brings lost floating windows to the current workspace"""
         monitors = cast(list, await self.hyprctlJSON("monitors"))
         windows = cast(list, await self.get_clients())
-        lost = [
-            win
-            for win in windows
-            if win["floating"] and not any(contains(mon, win) for mon in monitors)
-        ]
+        lost = [win for win in windows if win["floating"] and not any(contains(mon, win) for mon in monitors)]
         focused: dict[str, Any] = [mon for mon in monitors if mon["focused"]][0]
         interval = focused["width"] / (1 + len(lost))
         interval_y = focused["height"] / (1 + len(lost))

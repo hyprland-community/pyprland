@@ -13,14 +13,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)
         if wid < 1:  # special workspace
-            await self.hyprctl(
-                [
-                    f"togglespecialworkspace {special_workspace}",
-                    f"movetoworkspacesilent {state.active_workspace},address:{aw['address']}",
-                    f"focuswindow address:{aw['address']}",
-                ]
-            )
+            await self.hyprctl([
+                f"togglespecialworkspace {special_workspace}",
+                f"movetoworkspacesilent {state.active_workspace},address:{aw['address']}",
+                f"focuswindow address:{aw['address']}",
+            ])
         else:
-            await self.hyprctl(
-                f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}"
-            )
+            await self.hyprctl(f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}")

@@ -16,9 +16,7 @@ from .interface import Plugin
 class Extension(CastBoolMixin, Plugin):
     "Manages a layout with one centered window on top of others"
 
-    workspace_info: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"enabled": False, "addr": ""}
-    )
+    workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
     last_index = 0
 
     # Events
@@ -36,20 +34,15 @@ class Extension(CastBoolMixin, Plugin):
 
     async def event_activewindowv2(self, _):
         "keep track of focused client"
-        if (
-            self.cast_bool(self.config.get("captive_focus"))
-            and self.enabled
-            and state.active_window != self.main_window_addr
-            and len(
-                [
-                    c
-                    for c in await self.get_clients()
-                    if c["address"] == state.active_window
-                ]
-            )
-            > 0
-        ):
-            await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+        captive = self.cast_bool(self.config.get("captive_focus"))
+        is_not_active = state.active_window != self.main_window_addr
+        if captive and self.enabled and is_not_active:
+            try:
+                next(c for c in await self.get_clients() if c["address"] == state.active_window)
+            except StopIteration:
+                pass
+            else:
+                await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr):
         "Disable when the main window is closed"
@@ -82,9 +75,7 @@ class Extension(CastBoolMixin, Plugin):
 
     async def get_clients(self):  # pylint: disable=arguments-differ
         "Return the client list in the currently active workspace"
-        clients = await super().get_clients(
-            mapped=True, workspace=state.active_workspace
-        )
+        clients = await super().get_clients(mapped=True, workspace=state.active_workspace)
         clients.sort(key=lambda c: c["address"])
         return clients
 
@@ -118,12 +109,8 @@ class Extension(CastBoolMixin, Plugin):
                 x += monitor["x"] + margin
                 y += monitor["y"] + margin
                 break
-        await self.hyprctl(
-            f"resizewindowpixel exact {int(width/scale)} {int(height/scale)},address:{addr}"
-        )
-        await self.hyprctl(
-            f"movewindowpixel exact {int(x/scale)} {int(y/scale)},address:{addr}"
-        )
+        await self.hyprctl(f"resizewindowpixel exact {int(width / scale)} {int(height / scale)},address:{addr}")
+        await self.hyprctl(f"movewindowpixel exact {int(x / scale)} {int(y / scale)},address:{addr}")
 
     # Subcommands
 
@@ -199,9 +186,7 @@ class Extension(CastBoolMixin, Plugin):
         "set if center layout enabled on the active workspace"
         self.workspace_info[state.active_workspace]["enabled"] = value
 
-    enabled = property(
-        get_enabled, set_enabled, doc="centered layout enabled on this workspace"
-    )
+    enabled = property(get_enabled, set_enabled, doc="centered layout enabled on this workspace")
     del get_enabled, set_enabled
 
     # main_window_addr

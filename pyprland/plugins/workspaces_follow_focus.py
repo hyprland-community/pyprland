@@ -17,15 +17,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = set(
-            mon["activeWorkspace"]["name"]
-            for mon in cast(list[dict], await self.hyprctlJSON("monitors"))
-            if mon["name"] != monitor_id
+            mon["activeWorkspace"]["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors")) if mon["name"] != monitor_id
         )
-        workspaces = [
-            w["name"]
-            for w in cast(list[dict], await self.hyprctlJSON("workspaces"))
-            if w["id"] > 0
-        ]
+        workspaces = [w["name"] for w in cast(list[dict], await self.hyprctlJSON("workspaces")) if w["id"] > 0]
 
         batch: list[str] = []
         for n in workspaces:
@@ -47,24 +41,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.error("Can not find a focused monitor")
             return
         assert isinstance(monitor, dict)
-        busy_workspaces = set(
-            m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]
-        )
+        busy_workspaces = set(m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"])
         cur_workspace = monitor["activeWorkspace"]["id"]
-        available_workspaces = [
-            i for i in self.workspace_list if i not in busy_workspaces
-        ]
+        available_workspaces = [i for i in self.workspace_list if i not in busy_workspaces]
         try:
             idx = available_workspaces.index(cur_workspace)
         except ValueError:
             next_workspace = available_workspaces[0 if increment > 0 else -1]
         else:
-            next_workspace = available_workspaces[
-                (idx + increment) % len(available_workspaces)
-            ]
-        await self.hyprctl(
-            [
-                f"moveworkspacetomonitor {next_workspace},{monitor['name']}",
-                f"workspace {next_workspace}",
-            ]
-        )
+            next_workspace = available_workspaces[(idx + increment) % len(available_workspaces)]
+        await self.hyprctl([
+            f"moveworkspacetomonitor {next_workspace},{monitor['name']}",
+            f"workspace {next_workspace}",
+        ])

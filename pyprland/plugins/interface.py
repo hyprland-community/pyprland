@@ -79,11 +79,6 @@ class Plugin:
             client
             for client in cast(list[ClientInfo], await self.hyprctlJSON("clients"))
             if (not mapped or client["mapped"])
-            and (
-                workspace is None or cast(str, client["workspace"]["name"]) == workspace
-            )
-            and (
-                workspace_bl is None
-                or cast(str, client["workspace"]["name"]) != workspace_bl
-            )
+            and (workspace is None or cast(str, client["workspace"]["name"]) == workspace)
+            and (workspace_bl is None or cast(str, client["workspace"]["name"]) != workspace_bl)
         ]

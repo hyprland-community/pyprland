@@ -127,9 +127,7 @@ class Pyprland:
             self.plugins[name] = plug
         except ModuleNotFoundError as e:
             self.log.error("Unable to locate plugin called '%s'", name)
-            await notify_info(
-                f'Config requires plugin "{name}" but pypr can\'t find it: {e}'
-            )
+            await notify_info(f'Config requires plugin "{name}" but pypr can\'t find it: {e}')
             return False
         except Exception as e:
             await notify_info(f"Error loading plugin {name}: {e}")
@@ -177,9 +175,7 @@ class Pyprland:
         assert self.config
         await self.__load_plugins_config(init=init)
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
-        self.log_handler = (
-            self.colored_log_handler if colored_logs else self.plain_log_handler
-        )  # pylint: disable=attribute-defined-outside-init
+        self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler  # pylint: disable=attribute-defined-outside-init
 
     def plain_log_handler(self, plugin, name, params):
         "log a handler method without color"
@@ -196,13 +192,9 @@ class Pyprland:
         try:
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
-            self.log.error(
-                "This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues"
-            )
+            self.log.error("This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues")
             self.log.exception(e)
-            await notify_error(
-                f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}"
-            )
+            await notify_error(f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}")
         except Exception as e:  # pylint: disable=W0718
             self.log.warning("%s::%s(%s) failed:", plugin.name, full_name, params)
             self.log.exception(e)
@@ -322,9 +314,7 @@ class Pyprland:
             except asyncio.TimeoutError:
                 self.log.error("Timeout running plugin %s::%s", name, task)
             except Exception as e:  # pylint: disable=W0718
-                self.log.error(
-                    "Unhandled error running plugin %s::%s: %s", name, task, e
-                )
+                self.log.error("Unhandled error running plugin %s::%s: %s", name, task, e)
             if is_pyprland and q.empty():
                 self.pyprland_mutex_event.set()
 
@@ -359,9 +349,7 @@ async def run_daemon():
                 manager.log.critical("Failed to open hyprland event stream: %s.", e)
                 await notify_fatal("Failed to open hyprland event stream")
                 raise PyprError() from e
-            manager.log.warning(
-                "Failed to get event stream: %s, retry %s/%s...", e, attempt, max_retry
-            )
+            manager.log.warning("Failed to get event stream: %s, retry %s/%s...", e, attempt, max_retry)
             await asyncio.sleep(1)
         else:
             break

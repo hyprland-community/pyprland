@@ -42,10 +42,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                 break
             try:
                 formatted_options = {_format_title(k, v): v for k, v in options.items()}
-                if (
-                    self.cast_bool(self.config.get("skip_single"), True)
-                    and len(formatted_options) == 1
-                ):
+                if self.cast_bool(self.config.get("skip_single"), True) and len(formatted_options) == 1:
                     selection = list(formatted_options.keys())[0]
                 else:
                     selection = await self.menu.run(formatted_options, selection)
@@ -67,23 +64,13 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                 choices = []
                 var_name = option["name"]
                 if option.get("command"):  # use the option to select some variable
-                    proc = await asyncio.create_subprocess_shell(
-                        option["command"], stdout=asyncio.subprocess.PIPE
-                    )
+                    proc = await asyncio.create_subprocess_shell(option["command"], stdout=asyncio.subprocess.PIPE)
                     assert proc.stdout
                     await proc.wait()
                     option_array = (await proc.stdout.read()).decode().split("\n")
-                    choices.extend(
-                        [
-                            apply_variables(line, variables).strip()
-                            for line in option_array
-                            if line.strip()
-                        ]
-                    )
+                    choices.extend([apply_variables(line, variables).strip() for line in option_array if line.strip()])
                 elif option.get("options"):
-                    choices.extend(
-                        apply_variables(txt, variables) for txt in option["options"]
-                    )
+                    choices.extend(apply_variables(txt, variables) for txt in option["options"])
                 if len(choices) == 0:
                     await self.notify_info("command didn't return anything")
                     return

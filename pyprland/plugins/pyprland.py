@@ -27,9 +27,7 @@ class Extension(Plugin):
                 self.log.warning("No tag available, assuming a recent git version.")
 
         try:
-            state.hyprland_version = VersionInfo(
-                *(int(i) for i in version[1:].split(".")[:3])
-            )
+            state.hyprland_version = VersionInfo(*(int(i) for i in version[1:].split(".")[:3]))
         except Exception as e:  # pylint: disable=broad-except
             self.log.error('Fail to parse version tag "%s": %s', version, e)
             await self.notify_error(f"Failed to parse hyprctl version tag: {version}")

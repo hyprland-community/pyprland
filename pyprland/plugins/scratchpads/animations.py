@@ -31,14 +31,10 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_height, monitor)
 
-        return (
-            f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
-        )
+        return f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
 
     @staticmethod
-    def frombottom(
-        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
-    ):
+    def frombottom(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
         "Slide from/to bottom"
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -53,9 +49,7 @@ class Animations:  # {{{
         return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
 
     @staticmethod
-    def fromleft(
-        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
-    ):
+    def fromleft(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
         "Slide from/to left"
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -66,14 +60,10 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_width, monitor)
 
-        return (
-            f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
-        )
+        return f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
 
     @staticmethod
-    def fromright(
-        monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int
-    ):
+    def fromright(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
         "Slide from/to right"
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -85,7 +75,7 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_width, monitor)
 
-        return f"movewindowpixel exact {mon_width - client_width - corrected_margin + mon_x } {margin_y},{client_uid}"
+        return f"movewindowpixel exact {mon_width - client_width - corrected_margin + mon_x} {margin_y},{client_uid}"
 
 
 # }}}

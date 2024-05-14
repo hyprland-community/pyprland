@@ -29,9 +29,7 @@ EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):
     "Uses hyprland notification system"
-    await hyprctl(
-        f"{icon} {int(duration*1000)} rgb({color})  {text}", "notify", logger=logger
-    )
+    await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
 
 notify_fatal = partial(notify, icon=3, duration=10)
@@ -71,9 +69,7 @@ cached_responses: dict[str, list[Any]] = {
 
 
 @retry_on_reset
-async def hyprctlJSON(
-    command: str, logger=None
-) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctlJSON(command: str, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
     logger = logger or log
     now = time.time()
@@ -110,9 +106,7 @@ def _format_command(command_list, default_base_command):
 
 
 @retry_on_reset
-async def hyprctl(
-    command: str | list[str], base_command: str = "dispatch", logger=None
-) -> bool:
+async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger=None) -> bool:
     """Run an IPC command. Returns success value.
 
     Args:
@@ -132,9 +126,7 @@ async def hyprctl(
 
     if isinstance(command, list):
         nb_cmds = len(command)
-        ctl_writer.write(
-            f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode()
-        )
+        ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode())
     else:
         nb_cmds = 1
         ctl_writer.write(f"/{base_command} {command}".encode())
@@ -176,9 +168,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
     raise RuntimeError("no focused monitor")
 
 
-async def get_client_props(
-    logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw
-) -> ClientInfo | None:
+async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
     """
     Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments
 

@@ -30,14 +30,10 @@ class Extension(MenuMixin, Plugin):
 
         separator = self.config.get("separator", "|")
 
-        choice = await self.menu.run(
-            [f"{i+1} {separator} {c['title']}" for i, c in enumerate(clients)]
-        )
+        choice = await self.menu.run([f"{i + 1} {separator} {c['title']}" for i, c in enumerate(clients)])
 
         if choice:
             num = int(choice.split(None, 1)[0]) - 1
             addr = clients[num]["address"]
             self._windows_origins[addr] = clients[num]["workspace"]["name"]
-            await self.hyprctl(
-                f"movetoworkspace {state.active_workspace},address:{addr}"
-            )
+            await self.hyprctl(f"movetoworkspace {state.active_workspace},address:{addr}")

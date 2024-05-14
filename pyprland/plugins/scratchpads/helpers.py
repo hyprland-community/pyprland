@@ -19,9 +19,7 @@ def get_active_space_identifier():
 
 async def get_all_space_identifiers(monitors):
     "Returns a list of every space identifiers (workspace + monitor) on active screens"
-    return [
-        (monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors
-    ]
+    return [(monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors]
 
 
 _match_fn_re_cache = {}

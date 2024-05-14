@@ -259,7 +259,5 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     if r:
                         resolved.append(r["name"])
                 if resolved:
-                    cleaned_config[name][clean_pos(position)] = [
-                        r for r in resolved if r in plugged_monitors
-                    ]
+                    cleaned_config[name][clean_pos(position)] = [r for r in resolved if r in plugged_monitors]
         return cleaned_config

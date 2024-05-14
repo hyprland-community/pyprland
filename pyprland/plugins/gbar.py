@@ -40,9 +40,7 @@ class Extension(Plugin):
             self.cur_monitor = await self.get_best_monitor()
             if not self.cur_monitor:
                 first_mon = next(iter(state.monitors))
-                await self.notify_info(
-                    f"gBar: No preferred monitor found, using {first_mon}"
-                )
+                await self.notify_info(f"gBar: No preferred monitor found, using {first_mon}")
                 cmd = f"gBar bar {first_mon}"
             else:
                 cmd = f"gBar bar {self.cur_monitor}"

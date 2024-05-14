@@ -24,18 +24,14 @@ def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
     x_offset = -min_x
     y_offset = -min_y
     for mon in other_monitors:
-        command.extend(
-            [
-                "--output",
-                mon["name"],
-                "--pos",
-                f"{mon['x']+x_offset},{mon['y']+y_offset}",
-            ]
-        )
+        command.extend([
+            "--output",
+            mon["name"],
+            "--pos",
+            f"{mon['x'] + x_offset},{mon['y'] + y_offset}",
+        ])
 
-    command.extend(
-        ["--output", screenid, "--pos", f"{pos_x+x_offset},{pos_y+y_offset}"]
-    )
+    command.extend(["--output", screenid, "--pos", f"{pos_x + x_offset},{pos_y + y_offset}"])
     subprocess.call(command)
 
 
@@ -48,13 +44,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "Recompute & apply every monitors's layout"
         monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
         for monitor in monitors:
-            await self.event_monitoradded(
-                monitor["name"], no_default=True, monitors=monitors
-            )
+            await self.event_monitoradded(monitor["name"], no_default=True, monitors=monitors)
 
-    async def event_monitoradded(
-        self, monitor_name, no_default=False, monitors: list | None = None
-    ) -> None:
+    async def event_monitoradded(self, monitor_name, no_default=False, monitors: list | None = None) -> None:
         "Triggers when a monitor is plugged"
 
         if not monitors:
@@ -78,9 +70,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
 
-    def _place_monitors(
-        self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]
-    ):
+    def _place_monitors(self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]):
         "place a given monitor according to config"
         mon_by_name = {m["name"]: m for m in monitors}
         newmon = mon_by_name[monitor_name]

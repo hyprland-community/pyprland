@@ -55,9 +55,7 @@ class Extension(Plugin):
             self.log.debug("Loaded parser %s", name)
 
         for props in self.config.get("sources", []):
-            assert (
-                props["parser"] in self.parsers
-            ), f"{props['parser']} was not found in {self.parsers}"
+            assert props["parser"] in self.parsers, f"{props['parser']} was not found in {self.parsers}"
             self.log.debug("Loaded source %s => %s", props["command"], props["parser"])
             self.tasks.append(asyncio.create_task(self.start_source(props)))
 
@@ -78,13 +76,9 @@ class Extension(Plugin):
     async def start_source(self, props):
         "Start a source loop"
 
-        parsers = (
-            [props["parser"]] if isinstance(props["parser"], str) else props["parser"]
-        )
+        parsers = [props["parser"]] if isinstance(props["parser"], str) else props["parser"]
         queues = [self.parsers[p] for p in parsers]
-        proc = await asyncio.create_subprocess_shell(
-            props["command"], stdout=asyncio.subprocess.PIPE
-        )
+        proc = await asyncio.create_subprocess_shell(props["command"], stdout=asyncio.subprocess.PIPE)
 
         self.sources[props["command"]] = proc
         assert proc.stdout
@@ -102,13 +96,11 @@ class Extension(Plugin):
         rules = []
         default_color = self.config.get("default_color", "#5555AA")
         for prop in props:
-            rules.append(
-                {
-                    "pattern": re.compile(prop["pattern"]),
-                    "filter": prop.get("filter"),
-                    "color": convert_color(prop.get("color", default_color)),
-                }
-            )
+            rules.append({
+                "pattern": re.compile(prop["pattern"]),
+                "filter": prop.get("filter"),
+                "color": convert_color(prop.get("color", default_color)),
+            })
         while self.running:
             content = await q.get()
             for rule in rules:
