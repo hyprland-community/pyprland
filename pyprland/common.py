@@ -34,7 +34,7 @@ try:
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
     )
 except KeyError:
-    print("This is a fatal error, assuming we are running documentation generation hence ignoring it")
+    print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
     IPC_FOLDER = "/fake"
 
 
