@@ -1,5 +1,11 @@
 ---
 repos:
+  - repo: local
+    hooks:
+      - id: versionMgmt
+        name: versionMgmt
+        entry: ./scripts/update_version
+        language: system
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v4.6.0"
     hooks:
@@ -24,11 +30,5 @@ repos:
     rev: "v1.35.1"
     hooks:
       - id: yamllint
-  - repo: local
-    hooks:
-      - id: versionMgmt
-        name: versionMgmt
-        entry: ./scripts/update_version
-        language: system
 #        types: [python]
 #        pass_filenames: false

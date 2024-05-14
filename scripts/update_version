@@ -11,7 +11,9 @@ fi
 # Create a temporary file
 T=$(mktemp)
 
-echo "VERSION = \"${V}\"" > ${T}
+echo '"""Package version"""' > ${T}
+echo '' >> ${T}
+echo "VERSION = \"${V}\"" >> ${T}
 
 cmp "$T" pyprland/version.py  > /dev/null || {
     cp "$T" pyprland/version.py
