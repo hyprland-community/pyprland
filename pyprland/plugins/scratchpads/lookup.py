@@ -85,6 +85,8 @@ class ScratchDB:  # {{{
             elif addr is not None:
                 d = self._by_addr
                 v = addr
+            else:
+                raise ValueError("name, pid or addr must be provided")
             d[v] = scratch
         # }}}
 
@@ -105,6 +107,8 @@ class ScratchDB:  # {{{
         elif addr is not None:
             d = self._by_addr
             v = addr
+        else:
+            raise ValueError("name, pid or addr must be provided")
         return d.get(v)
         # }}}
 
