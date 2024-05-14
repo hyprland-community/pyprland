@@ -1,4 +1,4 @@
-"""Shared utilities: logging"""
+"""Shared utilities: logging."""
 
 import fcntl
 import logging
@@ -39,12 +39,12 @@ except KeyError:
 
 
 def set_terminal_size(descriptor, rows, cols):
-    "Set the terminal size"
+    """Set the terminal size."""
     fcntl.ioctl(descriptor, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
 def set_raw_mode(descriptor):
-    "Set a file descriptor in raw mode"
+    """Set a file descriptor in raw mode."""
     # Get the current terminal attributes
     attrs = termios.tcgetattr(descriptor)
     # Set the terminal to raw mode
@@ -54,7 +54,7 @@ def set_raw_mode(descriptor):
 
 
 def run_interactive_program(command):
-    "Run an interactive program in a blocking way"
+    """Run an interactive program in a blocking way."""
     # Create a pseudo-terminal
     master, slave = pty.openpty()
 
@@ -100,7 +100,8 @@ def run_interactive_program(command):
 
 def merge(merged, obj2):
     """
-    Merges the content of d2 into d1
+    Merge the content of d2 into d1.
+
     Eg:
         merge({"a": {"b": 1}}, {"a": {"c": 2}}) == {"a": {"b": 1, "c": 2}}
 
@@ -125,19 +126,19 @@ def merge(merged, obj2):
 
 
 class LogObjects:
-    """Reusable objects for loggers"""
+    """Reusable objects for loggers."""
 
     handlers: list[logging.Handler] = []
 
 
 def init_logger(filename=None, force_debug=False):
-    """initializes the logging system"""
+    """Initialize the logging system."""
     global DEBUG
     if force_debug:
         DEBUG = True
 
     class ScreenLogFormatter(logging.Formatter):
-        "A custom formatter, adding colors"
+        """A custom formatter, adding colors."""
 
         LOG_FORMAT = r"%(name)25s - %(message)s // %(filename)s:%(lineno)d" if DEBUG else r"%(message)s"
         RESET_ANSI = "\x1b[0m"
@@ -164,7 +165,7 @@ def init_logger(filename=None, force_debug=False):
 
 
 def get_logger(name="pypr", level=None) -> logging.Logger:
-    """Returns a named logger
+    """Return a named logger.
 
     Args:
         name (str): logger's name
@@ -184,7 +185,7 @@ def get_logger(name="pypr", level=None) -> logging.Logger:
 
 @dataclass
 class SharedState:
-    "Stores commonly requested properties"
+    """Stores commonly requested properties."""
 
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
@@ -204,12 +205,13 @@ Exposes most-commonly accessed attributes to avoid specific IPC requests
 
 
 def prepare_for_quotes(text: str):
-    "Escapes double quotes in text"
+    """Escapes double quotes in text."""
     return text.replace('"', '\\"')
 
 
 def apply_variables(template: str, variables: dict[str, str]):
-    """Replace [var_name] with content from supplied variables
+    """Replace [var_name] with content from supplied variables.
+
     Args:
         template: the string template
         variables: a dict containing the variables to replace
@@ -224,8 +226,10 @@ def apply_variables(template: str, variables: dict[str, str]):
 
 
 def apply_filter(text, filt_cmd: str):
-    """Apply filters to text
-    Currently supports only "s" command fom vim/ed"""
+    """Apply filters to text.
+
+    Currently supports only "s" command fom vim/ed
+    """
     if not filt_cmd:
         return text
     if filt_cmd[0] == "s":  # vi-like substitute
@@ -235,12 +239,12 @@ def apply_filter(text, filt_cmd: str):
 
 
 class CastBoolMixin:
-    "Adds `cast_bool` method"
+    """Adds `cast_bool` method."""
 
     log: logging.Logger
 
     def cast_bool(self, value, default_value=False):
-        "recovers wrong typing on boolean values"
+        """Recovers wrong typing on boolean values."""
         if isinstance(value, str):
             lv = value.lower().strip()
             r = lv not in ("false", "no", "off")
@@ -249,5 +253,5 @@ class CastBoolMixin:
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:
-    "Returns True if the monitor is rotated"
+    """Return True if the monitor is rotated."""
     return monitor["transform"] in (1, 3, 5, 7)

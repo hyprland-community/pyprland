@@ -1,4 +1,4 @@
-"shift workspaces across monitors"
+"""Shift workspaces across monitors."""
 
 from typing import cast
 
@@ -6,13 +6,16 @@ from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
+    """Shift workspaces across monitors."""
+
     monitors: list[str] = []
 
     async def init(self):
+        """Initialize the plugin."""
         self.monitors: list[str] = [mon["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors"))]
 
     async def run_shift_monitors(self, arg: str):
-        """<+1/-1> Swaps monitors' workspaces in the given direction"""
+        """<+1/-1> Swaps monitors' workspaces in the given direction."""
         direction: int = int(arg)
         if direction > 0:
             mon_list = self.monitors[:-1]
@@ -23,9 +26,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await self.hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i + direction]}")
 
     async def event_monitoradded(self, monitor):
-        "keep track of monitors"
+        """Keep track of monitors."""
         self.monitors.append(monitor)
 
     async def event_monitorremoved(self, monitor):
-        "keep track of monitors"
+        """Keep track of monitors."""
         self.monitors.remove(monitor)

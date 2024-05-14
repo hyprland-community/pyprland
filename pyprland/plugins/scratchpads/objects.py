@@ -1,4 +1,4 @@
-"Scratchpad object definition"
+"""Scratchpad object definition."""
 
 __all__ = ["Scratch"]
 
@@ -18,7 +18,7 @@ from .helpers import OverridableConfig, get_match_fn
 
 @dataclass
 class MetaInfo:
-    "Meta properties"
+    """Meta properties."""
 
     initialized: bool = False
     should_hide: bool = False
@@ -29,7 +29,7 @@ class MetaInfo:
 
 
 class Scratch(CastBoolMixin):  # {{{
-    "A scratchpad state including configuration & client state"
+    """A scratchpad state including configuration & client state."""
 
     log = logging.getLogger("scratch")
     get_client_props: Callable
@@ -47,7 +47,7 @@ class Scratch(CastBoolMixin):  # {{{
         self.extra_addr: set[str] = set()  # additional client addresses
 
     def set_config(self, opts):
-        "Apply constraints to the configuration"
+        """Apply constraints to the configuration."""
         if "class_match" in opts:  # NOTE: legacy, to be removed
             opts["match_by"] = "class"
         if self.cast_bool(opts.get("preserve_aspect")):
@@ -62,11 +62,11 @@ class Scratch(CastBoolMixin):  # {{{
         self.conf = opts
 
     def have_address(self, addr):
-        "Check if the address is the same as the client"
+        """Check if the address is the same as the client."""
         return addr == self.full_address or addr in self.extra_addr
 
     async def initialize(self, ex):
-        "Initialize the scratchpad"
+        """Initialize the scratchpad."""
         if self.meta.initialized:
             return
         self.meta.initialized = True
@@ -79,7 +79,7 @@ class Scratch(CastBoolMixin):  # {{{
             )
 
     async def isAlive(self) -> bool:
-        "is the process running ?"
+        """Is the process running ?."""
         if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
             if await aios.path.exists(path):
@@ -96,7 +96,7 @@ class Scratch(CastBoolMixin):  # {{{
         return False
 
     async def fetch_matching_client(self, clients=None):
-        "Fetch the first matching client properties"
+        """Fetch the first matching client properties."""
         match_by, match_val = self.get_match_props()
         return await self.get_client_props(
             match_fn=get_match_fn(match_by, match_val),
@@ -105,12 +105,12 @@ class Scratch(CastBoolMixin):  # {{{
         )
 
     def get_match_props(self):
-        "Returns the match properties for the scratchpad"
+        """Return the match properties for the scratchpad."""
         match_by = self.conf.get("match_by", "pid")
         return match_by, self.pid if match_by == "pid" else self.conf[match_by]
 
     def reset(self, pid: int) -> None:
-        "clear the object"
+        """Clear the object."""
         self.pid = pid
         self.visible = False
         self.client_info = {}  # type: ignore
@@ -118,12 +118,12 @@ class Scratch(CastBoolMixin):  # {{{
 
     @property
     def address(self) -> str:
-        "Returns the client address"
+        """Return the client address."""
         return self.client_info.get("address", "")[2:]
 
     @property
     def full_address(self) -> str:
-        "Returns the client address"
+        """Return the client address."""
         return cast(str, self.client_info.get("address", ""))
 
     async def updateClientInfo(
@@ -131,7 +131,7 @@ class Scratch(CastBoolMixin):  # {{{
         client_info: ClientInfo | None = None,
         clients: list[ClientInfo] | None = None,
     ) -> None:
-        "update the internal client info property, if not provided, refresh based on the current address"
+        """Update the internal client info property, if not provided, refresh based on the current address."""
         if client_info is None:
             client_info = await self.get_client_props(addr=self.full_address, clients=clients)
         if not isinstance(client_info, dict):

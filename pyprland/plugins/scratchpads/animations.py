@@ -1,4 +1,4 @@
-"Animations for absolute window positioning"
+"""Animations for absolute window positioning."""
 
 __all__ = ["Animations"]
 
@@ -8,7 +8,7 @@ from ...types import ClientInfo, MonitorInfo
 
 
 def get_size(monitor: MonitorInfo):
-    "Get the (width, height) size of the monitor"
+    """Get the (width, height) size of the monitor."""
     s = monitor["scale"]
     h, w = int(monitor["height"] / s), int(monitor["width"] / s)
     if is_rotated(monitor):
@@ -17,11 +17,11 @@ def get_size(monitor: MonitorInfo):
 
 
 class Animations:  # {{{
-    "Animation store"
+    """Animation store."""
 
     @staticmethod
     def fromtop(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
-        "Slide from/to top"
+        """Slide from/to top."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -35,7 +35,7 @@ class Animations:  # {{{
 
     @staticmethod
     def frombottom(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
-        "Slide from/to bottom"
+        """Slide from/to bottom."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -50,7 +50,7 @@ class Animations:  # {{{
 
     @staticmethod
     def fromleft(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
-        "Slide from/to left"
+        """Slide from/to left."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -64,7 +64,7 @@ class Animations:  # {{{
 
     @staticmethod
     def fromright(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
-        "Slide from/to right"
+        """Slide from/to right."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)

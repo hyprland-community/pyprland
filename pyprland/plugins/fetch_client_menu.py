@@ -1,4 +1,4 @@
-"Select a client window and move it to the active workspace"
+"""Select a client window and move it to the active workspace."""
 
 from ..adapters.menus import MenuMixin
 from ..common import state
@@ -6,14 +6,14 @@ from .interface import Plugin
 
 
 class Extension(MenuMixin, Plugin):
-    "Shows a menu with shortcuts"
+    """Shows a menu with shortcuts."""
 
     _windows_origins: dict[str, str] = {}
 
     # Commands
 
     async def run_unfetch_client(self):
-        "Returns a window back to its origin"
+        """Return a window back to its origin."""
         addr = state.active_window
         try:
             origin = self._windows_origins[addr]
@@ -23,7 +23,7 @@ class Extension(MenuMixin, Plugin):
             await self.hyprctl(f"movetoworkspacesilent {origin},address:{addr}")
 
     async def run_fetch_client_menu(self):
-        "Select a client window and move it to the active workspace"
+        """Select a client window and move it to the active workspace."""
         await self.ensure_menu_configured()
 
         clients = await self.get_clients(workspace_bl=state.active_workspace)

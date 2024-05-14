@@ -1,4 +1,4 @@
-"Lookup & update API for Scratch objects"
+"""Lookup & update API for Scratch objects."""
 
 from collections import defaultdict
 from typing import Any, cast
@@ -7,7 +7,7 @@ from .objects import Scratch
 
 
 class ScratchDB:  # {{{
-    """Single storage for every Scratch allowing a boring lookup & update API"""
+    """Single storage for every Scratch allowing a boring lookup & update API."""
 
     _by_addr: dict[str, Scratch] = {}
     _by_pid: dict[int, Scratch] = {}
@@ -16,47 +16,47 @@ class ScratchDB:  # {{{
 
     # State management {{{
     def getByState(self, status: str):
-        "get a set of `Scratch` being in `status`"
+        """Get a set of `Scratch` being in `status`."""
         return self._states[status]
 
     def hasState(self, scratch: Scratch, status: str):
-        "Returns true if `scratch` has state `status`"
+        """Return true if `scratch` has state `status`."""
         return scratch in self._states[status]
 
     def setState(self, scratch: Scratch, status: str):
-        "Sets `scratch` in the provided status"
+        """Set `scratch` in the provided status."""
         self._states[status].add(scratch)
 
     def clearState(self, scratch: Scratch, status: str):
-        "Unsets the the provided status from the scratch"
+        """Unset the the provided status from the scratch."""
         self._states[status].remove(scratch)
 
     # }}}
 
     # dict-like {{{
     def __iter__(self):
-        "return all Scratch name"
+        """Return all Scratch name."""
         return iter(self._by_name.keys())
 
     def values(self):
-        "returns every Scratch"
+        """Return every Scratch."""
         return self._by_name.values()
 
     def items(self):
-        "return an iterable list of (name, Scratch)"
+        """Return an iterable list of (name, Scratch)."""
         return self._by_name.items()
 
     # }}}
 
     def reset(self, scratch: Scratch):
-        "clears registered address & pid"
+        """Clear registered address & pid."""
         if scratch.address in self._by_addr:
             del self._by_addr[scratch.address]
         if scratch.pid in self._by_pid:
             del self._by_pid[scratch.pid]
 
     def clear(self, name=None, pid=None, addr=None):
-        "clears the index by name, pid or address"
+        """Clear the index by name, pid or address."""
         # {{{
 
         assert any((name, pid, addr))
@@ -69,7 +69,7 @@ class ScratchDB:  # {{{
         # }}}
 
     def register(self, scratch: Scratch, name=None, pid=None, addr=None):
-        "set the Scratch index by name, pid or address, or update every index of only `scratch` is provided"
+        """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided."""
         # {{{
         if not any((name, pid, addr)):
             self._by_name[scratch.uid] = scratch
@@ -91,7 +91,7 @@ class ScratchDB:  # {{{
         # }}}
 
     def get(self, name=None, pid=None, addr=None) -> Scratch | None:
-        "return the Scratch matching given name, pid or address"
+        """Return the Scratch matching given name, pid or address."""
         # {{{
         assert 1 == len(list(filter(bool, (name, pid, addr)))), (
             name,

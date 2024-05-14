@@ -1,4 +1,4 @@
-"Shortcuts menu"
+"""Shortcuts menu."""
 
 import asyncio
 
@@ -8,12 +8,12 @@ from .interface import Plugin
 
 
 class Extension(CastBoolMixin, MenuMixin, Plugin):
-    "Shows a menu with shortcuts"
+    """Shows a menu with shortcuts."""
 
     # Commands
 
     async def run_menu(self, name=""):
-        """[name] Shows the menu, if "name" is provided, will only show this sub-menu"""
+        """[name] Shows the menu, if "name" is provided, will only show this sub-menu."""
         await self.ensure_menu_configured()
         options = self.config["entries"]
         if name:
@@ -54,7 +54,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
     # Utils
 
     async def _handle_chain(self, options):
-        "Handles a chain of special objects + final command string"
+        """Handle a chain of special objects + final command string."""
         variables: dict[str, str] = state.variables.copy()
         autovalidate = self.cast_bool(self.config.get("skip_single"), True)
         for option in options:
@@ -83,7 +83,14 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                     self.log.debug("set %s = %s", var_name, variables[var_name])
 
     async def _run_command(self, command, variables):
-        "Runs a shell `command`, optionally replacing `variables`"
+        """Run a shell `command`, optionally replacing `variables`.
+
+        The command is run in a shell, and the variables are replaced using the `apply_variables` function.
+
+        Args:
+            command: The command to run.
+            variables: The variables to replace in the command.
+        """
         final_command = apply_variables(command, variables)
         self.log.info("Executing %s", final_command)
         await asyncio.create_subprocess_shell(final_command)

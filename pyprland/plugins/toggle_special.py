@@ -1,4 +1,4 @@
-"""toggle_special allows having an "expose" like selection of windows in a special group"""
+"""toggle_special allows having an "expose" like selection of windows in a special group."""
 
 from typing import cast
 
@@ -7,8 +7,10 @@ from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
+    """Toggle switching the focused window to a special workspace."""
+
     async def run_toggle_special(self, special_workspace="minimized"):
-        """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)"""
+        """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)."""
         aw = cast(dict, await self.hyprctlJSON("activewindow"))
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)

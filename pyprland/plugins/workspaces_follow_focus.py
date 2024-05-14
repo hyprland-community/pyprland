@@ -1,4 +1,4 @@
-"""Force workspaces to follow the focus / mouse"""
+"""Force workspaces to follow the focus / mouse."""
 
 from typing import cast
 
@@ -6,14 +6,16 @@ from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
+    """Force workspaces to follow the focus / mouse."""
+
     workspace_list: list[int] = []
 
     async def on_reload(self):
-        "rebuild workspaces list"
+        """Rebuild workspaces list."""
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
     async def event_focusedmon(self, screenid_name):
-        "reacts to monitor changes"
+        """Reacts to monitor changes."""
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = set(
@@ -29,7 +31,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await self.hyprctl(batch)
 
     async def run_change_workspace(self, direction: str):
-        """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces"""
+        """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces."""
         increment = int(direction)
         # get focused screen info
         monitors = await self.hyprctlJSON("monitors")

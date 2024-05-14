@@ -1,4 +1,4 @@
-"Menu engine adapter"
+"""Menu engine adapter."""
 
 import asyncio
 import subprocess
@@ -14,7 +14,7 @@ menu_logger = get_logger("menus adapter")
 
 
 class MenuEngine:
-    "Menu backend interface"
+    """Menu backend interface."""
 
     proc_name: str
     " process name for this engine "
@@ -24,12 +24,17 @@ class MenuEngine:
     " process parameters used to check if the engine can run "
 
     def __init__(self, extra_parameters):
+        """Initialize the engine with extra parameters.
+
+        Args:
+            extra_parameters: extra parameters to pass to the program
+        """
         if extra_parameters:
             self.proc_extra_parameters = extra_parameters
 
     @classmethod
     def is_available(cls):
-        "Check engine availability"
+        """Check engine availability."""
         try:
             subprocess.call([cls.proc_name] + cls.proc_detect_parameters)
         except FileNotFoundError:
@@ -37,7 +42,7 @@ class MenuEngine:
         return True
 
     async def run(self, choices: Iterable[str], prompt="") -> str:
-        """Run the engine and get the response for the proposed `choices`
+        """Run the engine and get the response for the proposed `choices`.
 
         Args:
             choices: options to chose from
@@ -71,42 +76,42 @@ class MenuEngine:
 
 
 class TofiMenu(MenuEngine):
-    "A tofi based menu"
+    """A tofi based menu."""
 
     proc_name = "tofi"
     proc_extra_parameters: str = "--prompt-text '[prompt]'"
 
 
 class RofiMenu(MenuEngine):
-    "A rofi based menu"
+    """A rofi based menu."""
 
     proc_name = "rofi"
     proc_extra_parameters = "-dmenu -matching fuzzy -i -p '[prompt]'"
 
 
 class WofiMenu(MenuEngine):
-    "A wofi based menu"
+    """A wofi based menu."""
 
     proc_name = "wofi"
     proc_extra_parameters = "-dmenu -i -p '[prompt]'"
 
 
 class DmenuMenu(MenuEngine):
-    "A dmenu based menu"
+    """A dmenu based menu."""
 
     proc_name = "dmenu"
     proc_extra_parameters = "-i"
 
 
 class BemenuMenu(MenuEngine):
-    "A bemenu based menu"
+    """A bemenu based menu."""
 
     proc_name = "bemenu"
     proc_extra_parameters = "-c"
 
 
 class AnyrunMenu(MenuEngine):
-    "A bemenu based menu"
+    """A bemenu based menu."""
 
     proc_name = "anyrun"
     proc_extra_parameters = "--plugins libstdin.so"
@@ -116,7 +121,7 @@ every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, Anyrun
 
 
 async def init(force_engine=False, extra_parameters="") -> MenuEngine:
-    "initializes the module"
+    """Initialize the module."""
     try:
         engines = [next(e for e in every_menu_engine if e.proc_name == force_engine)] if force_engine else every_menu_engine
     except StopIteration:
@@ -141,7 +146,7 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
 
 
 class MenuMixin:
-    """An extension mixin supporting 'engine' and 'parameters' config options to show a menu"""
+    """An extension mixin supporting 'engine' and 'parameters' config options to show a menu."""
 
     _menu_configured = False
     menu: MenuEngine
@@ -152,12 +157,12 @@ class MenuMixin:
     " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
 
     async def ensure_menu_configured(self):
-        "If not configured, init the menu system"
+        """If not configured, init the menu system."""
         if not self._menu_configured:
             self.menu = await init(self.config.get("engine"), self.config.get("parameters", ""))
             self.log.info("Using %s engine", self.menu.proc_name)
             self._menu_configured = True
 
     async def on_reload(self):
-        "Resets the configuration status"
+        """Reset the configuration status."""
         self._menu_configured = False

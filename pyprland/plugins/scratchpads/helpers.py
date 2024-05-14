@@ -1,4 +1,4 @@
-"Helper functions for the scratchpads plugin"
+"""Helper functions for the scratchpads plugin."""
 
 __all__ = [
     "get_active_space_identifier",
@@ -13,12 +13,12 @@ from ...common import state
 
 
 def get_active_space_identifier():
-    "Returns a unique object for the workspace + monitor combination"
+    """Return a unique object for the workspace + monitor combination."""
     return (state.active_workspace, state.active_monitor)
 
 
 async def get_all_space_identifiers(monitors):
-    "Returns a list of every space identifiers (workspace + monitor) on active screens"
+    """Return a list of every space identifiers (workspace + monitor) on active screens."""
     return [(monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors]
 
 
@@ -26,7 +26,7 @@ _match_fn_re_cache = {}
 
 
 def get_match_fn(prop_name, prop_value):
-    "Returns a function to match a client based on a property"
+    """Return a function to match a client based on a property."""
     assert prop_name  # may be used for more specific matching
     if isinstance(prop_value, str) and prop_value.startswith("re:"):
         # get regex from cache if possible:
@@ -38,7 +38,7 @@ def get_match_fn(prop_name, prop_value):
 
 
 class OverridableConfig:
-    "A `dict`-like object allowing per-monitor overrides"
+    """A `dict`-like object allowing per-monitor overrides."""
 
     def __init__(self, ref, monitor_override):
         self.ref = ref
@@ -61,7 +61,7 @@ class OverridableConfig:
             return False
 
     def get(self, name, default=None):
-        "get the attribute `name`"
+        """Get the attribute `name`."""
         try:
             return self[name]
         except KeyError:

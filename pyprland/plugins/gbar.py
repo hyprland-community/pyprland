@@ -1,4 +1,4 @@
-"Run gbar on the first available display from a list of displays"
+"""Run gbar on the first available display from a list of displays."""
 
 import asyncio
 
@@ -7,7 +7,7 @@ from .interface import Plugin
 
 
 class Extension(Plugin):
-    "Manage gBar application"
+    """Manage gBar application."""
 
     monitors: set[str]
     proc = None
@@ -16,7 +16,7 @@ class Extension(Plugin):
     ongoing_task: asyncio.Task | None = None
 
     def _run_gbar(self, cmd):
-        "create ongoing task restarting gbar in case of crash"
+        """Create ongoing task restarting gbar in case of crash."""
 
         async def _run_loop():
             while True:
@@ -29,13 +29,13 @@ class Extension(Plugin):
         self.ongoing_task = asyncio.create_task(_run_loop())
 
     async def run_gbar(self, args):
-        "Starts gBar on the first available monitor"
+        """Start gBar on the first available monitor."""
         if args.startswith("re"):
             self.kill()
             await self.on_reload()
 
     async def on_reload(self):
-        "Initializes if not done"
+        """Initialize if not done."""
         if not self.proc:
             self.cur_monitor = await self.get_best_monitor()
             if not self.cur_monitor:
@@ -48,14 +48,14 @@ class Extension(Plugin):
             self._run_gbar(cmd)
 
     async def get_best_monitor(self):
-        "get best monitor according to preferred list"
+        """Get best monitor according to preferred list."""
         preferred = self.config.get("monitors", [])
         for monitor in preferred:
             if monitor in state.monitors:
                 return monitor
 
     async def event_monitoradded(self, monitor):
-        "Switch bar in case the monitor is preferred"
+        """Switch bar in case the monitor is preferred."""
         if self.cur_monitor:
             preferred = self.config.get("monitors", [])
             cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999
@@ -65,11 +65,11 @@ class Extension(Plugin):
                 await self.on_reload()
 
     async def exit(self):
-        "Kill the process"
+        """Kill the process."""
         self.kill()
 
     def kill(self):
-        "Kill the process"
+        """Kill the process."""
         if self.proc:
             if self.ongoing_task:
                 self.ongoing_task.cancel()

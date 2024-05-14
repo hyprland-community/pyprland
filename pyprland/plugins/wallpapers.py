@@ -1,4 +1,4 @@
-"Plugin template"
+"""Plugin template."""
 
 import asyncio
 import os.path
@@ -11,12 +11,12 @@ from .interface import Plugin
 
 
 def expand_path(path):
-    "Expands the path"
+    """Expand the path."""
     return os.path.expanduser(os.path.expandvars(path))
 
 
 async def get_files_with_ext(path, extensions, recurse=True):
-    "Returns files matching `extension` in given `path`. Can optionally `recurse` subfolders."
+    """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders.."""
     for fname in await listdir(path):
         ext = fname.rsplit(".", 1)[-1]
         full_path = os.path.join(path, fname)
@@ -28,7 +28,7 @@ async def get_files_with_ext(path, extensions, recurse=True):
 
 
 class Extension(CastBoolMixin, Plugin):
-    "Manages the background image"
+    """Manages the background image."""
 
     default_image_ext: set[str] | list[str] = set(("png", "jpg", "jpeg"))
     image_list: list[str] = []
@@ -40,7 +40,7 @@ class Extension(CastBoolMixin, Plugin):
     cur_image = ""
 
     async def on_reload(self):
-        "Re-build the image list"
+        """Re-build the image list."""
         cfg_path = self.config["path"]
         paths = [expand_path(cfg_path)] if isinstance(cfg_path, str) else [expand_path(p) for p in cfg_path]
         extensions = self.config.get("extensions", self.default_image_ext)
@@ -56,18 +56,18 @@ class Extension(CastBoolMixin, Plugin):
             self.loop = asyncio.create_task(self.main_loop())
 
     async def exit(self):
-        "terminates gracefully"
+        """Terminates gracefully."""
         self.running = False
         if self.loop:
             self.loop.cancel()
         await self.terminate()
 
     async def event_monitoradded(self, _):
-        "When a new monitor is added, set the background"
+        """When a new monitor is added, set the background."""
         self.next_background_event.set()
 
     def select_next_image(self):
-        "Returns the next image (random is supported for now)"
+        """Return the next image (random is supported for now)."""
         choice = random.choice(self.image_list)
         if choice == self.cur_image:
             choice = random.choice(self.image_list)
@@ -75,13 +75,13 @@ class Extension(CastBoolMixin, Plugin):
         return choice
 
     async def _run_one(self, template, values):
-        "Runs one command"
+        """Run one command."""
         cmd = apply_variables(template, values)
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
     async def main_loop(self):
-        "Main plugin loop, runs in the 'background'"
+        """Run the main plugin loop in the 'background'."""
         self.proc = []
         unique = self.config.get("unique", False)
         variables = state.variables.copy()
@@ -128,7 +128,7 @@ class Extension(CastBoolMixin, Plugin):
             await self.terminate()
 
     async def terminate(self):
-        "Exits existing process if any"
+        """Exit existing process if any."""
         if self.proc:
             for proc in self.proc:
                 if proc.returncode is None:
@@ -137,7 +137,7 @@ class Extension(CastBoolMixin, Plugin):
         self.proc[:] = []
 
     async def run_wall(self, arg):
-        "<next|clear> skip the current background image or stop displaying it"
+        """<next|clear> skip the current background image or stop displaying it."""
         if arg.startswith("n"):
             self.next_background_event.set()
         elif arg.startswith("c"):

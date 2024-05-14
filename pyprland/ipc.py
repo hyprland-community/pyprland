@@ -1,5 +1,4 @@
-#!/bin/env python
-"""Interact with hyprland using sockets"""
+"""Interact with hyprland using sockets."""
 
 __all__ = [
     "get_focused_monitor_props",
@@ -28,7 +27,7 @@ EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 
 async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):
-    "Uses hyprland notification system"
+    """Hyprland notification system."""
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
 
@@ -38,12 +37,12 @@ notify_info = partial(notify, icon=1, duration=5)
 
 
 async def get_event_stream():
-    "Returns a new event socket connection"
+    """Return a new event socket connection."""
     return await asyncio.open_unix_connection(EVENTS)
 
 
 def retry_on_reset(func):
-    "wrapper to retry on reset"
+    """Retry on reset wrapper."""
 
     async def wrapper(*args, logger, **kwargs):
         exc = None
@@ -97,7 +96,13 @@ async def hyprctlJSON(command: str, logger=None) -> list[dict[str, Any]] | dict[
 
 
 def _format_command(command_list, default_base_command):
-    "helper function to format BATCH commands"
+    """Format a list of commands to be sent to Hyprland.
+
+    Args:
+        command_list: list of commands to send
+            Each command can be a string or a tuple with the command and the base command
+        default_base_command: type of command to send
+    """
     for command in command_list:
         if isinstance(command, str):
             yield f"{default_base_command} {command}"
@@ -141,14 +146,13 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
 
 
 async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
-    """Returns focused monitor data if `name` is not defined, else use monitor's name
+    """Return focused monitor data if `name` is not defined, else use monitor's name.
 
     Args:
         logger: logger to use in case of error
         name [optional]: monitor name
 
     Returns:
-
         dict() with the focused monitor properties
     """
     if name:
@@ -170,7 +174,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
 
 async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
     """
-    Returns the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments
+    Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
 
     Eg.
         # will return the properties of the client with address "0x1234"
@@ -180,7 +184,6 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
         get_client_props(logger, match_fn=lambda x, y: y in x), initialClass="fooBar")
 
     Args:
-
         logger: logger to use in case of error
         match_fn: function to match the client properties, takes 2 arguments (client_value, config_value)
 
@@ -217,13 +220,13 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
 
 
 def init():
-    "initialize logging"
+    """Initialize logging."""
     global log
     log = get_logger("ipc")
 
 
 def getCtrlObjects(logger):
-    "Returns (hyprctl, hyprctlJSON, notify) configured for the given logger"
+    """Return (hyprctl, hyprctlJSON, notify) configured for the given logger."""
     return (
         partial(hyprctl, logger=logger),
         partial(hyprctlJSON, logger=logger),

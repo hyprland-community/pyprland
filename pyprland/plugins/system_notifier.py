@@ -1,4 +1,4 @@
-"Add system notifications based on journal logs"
+"""Add system notifications based on journal logs."""
 
 import asyncio
 import re
@@ -35,9 +35,10 @@ builtin_parsers = {
 
 
 class Extension(Plugin):
-    "The plugin code"
+    """Notification system from live apps & logs."""
 
     def __init__(self, name):
+        """Initialize the class."""
         super().__init__(name)
         self.tasks: list[asyncio.Task] = []
         self.sources = {}
@@ -45,6 +46,7 @@ class Extension(Plugin):
         self.running = True
 
     async def on_reload(self):
+        """Reload the plugin."""
         await self.exit()
         self.running = True
         parsers = deepcopy(builtin_parsers)
@@ -60,7 +62,7 @@ class Extension(Plugin):
             self.tasks.append(asyncio.create_task(self.start_source(props)))
 
     async def exit(self):
-        "exit function"
+        """Exit function."""
         self.running = False
         for task in self.tasks:
             task.cancel()
@@ -73,9 +75,16 @@ class Extension(Plugin):
                 source.kill()
         self.tasks[:] = []
 
-    async def start_source(self, props):
-        "Start a source loop"
+    async def start_source(self, props) -> None:
+        """Start a source loop.
 
+        A source is a command that will be executed and its stdout will be read line by line.
+
+        Args:
+            props: A dictionary with the following keys:
+                - command: The command to execute.
+                - parser: The name of the parser to use.
+        """
         parsers = [props["parser"]] if isinstance(props["parser"], str) else props["parser"]
         queues = [self.parsers[p] for p in parsers]
         proc = await asyncio.create_subprocess_shell(props["command"], stdout=asyncio.subprocess.PIPE)
@@ -91,7 +100,15 @@ class Extension(Plugin):
                     await q.put(line)
 
     async def start_parser(self, name, props: list):
-        "Start a parser loop"
+        """Start a parser loop.
+
+        Args:
+            name: The name of the parser.
+            props: A list of dictionaries with the following keys:
+                - pattern: A regex pattern to match.
+                - filter: A filter to apply to the matched line.
+                - color: The color to use in the notification.
+        """
         q = self.parsers[name]
         rules = []
         default_color = self.config.get("default_color", "#5555AA")

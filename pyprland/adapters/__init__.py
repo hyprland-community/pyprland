@@ -1,0 +1,1 @@
+"""Adapter functions for pyprland."""

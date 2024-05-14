@@ -1,5 +1,6 @@
 """
-Implements a "Centered" layout:
+Implements a "Centered" layout.
+
 - windows are normally tiled but one
 - the active window is floating and centered
 - you can cycle the active window, keeping the same layout type
@@ -14,7 +15,7 @@ from .interface import Plugin
 
 
 class Extension(CastBoolMixin, Plugin):
-    "Manages a layout with one centered window on top of others"
+    """Manages a layout with one centered window on top of others."""
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
     last_index = 0
@@ -22,7 +23,7 @@ class Extension(CastBoolMixin, Plugin):
     # Events
 
     async def event_openwindow(self, windescr):
-        "Re-set focus to main if a window is opened"
+        """Re-set focus to main if a window is opened."""
         if not self.enabled:
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
@@ -33,7 +34,7 @@ class Extension(CastBoolMixin, Plugin):
                 break
 
     async def event_activewindowv2(self, _):
-        "keep track of focused client"
+        """Keep track of focused client."""
         captive = self.cast_bool(self.config.get("captive_focus"))
         is_not_active = state.active_window != self.main_window_addr
         if captive and self.enabled and is_not_active:
@@ -45,7 +46,7 @@ class Extension(CastBoolMixin, Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr):
-        "Disable when the main window is closed"
+        """Disable when the main window is closed."""
         addr = "0x" + addr
         clients = [c for c in await self.get_clients() if c["address"] != addr]
         if self.enabled and await self._sanity_check(clients):
@@ -57,7 +58,7 @@ class Extension(CastBoolMixin, Plugin):
     # Command
 
     async def run_layout_center(self, what):
-        "<toggle|next|prev> turn on/off or change the active window"
+        """<toggle|next|prev> turn on/off or change the active window."""
         if what == "toggle":
             await self._run_toggle()
         elif what == "next":
@@ -74,13 +75,13 @@ class Extension(CastBoolMixin, Plugin):
     # Utils
 
     async def get_clients(self):  # pylint: disable=arguments-differ
-        "Return the client list in the currently active workspace"
+        """Return the client list in the currently active workspace."""
         clients = await super().get_clients(mapped=True, workspace=state.active_workspace)
         clients.sort(key=lambda c: c["address"])
         return clients
 
     async def unprepare_window(self, clients=None):
-        "Set the window as normal"
+        """Set the window as normal."""
         if not clients:
             clients = await self.get_clients()
         addr = self.main_window_addr
@@ -89,7 +90,7 @@ class Extension(CastBoolMixin, Plugin):
                 await self.hyprctl(f"togglefloating address:{addr}")
 
     async def prepare_window(self, clients=None):
-        "Set the window as centered"
+        """Set the window as centered."""
         if not clients:
             clients = await self.get_clients()
         addr = self.main_window_addr
@@ -115,7 +116,7 @@ class Extension(CastBoolMixin, Plugin):
     # Subcommands
 
     async def _sanity_check(self, clients=None):
-        "Auto-disable if needed & return enabled status"
+        """Auto-disable if needed & return enabled status."""
         clients = clients or await self.get_clients()
         if len(clients) < 2:
             # If < 2 clients, disable the layout & stop
@@ -125,7 +126,7 @@ class Extension(CastBoolMixin, Plugin):
         return self.enabled
 
     async def _run_changefocus(self, direction, default_override=None):
-        "Change the focus in the given direction (-1 or 1)"
+        """Change the focus in the given direction (-1 or 1)."""
         if self.enabled:
             clients = await self.get_clients()
             if await self._sanity_check(clients):
@@ -151,7 +152,7 @@ class Extension(CastBoolMixin, Plugin):
                 await self.hyprctl(command)
 
     async def _run_toggle(self):
-        "toggle the center layout"
+        """Toggle the center layout."""
         disabled = not self.enabled
         if disabled:
             self.main_window_addr = state.active_window
@@ -165,7 +166,7 @@ class Extension(CastBoolMixin, Plugin):
 
     @property
     def offset(self):
-        "Returns the centered window offset"
+        """Returns the centered window offset."""
         offset = self.config.get("offset", [0, 0])
         if isinstance(offset, str):
             x, y = (int(i) for i in self.config["offset"].split() if i.strip())
@@ -174,16 +175,16 @@ class Extension(CastBoolMixin, Plugin):
 
     @property
     def margin(self):
-        "Returns the margin of the centered window"
+        """Returns the margin of the centered window."""
         return self.config.get("margin", 60)
 
     # enabled
     def get_enabled(self):
-        "Is center layout enabled on the active workspace ?"
+        """Is center layout enabled on the active workspace ?."""
         return self.workspace_info[state.active_workspace]["enabled"]
 
     def set_enabled(self, value):
-        "set if center layout enabled on the active workspace"
+        """Set if center layout enabled on the active workspace."""
         self.workspace_info[state.active_workspace]["enabled"] = value
 
     enabled = property(get_enabled, set_enabled, doc="centered layout enabled on this workspace")
@@ -191,11 +192,11 @@ class Extension(CastBoolMixin, Plugin):
 
     # main_window_addr
     def get_main_window_addr(self):
-        "get active workspace's centered window address"
+        """Get active workspace's centered window address."""
         return self.workspace_info[state.active_workspace]["addr"]
 
     def set_main_window_addr(self, value):
-        "set active workspace's centered window address"
+        """Set active workspace's centered window address."""
         self.workspace_info[state.active_workspace]["addr"] = value
 
     main_window_addr = property(

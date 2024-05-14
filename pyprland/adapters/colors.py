@@ -1,8 +1,8 @@
-"Color conversion & misc color related helpers"
+"""Color conversion & misc color related helpers."""
 
 
 def convert_color(description: str) -> str:
-    "Get a color description and returns the 6 HEX digits as string"
+    """Get a color description and returns the 6 HEX digits as string."""
     if description[0] == "#":
         return description[1:]
     if description.startswith("rgb("):

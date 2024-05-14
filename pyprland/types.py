@@ -1,18 +1,18 @@
-"Common types from Hyprland API"
+"""Common types from Hyprland API."""
 
 from dataclasses import dataclass
 from typing import TypedDict
 
 
 class WorkspaceDf(TypedDict):
-    "Workspace definition"
+    """Workspace definition."""
 
     id: int
     name: str
 
 
 class ClientInfo(TypedDict):
-    "Client information as returned by Hyprland"
+    """Client information as returned by Hyprland."""
 
     address: str
     mapped: bool
@@ -38,7 +38,7 @@ class ClientInfo(TypedDict):
 
 
 class MonitorInfo(TypedDict):
-    "Monitor information as returned by Hyprland"
+    """Monitor information as returned by Hyprland."""
 
     id: int
     name: str
@@ -67,7 +67,7 @@ class MonitorInfo(TypedDict):
 
 @dataclass(order=True)
 class VersionInfo:
-    "Stores version information"
+    """Stores version information."""
 
     major: int = 0  # noqa: F841
     minor: int = 0  # noqa: F841
@@ -75,4 +75,4 @@ class VersionInfo:
 
 
 class PyprError(Exception):
-    """Used for errors which already triggered logging"""
+    """Used for errors which already triggered logging."""

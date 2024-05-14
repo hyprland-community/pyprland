@@ -1,4 +1,4 @@
-"Toggles workspace zooming"
+"""Toggles workspace zooming."""
 
 import asyncio
 
@@ -6,6 +6,8 @@ from .interface import Plugin
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
+    """Control workspace zooming."""
+
     zoomed = False
 
     cur_factor = 1.0
@@ -16,12 +18,23 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         return -end * step * (step - 2) + start
 
     def animated_eased_zoom(self, start, end, duration):
-        """Helper function to animate zoom"""
+        """Add easing to an animation.
+
+        This function is a generator that yields the next value of the animation
+
+        Args:
+            start (float): starting value
+            end (float): ending value
+            duration (int): duration of the animation
+        """
         for i in range(duration):
             yield self.ease_out_quad(i, start, end - start, duration)
 
     async def run_zoom(self, *args):
-        """[factor] zooms to "factor" or toggles zoom level if factor is ommited"""
+        """[factor] zooms to "factor" or toggles zoom level if factor is ommited.
+
+        If factor is omitted, it toggles between the configured zoom level and no zoom.
+        """
         duration = self.config.get("duration", 15)
         animated = bool(duration)
         prev_factor = self.cur_factor

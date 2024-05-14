@@ -1,5 +1,4 @@
-#!/bin/env python
-"""Pyprland - an Hyprland companion app (cli client & daemon)"""
+"""Pyprland - an Hyprland companion app (cli client & daemon)."""
 
 import asyncio
 import importlib
@@ -35,7 +34,7 @@ __all__: list[str] = []
 
 
 class Pyprland:
-    "Main app object"
+    """Main app object."""
 
     server: asyncio.Server
     event_reader: asyncio.StreamReader
@@ -48,7 +47,7 @@ class Pyprland:
 
     @classmethod
     def _set_instance(cls, instance):
-        "Set instance reference into class (for testing/debugging only)"
+        """Set instance reference into class (for testing/debugging only)."""
         cls.instance = instance
 
     def __init__(self):
@@ -61,11 +60,11 @@ class Pyprland:
         self._set_instance(self)
 
     async def initialize(self):
-        "Initializes the main structures"
+        """Initialize the main structures."""
         await self.load_config()  # ensure sockets are connected first
 
     async def __open_config(self, config_filename=""):
-        """Loads config file as self.config"""
+        """Load config file as self.config."""
         if config_filename:
             fname = os.path.expandvars(os.path.expanduser(config_filename))
             if os.path.isdir(fname):
@@ -90,7 +89,7 @@ class Pyprland:
         return config
 
     def __load_config_file(self, fname):
-        """Loads a configuration file and returns it as a dictionary"""
+        """Load a configuration file and returns it as a dictionary."""
         config = {}
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
@@ -110,7 +109,7 @@ class Pyprland:
         return config
 
     async def _load_single_plugin(self, name, init) -> bool:
-        "Load a single plugin, optionally calling `init`"
+        """Load a single plugin, optionally calling `init`."""
         if "." in name:
             modname = name
         elif "external:" in name:
@@ -136,10 +135,10 @@ class Pyprland:
         return True
 
     async def __load_plugins_config(self, init=True):
-        """Loads the plugins mentioned in the config.
+        """Load the plugins mentioned in the config.
+
         If init is `True`, call the `init()` method on each plugin.
         """
-
         sys.path.extend(self.config["pyprland"].get("plugins_paths", []))
 
         init_pyprland = "pyprland" not in self.plugins
@@ -167,27 +166,27 @@ class Pyprland:
             plug.set_commands(reload=self.load_config)  # type: ignore
 
     async def load_config(self, init=True):
-        """loads the configuration (new plugins will be added & config updated)
+        """Load the configuration (new plugins will be added & config updated).
 
-        if `init` is true, also initializes the plugins"""
-
+        if `init` is true, also initializes the plugins
+        """
         await self.__open_config()
         assert self.config
         await self.__load_plugins_config(init=init)
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
-        self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler  # pylint: disable=attribute-defined-outside-init
+        self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler
 
     def plain_log_handler(self, plugin, name, params):
-        "log a handler method without color"
+        """Log a handler method without color."""
         plugin.log.debug(f"{name}{params}")
 
     def colored_log_handler(self, plugin, name, params):
-        "log a handler method with color"
+        """Log a handler method with color."""
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug(f"\033[{color};1m%s%s\033[0m", name, params)
 
     async def _run_plugin_handler(self, plugin, full_name, params):
-        "Runs a single handler on a plugin"
+        """Run a single handler on a plugin."""
         self.log_handler(plugin, full_name, params)
         try:
             await getattr(plugin, full_name)(*params)
@@ -201,7 +200,7 @@ class Pyprland:
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
     async def _callHandler(self, full_name, *params, notify=""):
-        "Call an event handler with params"
+        """Call an event handler with params."""
         handled = False
         for plugin in self.plugins.values():
             if hasattr(plugin, full_name):
@@ -217,7 +216,7 @@ class Pyprland:
         return handled
 
     async def read_events_loop(self):
-        "Consumes the event loop and calls corresponding handlers"
+        """Consume the event loop and calls corresponding handlers."""
         while not self.stopped:
             try:
                 data = (await self.event_reader.readline()).decode()
@@ -237,14 +236,14 @@ class Pyprland:
             await self._callHandler(full_name, params.rstrip("\n"))
 
     async def exit_plugins(self):
-        "Exits all plugins"
+        """Exit all plugins."""
         for plugin in self.plugins.values():
             if not plugin.aborted:
                 plugin.aborted = True
                 await asyncio.wait_for(plugin.exit(), timeout=2.0)
 
     async def read_command(self, reader, writer) -> None:
-        "Receives a socket command"
+        """Receive a socket command."""
         data = (await reader.readline()).decode()
         if not data:
             self.log.critical("Server starved")
@@ -288,12 +287,12 @@ class Pyprland:
             self.log.warning("No such command: %s", cmd)
 
     async def serve(self):
-        "Runs the server"
+        """Run the server."""
         async with self.server:
             await self.server.wait_closed()
 
     async def _plugin_runner_loop(self, name):
-        "Runs tasks for a given plugin indefinitely"
+        """Run tasks for a given plugin indefinitely."""
         q = self.queues[name]
         is_pyprland = name == "pyprland"
 
@@ -319,14 +318,14 @@ class Pyprland:
                 self.pyprland_mutex_event.set()
 
     async def plugins_runner(self):
-        "Runs plugins' task using the created `tasks` TaskGroup attribute"
+        """Run plugins' task using the created `tasks` TaskGroup attribute."""
         async with asyncio.TaskGroup() as group:
             self.tasks_group = group
             for name in self.plugins:
                 self.tasks.append(group.create_task(self._plugin_runner_loop(name)))
 
     async def run(self):
-        "Runs the server and the event listener"
+        """Run the server and the event listener."""
         await asyncio.gather(
             asyncio.create_task(self.serve()),
             asyncio.create_task(self.read_events_loop()),
@@ -335,7 +334,7 @@ class Pyprland:
 
 
 async def run_daemon():
-    "Runs the server / daemon"
+    """Run the server / daemon."""
     manager = Pyprland()
     err_count = itertools.count()
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
@@ -386,7 +385,7 @@ async def run_daemon():
 
 
 def show_help(manager):
-    "show the documentation"
+    """Show the documentation."""
 
     def format_doc(txt):
         return txt.split("\n")[0]
@@ -420,7 +419,7 @@ Available commands:
 
 
 async def run_client():
-    "Runs the client (CLI)"
+    """Run the client (CLI)."""
     manager = Pyprland()
 
     if sys.argv[1] == "version":
@@ -459,7 +458,8 @@ async def run_client():
 
 
 def use_param(txt):
-    """Checks if parameter `txt` is in sys.argv
+    """Check if parameter `txt` is in sys.argv.
+
     if found, removes it from sys.argv & returns the argument value
     """
     v = ""
@@ -471,7 +471,7 @@ def use_param(txt):
 
 
 def main():
-    "runs the command"
+    """Run the command."""
     debug_flag = use_param("--debug")
     if debug_flag:
         init_logger(filename=debug_flag, force_debug=True)

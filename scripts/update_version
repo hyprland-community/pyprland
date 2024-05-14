@@ -11,7 +11,7 @@ fi
 # Create a temporary file
 T=$(mktemp)
 
-echo '"""Package version"""' > ${T}
+echo '"""Package version."""' > ${T}
 echo '' >> ${T}
 echo "VERSION = \"${V}\"" >> ${T}
 
