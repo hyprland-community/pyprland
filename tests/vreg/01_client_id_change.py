@@ -14,12 +14,11 @@ def show_window():
 
     @window.event
     def on_key_press(symbol, modifiers):
-        current = next(counter)
+        next(counter)
         window.close()
 
     @window.event
     def on_draw():
-
         window.clear()
         label = pyglet.text.Label(
             f"Hello {current}",
@@ -36,5 +35,5 @@ def show_window():
     pyglet.app.run()
 
 
-for n in range(5):
+for _n in range(5):
     show_window()

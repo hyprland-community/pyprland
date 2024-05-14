@@ -70,7 +70,7 @@ workspaces = [
 
 @fixture
 async def layout_config(monkeypatch):
-    "enable the plugin"
+    """Enable the plugin."""
     config = {"pyprland": {"plugins": ["workspaces_follow_focus"]}}
     monkeypatch.setattr("tomllib.load", lambda x: config)
     yield

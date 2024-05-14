@@ -1,7 +1,7 @@
 import sys
-import tomllib
 
 import pytest
+import tomllib
 from pytest_asyncio import fixture
 
 from .conftest import mocks as tst
@@ -11,7 +11,7 @@ sys.path.append("sample_extension")
 
 @fixture
 async def external_plugin_config(monkeypatch):
-    "external config"
+    """External config."""
     config = """
 [pyprland]
 plugins = ["pypr_examples.focus_counter"]

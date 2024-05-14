@@ -1,5 +1,4 @@
-"""
-Implements a "Centered" layout.
+"""Implements a "Centered" layout.
 
 - windows are normally tiled but one
 - the active window is floating and centered

@@ -1,9 +1,9 @@
 import asyncio
-import tomllib
 from typing import cast
 from unittest.mock import Mock
 
 import pytest
+import tomllib
 
 from .conftest import mocks as tst
 from .testtools import wait_called
@@ -39,5 +39,5 @@ placement = {}
 
     assert placement != cfg["placement"]
     assert bool_opt != cfg["startup_relayout"]
-    assert cfg["startup_relayout"] == True
+    assert cfg["startup_relayout"] is True
     assert cfg["placement"] == {}

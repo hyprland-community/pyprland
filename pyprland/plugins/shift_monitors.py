@@ -17,10 +17,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     async def run_shift_monitors(self, arg: str):
         """<+1/-1> Swaps monitors' workspaces in the given direction."""
         direction: int = int(arg)
-        if direction > 0:
-            mon_list = self.monitors[:-1]
-        else:
-            mon_list = list(reversed(self.monitors[1:]))
+        mon_list = self.monitors[:-1] if direction > 0 else list(reversed(self.monitors[1:]))
 
         for i, mon in enumerate(mon_list):
             await self.hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i + direction]}")

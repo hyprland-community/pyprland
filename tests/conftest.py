@@ -1,12 +1,13 @@
-" generic fixtures "
+"""generic fixtures."""
+
 import asyncio
 import os
-import tomllib
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, Mock
 
+import tomllib
 from pytest_asyncio import fixture
 
 from .testtools import MockReader, MockWriter
@@ -17,7 +18,7 @@ CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
 
 def pytest_configure():
-    "Runs once before all"
+    """Runs once before all."""
     from pyprland.common import init_logger
 
     init_logger("/dev/null", force_debug=True)
@@ -38,17 +39,17 @@ class GlobalMocks:
     _pypr_command_reader: Callable = None
 
     def reset(self):
-        "Resets not standard mocks"
+        """Resets not standard mocks."""
         self.json_commands_result.clear()
 
     async def pypr(self, cmd):
-        "Simulates the pypr command"
+        """Simulates the pypr command."""
         assert self.pyprctrl
         await self.pyprctrl[0].q.put(b"%s\n" % cmd.encode("utf-8"))
         await self._pypr_command_reader(*self.pyprctrl)
 
     async def send_event(self, cmd):
-        "Simulates receiving a Hyprland event"
+        """Simulates receiving a Hyprland event."""
         assert self.hyprevt
         await self.hyprevt[0].q.put(b"%s\n" % cmd.encode("utf-8"))
 
@@ -64,7 +65,7 @@ async def mocked_unix_server(command_reader, *_):
 
 
 async def mocked_unix_connection(path):
-    "Return a mocked reader & writer"
+    """Return a mocked reader & writer."""
     if path.endswith(".socket2.sock"):
         return mocks.hyprevt
     raise ValueError()
@@ -72,14 +73,14 @@ async def mocked_unix_connection(path):
 
 @fixture
 async def empty_config(monkeypatch):
-    "Runs with no config"
+    """Runs with no config."""
     monkeypatch.setattr("tomllib.load", lambda x: {"pyprland": {"plugins": []}})
     yield
 
 
 @fixture
 async def third_monitor(monkeypatch):
-    "Adds a third monitor"
+    """Adds a third monitor."""
     MONITORS.append(EXTRA_MON)
     yield
     MONITORS[:] = MONITORS[:-1]
@@ -87,7 +88,7 @@ async def third_monitor(monkeypatch):
 
 @fixture
 async def sample1_config(monkeypatch):
-    "Runs with config n°1"
+    """Runs with config n°1."""
     monkeypatch.setattr("tomllib.load", lambda x: deepcopy(CONFIG_1))
     yield
 
@@ -116,9 +117,7 @@ async def mocked_hyprctlJSON(command, logger=None):
 @fixture
 def subprocess_shell_mock(mocker):
     # Mocking the asyncio.create_subprocess_shell function
-    mocked_subprocess_shell = mocker.patch(
-        "asyncio.create_subprocess_shell", name="mocked_shell_command"
-    )
+    mocked_subprocess_shell = mocker.patch("asyncio.create_subprocess_shell", name="mocked_shell_command")
     mocked_process = MagicMock(spec="subprocess.Process", name="mocked_subprocess")
     mocked_subprocess_shell.return_value = mocked_process
     mocked_process.pid = 1  # init always exists
@@ -133,7 +132,7 @@ def subprocess_shell_mock(mocker):
 
 @fixture
 async def server_fixture(monkeypatch, mocker):
-    "Handle server setup boilerplate"
+    """Handle server setup boilerplate."""
     mocks.hyprctl = AsyncMock(return_value=True)
     mocks.hyprevt = (MockReader(), MockWriter())
     mocks.pyprctrl = (MockReader(), MockWriter())

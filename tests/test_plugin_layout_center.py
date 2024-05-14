@@ -7,7 +7,7 @@ from .testtools import wait_called
 
 @fixture
 async def layout_config(monkeypatch):
-    "enable the plugin"
+    """Enable the plugin."""
     config = {"pyprland": {"plugins": ["layout_center"]}}
     monkeypatch.setattr("tomllib.load", lambda x: config)
     yield

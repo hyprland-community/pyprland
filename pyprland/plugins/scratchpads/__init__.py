@@ -1,6 +1,7 @@
 """Scratchpads addon."""
 
 import asyncio
+import contextlib
 import time
 from dataclasses import dataclass
 from functools import partial
@@ -203,10 +204,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Ensure alive, standard version."""
         uid = scratch.uid
         if uid in self.procs:
-            try:
+            with contextlib.suppress(ProcessLookupError):
                 self.procs[uid].kill()
-            except ProcessLookupError:
-                pass
         self.scratches.reset(scratch)
         await self.start_scratch_command(uid)
         self.log.info("starting %s", uid)
@@ -217,10 +216,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 await self.procs[uid].communicate()
                 code = self.procs[uid].returncode
-                if code:
-                    error = f"The command failed with code {code}"
-                else:
-                    error = "The command terminated sucessfully, is it already running?"
+                error = f"The command failed with code {code}" if code else "The command terminated sucessfully, is it already running?"
             self.log.error('"%s": %s', scratch.conf["command"], error)
             await notify_error(error)
             return False
@@ -307,10 +303,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_activewindowv2(self, addr) -> None:
         """Active windows hook."""
-        if not addr or len(addr) < 10:
-            full_address = ""
-        else:
-            full_address = "0x" + addr
+        full_address = "" if not addr or len(addr) < 10 else "0x" + addr
         for uid, scratch in self.scratches.items():
             if not scratch.client_info:
                 continue
@@ -341,10 +334,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.debug("hide %s because another client is active", scratch.uid)
                 await self.run_hide(scratch.uid, autohide=True)
 
-                try:
+                with contextlib.suppress(KeyError):
                     del self._hysteresis_tasks[scratch.uid]
-                except KeyError:
-                    pass
 
             self._hysteresis_tasks[scratch.uid] = asyncio.create_task(_task(scratch, hysteresis))
         else:
@@ -420,10 +411,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name"."""
-        if " " in uid_or_uids:
-            uids = list(filter(bool, map(str.strip, uid_or_uids.split())))
-        else:
-            uids = [uid_or_uids.strip()]
+        uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
 
         for uid in uids:
             self.cancel_task(uid)
@@ -735,9 +723,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         tracker = self.focused_window_tracking.get(scratch.uid)
         if tracker and not tracker.prev_focused_window_wrkspc.startswith("special:"):
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
-            if scratch.have_address(active_window) and same_workspace:
-                if not scratch.have_address(tracker.prev_focused_window):
-                    await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
+            if scratch.have_address(active_window) and same_workspace and not scratch.have_address(tracker.prev_focused_window):
+                await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
 
     # }}}
 

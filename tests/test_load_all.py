@@ -1,12 +1,11 @@
-import tomllib
-
 import pytest
+import tomllib
 from pytest_asyncio import fixture
 
 
 @fixture
 async def load_all_config(monkeypatch):
-    "external config"
+    """External config."""
     config = """
 [pyprland]
 plugins = [

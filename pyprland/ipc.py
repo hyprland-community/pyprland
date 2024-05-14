@@ -117,6 +117,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     Args:
         command: single command (str) or list of commands to send to Hyprland
         base_command: type of command to send
+        logger: logger to use in case of error
 
     Returns:
         True on success
@@ -150,7 +151,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
 
     Args:
         logger: logger to use in case of error
-        name [optional]: monitor name
+        name: (optional) monitor name
 
     Returns:
         dict() with the focused monitor properties
@@ -173,8 +174,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
 
 
 async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
-    """
-    Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
+    """Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
 
     Eg.
         # will return the properties of the client with address "0x1234"
@@ -186,6 +186,8 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
     Args:
         logger: logger to use in case of error
         match_fn: function to match the client properties, takes 2 arguments (client_value, config_value)
+        clients: list of clients to search in
+        kw: keyword arguments to match the client properties
 
         Any other keyword argument will be used to match the client properties. Only one keyword argument is allowed.
         `addr` aliases `address` and `cls` aliases `class`

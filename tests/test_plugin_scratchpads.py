@@ -1,4 +1,4 @@
-"Scratchpad plugin (smoke) tests"
+"""Scratchpad plugin (smoke) tests."""
 
 import asyncio
 
@@ -66,7 +66,7 @@ async def test_not_found(scratchpads, subprocess_shell_mock, server_fixture):
 
 
 def gen_call_set(call_list: list) -> set[str]:
-    "Generate a set of calls from a list of calls"
+    """Generate a set of calls from a list of calls."""
     call_set: set[str] = set()
     for item in call_list:
         if isinstance(item, str):
@@ -76,9 +76,7 @@ def gen_call_set(call_list: list) -> set[str]:
     return call_set
 
 
-async def _send_window_events(
-    address="12345677890", klass="kitty-dropterm", title="my fake terminal"
-):
+async def _send_window_events(address="12345677890", klass="kitty-dropterm", title="my fake terminal"):
     await mocks.send_event(f"openwindow>>address:0x{address},1,{klass},{title}")
     await mocks.send_event("activewindowv2>>address:44444677890")
     await mocks.send_event(f"activewindowv2>>address:{address}")

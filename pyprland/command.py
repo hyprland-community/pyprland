@@ -6,9 +6,10 @@ import itertools
 import json
 import os
 import sys
-import tomllib
 from functools import partial
 from typing import Any, Callable, Self
+
+import tomllib
 
 from pyprland.common import (
     IPC_FOLDER,
@@ -17,9 +18,8 @@ from pyprland.common import (
     merge,
     run_interactive_program,
 )
-from pyprland.ipc import get_event_stream
+from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
-from pyprland.ipc import notify_error, notify_fatal, notify_info
 from pyprland.plugins.interface import Plugin
 from pyprland.types import PyprError
 from pyprland.version import VERSION
@@ -144,9 +144,8 @@ class Pyprland:
         init_pyprland = "pyprland" not in self.plugins
 
         for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
-            if name not in self.plugins:
-                if not await self._load_single_plugin(name, init):
-                    continue
+            if name not in self.plugins and not await self._load_single_plugin(name, init):
+                continue
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)

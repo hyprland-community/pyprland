@@ -1,6 +1,5 @@
-import tomllib
-
 import pytest
+import tomllib
 from pytest_asyncio import fixture
 
 from .conftest import mocks as tst
@@ -9,7 +8,7 @@ from .testtools import wait_called
 
 @fixture
 async def shapeL_config(monkeypatch):
-    "L shape"
+    """L shape."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -28,7 +27,7 @@ new_monitor_delay = 0
 
 @fixture
 async def flipped_shapeL_config(monkeypatch):
-    "flipped L shape"
+    """Flipped L shape."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -47,7 +46,7 @@ new_monitor_delay = 0
 
 @fixture
 async def descr_config(monkeypatch):
-    "Runs with config n°1"
+    """Runs with config n°1."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -66,7 +65,7 @@ new_monitor_delay = 0
 
 @fixture
 async def topdown_config(monkeypatch):
-    "Runs with config n°1"
+    """Runs with config n°1."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -85,7 +84,7 @@ new_monitor_delay = 0
 
 @fixture
 async def bottomup_config(monkeypatch):
-    "Runs with config n°1"
+    """Runs with config n°1."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -108,7 +107,7 @@ def get_xrandr_calls(mock):
 
 @fixture
 async def reversed_config(monkeypatch):
-    "Runs with config n°1"
+    """Runs with config n°1."""
     config = """
 [pyprland]
 plugins = ["monitors"]
@@ -125,7 +124,9 @@ new_monitor_delay = 0
     yield
 
 
-def assert_modes(call_list, expected=[], allow_empty=False):
+def assert_modes(call_list, expected=None, allow_empty=False):
+    if expected is None:
+        expected = []
     ref_str = {x[0][0] for x in call_list}
     for e in expected:
         ref_str.remove(e)

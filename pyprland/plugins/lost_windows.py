@@ -9,9 +9,7 @@ def contains(monitor, window):
     """Tell if a window is visible in a monitor."""
     if not (window["at"][0] > monitor["x"] and window["at"][0] < monitor["x"] + monitor["width"]):
         return False
-    if not (window["at"][1] > monitor["y"] and window["at"][1] < monitor["y"] + monitor["height"]):
-        return False
-    return True
+    return bool(window["at"][1] > monitor["y"] and window["at"][1] < monitor["y"] + monitor["height"])
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring

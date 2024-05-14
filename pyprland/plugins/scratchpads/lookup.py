@@ -93,7 +93,7 @@ class ScratchDB:  # {{{
     def get(self, name=None, pid=None, addr=None) -> Scratch | None:
         """Return the Scratch matching given name, pid or address."""
         # {{{
-        assert 1 == len(list(filter(bool, (name, pid, addr)))), (
+        assert len(list(filter(bool, (name, pid, addr)))) == 1, (
             name,
             pid,
             addr,

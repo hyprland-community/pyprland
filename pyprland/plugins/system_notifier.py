@@ -1,6 +1,7 @@
 """Add system notifications based on journal logs."""
 
 import asyncio
+import contextlib
 import re
 from copy import deepcopy
 from typing import cast
@@ -66,10 +67,8 @@ class Extension(Plugin):
         self.running = False
         for task in self.tasks:
             task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await task
-            except asyncio.CancelledError:
-                pass
         for source in self.sources.values():
             if source.pid is not None:
                 source.kill()
@@ -122,9 +121,6 @@ class Extension(Plugin):
             content = await q.get()
             for rule in rules:
                 if rule["pattern"].search(content):
-                    if rule["filter"]:
-                        text = apply_filter(content, cast(str, rule["filter"]))
-                    else:
-                        text = content
+                    text = apply_filter(content, cast(str, rule["filter"])) if rule["filter"] else content
                     await self.notify(text, color=rule["color"])
                     await asyncio.sleep(0.01)

@@ -1,6 +1,7 @@
 """Run gbar on the first available display from a list of displays."""
 
 import asyncio
+import contextlib
 
 from ..common import state
 from .interface import Plugin
@@ -74,8 +75,6 @@ class Extension(Plugin):
             if self.ongoing_task:
                 self.ongoing_task.cancel()
                 self.ongoing_task = None
-            try:
+            with contextlib.suppress(ProcessLookupError):
                 self.proc.kill()
-            except ProcessLookupError:
-                pass
             self.proc = None

@@ -99,18 +99,18 @@ def run_interactive_program(command):
 
 
 def merge(merged, obj2):
-    """
-    Merge the content of d2 into d1.
+    """Merge the content of d2 into d1.
+
+    Args:
+        merged (dict): Dictionary to merge into
+        obj2 (dict): Dictionary to merge from
+
+    Returns:
+        `merged` dictionary with the merged content
 
     Eg:
         merge({"a": {"b": 1}}, {"a": {"c": 2}}) == {"a": {"b": 1, "c": 2}}
 
-    Args:
-    - merged (dict): First dictionary to merge (will be updated).
-    - obj2 (dict): Second dictionary to merge
-
-    Returns:
-    - dict: Merged dictionary
     """
     for key, value in obj2.items():
         if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):

@@ -16,7 +16,7 @@ async def wait_called(fn, timeout=1.0, count=1):
 
 
 class MockReader:
-    "A StreamReader mock"
+    """A StreamReader mock."""
 
     def __init__(self):
         self.q = asyncio.Queue()
@@ -28,7 +28,7 @@ class MockReader:
 
 
 class MockWriter:
-    "A StreamWriter mock"
+    """A StreamWriter mock."""
 
     def __init__(self):
         self.write = Mock()

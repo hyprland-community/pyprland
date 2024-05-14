@@ -1,4 +1,4 @@
-""" Fake pypr CLI to generate auto-completion scripts """
+"""Fake pypr CLI to generate auto-completion scripts."""
 
 import argparse
 import os
@@ -27,10 +27,8 @@ _shtab_greeter_compgen_TOMLFiles() {
 
 
 def get_parser():
-    "Parses the command line arguments"
-    parser = argparse.ArgumentParser(
-        prog="pypr", description="Pyprland CLI", add_help=False, allow_abbrev=False
-    )
+    """Parses the command line arguments."""
+    parser = argparse.ArgumentParser(prog="pypr", description="Pyprland CLI", add_help=False, allow_abbrev=False)
     parser.add_argument(
         "--debug",
         help="Enable debug mode and log to a file",
@@ -54,9 +52,7 @@ def get_parser():
     subparsers.add_parser("reload", help="Reload the configuration file")
 
     # Scratchpads
-    subparsers.add_parser(
-        "attach", help="Attach the focused window to the last focused scratchpad"
-    )
+    subparsers.add_parser("attach", help="Attach the focused window to the last focused scratchpad")
     show = subparsers.add_parser("show", help="Show the given scratchpad")
     show.add_argument("Scratchpad", help="scratchpad name")
     hide = subparsers.add_parser("hide", help="Hide the given scratchpad")
@@ -64,9 +60,7 @@ def get_parser():
     toggle = subparsers.add_parser("toggle", help="Toggle the given scratchpad")
     toggle.add_argument("Scratchpad", help="scratchpad name")
     # gbar
-    gbar = subparsers.add_parser(
-        "gbar", help="Starts gBar on the first available monitor"
-    )
+    gbar = subparsers.add_parser("gbar", help="Starts gBar on the first available monitor")
     gbar.add_argument(
         "command",
         help="Starts gBar on the first available monitor",
@@ -83,23 +77,13 @@ def get_parser():
     )
     toggle_special.add_argument("name", help="special workspace name")
     # layout_center
-    layout_center = subparsers.add_parser(
-        "layout_center", help="Change the active window"
-    )
-    layout_center.add_argument(
-        "command", help="Change the active window", choices=["toggle", "next", "prev"]
-    )
+    layout_center = subparsers.add_parser("layout_center", help="Change the active window")
+    layout_center.add_argument("command", help="Change the active window", choices=["toggle", "next", "prev"])
     # lost_windows
-    subparsers.add_parser(
-        "attract_lost", help="Brings lost floating windows to the current workspace"
-    )
+    subparsers.add_parser("attract_lost", help="Brings lost floating windows to the current workspace")
     # shift_monitors
-    shift_monitors = subparsers.add_parser(
-        "shift_monitors", help="Swaps monitors' workspaces in the given direction"
-    )
-    shift_monitors.add_argument(
-        "direction", help="Swaps monitors' workspaces in the given direction"
-    )
+    shift_monitors = subparsers.add_parser("shift_monitors", help="Swaps monitors' workspaces in the given direction")
+    shift_monitors.add_argument("direction", help="Swaps monitors' workspaces in the given direction")
     # toggle_dpms
     subparsers.add_parser("toggle_dpms", help="Toggles dpms on/off for every monitor")
     # magnify
@@ -108,17 +92,11 @@ def get_parser():
     # Expose
     subparsers.add_parser("expose", help="Expose every client on the active workspace")
     # workspaces_follow_focus
-    change_workspace = subparsers.add_parser(
-        "change_workspace", help="Switch workspaces of current monitor"
-    )
-    change_workspace.add_argument(
-        "direction", help="direction to switch workspaces", choices=["-1", "+1"]
-    )
+    change_workspace = subparsers.add_parser("change_workspace", help="Switch workspaces of current monitor")
+    change_workspace.add_argument("direction", help="direction to switch workspaces", choices=["-1", "+1"])
     # wallpapers
     wall = subparsers.add_parser("wall", help="Skip the current background image")
-    wall.add_argument(
-        "action", help="Skip the current background image", choices=["next", "clear"]
-    )
+    wall.add_argument("action", help="Skip the current background image", choices=["next", "clear"])
     # fetch_client_menu
     subparsers.add_parser(
         "fetch_client_menu",

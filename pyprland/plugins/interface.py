@@ -1,5 +1,6 @@
 """Common plugin interface."""
 
+import contextlib
 from typing import Any, Callable, cast
 
 from ..common import get_logger
@@ -68,10 +69,8 @@ class Plugin:
     async def load_config(self, config: dict[str, Any]):
         """Load the configuration section from the passed `config`."""
         self.config.clear()
-        try:
+        with contextlib.suppress(KeyError):
             self.config.update(config[self.name])
-        except KeyError:
-            pass
 
     async def get_clients(self, mapped=True, workspace=None, workspace_bl=None):
         """Return the client list, optionally returns only mapped clients or from a given workspace."""
