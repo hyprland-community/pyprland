@@ -46,6 +46,7 @@ class MenuEngine:
 
         Args:
             choices: options to chose from
+            prompt: prompt replacement variable (passed in `apply_variables`)
 
         Returns:
             The choice which have been selected by the user, or an empty string
