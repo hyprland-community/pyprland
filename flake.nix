@@ -51,4 +51,9 @@
       };
     });
   };
+
+  nixConfig = {
+    extra-substituters = ["https://hyprland-community.cachix.org"];
+    extra-trusted-public-keys = ["hyprland-community.cachix.org-1:5dTHY+TjAJjnQs23X+vwMQG4va7j+zmvkTKoYuSXnmE="];
+  };
 }
