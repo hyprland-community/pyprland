@@ -16,11 +16,11 @@ from .types import MonitorInfo, VersionInfo
 
 __all__ = [
     "DEBUG",
-    "get_logger",
-    "state",
     "apply_variables",
+    "get_logger",
     "merge",
     "run_interactive_program",
+    "state",
 ]
 
 DEBUG = os.environ.get("DEBUG", False)
@@ -31,19 +31,19 @@ try:
     IPC_FOLDER = (
         f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
         if os.path.exists(f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}')
-        else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
+        else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
     IPC_FOLDER = "/fake"
 
 
-def set_terminal_size(descriptor, rows, cols):
+def set_terminal_size(descriptor, rows, cols) -> None:
     """Set the terminal size."""
     fcntl.ioctl(descriptor, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
-def set_raw_mode(descriptor):
+def set_raw_mode(descriptor) -> None:
     """Set a file descriptor in raw mode."""
     # Get the current terminal attributes
     attrs = termios.tcgetattr(descriptor)
@@ -53,7 +53,7 @@ def set_raw_mode(descriptor):
     termios.tcsetattr(descriptor, termios.TCSANOW, attrs)
 
 
-def run_interactive_program(command):
+def run_interactive_program(command) -> None:
     """Run an interactive program in a blocking way."""
     # Create a pseudo-terminal
     master, slave = pty.openpty()
@@ -131,7 +131,7 @@ class LogObjects:
     handlers: list[logging.Handler] = []
 
 
-def init_logger(filename=None, force_debug=False):
+def init_logger(filename=None, force_debug=False) -> None:
     """Initialize the logging system."""
     global DEBUG
     if force_debug:
@@ -247,11 +247,11 @@ class CastBoolMixin:
         """Recovers wrong typing on boolean values."""
         if isinstance(value, str):
             lv = value.lower().strip()
-            r = lv not in ("false", "no", "off")
+            r = lv not in {"false", "no", "off"}
             self.log.warning("Invalid value for boolean option: %s, considering it %s", value, r)
         return default_value if value is None else value
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:
     """Return True if the monitor is rotated."""
-    return monitor["transform"] in (1, 3, 5, 7)
+    return monitor["transform"] in {1, 3, 5, 7}

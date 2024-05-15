@@ -15,12 +15,12 @@ def contains(monitor, window):
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Moves unreachable client windows to the currently focused workspace."""
 
-    async def run_attract_lost(self):
+    async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""
         monitors = cast(list, await self.hyprctlJSON("monitors"))
         windows = cast(list, await self.get_clients())
         lost = [win for win in windows if win["floating"] and not any(contains(mon, win) for mon in monitors)]
-        focused: dict[str, Any] = [mon for mon in monitors if mon["focused"]][0]
+        focused: dict[str, Any] = next(mon for mon in monitors if mon["focused"])
         interval = focused["width"] / (1 + len(lost))
         interval_y = focused["height"] / (1 + len(lost))
         batch = []

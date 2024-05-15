@@ -12,7 +12,7 @@ class Extension(MenuMixin, Plugin):
 
     # Commands
 
-    async def run_unfetch_client(self):
+    async def run_unfetch_client(self) -> None:
         """Return a window back to its origin."""
         addr = state.active_window
         try:
@@ -22,7 +22,7 @@ class Extension(MenuMixin, Plugin):
         else:
             await self.hyprctl(f"movetoworkspacesilent {origin},address:{addr}")
 
-    async def run_fetch_client_menu(self):
+    async def run_fetch_client_menu(self) -> None:
         """Select a client window and move it to the active workspace."""
         await self.ensure_menu_configured()
 

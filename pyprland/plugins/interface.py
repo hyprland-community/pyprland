@@ -1,7 +1,8 @@
 """Common plugin interface."""
 
 import contextlib
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from ..common import get_logger
 from ..ipc import getCtrlObjects
@@ -31,7 +32,7 @@ class Plugin:
     config: dict[str, Any]
     " This plugin configuration section as a dict object "
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """Create a new plugin `name` and the matching logger."""
         self.name = name
         """ the plugin name """
@@ -49,24 +50,24 @@ class Plugin:
 
     # Functions to override
 
-    async def init(self):
+    async def init(self) -> None:
         """Initialize the plugin.
 
         Note that the `config` attribute isn't ready yet when this is called.
         """
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Add the code which requires the `config` attribute here.
 
         This is called on *init* and *reload*
         """
 
-    async def exit(self):
+    async def exit(self) -> None:
         """Empty exit function."""
 
     # Generic implementations
 
-    async def load_config(self, config: dict[str, Any]):
+    async def load_config(self, config: dict[str, Any]) -> None:
         """Load the configuration section from the passed `config`."""
         self.config.clear()
         with contextlib.suppress(KeyError):

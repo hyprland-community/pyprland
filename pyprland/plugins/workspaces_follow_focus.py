@@ -10,17 +10,17 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     workspace_list: list[int] = []
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Rebuild workspaces list."""
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
-    async def event_focusedmon(self, screenid_name):
+    async def event_focusedmon(self, screenid_name) -> None:
         """Reacts to monitor changes."""
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
-        busy_workspaces = set(
+        busy_workspaces = {
             mon["activeWorkspace"]["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors")) if mon["name"] != monitor_id
-        )
+        }
         workspaces = [w["name"] for w in cast(list[dict], await self.hyprctlJSON("workspaces")) if w["id"] > 0]
 
         batch: list[str] = []
@@ -30,7 +30,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             batch.append(f"moveworkspacetomonitor name:{n} {monitor_id}")
         await self.hyprctl(batch)
 
-    async def run_change_workspace(self, direction: str):
+    async def run_change_workspace(self, direction: str) -> None:
         """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces."""
         increment = int(direction)
         # get focused screen info
@@ -43,7 +43,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             self.log.error("Can not find a focused monitor")
             return
         assert isinstance(monitor, dict)
-        busy_workspaces = set(m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"])
+        busy_workspaces = {m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]}
         cur_workspace = monitor["activeWorkspace"]["id"]
         available_workspaces = [i for i in self.workspace_list if i not in busy_workspaces]
         try:

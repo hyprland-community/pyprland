@@ -6,10 +6,10 @@ import itertools
 import json
 import os
 import sys
-from functools import partial
-from typing import Any, Callable, Self
-
 import tomllib
+from collections.abc import Callable
+from functools import partial
+from typing import Any, Self
 
 from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
@@ -40,11 +40,11 @@ class Pyprland:
     log_handler: Callable[[Plugin, str, tuple], None]
 
     @classmethod
-    def _set_instance(cls, instance):
+    def _set_instance(cls, instance) -> None:
         """Set instance reference into class (for testing/debugging only)."""
         cls.instance = instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.pyprland_mutex_event = asyncio.Event()
         self.pyprland_mutex_event.set()
         self.config = {}
@@ -53,7 +53,7 @@ class Pyprland:
         self.queues = {}
         self._set_instance(self)
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the main structures."""
         await self.load_config()  # ensure sockets are connected first
 
@@ -92,14 +92,14 @@ class Pyprland:
                     config = tomllib.load(f)
                 except tomllib.TOMLDecodeError as e:
                     self.log.critical("Problem reading %s: %s", fname, e)
-                    raise PyprError() from e
+                    raise PyprError from e
         elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
             self.log.info("Loading %s", OLD_CONFIG_FILE)
             with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
                 config = json.loads(f.read())
         else:
             self.log.critical("Config file not found! Please create %s", fname)
-            raise PyprError()
+            raise PyprError
         return config
 
     async def _load_single_plugin(self, name, init) -> bool:
@@ -125,10 +125,10 @@ class Pyprland:
         except Exception as e:
             await notify_info(f"Error loading plugin {name}: {e}")
             self.log.error("Error loading plugin %s:", name, exc_info=True)
-            raise PyprError() from e
+            raise PyprError from e
         return True
 
-    async def __load_plugins_config(self, init=True):
+    async def __load_plugins_config(self, init=True) -> None:
         """Load the plugins mentioned in the config.
 
         If init is `True`, call the `init()` method on each plugin.
@@ -144,21 +144,21 @@ class Pyprland:
                 try:
                     await self.plugins[name].load_config(self.config)
                     await asyncio.wait_for(self.plugins[name].on_reload(), timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     self.plugins[name].log.info("timed out on reload")
                 except PyprError:
                     raise
                 except Exception as e:
                     await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.error("Error initializing plugin %s:", name, exc_info=True)
-                    raise PyprError() from e
+                    raise PyprError from e
                 else:
                     self.plugins[name].log.info("configured")
         if init_pyprland:
             plug = self.plugins["pyprland"]
             plug.set_commands(reload=self.load_config)  # type: ignore
 
-    async def load_config(self, init=True):
+    async def load_config(self, init=True) -> None:
         """Load the configuration (new plugins will be added & config updated).
 
         if `init` is true, also initializes the plugins
@@ -169,16 +169,16 @@ class Pyprland:
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
         self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler
 
-    def plain_log_handler(self, plugin, name, params):
+    def plain_log_handler(self, plugin, name, params) -> None:
         """Log a handler method without color."""
         plugin.log.debug(f"{name}{params}")
 
-    def colored_log_handler(self, plugin, name, params):
+    def colored_log_handler(self, plugin, name, params) -> None:
         """Log a handler method with color."""
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug(f"\033[{color};1m%s%s\033[0m", name, params)
 
-    async def _run_plugin_handler(self, plugin, full_name, params):
+    async def _run_plugin_handler(self, plugin, full_name, params) -> None:
         """Run a single handler on a plugin."""
         self.log_handler(plugin, full_name, params)
         try:
@@ -201,14 +201,13 @@ class Pyprland:
                 task = partial(self._run_plugin_handler, plugin, full_name, params)
                 if plugin == "pyprland":
                     await task()
-                else:
-                    if not plugin.aborted:
-                        await self.queues[plugin.name].put(task)
+                elif not plugin.aborted:
+                    await self.queues[plugin.name].put(task)
         if notify and not handled:
             await notify_info(f'"{notify}" not found')
         return handled
 
-    async def read_events_loop(self):
+    async def read_events_loop(self) -> None:
         """Consume the event loop and calls corresponding handlers."""
         while not self.stopped:
             try:
@@ -228,7 +227,7 @@ class Pyprland:
             # self.log.debug("[%s] %s", cmd, params.strip())
             await self._callHandler(full_name, params.rstrip("\n"))
 
-    async def exit_plugins(self):
+    async def exit_plugins(self) -> None:
         """Exit all plugins."""
         for plugin in self.plugins.values():
             if not plugin.aborted:
@@ -244,7 +243,7 @@ class Pyprland:
         data = data.strip()
         if data == "exit":
 
-            async def _abort():
+            async def _abort() -> None:
                 await self.exit_plugins()
                 # cancel the task group
                 for task in self.tasks:
@@ -274,17 +273,17 @@ class Pyprland:
         full_name = f"run_{cmd}"
 
         if PYPR_DEMO:
-            os.system(f"notify-send -t 4000 '{data}'")
+            os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC102
 
         if not await self._callHandler(full_name, *args, notify=cmd):
             self.log.warning("No such command: %s", cmd)
 
-    async def serve(self):
+    async def serve(self) -> None:
         """Run the server."""
         async with self.server:
             await self.server.wait_closed()
 
-    async def _plugin_runner_loop(self, name):
+    async def _plugin_runner_loop(self, name) -> None:
         """Run tasks for a given plugin indefinitely."""
         q = self.queues[name]
         is_pyprland = name == "pyprland"
@@ -303,21 +302,21 @@ class Pyprland:
                 return
             try:
                 await asyncio.wait_for(task(), timeout=12.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.log.error("Timeout running plugin %s::%s", name, task)
             except Exception as e:  # pylint: disable=W0718
                 self.log.error("Unhandled error running plugin %s::%s: %s", name, task, e)
             if is_pyprland and q.empty():
                 self.pyprland_mutex_event.set()
 
-    async def plugins_runner(self):
+    async def plugins_runner(self) -> None:
         """Run plugins' task using the created `tasks` TaskGroup attribute."""
         async with asyncio.TaskGroup() as group:
             self.tasks_group = group
             for name in self.plugins:
                 self.tasks.append(group.create_task(self._plugin_runner_loop(name)))
 
-    async def run(self):
+    async def run(self) -> None:
         """Run the server and the event listener."""
         await asyncio.gather(
             asyncio.create_task(self.serve()),
@@ -326,43 +325,54 @@ class Pyprland:
         )
 
 
-async def run_daemon():
-    """Run the server / daemon."""
-    manager = Pyprland()
+async def get_event_stream_with_retry(max_retry=10):
+    """Obtain the event stream, retrying if it fails.
+
+    If retry count is exhausted, returns (None, exception).
+    """
     err_count = itertools.count()
-    manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
-    max_retry = 10
     while True:
         attempt = next(err_count)
         try:
-            events_reader, events_writer = await get_event_stream()
+            return await get_event_stream()
         except Exception as e:  # pylint: disable=W0718
             if attempt > max_retry:
-                manager.log.critical("Failed to open hyprland event stream: %s.", e)
-                await notify_fatal("Failed to open hyprland event stream")
-                raise PyprError() from e
-            manager.log.warning("Failed to get event stream: %s, retry %s/%s...", e, attempt, max_retry)
+                return None, e
             await asyncio.sleep(1)
-        else:
-            break
 
-    manager.event_reader = events_reader
 
+async def initialize_manager(manager):
+    """Initialize the manager object."""
     try:
         await manager.initialize()
     except PyprError as e:
-        if bool(str(e)):
-            await notify_fatal(f"Pypr failed to start: {e}")
-        else:
-            await notify_fatal("Pypr failed to start!")
-
-        raise SystemExit(1) from e
+        return str(e) if bool(str(e)) else "Pypr failed to start!"
     except Exception as e:
-        manager.log.critical("Failed to load config.", exc_info=True)
-        await notify_fatal(f"Pypr couldn't load config: {e}")
-        raise SystemExit(1) from e
+        return f"Pypr couldn't load config: {e}"
+    return None
+
+
+async def run_daemon() -> None:
+    """Run the server / daemon."""
+    manager = Pyprland()
+    manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
+
+    events_reader, events_writer = await get_event_stream_with_retry()
+    if not events_reader:
+        manager.log.critical("Failed to open hyprland event stream: %s.", events_writer)
+        await notify_fatal("Failed to open hyprland event stream")
+        raise PyprError from events_writer
+
+    manager.event_reader = events_reader
+
+    error = await initialize_manager(manager)
+    if error:
+        manager.log.critical("Failed to initialize: %s", error, exc_info=True)
+        await notify_fatal(error)
+        raise SystemExit(1) from error
 
     manager.log.debug("[ initialized ]".center(80, "="))
+
     try:
         await manager.run()
     except KeyboardInterrupt:
@@ -377,7 +387,7 @@ async def run_daemon():
         await manager.server.wait_closed()
 
 
-def show_help(manager):
+def show_help(manager) -> None:
     """Show the documentation."""
 
     def format_doc(txt):
@@ -417,7 +427,7 @@ async def run_client():
 
     if sys.argv[1] == "version":
         print(VERSION)
-        return
+        return None
 
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
@@ -425,7 +435,7 @@ async def run_client():
         run_interactive_program(f'{editor} "{filename}"')
         sys.argv[1] = "reload"
 
-    if sys.argv[1] in ("--help", "-h", "help"):
+    if sys.argv[1] in {"--help", "-h", "help"}:
         await manager.load_config(init=False)
         return show_help(manager)
 
@@ -433,14 +443,14 @@ async def run_client():
         await manager.load_config(init=False)
         # Dump manager.config in TOML format
         print(json.dumps(manager.config, indent=2))
-        return
+        return None
 
     try:
         _, writer = await asyncio.open_unix_connection(CONTROL)
     except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
         await notify_error("Pypr can't connect, is daemon running ?")
-        raise PyprError() from e
+        raise PyprError from e
 
     args = sys.argv[1:]
     args[0] = args[0].replace("-", "_")
@@ -463,7 +473,7 @@ def use_param(txt):
     return v
 
 
-def main():
+def main() -> None:
     """Run the command."""
     debug_flag = use_param("--debug")
     if debug_flag:

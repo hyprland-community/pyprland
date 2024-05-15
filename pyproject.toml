@@ -44,26 +44,70 @@ preview = true
 
 src = ["pyprland"]
 exclude = ["*_v?.py", "tests", "scripts", "sample_extension", ".git"]
+target-version = "py311"
 
 
 [tool.ruff.lint]
 fixable = ["ALL"]
-ignore = ["E203", "D107", "D105"]
+ignore = ["E203", "D107", "D105", "TID252", "PTH118", "S101", "S603", "S605", "S404", "S311", "S602", "S607", "RET503"]
 select = [
-    # pycodestyle
-    "E",
-    "D",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
+    "A",
+    "AIR",
+    "ARG",
+    "ASYNC",
     "B",
-    # flake8-simplify
-    "SIM",
-    # isort
+    "B",
+    "C",
+    "C4",
+    "C90",
+    "D",
+    "D",
+    "DTZ",
+    "E",
+    "EM",
+    "EXE",
+    "F",
+    "FA",
+    "FIX",
+    "FLY",
     "I",
-    "W"
+    "ICN",
+    "INP",
+    "INT",
+    "ISC",
+    "LOG",
+    "PERF",
+    "PIE",
+    "PT",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "S",
+    "SIM",
+    "SLF",
+    "SLOT",
+    "T10",
+    "TCH",
+    "TD",
+    "TID",
+    "TRIO",
+    "UP",
+    "W",
+    "YTT",
+    # "ANN",
+    # "RUF",
+    # "COM"
+    # "N",
+    # "G",
+    # "BLE",
+    # "FBT",
+    # "PL",
+    # "PLC",
+    # "PLE",
+    # "PLR",
+    # "PLW",
+    # "TRY",
 ]
 [tool.ruff.format]
 indent-style = "space"

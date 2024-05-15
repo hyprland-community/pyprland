@@ -38,7 +38,7 @@ builtin_parsers = {
 class Extension(Plugin):
     """Notification system from live apps & logs."""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         """Initialize the class."""
         super().__init__(name)
         self.tasks: list[asyncio.Task] = []
@@ -46,7 +46,7 @@ class Extension(Plugin):
         self.parsers = {}
         self.running = True
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Reload the plugin."""
         await self.exit()
         self.running = True
@@ -62,7 +62,7 @@ class Extension(Plugin):
             self.log.debug("Loaded source %s => %s", props["command"], props["parser"])
             self.tasks.append(asyncio.create_task(self.start_source(props)))
 
-    async def exit(self):
+    async def exit(self) -> None:
         """Exit function."""
         self.running = False
         for task in self.tasks:
@@ -98,7 +98,7 @@ class Extension(Plugin):
                 for q in queues:
                     await q.put(line)
 
-    async def start_parser(self, name, props: list):
+    async def start_parser(self, name, props: list) -> None:
         """Start a parser loop.
 
         Args:
@@ -109,14 +109,15 @@ class Extension(Plugin):
                 - color: The color to use in the notification.
         """
         q = self.parsers[name]
-        rules = []
         default_color = self.config.get("default_color", "#5555AA")
-        for prop in props:
-            rules.append({
+        rules = [
+            {
                 "pattern": re.compile(prop["pattern"]),
                 "filter": prop.get("filter"),
                 "color": convert_color(prop.get("color", default_color)),
-            })
+            }
+            for prop in props
+        ]
         while self.running:
             content = await q.get()
             for rule in rules:

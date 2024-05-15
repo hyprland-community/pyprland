@@ -16,10 +16,10 @@ class Extension(Plugin):
 
     ongoing_task: asyncio.Task | None = None
 
-    def _run_gbar(self, cmd):
+    def _run_gbar(self, cmd) -> None:
         """Create ongoing task restarting gbar in case of crash."""
 
-        async def _run_loop():
+        async def _run_loop() -> None:
             while True:
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 await self.proc.wait()
@@ -29,13 +29,13 @@ class Extension(Plugin):
             self.ongoing_task.cancel()
         self.ongoing_task = asyncio.create_task(_run_loop())
 
-    async def run_gbar(self, args):
+    async def run_gbar(self, args) -> None:
         """Start gBar on the first available monitor."""
         if args.startswith("re"):
             self.kill()
             await self.on_reload()
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Initialize if not done."""
         if not self.proc:
             self.cur_monitor = await self.get_best_monitor()
@@ -55,7 +55,7 @@ class Extension(Plugin):
             if monitor in state.monitors:
                 return monitor
 
-    async def event_monitoradded(self, monitor):
+    async def event_monitoradded(self, monitor) -> None:
         """Switch bar in case the monitor is preferred."""
         if self.cur_monitor:
             preferred = self.config.get("monitors", [])
@@ -65,11 +65,11 @@ class Extension(Plugin):
                 self.kill()
                 await self.on_reload()
 
-    async def exit(self):
+    async def exit(self) -> None:
         """Kill the process."""
         self.kill()
 
-    def kill(self):
+    def kill(self) -> None:
         """Kill the process."""
         if self.proc:
             if self.ongoing_task:

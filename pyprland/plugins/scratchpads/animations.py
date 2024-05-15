@@ -20,7 +20,7 @@ class Animations:  # {{{
     """Animation store."""
 
     @staticmethod
-    def fromtop(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
+    def fromtop(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
         """Slide from/to top."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -34,7 +34,7 @@ class Animations:  # {{{
         return f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
 
     @staticmethod
-    def frombottom(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
+    def frombottom(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
         """Slide from/to bottom."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -49,7 +49,7 @@ class Animations:  # {{{
         return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
 
     @staticmethod
-    def fromleft(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
+    def fromleft(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
         """Slide from/to left."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -63,7 +63,7 @@ class Animations:  # {{{
         return f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
 
     @staticmethod
-    def fromright(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int):
+    def fromright(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
         """Slide from/to right."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]

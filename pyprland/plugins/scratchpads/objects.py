@@ -4,8 +4,9 @@ __all__ = ["Scratch"]
 
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, cast
+from typing import cast
 
 from aiofiles import open as aiopen
 from aiofiles import os as aios
@@ -39,14 +40,14 @@ class Scratch(CastBoolMixin):  # {{{
     monitor = ""
     pid = -1
 
-    def __init__(self, uid, opts):
+    def __init__(self, uid, opts) -> None:
         self.uid = uid
         self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
 
-    def set_config(self, opts):
+    def set_config(self, opts) -> None:
         """Apply constraints to the configuration."""
         if "class_match" in opts:  # NOTE: legacy, to be removed
             opts["match_by"] = "class"
@@ -65,7 +66,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Check if the address is the same as the client."""
         return addr == self.full_address or addr in self.extra_addr
 
-    async def initialize(self, ex):
+    async def initialize(self, ex) -> None:
         """Initialize the scratchpad."""
         if self.meta.initialized:
             return
@@ -137,13 +138,15 @@ class Scratch(CastBoolMixin):  # {{{
         if not isinstance(client_info, dict):
             if client_info is None:
                 self.log.error("The client window %s vanished", self.full_address)
-                raise KeyError(f"Client window {self.full_address} not found")
+                msg = f"Client window {self.full_address} not found"
+                raise KeyError(msg)
             self.log.error("client_info of %s must be a dict: %s", self.address, client_info)
-            raise AssertionError(f"Not a dict: {client_info}")
+            msg = f"Not a dict: {client_info}"
+            raise AssertionError(msg)
 
         self.client_info.update(client_info)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 
 

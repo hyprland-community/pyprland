@@ -9,7 +9,7 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Toggle switching the focused window to a special workspace."""
 
-    async def run_toggle_special(self, special_workspace="minimized"):
+    async def run_toggle_special(self, special_workspace="minimized") -> None:
         """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)."""
         aw = cast(dict, await self.hyprctlJSON("activewindow"))
         wid = aw["workspace"]["id"]

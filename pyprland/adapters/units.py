@@ -21,7 +21,8 @@ def convert_monitor_dimension(size: int | str, ref_value, monitor: MonitorInfo) 
         if size.endswith("px"):
             return int(size[:-2])
 
-    raise ValueError(f"Unsupported format: {size} (applied to {ref_value})")
+    msg = f"Unsupported format: {size} (applied to {ref_value})"
+    raise ValueError(msg)
 
 
 def convert_coords(coords: str, monitor: MonitorInfo) -> list[int]:
@@ -39,5 +40,6 @@ def convert_coords(coords: str, monitor: MonitorInfo) -> list[int]:
         for (name, ref) in zip(
             [coord.strip() for coord in coords.split()],
             (("height", "width") if is_rotated(monitor) else ("width", "height")),
+            strict=False,
         )
     ]

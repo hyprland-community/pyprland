@@ -1,13 +1,13 @@
 """Interact with hyprland using sockets."""
 
 __all__ = [
-    "get_focused_monitor_props",
     "get_client_props",
+    "get_focused_monitor_props",
+    "hyprctl",
+    "hyprctlJSON",
     "notify",
     "notify_error",
     "notify_info",
-    "hyprctl",
-    "hyprctlJSON",
 ]
 
 import asyncio
@@ -26,7 +26,7 @@ HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 
-async def notify(text, duration=3, color="ff1010", icon=-1, logger=None):
+async def notify(text, duration=3, color="ff1010", icon=-1, logger=None) -> None:
     """Hyprland notification system."""
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
@@ -49,12 +49,12 @@ def retry_on_reset(func):
         for count in range(3):
             try:
                 return await func(*args, **kwargs, logger=logger)
-            except ConnectionResetError as e:
+            except ConnectionResetError as e:  # noqa: PERF203
                 exc = e
                 logger.warning("ipc connection problem, retrying...")
                 await asyncio.sleep(0.5 * count)
         logger.error("ipc connection failed.")
-        raise ConnectionResetError() from exc
+        raise ConnectionResetError from exc
 
     return wrapper
 
@@ -81,14 +81,14 @@ async def hyprctlJSON(command: str, logger=None) -> list[dict[str, Any]] | dict[
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
         logger.critical("hyprctl socket not found! is it running ?")
-        raise PyprError() from e
+        raise PyprError from e
     ctl_writer.write(f"-j/{command}".encode())
     await ctl_writer.drain()
     resp = await ctl_reader.read()
     ctl_writer.close()
     await ctl_writer.wait_closed()
     ret = json.loads(resp)
-    assert isinstance(ret, (list, dict))
+    assert isinstance(ret, list | dict)
     if command in cached_responses:  # should fill the cache
         cached_responses[command][0] = now + cached_responses[command][2]
         cached_responses[command][1] = ret
@@ -128,7 +128,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
         logger.critical("hyprctl socket not found! is it running ?")
-        raise PyprError() from e
+        raise PyprError from e
 
     if isinstance(command, list):
         nb_cmds = len(command)
@@ -170,7 +170,8 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
         assert isinstance(monitor, dict)
         if match_fn(monitor):
             return monitor  # type: ignore
-    raise RuntimeError("no focused monitor")
+    msg = "no focused monitor"
+    raise RuntimeError(msg)
 
 
 async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
@@ -221,7 +222,7 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
     return None
 
 
-def init():
+def init() -> None:
     """Initialize logging."""
     global log
     log = get_logger("ipc")

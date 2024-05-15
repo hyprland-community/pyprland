@@ -23,11 +23,11 @@ class ScratchDB:  # {{{
         """Return true if `scratch` has state `status`."""
         return scratch in self._states[status]
 
-    def setState(self, scratch: Scratch, status: str):
+    def setState(self, scratch: Scratch, status: str) -> None:
         """Set `scratch` in the provided status."""
         self._states[status].add(scratch)
 
-    def clearState(self, scratch: Scratch, status: str):
+    def clearState(self, scratch: Scratch, status: str) -> None:
         """Unset the the provided status from the scratch."""
         self._states[status].remove(scratch)
 
@@ -48,14 +48,14 @@ class ScratchDB:  # {{{
 
     # }}}
 
-    def reset(self, scratch: Scratch):
+    def reset(self, scratch: Scratch) -> None:
         """Clear registered address & pid."""
         if scratch.address in self._by_addr:
             del self._by_addr[scratch.address]
         if scratch.pid in self._by_pid:
             del self._by_pid[scratch.pid]
 
-    def clear(self, name=None, pid=None, addr=None):
+    def clear(self, name=None, pid=None, addr=None) -> None:
         """Clear the index by name, pid or address."""
         # {{{
 
@@ -68,7 +68,7 @@ class ScratchDB:  # {{{
             del self._by_addr[addr]
         # }}}
 
-    def register(self, scratch: Scratch, name=None, pid=None, addr=None):
+    def register(self, scratch: Scratch, name=None, pid=None, addr=None) -> None:
         """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided."""
         # {{{
         if not any((name, pid, addr)):
@@ -86,7 +86,8 @@ class ScratchDB:  # {{{
                 d = self._by_addr
                 v = addr
             else:
-                raise ValueError("name, pid or addr must be provided")
+                msg = "name, pid or addr must be provided"
+                raise ValueError(msg)
             d[v] = scratch
         # }}}
 
@@ -108,7 +109,8 @@ class ScratchDB:  # {{{
             d = self._by_addr
             v = addr
         else:
-            raise ValueError("name, pid or addr must be provided")
+            msg = "name, pid or addr must be provided"
+            raise ValueError(msg)
         return d.get(v)
         # }}}
 

@@ -69,9 +69,9 @@ class MonitorInfo(TypedDict):
 class VersionInfo:
     """Stores version information."""
 
-    major: int = 0  # noqa: F841
-    minor: int = 0  # noqa: F841
-    micro: int = 0  # noqa: F841
+    major: int = 0
+    minor: int = 0
+    micro: int = 0
 
 
 class PyprError(Exception):

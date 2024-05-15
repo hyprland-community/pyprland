@@ -2,13 +2,13 @@
 
 import asyncio
 import subprocess
+from collections.abc import Iterable
 from logging import Logger
-from typing import Iterable
 
 from ..common import apply_variables, get_logger
 from ..types import PyprError
 
-__all__ = ["MenuMixin", "MenuEngine"]
+__all__ = ["MenuEngine", "MenuMixin"]
 
 menu_logger = get_logger("menus adapter")
 
@@ -23,7 +23,7 @@ class MenuEngine:
     proc_detect_parameters: list[str] = ["--help"]
     " process parameters used to check if the engine can run "
 
-    def __init__(self, extra_parameters):
+    def __init__(self, extra_parameters) -> None:
         """Initialize the engine with extra parameters.
 
         Args:
@@ -33,10 +33,10 @@ class MenuEngine:
             self.proc_extra_parameters = extra_parameters
 
     @classmethod
-    def is_available(cls):
+    def is_available(cls) -> bool:
         """Check engine availability."""
         try:
-            subprocess.call([cls.proc_name] + cls.proc_detect_parameters)
+            subprocess.call([cls.proc_name, *cls.proc_detect_parameters])
         except FileNotFoundError:
             return False
         return True
@@ -143,7 +143,8 @@ async def init(force_engine=False, extra_parameters="") -> MenuEngine:
         me.proc_name = force_engine
         return me
 
-    raise PyprError("No engine found")
+    msg = "No engine found"
+    raise PyprError(msg)
 
 
 class MenuMixin:
@@ -157,13 +158,13 @@ class MenuMixin:
     log: Logger
     " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
 
-    async def ensure_menu_configured(self):
+    async def ensure_menu_configured(self) -> None:
         """If not configured, init the menu system."""
         if not self._menu_configured:
             self.menu = await init(self.config.get("engine"), self.config.get("parameters", ""))
             self.log.info("Using %s engine", self.menu.proc_name)
             self._menu_configured = True
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Reset the configuration status."""
         self._menu_configured = False

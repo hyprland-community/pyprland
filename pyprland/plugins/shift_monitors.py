@@ -10,11 +10,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     monitors: list[str] = []
 
-    async def init(self):
+    async def init(self) -> None:
         """Initialize the plugin."""
         self.monitors: list[str] = [mon["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors"))]
 
-    async def run_shift_monitors(self, arg: str):
+    async def run_shift_monitors(self, arg: str) -> None:
         """<+1/-1> Swaps monitors' workspaces in the given direction."""
         direction: int = int(arg)
         mon_list = self.monitors[:-1] if direction > 0 else list(reversed(self.monitors[1:]))
@@ -22,10 +22,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for i, mon in enumerate(mon_list):
             await self.hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i + direction]}")
 
-    async def event_monitoradded(self, monitor):
+    async def event_monitoradded(self, monitor) -> None:
         """Keep track of monitors."""
         self.monitors.append(monitor)
 
-    async def event_monitorremoved(self, monitor):
+    async def event_monitorremoved(self, monitor) -> None:
         """Keep track of monitors."""
         self.monitors.remove(monitor)

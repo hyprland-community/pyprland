@@ -102,7 +102,7 @@ def build_graph(config):
     graph = defaultdict(list)
     for name1, positions in config.items():
         for pos, names in positions.items():
-            tldr_direction = pos.startswith("left") or pos.startswith("top")
+            tldr_direction = pos.startswith(("left", "top"))
             for name2 in names:
                 if tldr_direction:
                     graph[name1].append(name2)

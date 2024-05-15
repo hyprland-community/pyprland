@@ -1,10 +1,10 @@
 """Helper functions for the scratchpads plugin."""
 
 __all__ = [
+    "OverridableConfig",
     "get_active_space_identifier",
     "get_all_space_identifiers",
     "get_match_fn",
-    "OverridableConfig",
 ]
 
 import re
@@ -32,7 +32,7 @@ def get_match_fn(prop_name, prop_value):
         # get regex from cache if possible:
         if prop_value not in _match_fn_re_cache:
             regex = re.compile(prop_value[3:])
-            _match_fn_re_cache[prop_value] = lambda value1, value2: regex.match(value1)
+            _match_fn_re_cache[prop_value] = lambda value1, _value2: regex.match(value1)
         return _match_fn_re_cache[prop_value]
     return lambda value1, value2: value1 == value2
 
@@ -40,11 +40,11 @@ def get_match_fn(prop_name, prop_value):
 class OverridableConfig:
     """A `dict`-like object allowing per-monitor overrides."""
 
-    def __init__(self, ref, monitor_override):
+    def __init__(self, ref, monitor_override) -> None:
         self.ref = ref
         self.mon_override = monitor_override
 
-    def __setitem__(self, name, value):
+    def __setitem__(self, name, value) -> None:
         self.ref[name] = value
 
     def __getitem__(self, name):
@@ -53,7 +53,7 @@ class OverridableConfig:
             return override[name]
         return self.ref[name]
 
-    def __contains__(self, name):
+    def __contains__(self, name) -> bool:
         try:
             self[name]  # pylint: disable=pointless-statement
             return True
@@ -67,5 +67,5 @@ class OverridableConfig:
         except KeyError:
             return default
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.ref} {self.mon_override}"

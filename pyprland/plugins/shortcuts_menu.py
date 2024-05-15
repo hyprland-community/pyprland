@@ -12,7 +12,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
 
     # Commands
 
-    async def run_menu(self, name=""):
+    async def run_menu(self, name="") -> None:
         """[name] Shows the menu, if "name" is provided, will only show this sub-menu."""
         await self.ensure_menu_configured()
         options = self.config["entries"]
@@ -43,7 +43,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
             try:
                 formatted_options = {_format_title(k, v): v for k, v in options.items()}
                 if self.cast_bool(self.config.get("skip_single"), True) and len(formatted_options) == 1:
-                    selection = list(formatted_options.keys())[0]
+                    selection = next(iter(formatted_options.keys()))
                 else:
                     selection = await self.menu.run(formatted_options, selection)
                 options = formatted_options[selection]
@@ -53,7 +53,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
 
     # Utils
 
-    async def _handle_chain(self, options):
+    async def _handle_chain(self, options) -> None:
         """Handle a chain of special objects + final command string."""
         variables: dict[str, str] = state.variables.copy()
         autovalidate = self.cast_bool(self.config.get("skip_single"), True)
@@ -82,7 +82,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                     variables[var_name] = apply_filter(selection, option.get("filter"))
                     self.log.debug("set %s = %s", var_name, variables[var_name])
 
-    async def _run_command(self, command, variables):
+    async def _run_command(self, command, variables) -> None:
         """Run a shell `command`, optionally replacing `variables`.
 
         The command is run in a shell, and the variables are replaced using the `apply_variables` function.

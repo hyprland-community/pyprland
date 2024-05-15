@@ -21,7 +21,7 @@ class Extension(CastBoolMixin, Plugin):
 
     # Events
 
-    async def event_openwindow(self, windescr):
+    async def event_openwindow(self, windescr) -> None:
         """Re-set focus to main if a window is opened."""
         if not self.enabled:
             return
@@ -32,7 +32,7 @@ class Extension(CastBoolMixin, Plugin):
                 self.last_index = i
                 break
 
-    async def event_activewindowv2(self, _):
+    async def event_activewindowv2(self, _) -> None:
         """Keep track of focused client."""
         captive = self.cast_bool(self.config.get("captive_focus"))
         is_not_active = state.active_window != self.main_window_addr
@@ -44,7 +44,7 @@ class Extension(CastBoolMixin, Plugin):
             else:
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
 
-    async def event_closewindow(self, addr):
+    async def event_closewindow(self, addr) -> None:
         """Disable when the main window is closed."""
         addr = "0x" + addr
         clients = [c for c in await self.get_clients() if c["address"] != addr]
@@ -56,7 +56,7 @@ class Extension(CastBoolMixin, Plugin):
 
     # Command
 
-    async def run_layout_center(self, what):
+    async def run_layout_center(self, what) -> None:
         """<toggle|next|prev> turn on/off or change the active window."""
         if what == "toggle":
             await self._run_toggle()
@@ -79,7 +79,7 @@ class Extension(CastBoolMixin, Plugin):
         clients.sort(key=lambda c: c["address"])
         return clients
 
-    async def unprepare_window(self, clients=None):
+    async def unprepare_window(self, clients=None) -> None:
         """Set the window as normal."""
         if not clients:
             clients = await self.get_clients()
@@ -88,7 +88,7 @@ class Extension(CastBoolMixin, Plugin):
             if cli["address"] == addr and cli["floating"]:
                 await self.hyprctl(f"togglefloating address:{addr}")
 
-    async def prepare_window(self, clients=None):
+    async def prepare_window(self, clients=None) -> None:
         """Set the window as centered."""
         if not clients:
             clients = await self.get_clients()
@@ -124,7 +124,7 @@ class Extension(CastBoolMixin, Plugin):
             self.enabled = False
         return self.enabled
 
-    async def _run_changefocus(self, direction, default_override=None):
+    async def _run_changefocus(self, direction, default_override=None) -> None:
         """Change the focus in the given direction (-1 or 1)."""
         if self.enabled:
             clients = await self.get_clients()
@@ -150,7 +150,7 @@ class Extension(CastBoolMixin, Plugin):
             if command:
                 await self.hyprctl(command)
 
-    async def _run_toggle(self):
+    async def _run_toggle(self) -> None:
         """Toggle the center layout."""
         disabled = not self.enabled
         if disabled:
@@ -182,7 +182,7 @@ class Extension(CastBoolMixin, Plugin):
         """Is center layout enabled on the active workspace ?."""
         return self.workspace_info[state.active_workspace]["enabled"]
 
-    def set_enabled(self, value):
+    def set_enabled(self, value) -> None:
         """Set if center layout enabled on the active workspace."""
         self.workspace_info[state.active_workspace]["enabled"] = value
 
@@ -194,7 +194,7 @@ class Extension(CastBoolMixin, Plugin):
         """Get active workspace's centered window address."""
         return self.workspace_info[state.active_workspace]["addr"]
 
-    def set_main_window_addr(self, value):
+    def set_main_window_addr(self, value) -> None:
         """Set active workspace's centered window address."""
         self.workspace_info[state.active_workspace]["addr"] = value
 

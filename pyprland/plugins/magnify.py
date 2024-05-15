@@ -30,7 +30,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for i in range(duration):
             yield self.ease_out_quad(i, start, end - start, duration)
 
-    async def run_zoom(self, *args):
+    async def run_zoom(self, *args) -> None:
         """[factor] zooms to "factor" or toggles zoom level if factor is ommited.
 
         If factor is omitted, it toggles between the configured zoom level and no zoom.
@@ -52,11 +52,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
             # sanity check
             self.cur_factor = max(self.cur_factor, 1)
+        elif self.zoomed:
+            self.cur_factor = 1
         else:
-            if self.zoomed:
-                self.cur_factor = 1
-            else:
-                self.cur_factor = float(self.config.get("factor", 2.0))
+            self.cur_factor = float(self.config.get("factor", 2.0))
 
         self.cur_factor = max(self.cur_factor, 1)
 

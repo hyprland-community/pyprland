@@ -30,7 +30,7 @@ async def get_files_with_ext(path, extensions, recurse=True):
 class Extension(CastBoolMixin, Plugin):
     """Manages the background image."""
 
-    default_image_ext: set[str] | list[str] = set(("png", "jpg", "jpeg"))
+    default_image_ext: set[str] | list[str] = {"png", "jpg", "jpeg"}
     image_list: list[str] = []
     running = True
     proc: list = []
@@ -39,7 +39,7 @@ class Extension(CastBoolMixin, Plugin):
     next_background_event = asyncio.Event()
     cur_image = ""
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Re-build the image list."""
         cfg_path = self.config["path"]
         paths = [expand_path(cfg_path)] if isinstance(cfg_path, str) else [expand_path(p) for p in cfg_path]
@@ -55,14 +55,14 @@ class Extension(CastBoolMixin, Plugin):
         if self.loop is None:
             self.loop = asyncio.create_task(self.main_loop())
 
-    async def exit(self):
+    async def exit(self) -> None:
         """Terminates gracefully."""
         self.running = False
         if self.loop:
             self.loop.cancel()
         await self.terminate()
 
-    async def event_monitoradded(self, _):
+    async def event_monitoradded(self, _) -> None:
         """When a new monitor is added, set the background."""
         self.next_background_event.set()
 
@@ -74,13 +74,13 @@ class Extension(CastBoolMixin, Plugin):
         self.cur_image = choice
         return choice
 
-    async def _run_one(self, template, values):
+    async def _run_one(self, template, values) -> None:
         """Run one command."""
         cmd = apply_variables(template, values)
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    async def main_loop(self):
+    async def main_loop(self) -> None:
         """Run the main plugin loop in the 'background'."""
         self.proc = []
         unique = self.config.get("unique", False)
@@ -127,7 +127,7 @@ class Extension(CastBoolMixin, Plugin):
 
             await self.terminate()
 
-    async def terminate(self):
+    async def terminate(self) -> None:
         """Exit existing process if any."""
         if self.proc:
             for proc in self.proc:
@@ -136,7 +136,7 @@ class Extension(CastBoolMixin, Plugin):
                 await proc.wait()
         self.proc[:] = []
 
-    async def run_wall(self, arg):
+    async def run_wall(self, arg) -> None:
         """<next|clear> skip the current background image or stop displaying it."""
         if arg.startswith("n"):
             self.next_background_event.set()
