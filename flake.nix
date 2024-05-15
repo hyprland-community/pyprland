@@ -1,9 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
 
     # <https://github.com/nix-community/poetry2nix>
-    poetry2nix.url = "github:nix-community/poetry2nix";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # <https://github.com/nix-systems/nix-systems>
     systems.url = "github:nix-systems/default-linux";
@@ -17,12 +20,11 @@
 
   outputs = {
     self,
-    nixpkgs,
     systems,
-    poetry2nix,
+    nixpkgs,
     ...
-  }: let
-    inherit (poetry2nix.lib) mkPoetry2Nix;
+  } @ inputs: let
+    inherit (inputs.poetry2nix.lib) mkPoetry2Nix;
 
     eachSystem = nixpkgs.lib.genAttrs (import systems);
     pkgsFor = eachSystem (system: import nixpkgs {localSystem = system;});
@@ -32,7 +34,7 @@
     in {
       default = self.packages.${system}.pyprland;
       pyprland = mkPoetryApplication {
-        projectDir = ./.;
+        projectDir = nixpkgs.lib.cleanSource ./.;
         checkGroups = [];
       };
     });
