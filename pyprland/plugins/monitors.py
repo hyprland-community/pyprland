@@ -10,7 +10,7 @@ from ..types import MonitorInfo
 from .interface import Plugin
 
 
-def trim_offset(monitors):
+def trim_offset(monitors) -> None:
     """Make the monitor set layout start at 0,0."""
     off_x = None
     off_y = None
@@ -34,50 +34,67 @@ def clean_pos(position):
     return position.lower().replace("_", "").replace("-", "")
 
 
+def scale_and_rotate(monitor):
+    """Scale and rotate the monitor dimensions."""
+    width = int(monitor["width"] / monitor["scale"])
+    height = int(monitor["height"] / monitor["scale"])
+    if is_rotated(monitor):
+        width, height = height, width
+    return width, height
+
+
+def top_place(main_mon, other_mon, centered, end):
+    """Place a monitor on top of another."""
+    x = other_mon["x"]
+    y = other_mon["y"] - main_mon[1]
+    if centered:
+        x += int((other_mon[0] - main_mon[0]) / 2)
+    elif end:
+        x += int(other_mon[0] - main_mon[0])
+    return (x, y)
+
+
+def bottom_place(main_mon, other_mon, centered):
+    """Place a monitor below another."""
+    x = other_mon["x"]
+    y = other_mon["y"] + other_mon[1]
+    if centered:
+        x += int((other_mon[0] - main_mon[0]) / 2)
+    return (x, y)
+
+
+def left_place(main_mon, other_mon):
+    """Place a monitor to the left of another."""
+    x = other_mon["x"] - main_mon[0]
+    y = other_mon["y"]
+    return (x, y)
+
+
+def right_place(_main_mon, other_mon):
+    """Place a monitor to the right of another."""
+    x = other_mon["x"] + other_mon[0]
+    y = other_mon["y"]
+    return (x, y)
+
+
 def get_XY(place, main_mon, other_mon):
     """Get the XY position of a monitor according to another (after `place` is applied).
 
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
     """
-    align_x = False
-    scaled_m_w = int(main_mon["width"] / main_mon["scale"])
-    scaled_m_h = int(main_mon["height"] / main_mon["scale"])
-    if is_rotated(main_mon):
-        scaled_m_w, scaled_m_h = scaled_m_h, scaled_m_w
-    scaled_om_w = int(other_mon["width"] / other_mon["scale"])
-    scaled_om_h = int(other_mon["height"] / other_mon["scale"])
-    if is_rotated(other_mon):
-        scaled_om_w, scaled_om_h = scaled_om_h, scaled_om_w
-    if place.startswith("top"):
-        x = other_mon["x"]
-        y = other_mon["y"] - scaled_m_h
-        align_x = True
-    elif place.startswith("bottom"):
-        x = other_mon["x"]
-        y = other_mon["y"] + scaled_om_h
-        align_x = True
-    elif place.startswith("left"):
-        x = other_mon["x"] - scaled_m_w
-        y = other_mon["y"]
-    elif place.startswith("right"):
-        x = other_mon["x"] + scaled_om_w
-        y = other_mon["y"]
-    else:
+    place_map = {"top": top_place, "bottom": bottom_place, "left": left_place, "right": right_place}
+
+    main_mon = scale_and_rotate(main_mon)
+    other_mon = scale_and_rotate(other_mon)
+
+    place_func = place_map.get(place.split()[0])
+    if not place_func:
         return None
 
     centered = "middle" in place or "center" in place
+    end = "end" in place
 
-    if align_x:
-        if centered:
-            x += int((scaled_om_w - scaled_m_w) / 2)
-        elif "end" in place:
-            x += int(scaled_om_w - scaled_m_w)
-    else:
-        if centered:
-            y += int((scaled_om_h - scaled_m_h) / 2)
-        elif "end" in place:
-            y += scaled_m_h - scaled_om_h
-    return (x, y)
+    return place_func(main_mon, other_mon, centered, end)
 
 
 def build_graph(config):
@@ -99,7 +116,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     _mon_by_pat_cache: dict[str, dict] = {}
 
-    async def on_reload(self):
+    async def on_reload(self) -> None:
         """Reload the plugin."""
         self._clear_mon_by_pat_cache()
         monitors = await self.hyprctlJSON("monitors")
@@ -111,7 +128,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(self, monitors: list[MonitorInfo] | None = None):
+    async def run_relayout(self, monitors: list[MonitorInfo] | None = None) -> None:
         """Recompute & apply every monitors's layout."""
         self._clear_mon_by_pat_cache()
 
@@ -153,7 +170,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Utils
 
-    async def _hotplug_command(self, monitors: list[MonitorInfo], name: str):
+    async def _hotplug_command(self, monitors: list[MonitorInfo], name: str) -> None:
         """Run the hotplug command for the monitor."""
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
@@ -163,7 +180,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 await asyncio.create_subprocess_shell(command)
                 break
 
-    def _clear_mon_by_pat_cache(self):
+    def _clear_mon_by_pat_cache(self) -> None:
         """Clear the cache."""
         self._mon_by_pat_cache = {}
 
@@ -230,12 +247,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         Returns a list of tuples (position, name) where name is the other monitor's name.
         """
         results = []
-        ref_set = set((name1, name2))
+        ref_set = {name1, name2}
         for name_a, positions in config.items():
             for pos, names in positions.items():
                 lpos = clean_pos(pos)
                 for name_b in names:
-                    if set((name_a, name_b)) == ref_set:
+                    if {name_a, name_b} == ref_set:
                         if name_a == name1:
                             results.append((lpos, name_b))
                         else:
