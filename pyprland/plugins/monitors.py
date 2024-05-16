@@ -34,7 +34,7 @@ def clean_pos(position):
     return position.lower().replace("_", "").replace("-", "")
 
 
-def scale_and_rotate(monitor):
+def scale_and_rotate_mon(monitor):
     """Scale and rotate the monitor dimensions."""
     width = int(monitor["width"] / monitor["scale"])
     height = int(monitor["height"] / monitor["scale"])
@@ -43,58 +43,36 @@ def scale_and_rotate(monitor):
     return width, height
 
 
-def top_place(main_mon, other_mon, centered, end):
-    """Place a monitor on top of another."""
-    x = other_mon["x"]
-    y = other_mon["y"] - main_mon[1]
-    if centered:
-        x += int((other_mon[0] - main_mon[0]) / 2)
-    elif end:
-        x += int(other_mon[0] - main_mon[0])
-    return (x, y)
-
-
-def bottom_place(main_mon, other_mon, centered):
-    """Place a monitor below another."""
-    x = other_mon["x"]
-    y = other_mon["y"] + other_mon[1]
-    if centered:
-        x += int((other_mon[0] - main_mon[0]) / 2)
-    return (x, y)
-
-
-def left_place(main_mon, other_mon):
-    """Place a monitor to the left of another."""
-    x = other_mon["x"] - main_mon[0]
-    y = other_mon["y"]
-    return (x, y)
-
-
-def right_place(_main_mon, other_mon):
-    """Place a monitor to the right of another."""
-    x = other_mon["x"] + other_mon[0]
-    y = other_mon["y"]
-    return (x, y)
-
-
 def get_XY(place, main_mon, other_mon):
     """Get the XY position of a monitor according to another (after `place` is applied).
 
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
     """
-    place_map = {"top": top_place, "bottom": bottom_place, "left": left_place, "right": right_place}
+    align_x = False  # if alignment is on X axis, else on Y axis
+    scaled_m_w, scaled_m_h = scale_and_rotate_mon(main_mon)
+    scaled_om_w, scaled_om_h = scale_and_rotate_mon(other_mon)
 
-    main_mon = scale_and_rotate(main_mon)
-    other_mon = scale_and_rotate(other_mon)
-
-    place_func = place_map.get(place.split()[0])
-    if not place_func:
-        return None
+    if place[0] in ("t", "b"):  # top or bottom
+        align_x = True
+        x = other_mon["x"]
+        y = other_mon["y"] - scaled_m_h if place[0] == "t" else other_mon["y"] + scaled_om_h
+    else:  # left or right
+        y = other_mon["y"]
+        x = other_mon["x"] - scaled_m_w if place[0] == "l" else other_mon["x"] + scaled_om_w
 
     centered = "middle" in place or "center" in place
-    end = "end" in place
 
-    return place_func(main_mon, other_mon, centered, end)
+    if align_x:
+        if centered:
+            x += int((scaled_om_w - scaled_m_w) / 2)
+        elif "end" in place:
+            x += int(scaled_om_w - scaled_m_w)
+    else:
+        if centered:
+            y += int((scaled_om_h - scaled_m_h) / 2)
+        elif "end" in place:
+            y += scaled_m_h - scaled_om_h
+    return (x, y)
 
 
 def build_graph(config):
@@ -228,7 +206,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 for name2 in graph[name]:
                     mon2 = monitors_by_name[name2]
                     for pos, _ in self.get_matching_config(name, name2, config):
-                        x, y = get_XY(self._flipped_positions[pos], mon2, mon1)
+                        try:
+                            x, y = get_XY(self._flipped_positions[pos.lower()], mon2, mon1)
+                        except TypeError:
+                            self.log.error("Invalid position %s", pos)
+                            continue
                         if x != mon2["x"]:
                             changed = True
                             requires_update = True
