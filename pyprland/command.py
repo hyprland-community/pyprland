@@ -60,7 +60,7 @@ class Pyprland:
     async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
         """Load config file as self.config."""
         if config_filename:
-            fname = os.path.expandvars(os.path.expanduser(config_filename))
+            fname = os.path.expanduser(os.path.expandvars(config_filename))
             if os.path.isdir(fname):
                 config: dict[str, Any] = {}
                 for toml_file in sorted(os.listdir(fname)):
@@ -72,7 +72,7 @@ class Pyprland:
             if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
                 self.log.warning("Consider changing your configuration to TOML format.")
             self.config.clear()
-            fname = os.path.expanduser(CONFIG_FILE)
+            fname = os.path.expanduser(os.path.expandvars(CONFIG_FILE))
 
         config = self.__load_config_file(fname)
 
