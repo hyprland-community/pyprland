@@ -74,7 +74,7 @@ async def hyprctl_json(command: str, logger=None) -> list[dict[str, Any]] | dict
     now = time.time()
     cached = command in cached_responses and cached_responses[command][0] > now
     if cached:
-        logger.debug(f"{command} (CACHE HIT)")
+        logger.debug("%s (CACHE HIT)", command)
         return cached_responses[command][1]  # type: ignore
     logger.debug(command)
     try:

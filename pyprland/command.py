@@ -124,7 +124,7 @@ class Pyprland:
             return False
         except Exception as e:
             await notify_info(f"Error loading plugin {name}: {e}")
-            self.log.error("Error loading plugin %s:", name, exc_info=True)
+            self.log.exception("Error loading plugin %s:", name)
             raise PyprError from e
         return True
 
@@ -150,7 +150,7 @@ class Pyprland:
                     raise
                 except Exception as e:
                     await notify_info(f"Error initializing plugin {name}: {e}")
-                    self.log.error("Error initializing plugin %s:", name, exc_info=True)
+                    self.log.exception("Error initializing plugin %s:", name)
                     raise PyprError from e
                 else:
                     self.plugins[name].log.info("configured")
@@ -171,12 +171,12 @@ class Pyprland:
 
     def plain_log_handler(self, plugin, name, params) -> None:
         """Log a handler method without color."""
-        plugin.log.debug(f"{name}{params}")
+        plugin.log.debug("%s%s", name, params)
 
     def colored_log_handler(self, plugin, name, params) -> None:
         """Log a handler method with color."""
         color = 33 if name.startswith("run_") else 30
-        plugin.log.debug(f"\033[{color};1m%s%s\033[0m", name, params)
+        plugin.log.debug("\033[%s;1m%s%s\033[0m", color, name, params)
 
     async def _run_plugin_handler(self, plugin, full_name, params) -> None:
         """Run a single handler on a plugin."""
