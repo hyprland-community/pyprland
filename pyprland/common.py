@@ -27,6 +27,8 @@ DEBUG = os.environ.get("DEBUG", False)
 
 HYPRLAND_INSTANCE_SIGNATURE = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
 
+MINIMUM_ADDR_LEN = 10
+
 try:
     IPC_FOLDER = (
         f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'

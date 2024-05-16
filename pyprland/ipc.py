@@ -17,7 +17,7 @@ from functools import partial
 from logging import Logger
 from typing import Any
 
-from .common import IPC_FOLDER, get_logger
+from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
 from .types import ClientInfo, MonitorInfo, PyprError
 
 log: Logger | None = None
@@ -201,7 +201,7 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
     klass = kw.get("cls")
 
     if addr:
-        assert len(addr) > 2, "Client address is invalid"
+        assert len(addr) > MINIMUM_ADDR_LEN, "Client address is invalid"
         prop_name = "address"
         prop_value = addr
     elif klass:

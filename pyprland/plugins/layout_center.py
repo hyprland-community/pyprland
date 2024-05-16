@@ -117,7 +117,7 @@ class Extension(CastBoolMixin, Plugin):
     async def _sanity_check(self, clients=None):
         """Auto-disable if needed & return enabled status."""
         clients = clients or await self.get_clients()
-        if len(clients) < 2:
+        if len(clients) < 2:  # noqa: PLR2004
             # If < 2 clients, disable the layout & stop
             self.log.info("disabling (clients starvation)")
             await self.unprepare_window()

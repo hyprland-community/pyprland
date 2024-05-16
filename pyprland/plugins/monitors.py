@@ -67,11 +67,11 @@ def get_xy(place, main_mon, other_mon):
             x += int((scaled_om_w - scaled_m_w) / 2)
         elif "end" in place:
             x += int(scaled_om_w - scaled_m_w)
-    else:
-        if centered:
-            y += int((scaled_om_h - scaled_m_h) / 2)
-        elif "end" in place:
-            y += scaled_m_h - scaled_om_h
+    elif centered:
+        y += int((scaled_om_h - scaled_m_h) / 2)
+    elif "end" in place:
+        y += scaled_m_h - scaled_om_h
+
     return (x, y)
 
 
@@ -263,7 +263,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             cleaned_config[name] = {}
             for position, descr_list in placement.items():
                 if isinstance(descr_list, str):
-                    descr_list = [descr_list]
+                    descr_list = [descr_list]  # noqa: PLW2901
                 resolved = []
                 for p in descr_list:
                     r = self._get_mon_by_pat(p, monitors_by_descr, plugged_monitors)

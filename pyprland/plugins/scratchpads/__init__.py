@@ -8,16 +8,12 @@ from functools import partial
 from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
-from ...common import CastBoolMixin, apply_variables, is_rotated, state
+from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
 from ...ipc import get_client_props, get_focused_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo
 from ..interface import Plugin
 from .animations import Animations
-from .helpers import (
-    get_active_space_identifier,
-    get_all_space_identifiers,
-    get_match_fn,
-)
+from .helpers import get_active_space_identifier, get_all_space_identifiers, get_match_fn
 from .lookup import ScratchDB
 from .objects import Scratch
 
@@ -303,7 +299,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_activewindowv2(self, addr) -> None:
         """Active windows hook."""
-        full_address = "" if not addr or len(addr) < 10 else "0x" + addr
+        full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
         for uid, scratch in self.scratches.items():
             if not scratch.client_info:
                 continue
@@ -480,8 +476,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not animation_type:
             return False
 
-        off_x, off_y = await self.get_offsets(scratch, monitor)
-        await self._slide_animation(animation_type, scratch, off_x, off_y)
+        await self._slide_animation(animation_type, scratch, await self.get_offsets(scratch, monitor))
         await asyncio.sleep(scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY))  # await for animation to finish
         return True
 
@@ -489,13 +484,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self,
         animation_type: str,
         scratch: Scratch,
-        off_x: int,
-        off_y: int,
+        offset: tuple[int, int],
         only_secondary=False,
     ) -> None:
         """Slides the window `offset` pixels respecting `animation_type`."""
         addresses = [] if only_secondary else [scratch.full_address]
         addresses.extend(scratch.extra_addr)
+        off_x, off_y = offset
 
         animation_actions = {
             "fromright": f"movewindowpixel {off_x} 0",
@@ -635,13 +630,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Animate the show transition."""
         animation_type = get_animation_type(scratch)
         if animation_type:
-            ox, oy = await self.get_offsets(scratch, monitor)
+            offset = tuple(-1 * n for n in await self.get_offsets(scratch, monitor))
             if relative_animation:
                 # Relative positioning
                 if "size" not in scratch.client_info:
                     await self.update_scratch_info(scratch)  # type: ignore
 
-                await self._slide_animation(animation_type, scratch, -ox, -oy)
+                await self._slide_animation(animation_type, scratch, offset)
             else:
                 # Absolute positioning
                 command = getattr(Animations, animation_type)(
@@ -651,7 +646,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     scratch.conf.get("margin", DEFAULT_MARGIN),
                 )
                 await self.hyprctl(command)
-                await self._slide_animation(animation_type, scratch, -ox, -oy, only_secondary=True)
+                await self._slide_animation(animation_type, scratch, offset, only_secondary=True)
         else:
             self.log.warning(
                 "No position and no animation provided for %s, don't know where to place it.",
