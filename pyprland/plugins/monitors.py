@@ -43,7 +43,7 @@ def scale_and_rotate_mon(monitor):
     return width, height
 
 
-def get_XY(place, main_mon, other_mon):
+def get_xy(place, main_mon, other_mon):
     """Get the XY position of a monitor according to another (after `place` is applied).
 
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
@@ -97,7 +97,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def on_reload(self) -> None:
         """Reload the plugin."""
         self._clear_mon_by_pat_cache()
-        monitors = await self.hyprctlJSON("monitors")
+        monitors = await self.hyprctl_json("monitors")
         if self.cast_bool(self.config.get("startup_relayout"), True):
             await self.run_relayout(monitors)
 
@@ -111,7 +111,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self._clear_mon_by_pat_cache()
 
         if monitors is None:
-            monitors = cast(list[MonitorInfo], await self.hyprctlJSON("monitors"))
+            monitors = cast(list[MonitorInfo], await self.hyprctl_json("monitors"))
 
         cleaned_config = self.resolve_names(monitors)
         if cleaned_config:
@@ -120,7 +120,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.debug("No configuration item is applicable")
         graph = build_graph(cleaned_config)
         need_change = self._update_positions(monitors, graph, cleaned_config)
-        every_monitor = {v["name"]: v for v in await self.hyprctlJSON("monitors all")}
+        every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
         if need_change:
             trim_offset(monitors)
 
@@ -142,7 +142,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def event_monitoradded(self, name) -> None:
         """Triggers when a monitor is plugged."""
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
-        monitors = await self.hyprctlJSON("monitors")
+        monitors = await self.hyprctl_json("monitors")
         await self._hotplug_command(monitors, name)
         await self.run_relayout(monitors)
 
@@ -207,7 +207,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     mon2 = monitors_by_name[name2]
                     for pos, _ in self.get_matching_config(name, name2, config):
                         try:
-                            x, y = get_XY(self._flipped_positions[pos.lower()], mon2, mon1)
+                            x, y = get_xy(self._flipped_positions[pos.lower()], mon2, mon1)
                         except TypeError:
                             self.log.error("Invalid position %s", pos)
                             continue

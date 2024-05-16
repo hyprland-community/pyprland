@@ -96,8 +96,7 @@ select = [
     "W",
     "YTT",
     # "ANN",
-    "COM"
-    # "N",
+    "N",
     # "G",
     # "BLE",
     # "FBT",

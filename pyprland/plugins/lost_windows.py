@@ -17,7 +17,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""
-        monitors = cast(list, await self.hyprctlJSON("monitors"))
+        monitors = cast(list, await self.hyprctl_json("monitors"))
         windows = cast(list, await self.get_clients())
         lost = [win for win in windows if win["floating"] and not any(contains(mon, win) for mon in monitors)]
         focused: dict[str, Any] = next(mon for mon in monitors if mon["focused"])

@@ -71,7 +71,7 @@ class Scratch(CastBoolMixin):  # {{{
         if self.meta.initialized:
             return
         self.meta.initialized = True
-        await self.updateClientInfo()
+        await self.update_client_info()
         await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
         if "class_match" in self.conf:  # NOTE: legacy, to be removed
             await notify_error(
@@ -79,7 +79,7 @@ class Scratch(CastBoolMixin):  # {{{
                 logger=self.log,
             )
 
-    async def isAlive(self) -> bool:
+    async def is_alive(self) -> bool:
         """Is the process running ?."""
         if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
@@ -127,7 +127,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Return the client address."""
         return cast(str, self.client_info.get("address", ""))
 
-    async def updateClientInfo(
+    async def update_client_info(
         self,
         client_info: ClientInfo | None = None,
         clients: list[ClientInfo] | None = None,

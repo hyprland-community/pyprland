@@ -15,19 +15,19 @@ class ScratchDB:  # {{{
     _states: defaultdict[str, set[Scratch]] = defaultdict(set)
 
     # State management {{{
-    def getByState(self, status: str):
+    def get_by_state(self, status: str):
         """Get a set of `Scratch` being in `status`."""
         return self._states[status]
 
-    def hasState(self, scratch: Scratch, status: str):
+    def has_state(self, scratch: Scratch, status: str):
         """Return true if `scratch` has state `status`."""
         return scratch in self._states[status]
 
-    def setState(self, scratch: Scratch, status: str) -> None:
+    def set_state(self, scratch: Scratch, status: str) -> None:
         """Set `scratch` in the provided status."""
         self._states[status].add(scratch)
 
-    def clearState(self, scratch: Scratch, status: str) -> None:
+    def clear_state(self, scratch: Scratch, status: str) -> None:
         """Unset the the provided status from the scratch."""
         self._states[status].remove(scratch)
 

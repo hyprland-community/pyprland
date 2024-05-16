@@ -14,7 +14,7 @@ class Extension(Plugin):
         """Initialize the plugin."""
         state.active_window = ""
         try:
-            version_info = await self.hyprctlJSON("version")
+            version_info = await self.hyprctl_json("version")
         except json.JSONDecodeError as e:
             self.log.error("Fail to parse hyprctl version: %s", e)
             await self.notify_error("Error: 'hyprctl version': incorrect JSON data")
@@ -33,8 +33,8 @@ class Extension(Plugin):
             await self.notify_error(f"Failed to parse hyprctl version tag: {version}")
             state.hyprland_version = VersionInfo(0, 0, 0)
 
-        state.active_workspace = (await self.hyprctlJSON("activeworkspace"))["name"]
-        monitors = await self.hyprctlJSON("monitors")
+        state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
+        monitors = await self.hyprctl_json("monitors")
         state.monitors = [mon["name"] for mon in monitors]
         state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
 

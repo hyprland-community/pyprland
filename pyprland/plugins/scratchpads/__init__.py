@@ -74,10 +74,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 proc = self.procs[scratch.uid]
                 proc.terminate()
                 for _ in range(10):
-                    if not await scratch.isAlive():
+                    if not await scratch.is_alive():
                         break
                     await asyncio.sleep(0.1)
-                if await scratch.isAlive():
+                if await scratch.is_alive():
                     proc.kill()
                 await proc.wait()
 
@@ -108,9 +108,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 self.log.error("Failure starting %s", name)
 
-        for scratch in list(self.scratches.getByState("configured")):
+        for scratch in list(self.scratches.get_by_state("configured")):
             assert scratch
-            self.scratches.clearState(scratch, "configured")
+            self.scratches.clear_state(scratch, "configured")
 
     async def _unset_windowrules(self, scratch: Scratch) -> None:
         """Unset the windowrules."""
@@ -120,7 +120,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
-        self.scratches.setState(scratch, "configured")
+        self.scratches.set_state(scratch, "configured")
         animation_type: str = scratch.conf.get("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get("class", "")
         skipped_windowrules = scratch.conf.get("skip_windowrules", [])
@@ -166,13 +166,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         interval_range = [0.1] * 10 + [0.2] * 20 + [0.5] * 15
         for interval in interval_range:
             await asyncio.sleep(interval)
-            is_alive = await scratch.isAlive()
+            is_alive = await scratch.is_alive()
 
             # skips the checks if the process isn't started (just wait)
             if is_alive or not use_proc:
                 info = await scratch.fetch_matching_client()
                 if info:
-                    await scratch.updateClientInfo(info)
+                    await scratch.update_client_info(info)
                     self.log.info(
                         "=> %s client (proc:%s, addr:%s) detected on time",
                         scratch.uid,
@@ -180,7 +180,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         scratch.full_address,
                     )
                     self.scratches.register(scratch)
-                    self.scratches.clearState(scratch, "respawned")
+                    self.scratches.clear_state(scratch, "respawned")
                     return True
             if use_proc and not is_alive:
                 return False
@@ -190,7 +190,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Ensure alive, PWA version."""
         uid = scratch.uid
         started = scratch.meta.no_pid
-        if not await scratch.isAlive():
+        if not await scratch.is_alive():
             started = False
         if not started:
             self.scratches.reset(scratch)
@@ -211,7 +211,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.log.info("starting %s", uid)
         if not await self.__wait_for_client(scratch):
             self.log.error("⚠ Failed spawning %s as proc %s", uid, scratch.pid)
-            if await scratch.isAlive():
+            if await scratch.is_alive():
                 error = "The command didn't open a window"
             else:
                 await self.procs[uid].communicate()
@@ -231,7 +231,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         assert item
 
         if self.cast_bool(item.conf.get("process_tracking"), True):
-            if not await item.isAlive():
+            if not await item.is_alive():
                 await self._configure_windowrules(item)
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):
@@ -246,7 +246,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Spawn a given scratchpad's process."""
         scratch = self.scratches.get(name)
         assert scratch
-        self.scratches.setState(scratch, "respawned")
+        self.scratches.set_state(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
         command = apply_variables(scratch.conf["command"], state.variables)
         proc = await asyncio.create_subprocess_shell(command)
@@ -258,14 +258,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if old_pid:
             self.scratches.clear(pid=old_pid)
 
-    async def updateScratchInfo(self, orig_scratch: Scratch | None = None) -> None:
+    async def update_scratch_info(self, orig_scratch: Scratch | None = None) -> None:
         """Update Scratchpad information.
 
         If `scratch` is given, update only this scratchpad.
         Else, update every scratchpad.
         """
         pid = orig_scratch.pid if orig_scratch else None
-        for client in await self.hyprctlJSON("clients"):
+        for client in await self.hyprctl_json("clients"):
             assert isinstance(client, dict)
             if pid and pid != client["pid"]:
                 continue
@@ -276,7 +276,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
                 self.scratches.register(scratch, addr=client["address"][2:])
-                await scratch.updateClientInfo(cast(ClientInfo, client))
+                await scratch.update_client_info(cast(ClientInfo, client))
                 break
         else:
             self.log.info("Didn't update scratch info %s", self)
@@ -298,7 +298,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_configreloaded(self, _nothing) -> None:
         """Re-apply windowrules when hyprland is restarted."""
-        for scratch in list(self.scratches.getByState("configured")):
+        for scratch in list(self.scratches.get_by_state("configured")):
             await self._configure_windowrules(scratch)
 
     async def event_activewindowv2(self, addr) -> None:
@@ -343,11 +343,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _alternative_lookup(self) -> bool:
         """If not matching by pid, use specific matching and return True."""
-        class_lookup_hack = [s for s in self.scratches.getByState("respawned") if s.conf.get("match_by", "pid") != "pid"]
+        class_lookup_hack = [s for s in self.scratches.get_by_state("respawned") if s.conf.get("match_by", "pid") != "pid"]
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
-        clients = await self.hyprctlJSON("clients")
+        clients = await self.hyprctl_json("clients")
         for pending_scratch in class_lookup_hack:
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
@@ -356,19 +356,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 if match_fn(client[match_by], match_value):
                     self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
-                    await pending_scratch.updateClientInfo(client)
+                    await pending_scratch.update_client_info(client)
         return True
 
     async def event_openwindow(self, params) -> None:
         """Open windows hook."""
         addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
-        rs = list(self.scratches.getByState("respawned"))
+        rs = list(self.scratches.get_by_state("respawned"))
         if rs and not item:
             # NOTE: for windows which aren't related to the process (see #8)
             if not await self._alternative_lookup():
                 self.log.info("Updating Scratch info")
-                await self.updateScratchInfo()
+                await self.update_scratch_info()
             item = self.scratches.get(addr=addr)
             if item and item.meta.should_hide:
                 await self.run_hide(item.uid, force=True)
@@ -429,7 +429,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if self.cast_bool(first_scratch.conf.get("alt_toggle")):
             # Needs to be on any monitor (if workspace matches)
             extra_visibility_check = first_scratch.meta.space_identifier in await get_all_space_identifiers(
-                await self.hyprctlJSON("monitors")
+                await self.hyprctl_json("monitors")
             )
         else:
             # Needs to be on the active monitor+workspace
@@ -448,7 +448,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.warning("%s is not configured", uid)
             else:
                 self.log.debug("%s visibility: %s and %s", uid, is_visible, item.visible)
-                if is_visible and await item.isAlive():
+                if is_visible and await item.is_alive():
                     tasks.append(partial(self.run_hide, uid))
                 else:
                     tasks.append(partial(self.run_show, uid))
@@ -520,7 +520,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.cancel_task(uid)
 
         self.log.info("Showing %s", uid)
-        was_alive = await scratch.isAlive()
+        was_alive = await scratch.is_alive()
         if not await self.ensure_alive(uid):
             self.log.error("Failed to show %s, aborting.", uid)
             return
@@ -585,7 +585,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if should_set_aspect:
             position_fixed = await self._fix_position(scratch, monitor)
 
-        clients = await self.hyprctlJSON("clients")
+        clients = await self.hyprctl_json("clients")
         await self._handle_multiwindow(scratch, clients)  # not very useful but cheap
         # move
         move_commands = [
@@ -594,10 +594,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             f"alterzorder top,address:{scratch.full_address}",
         ]
         for addr in scratch.extra_addr:
-            move_commands.extend([
-                f"movetoworkspacesilent {wrkspc},address:{addr}",
-                f"alterzorder top,address:{addr}",
-            ])
+            move_commands.extend(
+                [
+                    f"movetoworkspacesilent {wrkspc},address:{addr}",
+                    f"alterzorder top,address:{addr}",
+                ]
+            )
 
         await self.hyprctl(move_commands)
         await self._update_infos(scratch, clients)
@@ -613,7 +615,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Update the client info."""
         try:
             # update position, size & workspace information (workspace properties have been created)
-            await scratch.updateClientInfo(clients=clients)
+            await scratch.update_client_info(clients=clients)
         except KeyError:
             for alt_addr in scratch.extra_addr:
                 # get the client info for the extra addresses
@@ -621,7 +623,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     client_info = await self.get_client_props(addr="0x" + alt_addr, clients=clients)
                     if not client_info:
                         continue
-                    await scratch.updateClientInfo(clients=clients, client_info=client_info)
+                    await scratch.update_client_info(clients=clients, client_info=client_info)
                 except KeyError:
                     pass
                 else:
@@ -637,7 +639,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if relative_animation:
                 # Relative positioning
                 if "size" not in scratch.client_info:
-                    await self.updateScratchInfo(scratch)  # type: ignore
+                    await self.update_scratch_info(scratch)  # type: ignore
 
                 await self._slide_animation(animation_type, scratch, -ox, -oy)
             else:
@@ -698,7 +700,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
         # collects window which have been created by the app
         if self.cast_bool(scratch.conf.get("multi"), True):
-            await self._handle_multiwindow(scratch, await self.hyprctlJSON("clients"))
+            await self._handle_multiwindow(scratch, await self.hyprctl_json("clients"))
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)

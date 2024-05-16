@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Any, cast
 
 from ..common import get_logger
-from ..ipc import getCtrlObjects
+from ..ipc import get_controls
 from ..types import ClientInfo
 
 
@@ -14,8 +14,8 @@ class Plugin:
 
     aborted = False
 
-    hyprctlJSON: Callable
-    " `pyprland.ipc.hyprctlJSON` using the pluggin's logger "
+    hyprctl_json: Callable
+    " `pyprland.ipc.hyprctl_json` using the pluggin's logger "
 
     hyprctl: Callable
     " `pyprland.ipc.hyprctl` using the pluggin's logger "
@@ -38,10 +38,10 @@ class Plugin:
         """ the plugin name """
         self.log = get_logger(name)
         """ the logger to use for this plugin """
-        ctrl = getCtrlObjects(self.log)
+        ctrl = get_controls(self.log)
         (
             self.hyprctl,
-            self.hyprctlJSON,  # pylint: disable=invalid-name
+            self.hyprctl_json,  # pylint: disable=invalid-name
             self.notify,
             self.notify_info,
             self.notify_error,
@@ -77,7 +77,7 @@ class Plugin:
         """Return the client list, optionally returns only mapped clients or from a given workspace."""
         return [
             client
-            for client in cast(list[ClientInfo], await self.hyprctlJSON("clients"))
+            for client in cast(list[ClientInfo], await self.hyprctl_json("clients"))
             if (not mapped or client["mapped"])
             and (workspace is None or cast(str, client["workspace"]["name"]) == workspace)
             and (workspace_bl is None or cast(str, client["workspace"]["name"]) != workspace_bl)

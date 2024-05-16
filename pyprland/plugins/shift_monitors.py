@@ -12,7 +12,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def init(self) -> None:
         """Initialize the plugin."""
-        self.monitors: list[str] = [mon["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors"))]
+        self.monitors: list[str] = [mon["name"] for mon in cast(list[dict], await self.hyprctl_json("monitors"))]
 
     async def run_shift_monitors(self, arg: str) -> None:
         """<+1/-1> Swaps monitors' workspaces in the given direction."""

@@ -19,9 +19,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = {
-            mon["activeWorkspace"]["name"] for mon in cast(list[dict], await self.hyprctlJSON("monitors")) if mon["name"] != monitor_id
+            mon["activeWorkspace"]["name"] for mon in cast(list[dict], await self.hyprctl_json("monitors")) if mon["name"] != monitor_id
         }
-        workspaces = [w["name"] for w in cast(list[dict], await self.hyprctlJSON("workspaces")) if w["id"] > 0]
+        workspaces = [w["name"] for w in cast(list[dict], await self.hyprctl_json("workspaces")) if w["id"] > 0]
 
         batch: list[str] = []
         for n in workspaces:
@@ -34,7 +34,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces."""
         increment = int(direction)
         # get focused screen info
-        monitors = await self.hyprctlJSON("monitors")
+        monitors = await self.hyprctl_json("monitors")
         assert isinstance(monitors, list)
         for monitor in monitors:
             if monitor["focused"]:
@@ -52,7 +52,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             next_workspace = available_workspaces[0 if increment > 0 else -1]
         else:
             next_workspace = available_workspaces[(idx + increment) % len(available_workspaces)]
-        await self.hyprctl([
-            f"moveworkspacetomonitor {next_workspace},{monitor['name']}",
-            f"workspace {next_workspace}",
-        ])
+        await self.hyprctl(
+            [
+                f"moveworkspacetomonitor {next_workspace},{monitor['name']}",
+                f"workspace {next_workspace}",
+            ]
+        )

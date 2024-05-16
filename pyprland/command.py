@@ -192,7 +192,7 @@ class Pyprland:
             self.log.exception(e)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    async def _callHandler(self, full_name, *params, notify=""):
+    async def _call_handler(self, full_name, *params, notify=""):
         """Call an event handler with params."""
         handled = False
         for plugin in self.plugins.values():
@@ -225,7 +225,7 @@ class Pyprland:
             full_name = f"event_{cmd}"
 
             # self.log.debug("[%s] %s", cmd, params.strip())
-            await self._callHandler(full_name, params.rstrip("\n"))
+            await self._call_handler(full_name, params.rstrip("\n"))
 
     async def exit_plugins(self) -> None:
         """Exit all plugins."""
@@ -275,7 +275,7 @@ class Pyprland:
         if PYPR_DEMO:
             os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC102
 
-        if not await self._callHandler(full_name, *args, notify=cmd):
+        if not await self._call_handler(full_name, *args, notify=cmd):
             self.log.warning("No such command: %s", cmd)
 
     async def serve(self) -> None:

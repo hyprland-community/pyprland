@@ -101,7 +101,7 @@ class Extension(CastBoolMixin, Plugin):
         x, y = self.offset
         margin = self.margin
         scale = 1
-        for monitor in cast(list[dict[str, Any]], await self.hyprctlJSON("monitors")):
+        for monitor in cast(list[dict[str, Any]], await self.hyprctl_json("monitors")):
             scale = monitor["scale"]
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin)

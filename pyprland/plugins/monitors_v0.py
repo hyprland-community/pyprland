@@ -42,7 +42,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_relayout(self):
         "Recompute & apply every monitors's layout"
-        monitors = cast(list[dict], await self.hyprctlJSON("monitors"))
+        monitors = cast(list[dict], await self.hyprctl_json("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(monitor["name"], no_default=True, monitors=monitors)
 
@@ -50,7 +50,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         "Triggers when a monitor is plugged"
 
         if not monitors:
-            monitors = cast(list, await self.hyprctlJSON("monitors"))
+            monitors = cast(list, await self.hyprctl_json("monitors"))
 
         assert monitors
 

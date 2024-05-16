@@ -96,7 +96,7 @@ class Extension(CastBoolMixin, Plugin):
             )
 
             if unique:
-                monitors = await self.hyprctlJSON("monitors")
+                monitors = await self.hyprctl_json("monitors")
                 old_filename = None
                 for monitor in monitors:
                     filename = prepare_for_quotes(self.select_next_image())

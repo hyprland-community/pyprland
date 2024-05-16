@@ -4,7 +4,7 @@ __all__ = [
     "get_client_props",
     "get_focused_monitor_props",
     "hyprctl",
-    "hyprctlJSON",
+    "hyprctl_json",
     "notify",
     "notify_error",
     "notify_info",
@@ -68,7 +68,7 @@ cached_responses: dict[str, list[Any]] = {
 
 
 @retry_on_reset
-async def hyprctlJSON(command: str, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctl_json(command: str, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
     logger = logger or log
     now = time.time()
@@ -166,7 +166,7 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
         def match_fn(mon):
             return mon.get("focused")
 
-    for monitor in await hyprctlJSON("monitors", logger=logger):
+    for monitor in await hyprctl_json("monitors", logger=logger):
         assert isinstance(monitor, dict)
         if match_fn(monitor):
             return monitor  # type: ignore
@@ -215,7 +215,7 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
         def match_fn(value1, value2):
             return value1 == value2
 
-    for client in clients or await hyprctlJSON("clients", logger=logger):
+    for client in clients or await hyprctl_json("clients", logger=logger):
         assert isinstance(client, dict)
         if match_fn(client.get(prop_name), prop_value):
             return client  # type: ignore
@@ -228,11 +228,11 @@ def init() -> None:
     log = get_logger("ipc")
 
 
-def getCtrlObjects(logger):
-    """Return (hyprctl, hyprctlJSON, notify) configured for the given logger."""
+def get_controls(logger):
+    """Return (hyprctl, hyprctl_json, notify) configured for the given logger."""
     return (
         partial(hyprctl, logger=logger),
-        partial(hyprctlJSON, logger=logger),
+        partial(hyprctl_json, logger=logger),
         partial(notify, logger=logger),
         partial(notify_info, logger=logger),
         partial(notify_error, logger=logger),
