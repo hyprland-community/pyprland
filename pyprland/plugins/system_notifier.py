@@ -42,8 +42,8 @@ class Extension(Plugin):
         """Initialize the class."""
         super().__init__(name)
         self.tasks: list[asyncio.Task] = []
-        self.sources = {}
-        self.parsers = {}
+        self.sources: dict[str, asyncio.subprocess.Process] = {}
+        self.parsers: dict[str, asyncio.Queue] = {}
         self.running = True
 
     async def on_reload(self) -> None:

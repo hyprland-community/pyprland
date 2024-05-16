@@ -50,7 +50,7 @@ class Pyprland:
         self.config = {}
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
-        self.queues = {}
+        self.queues: dict[str, asyncio.Queue] = {}
         self._set_instance(self)
 
     async def initialize(self) -> None:
