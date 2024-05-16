@@ -1,4 +1,4 @@
-pyenv := ".tox/py311"
+pyenv := ".tox/py312-linting"
 
 testenv := ".tox/coverage"
 
