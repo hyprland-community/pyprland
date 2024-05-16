@@ -40,7 +40,7 @@ pytest-mock = "^3.12.0"
 
 [tool.ruff]
 line-length = 140
-preview = true
+preview = false
 
 src = ["pyprland"]
 exclude = ["*_v?.py", "tests", "scripts", "sample_extension", ".git"]
@@ -96,8 +96,7 @@ select = [
     "W",
     "YTT",
     # "ANN",
-    # "RUF",
-    # "COM"
+    "COM"
     # "N",
     # "G",
     # "BLE",
