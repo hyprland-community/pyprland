@@ -341,17 +341,6 @@ async def get_event_stream_with_retry(max_retry=10):
             await asyncio.sleep(1)
 
 
-async def initialize_manager(manager):
-    """Initialize the manager object."""
-    try:
-        await manager.initialize()
-    except PyprError as e:
-        return str(e) if bool(str(e)) else "Pypr failed to start!"
-    except Exception as e:  # pylint: disable=W0718
-        return f"Pypr couldn't load config: {e}"
-    return None
-
-
 async def run_daemon() -> None:
     """Run the server / daemon."""
     manager = Pyprland()
@@ -365,11 +354,7 @@ async def run_daemon() -> None:
 
     manager.event_reader = events_reader
 
-    error = await initialize_manager(manager)
-    if error:
-        manager.log.critical("Failed to initialize: %s", error, exc_info=True)
-        await notify_fatal(error)
-        raise SystemExit(1) from error
+    await manager.initialize()
 
     manager.log.debug("[ initialized ]".center(80, "="))
 
