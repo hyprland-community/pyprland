@@ -347,7 +347,7 @@ async def initialize_manager(manager):
         await manager.initialize()
     except PyprError as e:
         return str(e) if bool(str(e)) else "Pypr failed to start!"
-    except Exception as e:
+    except Exception as e:  # pylint: disable=W0718
         return f"Pypr couldn't load config: {e}"
     return None
 

@@ -10,6 +10,11 @@ from ..adapters.colors import convert_color
 from ..common import apply_filter
 from .interface import Plugin
 
+try:
+    from asyncio.subprocess import Process
+except ImportError:
+    from asyncio import Process  # type: ignore
+
 builtin_parsers = {
     "journal": [
         {
@@ -42,7 +47,7 @@ class Extension(Plugin):
         """Initialize the class."""
         super().__init__(name)
         self.tasks: list[asyncio.Task] = []
-        self.sources: dict[str, asyncio.subprocess.Process] = {}
+        self.sources: dict[str, Process] = {}
         self.parsers: dict[str, asyncio.Queue] = {}
         self.running = True
 
