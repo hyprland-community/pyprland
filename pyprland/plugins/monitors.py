@@ -10,7 +10,7 @@ from ..types import MonitorInfo
 from .interface import Plugin
 
 
-def trim_offset(monitors) -> None:
+def trim_offset(monitors: list[MonitorInfo]) -> None:
     """Make the monitor set layout start at 0,0."""
     off_x = None
     off_y = None
@@ -29,12 +29,12 @@ def trim_offset(monitors) -> None:
         mon["y"] -= off_y
 
 
-def clean_pos(position):
+def clean_pos(position: str) -> str:
     """Harmonize position format."""
     return position.lower().replace("_", "").replace("-", "")
 
 
-def scale_and_rotate_mon(monitor):
+def scale_and_rotate_mon(monitor: MonitorInfo) -> tuple[int, int]:
     """Scale and rotate the monitor dimensions."""
     width = int(monitor["width"] / monitor["scale"])
     height = int(monitor["height"] / monitor["scale"])
@@ -43,7 +43,7 @@ def scale_and_rotate_mon(monitor):
     return width, height
 
 
-def get_xy(place, main_mon, other_mon):
+def get_xy(place: str, main_mon: MonitorInfo, other_mon: MonitorInfo) -> tuple[int, int]:
     """Get the XY position of a monitor according to another (after `place` is applied).
 
     Place syntax: "<top|left|bottom|right> [center|middle|end] of" (without spaces)
@@ -75,7 +75,7 @@ def get_xy(place, main_mon, other_mon):
     return (x, y)
 
 
-def build_graph(config):
+def build_graph(config: dict[str, dict[str, list[str]]]) -> dict[str, list[str]]:
     """Make a sorted graph based on the cleaned_config."""
     graph = defaultdict(list)
     for name1, positions in config.items():
@@ -139,7 +139,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Event handlers
 
-    async def event_monitoradded(self, name) -> None:
+    async def event_monitoradded(self, name: str) -> None:
         """Triggers when a monitor is plugged."""
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
         monitors = await self.hyprctl_json("monitors")
@@ -162,7 +162,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Clear the cache."""
         self._mon_by_pat_cache = {}
 
-    def _get_mon_by_pat(self, pat, description_db, name_db):
+    def _get_mon_by_pat(self, pat: str, description_db: dict[str, MonitorInfo], name_db: [str, MonitorInfo]) -> MonitorInfo | None:
         """Return a (plugged) monitor object given its pattern or none if not found."""
         cached = self._mon_by_pat_cache.get(pat)
         if cached is None:
@@ -195,7 +195,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         "rightendof": "leftendof",
     }
 
-    def _update_positions(self, monitors, graph, config):
+    def _update_positions(self, monitors: list[MonitorInfo], graph: dict[str, list[str]], config: dict[str, dict[str, list[str]]]) -> bool:
         """Apply configuration to monitors_by_name using graph."""
         monitors_by_name = {m["name"]: m for m in monitors}
         requires_update = False
@@ -223,7 +223,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 break
         return requires_update
 
-    def get_matching_config(self, name1, name2, config):
+    def get_matching_config(self, name1: str, name2: str, config: dict[str, dict[str, list[str]]]) -> list[tuple[str, str]]:
         """Return rules matching name1 or name2 (relative to name1), looking up config.
 
         Returns a list of tuples (position, name) where name is the other monitor's name.
@@ -241,7 +241,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                             results.append((self._flipped_positions[lpos], name_a))
         return results
 
-    def resolve_names(self, monitors) -> dict[str, Any]:
+    def resolve_names(self, monitors: list[MonitorInfo]) -> dict[str, Any]:
         """Change partial descriptions used in config for monitor names.
 
         Args:

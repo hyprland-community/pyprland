@@ -3,6 +3,7 @@
 import asyncio
 import os.path
 import random
+from collections.abc import Iterator
 
 from aiofiles.os import listdir
 
@@ -10,12 +11,12 @@ from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
 
-def expand_path(path):
+def expand_path(path: str) -> str:
     """Expand the path."""
     return os.path.expanduser(os.path.expandvars(path))
 
 
-async def get_files_with_ext(path, extensions, recurse=True):
+async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = True) -> Iterator[str]:
     """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders.."""
     for fname in await listdir(path):
         ext = fname.rsplit(".", 1)[-1]
@@ -62,11 +63,11 @@ class Extension(CastBoolMixin, Plugin):
             self.loop.cancel()
         await self.terminate()
 
-    async def event_monitoradded(self, _) -> None:
+    async def event_monitoradded(self, _: str) -> None:
         """When a new monitor is added, set the background."""
         self.next_background_event.set()
 
-    def select_next_image(self):
+    def select_next_image(self) -> str:
         """Return the next image (random is supported for now)."""
         choice = random.choice(self.image_list)
         if choice == self.cur_image:
@@ -74,7 +75,7 @@ class Extension(CastBoolMixin, Plugin):
         self.cur_image = choice
         return choice
 
-    async def _run_one(self, template, values) -> None:
+    async def _run_one(self, template: str, values: dict[str, str]) -> None:
         """Run one command."""
         cmd = apply_variables(template, values)
         self.log.info("Running %s", cmd)
@@ -136,7 +137,7 @@ class Extension(CastBoolMixin, Plugin):
                 await proc.wait()
         self.proc[:] = []
 
-    async def run_wall(self, arg) -> None:
+    async def run_wall(self, arg: str) -> None:
         """<next|clear> skip the current background image or stop displaying it."""
         if arg.startswith("n"):
             self.next_background_event.set()

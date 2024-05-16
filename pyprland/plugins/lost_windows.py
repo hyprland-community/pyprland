@@ -2,10 +2,11 @@
 
 from typing import Any, cast
 
+from ..types import ClientInfo, MonitorInfo
 from .interface import Plugin
 
 
-def contains(monitor, window):
+def contains(monitor: MonitorInfo, window: ClientInfo) -> bool:
     """Tell if a window is visible in a monitor."""
     if not (window["at"][0] > monitor["x"] and window["at"][0] < monitor["x"] + monitor["width"]):
         return False

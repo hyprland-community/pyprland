@@ -13,6 +13,7 @@ __all__ = [
 import asyncio
 import json
 import time
+from collections.abc import Callable, Iterable
 from functools import partial
 from logging import Logger
 from typing import Any
@@ -26,7 +27,7 @@ HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 
-async def notify(text, duration=3, color="ff1010", icon=-1, logger=None) -> None:
+async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
     """Hyprland notification system."""
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
@@ -36,15 +37,15 @@ notify_error = partial(notify, icon=0, duration=5)
 notify_info = partial(notify, icon=1, duration=5)
 
 
-async def get_event_stream():
+async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
     return await asyncio.open_unix_connection(EVENTS)
 
 
-def retry_on_reset(func):
+def retry_on_reset(func: Callable) -> Callable:
     """Retry on reset wrapper."""
 
-    async def wrapper(*args, logger, **kwargs):
+    async def wrapper(*args, logger: Logger, **kwargs) -> Any:  # noqa: ANN401
         exc = None
         for count in range(3):
             try:
@@ -68,7 +69,7 @@ cached_responses: dict[str, list[Any]] = {
 
 
 @retry_on_reset
-async def hyprctl_json(command: str, logger=None) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
     logger = logger or log
     now = time.time()
@@ -95,7 +96,7 @@ async def hyprctl_json(command: str, logger=None) -> list[dict[str, Any]] | dict
     return ret
 
 
-def _format_command(command_list, default_base_command):
+def _format_command(command_list: list[str], default_base_command: str) -> Iterable[str]:
     """Format a list of commands to be sent to Hyprland.
 
     Args:
@@ -111,7 +112,7 @@ def _format_command(command_list, default_base_command):
 
 
 @retry_on_reset
-async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger=None) -> bool:
+async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger: Logger | None = None) -> bool:
     """Run an IPC command. Returns success value.
 
     Args:
@@ -146,7 +147,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     return r
 
 
-async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
+async def get_focused_monitor_props(logger: Logger | None = None, name: str | None = None) -> MonitorInfo:
     """Return focused monitor data if `name` is not defined, else use monitor's name.
 
     Args:
@@ -158,12 +159,12 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
     """
     if name:
 
-        def match_fn(mon):
+        def match_fn(mon: str) -> bool:
             return mon["name"] == name
 
     else:
 
-        def match_fn(mon):
+        def match_fn(mon: str) -> bool:
             return mon.get("focused")
 
     for monitor in await hyprctl_json("monitors", logger=logger):
@@ -174,7 +175,9 @@ async def get_focused_monitor_props(logger=None, name=None) -> MonitorInfo:
     raise RuntimeError(msg)
 
 
-async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
+async def get_client_props(
+    logger: Logger | None = None, match_fn: Callable = None, clients: list[ClientInfo] | None = None, **kw
+) -> ClientInfo | None:
     """Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
 
     Eg.
@@ -212,7 +215,7 @@ async def get_client_props(logger=None, match_fn=None, clients: list[ClientInfo]
 
     if match_fn is None:
 
-        def match_fn(value1, value2):
+        def match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
             return value1 == value2
 
     for client in clients or await hyprctl_json("clients", logger=logger):
@@ -228,7 +231,7 @@ def init() -> None:
     log = get_logger("ipc")
 
 
-def get_controls(logger):
+def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable]:
     """Return (hyprctl, hyprctl_json, notify) configured for the given logger."""
     return (
         partial(hyprctl, logger=logger),

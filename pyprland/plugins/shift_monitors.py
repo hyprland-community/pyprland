@@ -22,10 +22,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         for i, mon in enumerate(mon_list):
             await self.hyprctl(f"swapactiveworkspaces {mon} {self.monitors[i + direction]}")
 
-    async def event_monitoradded(self, monitor) -> None:
+    async def event_monitoradded(self, monitor: str) -> None:
         """Keep track of monitors."""
         self.monitors.append(monitor)
 
-    async def event_monitorremoved(self, monitor) -> None:
+    async def event_monitorremoved(self, monitor: str) -> None:
         """Keep track of monitors."""
         self.monitors.remove(monitor)

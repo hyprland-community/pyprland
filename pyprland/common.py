@@ -11,6 +11,7 @@ import subprocess
 import sys
 import termios
 from dataclasses import dataclass, field
+from typing import Any
 
 from .types import MonitorInfo, VersionInfo
 
@@ -40,12 +41,12 @@ except KeyError:
     IPC_FOLDER = "/fake"
 
 
-def set_terminal_size(descriptor, rows, cols) -> None:
+def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:
     """Set the terminal size."""
     fcntl.ioctl(descriptor, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
-def set_raw_mode(descriptor) -> None:
+def set_raw_mode(descriptor: int) -> None:
     """Set a file descriptor in raw mode."""
     # Get the current terminal attributes
     attrs = termios.tcgetattr(descriptor)
@@ -55,7 +56,7 @@ def set_raw_mode(descriptor) -> None:
     termios.tcsetattr(descriptor, termios.TCSANOW, attrs)
 
 
-def run_interactive_program(command) -> None:
+def run_interactive_program(command: str) -> None:
     """Run an interactive program in a blocking way."""
     # Create a pseudo-terminal
     master, slave = pty.openpty()
@@ -100,7 +101,7 @@ def run_interactive_program(command) -> None:
         termios.tcsetattr(sys.stdin, termios.TCSANOW, termios.tcgetattr(0))
 
 
-def merge(merged, obj2):
+def merge(merged: dict[str, Any], obj2: dict[str, Any]) -> dict[str, Any]:
     """Merge the content of d2 into d1.
 
     Args:
@@ -133,7 +134,7 @@ class LogObjects:
     handlers: list[logging.Handler] = []
 
 
-def init_logger(filename=None, force_debug=False) -> None:
+def init_logger(filename: str | None = None, force_debug: bool = False) -> None:
     """Initialize the logging system."""
     global DEBUG
     if force_debug:
@@ -153,7 +154,7 @@ def init_logger(filename=None, force_debug=False) -> None:
             logging.CRITICAL: logging.Formatter("\x1b[31;1m" + LOG_FORMAT + RESET_ANSI),
         }
 
-        def format(self, record):
+        def format(self, record: logging.LogRecord) -> str:
             return self.FORMATTERS[record.levelno].format(record)
 
     logging.basicConfig()
@@ -166,7 +167,7 @@ def init_logger(filename=None, force_debug=False) -> None:
     LogObjects.handlers.append(stream_handler)
 
 
-def get_logger(name="pypr", level=None) -> logging.Logger:
+def get_logger(name: str = "pypr", level: int | None = None) -> logging.Logger:
     """Return a named logger.
 
     Args:
@@ -206,12 +207,12 @@ Exposes most-commonly accessed attributes to avoid specific IPC requests
 """
 
 
-def prepare_for_quotes(text: str):
+def prepare_for_quotes(text: str) -> str:
     """Escapes double quotes in text."""
     return text.replace('"', '\\"')
 
 
-def apply_variables(template: str, variables: dict[str, str]):
+def apply_variables(template: str, variables: dict[str, str]) -> str:
     """Replace [var_name] with content from supplied variables.
 
     Args:
@@ -220,14 +221,14 @@ def apply_variables(template: str, variables: dict[str, str]):
     """
     pattern = r"\[([^\[\]]+)\]"
 
-    def replace(match):
+    def replace(match: re.Match[str]) -> str:
         var_name = match.group(1)
         return variables.get(var_name, match.group(0))
 
     return re.sub(pattern, replace, template)
 
 
-def apply_filter(text, filt_cmd: str):
+def apply_filter(text: str, filt_cmd: str) -> str:
     """Apply filters to text.
 
     Currently supports only "s" command fom vim/ed
@@ -245,7 +246,7 @@ class CastBoolMixin:
 
     log: logging.Logger
 
-    def cast_bool(self, value, default_value=False):
+    def cast_bool(self, value: str | bool, default_value: bool = False) -> bool:
         """Recovers wrong typing on boolean values."""
         if isinstance(value, str):
             lv = value.lower().strip()

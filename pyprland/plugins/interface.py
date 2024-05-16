@@ -73,7 +73,7 @@ class Plugin:
         with contextlib.suppress(KeyError):
             self.config.update(config[self.name])
 
-    async def get_clients(self, mapped=True, workspace=None, workspace_bl=None):
+    async def get_clients(self, mapped: bool = True, workspace: None | str = None, workspace_bl: str | None = None) -> list[ClientInfo]:
         """Return the client list, optionally returns only mapped clients or from a given workspace."""
         return [
             client

@@ -38,11 +38,11 @@ class Extension(Plugin):
         state.monitors = [mon["name"] for mon in monitors]
         state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
 
-    async def event_monitoradded(self, name) -> None:
+    async def event_monitoradded(self, name: str) -> None:
         """Track monitor."""
         state.monitors.append(name)
 
-    async def event_monitorremoved(self, name) -> None:
+    async def event_monitorremoved(self, name: str) -> None:
         """Track monitor."""
         state.monitors.remove(name)
 
@@ -50,7 +50,7 @@ class Extension(Plugin):
         """Reload the plugin."""
         state.variables = self.config.get("variables", {})
 
-    async def event_activewindowv2(self, addr) -> None:
+    async def event_activewindowv2(self, addr: str) -> None:
         """Keep track of the focused client."""
         if not addr or len(addr) < MINIMUM_ADDR_LEN:
             self.log.warning("Active window is incorrect: %s.", addr)
@@ -59,12 +59,12 @@ class Extension(Plugin):
             state.active_window = "0x" + addr
             self.log.debug("active_window = %s", state.active_window)
 
-    async def event_workspace(self, wrkspace) -> None:
+    async def event_workspace(self, wrkspace: str) -> None:
         """Track the active workspace."""
         state.active_workspace = wrkspace
         self.log.debug("active_workspace = %s", state.active_workspace)
 
-    async def event_focusedmon(self, mon) -> None:
+    async def event_focusedmon(self, mon: str) -> None:
         """Track the active workspace."""
         state.active_monitor, state.active_workspace = mon.rsplit(",", 1)
         self.log.debug("active_monitor = %s", state.active_monitor)

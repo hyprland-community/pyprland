@@ -16,7 +16,7 @@ class Extension(Plugin):
 
     ongoing_task: asyncio.Task | None = None
 
-    def _run_gbar(self, cmd) -> None:
+    def _run_gbar(self, cmd: str) -> None:
         """Create ongoing task restarting gbar in case of crash."""
 
         async def _run_loop() -> None:
@@ -29,7 +29,7 @@ class Extension(Plugin):
             self.ongoing_task.cancel()
         self.ongoing_task = asyncio.create_task(_run_loop())
 
-    async def run_gbar(self, args) -> None:
+    async def run_gbar(self, args: str) -> None:
         """Start gBar on the first available monitor."""
         if args.startswith("re"):
             self.kill()
@@ -48,14 +48,14 @@ class Extension(Plugin):
             self.log.info("starting gBar: %s", cmd)
             self._run_gbar(cmd)
 
-    async def get_best_monitor(self):
+    async def get_best_monitor(self) -> str | None:
         """Get best monitor according to preferred list."""
         preferred = self.config.get("monitors", [])
         for monitor in preferred:
             if monitor in state.monitors:
                 return monitor
 
-    async def event_monitoradded(self, monitor) -> None:
+    async def event_monitoradded(self, monitor: str) -> None:
         """Switch bar in case the monitor is preferred."""
         if self.cur_monitor:
             preferred = self.config.get("monitors", [])

@@ -1,6 +1,7 @@
 """Toggles workspace zooming."""
 
 import asyncio
+from collections.abc import Iterable
 
 from .interface import Plugin
 
@@ -12,12 +13,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     cur_factor = 1.0
 
-    def ease_out_quad(self, step, start, end, duration):
+    def ease_out_quad(self, step: int, start: int, end: int, duration: int) -> int:
         """Easing function for animations."""
         step /= duration
         return -end * step * (step - 2) + start
 
-    def animated_eased_zoom(self, start, end, duration):
+    def animated_eased_zoom(self, start: int, end: int, duration: int) -> Iterable[int]:
         """Add easing to an animation.
 
         This function is a generator that yields the next value of the animation

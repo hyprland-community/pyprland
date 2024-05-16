@@ -40,7 +40,7 @@ class Pyprland:
     log_handler: Callable[[Plugin, str, tuple], None]
 
     @classmethod
-    def _set_instance(cls, instance) -> None:
+    def _set_instance(cls: "Pyprland", instance: "Pyprland") -> None:
         """Set instance reference into class (for testing/debugging only)."""
         cls.instance = instance
 
@@ -57,7 +57,7 @@ class Pyprland:
         """Initialize the main structures."""
         await self.load_config()  # ensure sockets are connected first
 
-    async def __open_config(self, config_filename=""):
+    async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
         """Load config file as self.config."""
         if config_filename:
             fname = os.path.expandvars(os.path.expanduser(config_filename))
@@ -82,7 +82,7 @@ class Pyprland:
             self.config.update(config)
         return config
 
-    def __load_config_file(self, fname):
+    def __load_config_file(self, fname: str) -> dict[str, Any]:
         """Load a configuration file and returns it as a dictionary."""
         config = {}
         if os.path.exists(fname):
@@ -102,7 +102,7 @@ class Pyprland:
             raise PyprError
         return config
 
-    async def _load_single_plugin(self, name, init) -> bool:
+    async def _load_single_plugin(self, name: str, init: bool) -> bool:
         """Load a single plugin, optionally calling `init`."""
         if "." in name:
             modname = name
@@ -128,7 +128,7 @@ class Pyprland:
             raise PyprError from e
         return True
 
-    async def __load_plugins_config(self, init=True) -> None:
+    async def __load_plugins_config(self, init: bool = True) -> None:
         """Load the plugins mentioned in the config.
 
         If init is `True`, call the `init()` method on each plugin.
@@ -158,7 +158,7 @@ class Pyprland:
             plug = self.plugins["pyprland"]
             plug.set_commands(reload=self.load_config)  # type: ignore
 
-    async def load_config(self, init=True) -> None:
+    async def load_config(self, init: bool = True) -> None:
         """Load the configuration (new plugins will be added & config updated).
 
         if `init` is true, also initializes the plugins
@@ -169,16 +169,16 @@ class Pyprland:
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
         self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler
 
-    def plain_log_handler(self, plugin, name, params) -> None:
+    def plain_log_handler(self, plugin: str, name: str, params: str) -> None:
         """Log a handler method without color."""
         plugin.log.debug("%s%s", name, params)
 
-    def colored_log_handler(self, plugin, name, params) -> None:
+    def colored_log_handler(self, plugin: str, name: str, params: str) -> None:
         """Log a handler method with color."""
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug("\033[%s;1m%s%s\033[0m", color, name, params)
 
-    async def _run_plugin_handler(self, plugin, full_name, params) -> None:
+    async def _run_plugin_handler(self, plugin: str, full_name: str, params: str) -> None:
         """Run a single handler on a plugin."""
         self.log_handler(plugin, full_name, params)
         try:
@@ -190,7 +190,7 @@ class Pyprland:
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    async def _call_handler(self, full_name, *params, notify=""):
+    async def _call_handler(self, full_name: str, *params: list[str], notify: str = "") -> bool:
         """Call an event handler with params."""
         handled = False
         for plugin in self.plugins.values():
@@ -232,7 +232,7 @@ class Pyprland:
                 plugin.aborted = True
                 await asyncio.wait_for(plugin.exit(), timeout=2.0)
 
-    async def read_command(self, reader, writer) -> None:
+    async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command."""
         data = (await reader.readline()).decode()
         if not data:
@@ -281,7 +281,7 @@ class Pyprland:
         async with self.server:
             await self.server.wait_closed()
 
-    async def _plugin_runner_loop(self, name) -> None:
+    async def _plugin_runner_loop(self, name: str) -> None:
         """Run tasks for a given plugin indefinitely."""
         q = self.queues[name]
         is_pyprland = name == "pyprland"
@@ -323,7 +323,7 @@ class Pyprland:
         )
 
 
-async def get_event_stream_with_retry(max_retry=10):
+async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Obtain the event stream, retrying if it fails.
 
     If retry count is exhausted, returns (None, exception).
@@ -370,10 +370,10 @@ async def run_daemon() -> None:
         await manager.server.wait_closed()
 
 
-def show_help(manager) -> None:
+def show_help(manager: Pyprland) -> None:
     """Show the documentation."""
 
-    def format_doc(txt):
+    def format_doc(txt: str) -> str:
         return txt.split("\n")[0]
 
     print(
@@ -404,7 +404,7 @@ Available commands:
                 print(f" {name[4:]:20s} {doc_txt} [{plug.name}]")
 
 
-async def run_client():
+async def run_client() -> None:
     """Run the client (CLI)."""
     manager = Pyprland()
 
@@ -443,7 +443,7 @@ async def run_client():
     await writer.wait_closed()
 
 
-def use_param(txt):
+def use_param(txt: str) -> str:
     """Check if parameter `txt` is in sys.argv.
 
     if found, removes it from sys.argv & returns the argument value

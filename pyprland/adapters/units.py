@@ -4,7 +4,7 @@ from ..common import is_rotated
 from ..types import MonitorInfo
 
 
-def convert_monitor_dimension(size: int | str, ref_value, monitor: MonitorInfo) -> int:
+def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorInfo) -> int:
     """Convert `size` into pixels (given a reference value applied to a `monitor`).
 
     if size is an integer, assumed pixels & return it

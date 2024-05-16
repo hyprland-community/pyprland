@@ -14,7 +14,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """Rebuild workspaces list."""
         self.workspace_list = list(range(1, self.config.get("max_workspaces", 10) + 1))
 
-    async def event_focusedmon(self, screenid_name) -> None:
+    async def event_focusedmon(self, screenid_name: str) -> None:
         """Reacts to monitor changes."""
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop

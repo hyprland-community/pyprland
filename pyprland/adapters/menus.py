@@ -23,7 +23,7 @@ class MenuEngine:
     proc_detect_parameters: list[str] = ["--help"]
     " process parameters used to check if the engine can run "
 
-    def __init__(self, extra_parameters) -> None:
+    def __init__(self, extra_parameters: str) -> None:
         """Initialize the engine with extra parameters.
 
         Args:
@@ -33,7 +33,7 @@ class MenuEngine:
             self.proc_extra_parameters = extra_parameters
 
     @classmethod
-    def is_available(cls) -> bool:
+    def is_available(cls: "MenuEngine") -> bool:
         """Check engine availability."""
         try:
             subprocess.call([cls.proc_name, *cls.proc_detect_parameters])
@@ -41,7 +41,7 @@ class MenuEngine:
             return False
         return True
 
-    async def run(self, choices: Iterable[str], prompt="") -> str:
+    async def run(self, choices: Iterable[str], prompt: str = "") -> str:
         """Run the engine and get the response for the proposed `choices`.
 
         Args:
@@ -121,7 +121,7 @@ class AnyrunMenu(MenuEngine):
 every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu]
 
 
-async def init(force_engine=False, extra_parameters="") -> MenuEngine:
+async def init(force_engine: bool = False, extra_parameters: str = "") -> MenuEngine:
     """Initialize the module."""
     try:
         engines = [next(e for e in every_menu_engine if e.proc_name == force_engine)] if force_engine else every_menu_engine

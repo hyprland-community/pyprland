@@ -43,7 +43,7 @@ builtin_parsers = {
 class Extension(Plugin):
     """Notification system from live apps & logs."""
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         """Initialize the class."""
         super().__init__(name)
         self.tasks: list[asyncio.Task] = []
@@ -79,7 +79,7 @@ class Extension(Plugin):
                 source.kill()
         self.tasks[:] = []
 
-    async def start_source(self, props) -> None:
+    async def start_source(self, props: dict[str, str]) -> None:
         """Start a source loop.
 
         A source is a command that will be executed and its stdout will be read line by line.
@@ -103,7 +103,7 @@ class Extension(Plugin):
                 for q in queues:
                     await q.put(line)
 
-    async def start_parser(self, name, props: list) -> None:
+    async def start_parser(self, name: str, props: list) -> None:
         """Start a parser loop.
 
         Args:
