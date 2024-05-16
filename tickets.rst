@@ -70,43 +70,6 @@ Can parse hyprland config in such way:
 
 --------------------------------------------------------------------------------
 
-offset & margin: support % and px units
-=======================================
-
-:bugid: 33
-:created: 2024-03-08T00:07:02
-:priority: 0
-
---------------------------------------------------------------------------------
-
-Add "satellite" scratchpads
-===========================
-
-:bugid: 36
-:created: 2024-04-08T23:42:26
-:priority: 0
-
-- add a "scratch" command that sets the focused window into the currently focused scratchpad window
-
-Eg: open a terminal, hover it + "scratch" it while a scratchpad is open.
-Behind the hood, it creates attached "ghost scratchpads" for each attached window. They use "perserve_aspect" by default.
-
-**Alternative**
-
-Move focused client into the named scratchpad's special workspace.
-Rework pyprland's scratchpad to keep track of every window added to the special workspace and attach it to the last used scratch then hide it if the scratchpad is hidden.
-If called on a scratchpad window, will "de-attach" this window.
-
-Every attached window should be synchronized with the main one.
-
-
-**Option**
-
-Prepare / Simplify this dev by adding support for "ScratchGroups" (contains multiple Scratches which are synchronized).
-Would generalize the current feature: passing multiple scratches to the toggle command.
-
---------------------------------------------------------------------------------
-
 improve groups support
 ======================
 
@@ -124,16 +87,6 @@ else: Add it to "layout_center" overriding prev & next
 if groupped, toggle over groups, when at the limit, really changes the focus
 
 Option: think about a "chaining" in handlers, (eg: "pypr groups prev OR layout_center prev") in case of a separate plugin called "groups"
-
---------------------------------------------------------------------------------
-
-review CanceledError handling
-=============================
-
-:bugid: 38
-:created: 2024-04-17T23:24:13
-:priority: 0
-:started: 2024-05-01T23:40:59
 
 --------------------------------------------------------------------------------
 
@@ -155,41 +108,11 @@ CHECK / fix multi-monitor & attach command
 
 --------------------------------------------------------------------------------
 
-Check behavior of monitors when no match is found
-=================================================
-
-:bugid: 42
-:created: 2024-04-26T00:26:22
-:priority: 0
-
-Should ignore applying any rule
-
---------------------------------------------------------------------------------
-
-Review smart_focus when toggling on a special workspace
-=======================================================
-
-:bugid: 43
-:created: 2024-04-27T18:25:47
-:priority: 0
-:started: 2024-05-01T23:39:30
-
---------------------------------------------------------------------------------
-
 Test a configuration with zero initial command/window
 =====================================================
 
 :bugid: 46
 :created: 2024-05-01T23:37:31
-:priority: 0
-
---------------------------------------------------------------------------------
-
-scratchpads: experiment handling manual scratchpad workspace change
-===================================================================
-
-:bugid: 47
-:created: 2024-05-01T23:38:51
 :priority: 0
 
 --------------------------------------------------------------------------------
@@ -201,4 +124,4 @@ monitors: allow "screen descr".transform = 3
 :created: 2024-05-07T00:50:34
 :priority: 0
 
-also allow `.scale = <something>` 
+also allow `.scale = <something>`
