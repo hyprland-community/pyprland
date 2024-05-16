@@ -209,7 +209,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         try:
                             x, y = get_xy(self._flipped_positions[pos.lower()], mon2, mon1)
                         except TypeError:
-                            self.log.error("Invalid position %s", pos)
+                            self.log.exception("Invalid position %s", pos)
                             continue
                         if x != mon2["x"]:
                             changed = True

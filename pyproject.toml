@@ -101,11 +101,7 @@ select = [
     # "BLE",
     # "FBT",
     "PL",
-    # "PLC",
-    # "PLE",
-    # "PLR",
-    # "PLW",
-    # "TRY",
+    "TRY",
 ]
 [tool.ruff.format]
 indent-style = "space"

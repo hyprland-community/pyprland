@@ -119,7 +119,7 @@ class Pyprland:
                     self.tasks_group.create_task(self._plugin_runner_loop(name))
             self.plugins[name] = plug
         except ModuleNotFoundError as e:
-            self.log.error("Unable to locate plugin called '%s'", name)
+            self.log.exception("Unable to locate plugin called '%s'", name)
             await notify_info(f'Config requires plugin "{name}" but pypr can\'t find it: {e}')
             return False
         except Exception as e:
@@ -184,12 +184,10 @@ class Pyprland:
         try:
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
-            self.log.error("This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues")
-            self.log.exception(e)
+            self.log.exception("This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues")
             await notify_error(f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}")
         except Exception as e:  # pylint: disable=W0718
-            self.log.warning("%s::%s(%s) failed:", plugin.name, full_name, params)
-            self.log.exception(e)
+            self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
     async def _call_handler(self, full_name, *params, notify=""):
@@ -212,11 +210,11 @@ class Pyprland:
         while not self.stopped:
             try:
                 data = (await self.event_reader.readline()).decode()
-            except RuntimeError as e:
-                self.log.error("Aborting event loop: %s", e)
+            except RuntimeError:
+                self.log.exception("Aborting event loop")
                 return
             except UnicodeDecodeError:
-                self.log.error("Invalid unicode while reading events")
+                self.log.exception("Invalid unicode while reading events")
                 continue
             if not data:
                 self.log.critical("Reader starved")
@@ -297,15 +295,15 @@ class Pyprland:
                     return
                 if is_pyprland:
                     self.pyprland_mutex_event.clear()
-            except RuntimeError as e:
-                self.log.error("Aborting [%s] loop: %s", name, e)
+            except RuntimeError:
+                self.log.exception("Aborting [%s] loop", name)
                 return
             try:
                 await asyncio.wait_for(task(), timeout=12.0)
             except TimeoutError:
-                self.log.error("Timeout running plugin %s::%s", name, task)
-            except Exception as e:  # pylint: disable=W0718
-                self.log.error("Unhandled error running plugin %s::%s: %s", name, task, e)
+                self.log.exception("Timeout running plugin %s::%s", name, task)
+            except Exception:  # pylint: disable=W0718
+                self.log.exception("Unhandled error running plugin %s::%s", name, task)
             if is_pyprland and q.empty():
                 self.pyprland_mutex_event.set()
 

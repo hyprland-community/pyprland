@@ -56,9 +56,9 @@ class OverridableConfig:
     def __contains__(self, name) -> bool:
         try:
             self[name]  # pylint: disable=pointless-statement
-            return True
         except KeyError:
             return False
+        return True
 
     def get(self, name, default=None):
         """Get the attribute `name`."""

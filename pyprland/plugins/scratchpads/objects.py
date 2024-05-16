@@ -142,7 +142,7 @@ class Scratch(CastBoolMixin):  # {{{
                 raise KeyError(msg)
             self.log.error("client_info of %s must be a dict: %s", self.address, client_info)
             msg = f"Not a dict: {client_info}"
-            raise AssertionError(msg)
+            raise TypeError(msg)
 
         self.client_info.update(client_info)
 

@@ -15,8 +15,8 @@ class Extension(Plugin):
         state.active_window = ""
         try:
             version_info = await self.hyprctl_json("version")
-        except json.JSONDecodeError as e:
-            self.log.error("Fail to parse hyprctl version: %s", e)
+        except json.JSONDecodeError:
+            self.log.exception("Fail to parse hyprctl version")
             await self.notify_error("Error: 'hyprctl version': incorrect JSON data")
             version = "v0.0.0"
         else:
@@ -28,8 +28,8 @@ class Extension(Plugin):
 
         try:
             state.hyprland_version = VersionInfo(*(int(i) for i in version[1:].split(".")[:3]))
-        except Exception as e:  # pylint: disable=broad-except
-            self.log.error('Fail to parse version tag "%s": %s', version, e)
+        except Exception:  # pylint: disable=broad-except
+            self.log.exception('Fail to parse version tag "%s"', version)
             await self.notify_error(f"Failed to parse hyprctl version tag: {version}")
             state.hyprland_version = VersionInfo(0, 0, 0)
 

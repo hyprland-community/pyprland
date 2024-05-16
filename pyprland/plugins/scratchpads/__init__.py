@@ -624,7 +624,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 else:
                     break
             else:
-                self.log.error("Lost the client info for %s", scratch.uid)
+                self.log.exception("Lost the client info for %s", scratch.uid)
 
     async def _animate_show(self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool) -> None:
         """Animate the show transition."""
