@@ -109,3 +109,9 @@ line-ending = "auto"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pylsp-mypy]
+enabled = true
+live_mode = true
+strict = false
+exclude = ["tests/*", "scripts/*", "sample_extension/*"]
