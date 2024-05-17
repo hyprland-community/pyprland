@@ -355,21 +355,21 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     await pending_scratch.update_client_info(client)
         return True
 
-    async def event_openwindow(self, params) -> None:
+    async def event_openwindow(self, params: str) -> None:
         """Open windows hook."""
         addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
-        rs = list(self.scratches.get_by_state("respawned"))
-        if rs and not item:
+        respawned = list(self.scratches.get_by_state("respawned"))
+        if item:
+            # ensure initialized (no-op if already initialized)
+            await item.initialize(self)
+        elif respawned:
             # NOTE: for windows which aren't related to the process (see #8)
             if not await self._alternative_lookup():
                 self.log.info("Updating Scratch info")
                 await self.update_scratch_info()
-            item = self.scratches.get(addr=addr)
             if item and item.meta.should_hide:
                 await self.run_hide(item.uid, force=True)
-        if item:
-            await item.initialize(self)
 
     # }}}
     def cancel_task(self, uid: str) -> bool:
