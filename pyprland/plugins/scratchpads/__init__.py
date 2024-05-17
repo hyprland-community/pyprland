@@ -55,7 +55,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     previously_focused_window: str = ""
     last_focused: Scratch | None = None
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
         self.get_client_props = partial(get_client_props, logger=self.log)
@@ -153,7 +153,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
             await self.hyprctl(ipc_commands, "keyword")
 
-    async def __wait_for_client(self, scratch: Scratch, use_proc=True) -> bool:
+    async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
         """Wait for a client to be up and running.
 
         if `match_by=` is used, will use the match criteria, else the process's PID will be used.
@@ -218,7 +218,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return False
         return True
 
-    async def ensure_alive(self, uid: str):
+    async def ensure_alive(self, uid: str) -> bool:
         """Ensure the scratchpad is started.
 
         Returns true if started
@@ -292,12 +292,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if scratch.monitor == monitor_name:
                 await self.run_hide(scratch.uid, autohide=True)
 
-    async def event_configreloaded(self, _nothing) -> None:
+    async def event_configreloaded(self, _nothing: str) -> None:
         """Re-apply windowrules when hyprland is restarted."""
         for scratch in list(self.scratches.get_by_state("configured")):
             await self._configure_windowrules(scratch)
 
-    async def event_activewindowv2(self, addr) -> None:
+    async def event_activewindowv2(self, addr: str) -> None:
         """Active windows hook."""
         full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
         for uid, scratch in self.scratches.items():
@@ -318,13 +318,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 await self._hysteresis_handling(scratch)
         self.previously_focused_window = full_address
 
-    async def _hysteresis_handling(self, scratch) -> None:
+    async def _hysteresis_handling(self, scratch: Scratch) -> None:
         """Hysteresis handling."""
         hysteresis = scratch.conf.get("hysteresis", DEFAULT_HYSTERESIS)
         if hysteresis:
             self.cancel_task(scratch.uid)
 
-            async def _task(scratch, delay) -> None:
+            async def _task(scratch: Scratch, delay: float) -> None:
                 await asyncio.sleep(delay)
                 self.log.debug("hide %s because another client is active", scratch.uid)
                 await self.run_hide(scratch.uid, autohide=True)
@@ -450,7 +450,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     tasks.append(partial(self.run_show, uid))
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
-    async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None):
+    async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None) -> tuple[int, int]:
         """Return offset from config or use margin as a ref."""
         offset = scratch.conf.get("offset")
         if monitor is None:
@@ -485,7 +485,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type: str,
         scratch: Scratch,
         offset: tuple[int, int],
-        only_secondary=False,
+        only_secondary: bool = False,
     ) -> None:
         """Slides the window `offset` pixels respecting `animation_type`."""
         addresses = [] if only_secondary else [scratch.full_address]
@@ -675,7 +675,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return True
         return False
 
-    async def run_hide(self, uid: str, force=False, autohide=False) -> None:
+    async def run_hide(self, uid: str, force: bool = False, autohide: bool = False) -> None:
         """<name> hides scratchpad "name".
 
         if `autohide` is True, skips focus tracking

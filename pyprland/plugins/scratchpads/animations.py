@@ -7,7 +7,7 @@ from ...common import is_rotated
 from ...types import ClientInfo, MonitorInfo
 
 
-def get_size(monitor: MonitorInfo):
+def get_size(monitor: MonitorInfo) -> tuple[int, int]:
     """Get the (width, height) size of the monitor."""
     s = monitor["scale"]
     h, w = int(monitor["height"] / s), int(monitor["width"] / s)

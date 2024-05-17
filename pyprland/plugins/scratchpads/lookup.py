@@ -15,11 +15,11 @@ class ScratchDB:  # {{{
     _states: defaultdict[str, set[Scratch]] = defaultdict(set)
 
     # State management {{{
-    def get_by_state(self, status: str):
+    def get_by_state(self, status: str) -> set[Scratch]:
         """Get a set of `Scratch` being in `status`."""
         return self._states[status]
 
-    def has_state(self, scratch: Scratch, status: str):
+    def has_state(self, scratch: Scratch, status: str) -> bool:
         """Return true if `scratch` has state `status`."""
         return scratch in self._states[status]
 
@@ -38,11 +38,11 @@ class ScratchDB:  # {{{
         """Return all Scratch name."""
         return iter(self._by_name.keys())
 
-    def values(self):
+    def values(self) -> list[Scratch]:
         """Return every Scratch."""
         return self._by_name.values()
 
-    def items(self):
+    def items(self) -> list[tuple[str, Scratch]]:
         """Return an iterable list of (name, Scratch)."""
         return self._by_name.items()
 
@@ -55,7 +55,7 @@ class ScratchDB:  # {{{
         if scratch.pid in self._by_pid:
             del self._by_pid[scratch.pid]
 
-    def clear(self, name=None, pid=None, addr=None) -> None:
+    def clear(self, name: int | None = None, pid: int | None = None, addr: str | None = None) -> None:
         """Clear the index by name, pid or address."""
         # {{{
 
@@ -68,7 +68,7 @@ class ScratchDB:  # {{{
             del self._by_addr[addr]
         # }}}
 
-    def register(self, scratch: Scratch, name=None, pid=None, addr=None) -> None:
+    def register(self, scratch: Scratch, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
         """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided."""
         # {{{
         if not any((name, pid, addr)):
@@ -91,7 +91,7 @@ class ScratchDB:  # {{{
             d[v] = scratch
         # }}}
 
-    def get(self, name=None, pid=None, addr=None) -> Scratch | None:
+    def get(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> Scratch | None:
         """Return the Scratch matching given name, pid or address."""
         # {{{
         assert len(list(filter(bool, (name, pid, addr)))) == 1, (

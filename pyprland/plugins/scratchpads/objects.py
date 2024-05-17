@@ -6,7 +6,7 @@ import logging
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiofiles import open as aiopen
 from aiofiles import os as aios
@@ -15,6 +15,9 @@ from ...common import CastBoolMixin, state
 from ...ipc import notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import OverridableConfig, get_match_fn
+
+if TYPE_CHECKING:
+    import pyprland.plugins.scratchpads.Extension as PyprlandPlugin
 
 
 @dataclass
@@ -40,14 +43,14 @@ class Scratch(CastBoolMixin):  # {{{
     monitor = ""
     pid = -1
 
-    def __init__(self, uid, opts) -> None:
+    def __init__(self, uid: str, opts: dict[str, Any]) -> None:
         self.uid = uid
         self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
 
-    def set_config(self, opts) -> None:
+    def set_config(self, opts: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
         if "class_match" in opts:  # NOTE: legacy, to be removed
             opts["match_by"] = "class"
@@ -62,11 +65,11 @@ class Scratch(CastBoolMixin):  # {{{
 
         self.conf = opts
 
-    def have_address(self, addr):
+    def have_address(self, addr: str) -> bool:
         """Check if the address is the same as the client."""
         return addr == self.full_address or addr in self.extra_addr
 
-    async def initialize(self, ex) -> None:
+    async def initialize(self, ex: "PyprlandPlugin") -> None:
         """Initialize the scratchpad."""
         if self.meta.initialized:
             return
@@ -96,7 +99,7 @@ class Scratch(CastBoolMixin):  # {{{
 
         return False
 
-    async def fetch_matching_client(self, clients=None):
+    async def fetch_matching_client(self, clients: list[ClientInfo] = None) -> dict[str, Any] | None:
         """Fetch the first matching client properties."""
         match_by, match_val = self.get_match_props()
         return await self.get_client_props(
@@ -105,7 +108,7 @@ class Scratch(CastBoolMixin):  # {{{
             **{match_by: match_val},
         )
 
-    def get_match_props(self):
+    def get_match_props(self) -> tuple[str, str | float]:
         """Return the match properties for the scratchpad."""
         match_by = self.conf.get("match_by", "pid")
         return match_by, self.pid if match_by == "pid" else self.conf[match_by]
