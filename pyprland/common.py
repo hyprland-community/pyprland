@@ -11,7 +11,7 @@ import subprocess
 import sys
 import termios
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from .types import MonitorInfo, VersionInfo
 
@@ -246,13 +246,13 @@ class CastBoolMixin:
 
     log: logging.Logger
 
-    def cast_bool(self, value: str | bool, default_value: bool = False) -> bool:
+    def cast_bool(self, value: str | bool | None, default_value: bool = False) -> bool:
         """Recovers wrong typing on boolean values."""
         if isinstance(value, str):
             lv = value.lower().strip()
             r = lv not in {"false", "no", "off"}
             self.log.warning("Invalid value for boolean option: %s, considering it %s", value, r)
-        return default_value if value is None else value
+        return default_value if value is None else cast(bool, value)
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:

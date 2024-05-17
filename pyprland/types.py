@@ -74,5 +74,5 @@ class VersionInfo:
     micro: int = 0
 
 
-class PyprError(Exception):
+class PyprError(BaseException):
     """Used for errors which already triggered logging."""

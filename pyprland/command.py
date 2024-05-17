@@ -40,7 +40,7 @@ class Pyprland:
     log_handler: Callable[[Plugin, str, tuple], None]
 
     @classmethod
-    def _set_instance(cls: "Pyprland", instance: "Pyprland") -> None:
+    def _set_instance(cls, instance: Self) -> None:
         """Set instance reference into class (for testing/debugging only)."""
         cls.instance = instance
 
@@ -146,8 +146,6 @@ class Pyprland:
                     await asyncio.wait_for(self.plugins[name].on_reload(), timeout=5.0)
                 except TimeoutError:
                     self.plugins[name].log.info("timed out on reload")
-                except PyprError:
-                    raise
                 except Exception as e:
                     await notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.exception("Error initializing plugin %s:", name)
@@ -169,16 +167,16 @@ class Pyprland:
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
         self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler
 
-    def plain_log_handler(self, plugin: str, name: str, params: str) -> None:
+    def plain_log_handler(self, plugin: Plugin, name: str, params: tuple[str]) -> None:
         """Log a handler method without color."""
         plugin.log.debug("%s%s", name, params)
 
-    def colored_log_handler(self, plugin: str, name: str, params: str) -> None:
+    def colored_log_handler(self, plugin: Plugin, name: str, params: tuple[str]) -> None:
         """Log a handler method with color."""
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug("\033[%s;1m%s%s\033[0m", color, name, params)
 
-    async def _run_plugin_handler(self, plugin: str, full_name: str, params: str) -> None:
+    async def _run_plugin_handler(self, plugin: Plugin, full_name: str, params: tuple[str]) -> None:
         """Run a single handler on a plugin."""
         self.log_handler(plugin, full_name, params)
         try:
@@ -190,7 +188,7 @@ class Pyprland:
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    async def _call_handler(self, full_name: str, *params: list[str], notify: str = "") -> bool:
+    async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
         """Call an event handler with params."""
         handled = False
         for plugin in self.plugins.values():
@@ -323,7 +321,7 @@ class Pyprland:
         )
 
 
-async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.StreamReader, asyncio.StreamWriter] | tuple[None, Exception]:
     """Obtain the event stream, retrying if it fails.
 
     If retry count is exhausted, returns (None, exception).
@@ -345,7 +343,7 @@ async def run_daemon() -> None:
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
 
     events_reader, events_writer = await get_event_stream_with_retry()
-    if not events_reader:
+    if events_reader is None:
         manager.log.critical("Failed to open hyprland event stream: %s.", events_writer)
         await notify_fatal("Failed to open hyprland event stream")
         raise PyprError from events_writer
@@ -364,6 +362,7 @@ async def run_daemon() -> None:
         manager.log.critical("cancelled")
     else:
         await manager.exit_plugins()
+        assert isinstance(events_writer, asyncio.StreamWriter)
         events_writer.close()
         await events_writer.wait_closed()
         manager.server.close()

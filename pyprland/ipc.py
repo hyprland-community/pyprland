@@ -16,7 +16,7 @@ import time
 from collections.abc import Callable, Iterable
 from functools import partial
 from logging import Logger
-from typing import Any
+from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
 from .types import ClientInfo, MonitorInfo, PyprError
@@ -71,7 +71,7 @@ cached_responses: dict[str, list[Any]] = {
 @retry_on_reset
 async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[str, Any]] | dict[str, Any]:
     """Run an IPC command and return the JSON output."""
-    logger = logger or log
+    logger = cast(Logger, logger or log)
     now = time.time()
     cached = command in cached_responses and cached_responses[command][0] > now
     if cached:
@@ -96,7 +96,7 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[
     return ret
 
 
-def _format_command(command_list: list[str], default_base_command: str) -> Iterable[str]:
+def _format_command(command_list: list[str] | list[list[str]], default_base_command: str) -> Iterable[str]:
     """Format a list of commands to be sent to Hyprland.
 
     Args:
@@ -123,7 +123,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     Returns:
         True on success
     """
-    logger = logger or log
+    logger = cast(Logger, logger or log)
     logger.debug("%s %s", base_command, command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -159,24 +159,23 @@ async def get_focused_monitor_props(logger: Logger | None = None, name: str | No
     """
     if name:
 
-        def match_fn(mon: str) -> bool:
+        def match_fn(mon: MonitorInfo) -> bool:
             return mon["name"] == name
 
     else:
 
-        def match_fn(mon: str) -> bool:
-            return mon.get("focused")
+        def match_fn(mon: MonitorInfo) -> bool:
+            return cast(bool, mon.get("focused"))
 
     for monitor in await hyprctl_json("monitors", logger=logger):
-        assert isinstance(monitor, dict)
-        if match_fn(monitor):
+        if match_fn(cast(MonitorInfo, monitor)):
             return monitor  # type: ignore
     msg = "no focused monitor"
     raise RuntimeError(msg)
 
 
 async def get_client_props(
-    logger: Logger | None = None, match_fn: Callable = None, clients: list[ClientInfo] | None = None, **kw
+    logger: Logger | None = None, match_fn: Callable | None = None, clients: list[ClientInfo] | None = None, **kw
 ) -> ClientInfo | None:
     """Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
 
@@ -216,7 +215,7 @@ async def get_client_props(
     if match_fn is None:
 
         def match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
-            return value1 == value2
+            return bool(value1 == value2)
 
     for client in clients or await hyprctl_json("clients", logger=logger):
         assert isinstance(client, dict)

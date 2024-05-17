@@ -12,7 +12,7 @@ class Extension(Plugin):
 
     monitors: set[str]
     proc = None
-    cur_monitor = ""
+    cur_monitor: str | None = ""
 
     ongoing_task: asyncio.Task | None = None
 
@@ -48,12 +48,13 @@ class Extension(Plugin):
             self.log.info("starting gBar: %s", cmd)
             self._run_gbar(cmd)
 
-    async def get_best_monitor(self) -> str | None:
+    async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
-        preferred = self.config.get("monitors", [])
+        preferred: list[str] = self.config.get("monitors", [])
         for monitor in preferred:
             if monitor in state.monitors:
                 return monitor
+        return ""
 
     async def event_monitoradded(self, monitor: str) -> None:
         """Switch bar in case the monitor is preferred."""
