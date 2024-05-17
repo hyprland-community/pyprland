@@ -43,13 +43,33 @@ line-length = 140
 preview = false
 
 src = ["pyprland"]
-exclude = ["*_v?.py", "tests", "scripts", "sample_extension", ".git"]
+exclude = [ "*_v?.py", "tests", "scripts", "sample_extension", ".git" ]
 target-version = "py311"
-
 
 [tool.ruff.lint]
 fixable = ["ALL"]
-ignore = ["E203", "D107", "D105", "TID252", "PTH118", "S101", "S603", "S605", "S404", "S311", "S602", "S607", "RET503", "ISC001", "PLW0603", "ANN101", "ANN003", "ANN002", "ANN204", "ANN102"]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "ANN102",
+    "ANN204",
+    "D105",
+    "D107",
+    "E203",
+    "ISC001",
+    "PLW0603",
+    "PTH118",
+    "RET503",
+    "S101",
+    "S311",
+    "S404",
+    "S602",
+    "S603",
+    "S605",
+    "S607",
+    "TID252"
+]
 select = [
     "A",
     "AIR",
