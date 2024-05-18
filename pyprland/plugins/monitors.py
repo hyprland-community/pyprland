@@ -166,6 +166,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if mon and mon["name"] == name:
                 await asyncio.create_subprocess_shell(command)
                 break
+        single_command = self.config.get("hotplug_command")
+        if single_command:
+            await asyncio.create_subprocess_shell(single_command)
 
     def _clear_mon_by_pat_cache(self) -> None:
         """Clear the cache."""
