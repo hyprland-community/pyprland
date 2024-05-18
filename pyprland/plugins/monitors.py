@@ -109,7 +109,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(self, monitors: list[MonitorInfo] | None = None) -> None:
+    async def run_relayout(self, monitors: list[MonitorInfo] | None = None) -> bool:
         """Recompute & apply every monitors's layout."""
         self._clear_mon_by_pat_cache()
 
@@ -139,6 +139,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     f"monitor {name},{resolution},{position},{scale},transform,{transform}",
                     "keyword",
                 )
+            return True
+        return False
 
     # Event handlers
 
@@ -147,7 +149,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
         monitors = await self.hyprctl_json("monitors")
         await self._hotplug_command(monitors, name)
-        await self.run_relayout(monitors)
+
+        if not await self.run_relayout(monitors):
+            default_command = self.config.get("unknown")
+            if default_command:
+                await asyncio.create_subprocess_shell(default_command)
 
     # Utils
 
