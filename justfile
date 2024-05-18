@@ -15,7 +15,7 @@ compgen:
     tox run -e shellgen
 
 lint:
-    tox run -e linting
+    tox run -e linting, deadcode
 
 vreg:
     tox run -e vreg
@@ -32,7 +32,7 @@ release:
 htmlcov:
     {{pyenv}}/bin/coverage html
     xdg-open ./htmlcov/index.html
-    
+
 types:
     {{pyenv}}/bin/mypy --check-untyped-defs pyprland
 
