@@ -30,7 +30,6 @@ HYPRLAND_INSTANCE_SIGNATURE = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
 
 MINIMUM_ADDR_LEN = 10
 
-
 try:
     IPC_FOLDER = (
         f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
@@ -39,22 +38,7 @@ try:
     )
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
-    IPC_FOLDER = "/"
-
-
-class IPCFolder:
-    """Context manager to change to the IPC folder."""
-
-    def __init__(self) -> None:
-        self._current_folder = ""
-
-    def __enter__(self) -> str:
-        self._current_folder = os.getcwd()
-        os.chdir(IPC_FOLDER)
-        return IPC_FOLDER
-
-    def __exit__(self, *_):
-        os.chdir(self._current_folder)
+    IPC_FOLDER = "/fake"
 
 
 def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:

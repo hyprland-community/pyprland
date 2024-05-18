@@ -18,13 +18,13 @@ from functools import partial
 from logging import Logger
 from typing import Any, cast
 
-from .common import MINIMUM_ADDR_LEN, IPCFolder, get_logger
+from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
 from .types import ClientInfo, MonitorInfo, PyprError
 
 log: Logger | None = None
 
-HYPRCTL = ".socket.sock"
-EVENTS = ".socket2.sock"
+HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
+EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
@@ -39,11 +39,7 @@ notify_info = partial(notify, icon=1, duration=5)
 
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
-    conn: tuple[asyncio.StreamReader, asyncio.StreamWriter]
-
-    with IPCFolder():
-        conn = await asyncio.open_unix_connection(EVENTS)
-    return conn
+    return await asyncio.open_unix_connection(EVENTS)
 
 
 def retry_on_reset(func: Callable) -> Callable:
@@ -83,8 +79,7 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[
         return cached_responses[command][1]  # type: ignore
     logger.debug(command)
     try:
-        with IPCFolder():
-            ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
         logger.critical("hyprctl socket not found! is it running ?")
         raise PyprError from e
@@ -131,8 +126,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     logger = cast(Logger, logger or log)
     logger.debug("%s %s", base_command, command)
     try:
-        with IPCFolder():
-            ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
+        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
         logger.critical("hyprctl socket not found! is it running ?")
         raise PyprError from e
