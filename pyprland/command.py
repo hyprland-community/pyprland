@@ -11,14 +11,14 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Self
 
-from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
+from pyprland.common import IPC_FOLDER, IPCFolder, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
 from pyprland.types import PyprError
 from pyprland.version import VERSION
 
-CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
+CONTROL = ".pyprland.sock"
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
@@ -251,8 +251,9 @@ class Pyprland:
                 self.server.close()
                 # Ensure the process exits
                 await asyncio.sleep(1)
-                if os.path.exists(CONTROL):
-                    os.unlink(CONTROL)
+                with IPCFolder():
+                    if os.path.exists(CONTROL):
+                        os.unlink(CONTROL)
                 os._exit(0)
 
             self.stopped = True
@@ -340,7 +341,8 @@ async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.Stre
 async def run_daemon() -> None:
     """Run the server / daemon."""
     manager = Pyprland()
-    manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
+    with IPCFolder():
+        manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
 
     events_reader, events_writer = await get_event_stream_with_retry()
     if events_reader is None:
@@ -378,7 +380,7 @@ def show_help(manager: Pyprland) -> None:
     print(
         """Syntax: pypr [command]
 
-If the command is ommited, runs the daemon which will start every configured plugin.
+If the command is omitted, runs the daemon which will start every configured plugin.
 
 Available commands:
 """
@@ -428,7 +430,8 @@ async def run_client() -> None:
         return None
 
     try:
-        _, writer = await asyncio.open_unix_connection(CONTROL)
+        with IPCFolder():
+            _, writer = await asyncio.open_unix_connection(CONTROL)
     except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
         await notify_error("Pypr can't connect, is daemon running ?")
@@ -471,13 +474,14 @@ def main() -> None:
         CONFIG_FILE = config_override
 
     invoke_daemon = len(sys.argv) <= 1
-    if invoke_daemon and os.path.exists(CONTROL):
+    full_path = os.path.join(IPC_FOLDER, CONTROL)
+    if invoke_daemon and os.path.exists(full_path):
         asyncio.run(notify_fatal("Trying to run pypr more than once ?"))
         log.critical(
             """%s exists,
 is pypr already running ?
 If that's not the case, delete this file and run again.""",
-            CONTROL,
+            full_path,
         )
     else:
         try:
@@ -491,8 +495,9 @@ If that's not the case, delete this file and run again.""",
         except Exception:  # pylint: disable=W0718
             log.critical("Unhandled exception:", exc_info=True)
         finally:
-            if invoke_daemon and os.path.exists(CONTROL):
-                os.unlink(CONTROL)
+            with IPCFolder():
+                if invoke_daemon and os.path.exists(CONTROL):
+                    os.unlink(CONTROL)
 
 
 if __name__ == "__main__":
