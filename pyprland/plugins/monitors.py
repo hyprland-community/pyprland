@@ -24,6 +24,9 @@ def trim_offset(monitors: list[MonitorInfo]) -> None:
         off_x = min(mon["x"], off_x)
         off_y = min(mon["y"], off_y)
 
+    assert off_x is not None
+    assert off_y is not None
+
     for mon in monitors:
         mon["x"] -= off_x
         mon["y"] -= off_y
