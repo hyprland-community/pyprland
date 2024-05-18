@@ -15,7 +15,7 @@ compgen:
     tox run -e shellgen
 
 lint:
-    tox run -e linting, deadcode
+    tox run -e linting,deadcode
 
 vreg:
     tox run -e vreg
