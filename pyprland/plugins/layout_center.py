@@ -74,7 +74,7 @@ class Extension(CastBoolMixin, Plugin):
 
     # Utils
 
-    async def get_clients(self) -> list[ClientInfo]:  # pylint: disable=arguments-differ
+    async def get_clients(self, *_) -> list[ClientInfo]:  # pylint: disable=arguments-differ
         """Return the client list in the currently active workspace."""
         clients = await super().get_clients(mapped=True, workspace=state.active_workspace)
         clients.sort(key=lambda c: c["address"])
@@ -115,7 +115,7 @@ class Extension(CastBoolMixin, Plugin):
 
     # Subcommands
 
-    async def _sanity_check(self, clients: list[ClientInfo] = None) -> bool:
+    async def _sanity_check(self, clients: list[ClientInfo] | None = None) -> bool:
         """Auto-disable if needed & return enabled status."""
         clients = clients or await self.get_clients()
         if len(clients) < 2:  # noqa: PLR2004
@@ -125,7 +125,7 @@ class Extension(CastBoolMixin, Plugin):
             self.enabled = False
         return self.enabled
 
-    async def _run_changefocus(self, direction: int, default_override: dict | None = None) -> None:
+    async def _run_changefocus(self, direction: int, default_override: str | None = None) -> None:
         """Change the focus in the given direction (-1 or 1)."""
         if self.enabled:
             clients = await self.get_clients()
@@ -146,7 +146,7 @@ class Extension(CastBoolMixin, Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
                 self.last_index = index
                 await self.prepare_window(clients)
-        else:
+        elif default_override:
             command = self.config.get(default_override)
             if command:
                 await self.hyprctl(command)
@@ -165,43 +165,38 @@ class Extension(CastBoolMixin, Plugin):
     # Properties
 
     @property
-    def offset(self) -> list[int]:
+    def offset(self) -> tuple[int, int]:
         """Returns the centered window offset."""
-        offset = self.config.get("offset", [0, 0])
+        offset = self.config.get("offset", (0, 0))
         if isinstance(offset, str):
             x, y = (int(i) for i in self.config["offset"].split() if i.strip())
-            return [x, y]
-        return offset
+            return (x, y)
+        return cast(tuple[int, int], offset)
 
     @property
     def margin(self) -> int:
         """Returns the margin of the centered window."""
-        return self.config.get("margin", 60)
+        return cast(int, self.config.get("margin", 60))
 
     # enabled
-    def get_enabled(self) -> bool:
+    @property
+    def enabled(self) -> bool:
         """Is center layout enabled on the active workspace ?."""
-        return self.workspace_info[state.active_workspace]["enabled"]
+        return cast(bool, self.workspace_info[state.active_workspace]["enabled"])
 
-    def set_enabled(self, value: bool) -> None:
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
         """Set if center layout enabled on the active workspace."""
         self.workspace_info[state.active_workspace]["enabled"] = value
 
-    enabled = property(get_enabled, set_enabled, doc="centered layout enabled on this workspace")
-    del get_enabled, set_enabled
-
     # main_window_addr
-    def get_main_window_addr(self) -> str:
-        """Get active workspace's centered window address."""
-        return self.workspace_info[state.active_workspace]["addr"]
 
-    def set_main_window_addr(self, value: str) -> None:
+    @property
+    def main_window_addr(self) -> str:
+        """Get active workspace's centered window address."""
+        return cast(str, self.workspace_info[state.active_workspace]["addr"])
+
+    @main_window_addr.setter
+    def main_window_addr(self, value: str) -> None:
         """Set active workspace's centered window address."""
         self.workspace_info[state.active_workspace]["addr"] = value
-
-    main_window_addr = property(
-        get_main_window_addr,
-        set_main_window_addr,
-        doc="active workspace's centered window address",
-    )
-    del get_main_window_addr, set_main_window_addr

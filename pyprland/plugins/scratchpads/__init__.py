@@ -212,7 +212,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 await self.procs[uid].communicate()
                 code = self.procs[uid].returncode
-                error = f"The command failed with code {code}" if code else "The command terminated sucessfully, is it already running?"
+                error = f"The command failed with code {code}" if code else "The command terminated successfully, is it already running?"
             self.log.error('"%s": %s', scratch.conf["command"], error)
             await notify_error(error)
             return False
@@ -343,7 +343,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
-        clients = await self.hyprctl_json("clients")
+        clients = cast(list[ClientInfo], await self.hyprctl_json("clients"))
         for pending_scratch in class_lookup_hack:
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
@@ -459,7 +459,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
         if offset:
-            return [convert_monitor_dimension(offset, ref, monitor) for ref in aspect]
+            return cast(tuple[int, int], (convert_monitor_dimension(offset, ref, monitor) for ref in aspect))
 
         # compute from client size & margin
         margin = scratch.conf.get("margin", DEFAULT_MARGIN)
@@ -467,7 +467,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
 
         margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
-        return map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins, strict=False)])
+        scaled = map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins, strict=False)])
+        return cast(tuple[int, int], scaled)
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Animate hiding a scratchpad."""
@@ -556,7 +557,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     scratch.extra_addr.add(address)
 
     async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool) -> None:
-        """Perfoms the transition to visible state."""
+        """Performs the transition to visible state."""
         forbid_special = not self.cast_bool(scratch.conf.get("allow_special_workspace"), True)
         wrkspc = (
             monitor["activeWorkspace"]["name"]

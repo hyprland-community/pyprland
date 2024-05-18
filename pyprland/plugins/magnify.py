@@ -15,7 +15,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     def ease_out_quad(self, step: int, start: int, end: int, duration: int) -> int:
         """Easing function for animations."""
-        step /= duration
+        step //= duration
         return -end * step * (step - 2) + start
 
     def animated_eased_zoom(self, start: int, end: int, duration: int) -> Iterable[int]:
@@ -32,7 +32,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             yield self.ease_out_quad(i, start, end - start, duration)
 
     async def run_zoom(self, *args) -> None:
-        """[factor] zooms to "factor" or toggles zoom level if factor is ommited.
+        """[factor] zooms to "factor" or toggles zoom level if factor is omitted.
 
         If factor is omitted, it toggles between the configured zoom level and no zoom.
         """

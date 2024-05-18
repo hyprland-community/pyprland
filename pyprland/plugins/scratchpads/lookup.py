@@ -1,6 +1,7 @@
 """Lookup & update API for Scratch objects."""
 
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import Any, cast
 
 from .objects import Scratch
@@ -38,11 +39,11 @@ class ScratchDB:  # {{{
         """Return all Scratch name."""
         return iter(self._by_name.keys())
 
-    def values(self) -> list[Scratch]:
+    def values(self) -> Iterable[Scratch]:
         """Return every Scratch."""
         return self._by_name.values()
 
-    def items(self) -> list[tuple[str, Scratch]]:
+    def items(self) -> Iterable[tuple[str, Scratch]]:
         """Return an iterable list of (name, Scratch)."""
         return self._by_name.items()
 
@@ -55,7 +56,7 @@ class ScratchDB:  # {{{
         if scratch.pid in self._by_pid:
             del self._by_pid[scratch.pid]
 
-    def clear(self, name: int | None = None, pid: int | None = None, addr: str | None = None) -> None:
+    def clear(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
         """Clear the index by name, pid or address."""
         # {{{
 
@@ -71,6 +72,7 @@ class ScratchDB:  # {{{
     def register(self, scratch: Scratch, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
         """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided."""
         # {{{
+        v: str | int
         if not any((name, pid, addr)):
             self._by_name[scratch.uid] = scratch
             self._by_pid[scratch.pid] = scratch
@@ -94,6 +96,7 @@ class ScratchDB:  # {{{
     def get(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> Scratch | None:
         """Return the Scratch matching given name, pid or address."""
         # {{{
+        v: str | int
         assert len(list(filter(bool, (name, pid, addr)))) == 1, (
             name,
             pid,

@@ -95,7 +95,7 @@ def build_graph(config: dict[str, dict[str, list[str]]]) -> dict[str, list[str]]
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring
     """Control monitors layout."""
 
-    _mon_by_pat_cache: dict[str, dict] = {}
+    _mon_by_pat_cache: dict[str, MonitorInfo] = {}
 
     async def on_reload(self) -> None:
         """Reload the plugin."""
@@ -163,9 +163,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     def _clear_mon_by_pat_cache(self) -> None:
         """Clear the cache."""
-        self._mon_by_pat_cache = {}
+        self._mon_by_pat_cache: dict[str, MonitorInfo] = {}
 
-    def _get_mon_by_pat(self, pat: str, description_db: dict[str, MonitorInfo], name_db: [str, MonitorInfo]) -> MonitorInfo | None:
+    def _get_mon_by_pat(self, pat: str, description_db: dict[str, MonitorInfo], name_db: dict[str, MonitorInfo]) -> MonitorInfo | None:
         """Return a (plugged) monitor object given its pattern or none if not found."""
         cached = self._mon_by_pat_cache.get(pat)
         if cached is None:
@@ -176,7 +176,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                         cached = description_db[full_descr]
                         break
             if cached:
-                self._mon_by_pat_cache[pat] = cast(dict[str, dict], cached)
+                self._mon_by_pat_cache[pat] = cached
         return cached
 
     _flipped_positions = {

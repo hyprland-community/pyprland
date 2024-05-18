@@ -1,6 +1,7 @@
 """Shortcuts menu."""
 
 import asyncio
+from typing import cast
 
 from ..adapters.menus import MenuMixin
 from ..common import CastBoolMixin, apply_filter, apply_variables, state
@@ -79,7 +80,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                     variables[var_name] = choices[0]
                 else:
                     selection = await self.menu.run(choices, var_name)
-                    variables[var_name] = apply_filter(selection, option.get("filter"))
+                    variables[var_name] = apply_filter(selection, cast(str, option.get("filter", "")))
                     self.log.debug("set %s = %s", var_name, variables[var_name])
 
     async def _run_command(self, command: str, variables: dict[str, str]) -> None:

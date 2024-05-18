@@ -4,9 +4,8 @@ __all__ = ["Scratch"]
 
 import logging
 import os
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from aiofiles import open as aiopen
 from aiofiles import os as aios
@@ -17,7 +16,15 @@ from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import OverridableConfig, get_match_fn
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     import pyprland.plugins.scratchpads.Extension as PyprlandPlugin
+
+    class ClientPropGetter(Protocol):
+        """type for the get_client_props function."""
+
+        async def __call__(self, match_fn: Callable | None = None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
+            pass
 
 
 @dataclass
@@ -36,7 +43,7 @@ class Scratch(CastBoolMixin):  # {{{
     """A scratchpad state including configuration & client state."""
 
     log = logging.getLogger("scratch")
-    get_client_props: Callable
+    get_client_props: "ClientPropGetter"
     client_info: ClientInfo
     visible = False
     uid = ""
@@ -99,7 +106,7 @@ class Scratch(CastBoolMixin):  # {{{
 
         return False
 
-    async def fetch_matching_client(self, clients: list[ClientInfo] = None) -> dict[str, Any] | None:
+    async def fetch_matching_client(self, clients: list[ClientInfo] | None = None) -> ClientInfo | None:
         """Fetch the first matching client properties."""
         match_by, match_val = self.get_match_props()
         return await self.get_client_props(
@@ -143,6 +150,7 @@ class Scratch(CastBoolMixin):  # {{{
                 self.log.error("The client window %s vanished", self.full_address)
                 msg = f"Client window {self.full_address} not found"
                 raise KeyError(msg)
+            # Unexpected type:
             self.log.error("client_info of %s must be a dict: %s", self.address, client_info)
             msg = f"Not a dict: {client_info}"
             raise TypeError(msg)

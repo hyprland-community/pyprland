@@ -28,24 +28,28 @@ async def get_all_space_identifiers(monitors: list[MonitorInfo]) -> list[tuple[s
 _match_fn_re_cache = {}
 
 
-def get_match_fn(
-    prop_name: str, prop_value: float | bool | str | list
-) -> Callable[[float | bool | str | list, float | bool | str | list], bool]:
+def get_match_fn(prop_name: str, prop_value: float | bool | str | list) -> Callable[[Any, Any], bool]:
     """Return a function to match a client based on a property."""
     assert prop_name  # may be used for more specific matching
     if isinstance(prop_value, str) and prop_value.startswith("re:"):
         # get regex from cache if possible:
         if prop_value not in _match_fn_re_cache:
             regex = re.compile(prop_value[3:])
-            _match_fn_re_cache[prop_value] = lambda value1, _value2: regex.match(value1)
+
+            def _comp_function(value1: str, _value2: str) -> bool:
+                return bool(regex.match(value1))
+
+            _match_fn_re_cache[prop_value] = _comp_function
         return _match_fn_re_cache[prop_value]
     return lambda value1, value2: value1 == value2
 
 
-class OverridableConfig:
+class OverridableConfig(dict):
     """A `dict`-like object allowing per-monitor overrides."""
 
-    def __init__(self, ref: dict[str, Any], monitor_override: dict[str, dict[str, Any]]) -> None:
+    def __init__(
+        self, ref: dict[str, float | bool | list | str], monitor_override: dict[str, dict[str, float | bool | list | str]]
+    ) -> None:
         self.ref = ref
         self.mon_override = monitor_override
 
@@ -58,14 +62,15 @@ class OverridableConfig:
             return override[name]
         return self.ref[name]
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: object) -> bool:
+        assert isinstance(name, str)
         try:
             self[name]  # pylint: disable=pointless-statement
         except KeyError:
             return False
         return True
 
-    def get(self, name: str, default: str | float | bool | list = None) -> str | float | bool | list:
+    def get(self, name: str, default: object = None) -> object | None:
         """Get the attribute `name`."""
         try:
             return self[name]
