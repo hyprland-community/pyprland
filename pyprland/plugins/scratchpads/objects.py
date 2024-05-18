@@ -18,7 +18,7 @@ from .helpers import OverridableConfig, get_match_fn
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    import pyprland.plugins.scratchpads as _scratchpads_extension_t
+    import pyprland.plugins.scratchpads as _scratchpads_extension_m
 
     class ClientPropGetter(Protocol):
         """type for the get_client_props function."""
@@ -76,7 +76,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Check if the address is the same as the client."""
         return addr == self.full_address or addr in self.extra_addr
 
-    async def initialize(self, ex: "_scratchpads_extension_t.Extension") -> None:
+    async def initialize(self, ex: "_scratchpads_extension_m.Extension") -> None:
         """Initialize the scratchpad."""
         if self.meta.initialized:
             return
