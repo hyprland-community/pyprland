@@ -159,23 +159,27 @@ async def get_focused_monitor_props(logger: Logger | None = None, name: str | No
     """
     if name:
 
-        def match_fn(mon: MonitorInfo) -> bool:
+        def _match_fn(mon: MonitorInfo) -> bool:
             return mon["name"] == name
-
     else:
 
-        def match_fn(mon: MonitorInfo) -> bool:
+        def _match_fn(mon: MonitorInfo) -> bool:
             return cast(bool, mon.get("focused"))
 
     for monitor in await hyprctl_json("monitors", logger=logger):
-        if match_fn(cast(MonitorInfo, monitor)):
-            return monitor  # type: ignore
+        if _match_fn(cast(MonitorInfo, monitor)):
+            return cast(MonitorInfo, monitor)
     msg = "no focused monitor"
     raise RuntimeError(msg)
 
 
+def default_match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
+    """Default match function."""
+    return bool(value1 == value2)
+
+
 async def get_client_props(
-    logger: Logger | None = None, match_fn: Callable | None = None, clients: list[ClientInfo] | None = None, **kw
+    logger: Logger | None = None, match_fn: Callable = default_match_fn, clients: list[ClientInfo] | None = None, **kw
 ) -> ClientInfo | None:
     """Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
 
@@ -211,11 +215,6 @@ async def get_client_props(
         prop_value = klass
     else:
         prop_name, prop_value = next(iter(kw.items()))
-
-    if match_fn is None:
-
-        def match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
-            return bool(value1 == value2)
 
     for client in clients or await hyprctl_json("clients", logger=logger):
         assert isinstance(client, dict)

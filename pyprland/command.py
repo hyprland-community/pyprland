@@ -9,7 +9,7 @@ import sys
 import tomllib
 from collections.abc import Callable
 from functools import partial
-from typing import Any, Self
+from typing import Any, Self, cast
 
 from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
@@ -176,7 +176,7 @@ class Pyprland:
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug("\033[%s;1m%s%s\033[0m", color, name, params)
 
-    async def _run_plugin_handler(self, plugin: Plugin, full_name: str, params: tuple[str]) -> None:
+    async def _run_plugin_handler(self, plugin: Plugin, full_name: str, params: tuple[str, ...]) -> None:
         """Run a single handler on a plugin."""
         self.log_handler(plugin, full_name, params)
         try:
@@ -346,7 +346,7 @@ async def run_daemon() -> None:
     if events_reader is None:
         manager.log.critical("Failed to open hyprland event stream: %s.", events_writer)
         await notify_fatal("Failed to open hyprland event stream")
-        raise PyprError from events_writer
+        raise PyprError from cast(Exception, events_writer)
 
     manager.event_reader = events_reader
 
@@ -378,7 +378,7 @@ def show_help(manager: Pyprland) -> None:
     print(
         """Syntax: pypr [command]
 
-If the command is ommited, runs the daemon which will start every configured plugin.
+If the command is omitted, runs the daemon which will start every configured plugin.
 
 Available commands:
 """
