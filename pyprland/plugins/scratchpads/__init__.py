@@ -348,7 +348,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
             for client in clients:
-                assert isinstance(client, dict)
                 if match_fn(client[match_by], match_value):
                     self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
@@ -631,7 +630,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Animate the show transition."""
         animation_type = get_animation_type(scratch)
         if animation_type:
-            offset = tuple(-1 * n for n in await self.get_offsets(scratch, monitor))
+            offset = cast(tuple[int, int], tuple(-1 * n for n in await self.get_offsets(scratch, monitor)))
             if relative_animation:
                 # Relative positioning
                 if "size" not in scratch.client_info:
