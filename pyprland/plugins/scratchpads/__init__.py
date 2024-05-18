@@ -302,7 +302,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
         for uid, scratch in self.scratches.items():
             if not scratch.client_info:
-                continue
+                continue  # type: ignore
             if scratch.have_address(full_address):
                 self.last_focused = scratch
                 self.cancel_task(uid)
@@ -348,7 +348,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
             for client in clients:
-                if match_fn(client[match_by], match_value):
+                if match_fn(client[match_by], match_value):  # type: ignore
                     self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.update_client_info(client)
