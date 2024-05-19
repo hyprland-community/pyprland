@@ -35,7 +35,7 @@ DEBUG = os.environ.get("DEBUG", False)
 
 HYPRLAND_INSTANCE_SIGNATURE = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "NO_INSTANCE")
 
-MINIMUM_ADDR_LEN = 5
+MINIMUM_ADDR_LEN = 4
 
 try:
     original_ipc_folder = (
