@@ -22,11 +22,18 @@ __all__ = [
     "merge",
     "run_interactive_program",
     "state",
+    "init_logger",
+    "SharedState",
+    "prepare_for_quotes",
+    "apply_filter",
+    "CastBoolMixin",
+    "is_rotated",
 ]
+
 
 DEBUG = os.environ.get("DEBUG", False)
 
-HYPRLAND_INSTANCE_SIGNATURE = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
+HYPRLAND_INSTANCE_SIGNATURE = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "NO_INSTANCE")
 
 MINIMUM_ADDR_LEN = 10
 
@@ -204,7 +211,7 @@ class SharedState:
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)
 
 
-state = SharedState()
+state: SharedState = SharedState()
 """
 Exposes most-commonly accessed attributes to avoid specific IPC requests
 - `active_monitor` monitor's name

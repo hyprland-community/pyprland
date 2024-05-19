@@ -30,7 +30,7 @@ class Plugin:
     " `pyprland.ipc.notify_error` using the pluggin's logger "
 
     config: dict[str, Any]
-    " This plugin configuration section as a dict object "
+    " This plugin configuration section as a `dict` object "
 
     def __init__(self, name: str) -> None:
         """Create a new plugin `name` and the matching logger."""
