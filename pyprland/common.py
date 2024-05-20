@@ -44,14 +44,14 @@ try:
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    IPC_FOLDER = f"/tmp/.hypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
+    IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     # make a link from short path to original path
     if not os.path.exists(IPC_FOLDER):
         os.symlink(original_ipc_folder, IPC_FOLDER)
 
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
-    IPC_FOLDER = "/fake"
+    IPC_FOLDER = "/"
 
 
 def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:
