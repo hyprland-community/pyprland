@@ -13,12 +13,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     cur_factor = 1.0
 
-    def ease_out_quad(self, step: int, start: int, end: int, duration: int) -> int:
+    def ease_out_quad(self, step: float, start: int, end: int, duration: int) -> float:
         """Easing function for animations."""
-        step //= duration
+        step /= duration
         return -end * step * (step - 2) + start
 
-    def animated_eased_zoom(self, start: int, end: int, duration: int) -> Iterable[int]:
+    def animated_eased_zoom(self, start: int, end: int, duration: int) -> Iterable[float]:
         """Add easing to an animation.
 
         This function is a generator that yields the next value of the animation
