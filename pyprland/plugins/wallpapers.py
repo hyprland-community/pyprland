@@ -39,6 +39,7 @@ class Extension(CastBoolMixin, Plugin):
 
     next_background_event = asyncio.Event()
     cur_image = ""
+    _paused = False
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -88,34 +89,35 @@ class Extension(CastBoolMixin, Plugin):
         variables = state.variables.copy()
 
         while self.running:
-            self.next_background_event.clear()
+            if not self._paused:
+                self.next_background_event.clear()
 
-            # Define the command template based on the 'unique' flag
-            cmd_template = self.config.get(
-                "command",
-                ('swaybg -o [output] -m fill -i "[file]"' if unique else 'swaybg -m fill -i "[file]"'),
-            )
+                # Define the command template based on the 'unique' flag
+                cmd_template = self.config.get(
+                    "command",
+                    ('swaybg -o [output] -m fill -i "[file]"' if unique else 'swaybg -m fill -i "[file]"'),
+                )
 
-            if unique:
-                monitors = await self.hyprctl_json("monitors")
-                old_filename = None
-                for monitor in monitors:
-                    filename = prepare_for_quotes(self.select_next_image())
-                    while filename == old_filename:
+                if unique:
+                    monitors = await self.hyprctl_json("monitors")
+                    old_filename = None
+                    for monitor in monitors:
                         filename = prepare_for_quotes(self.select_next_image())
-                    variables.update({"file": filename, "output": monitor["name"]})
+                        while filename == old_filename:
+                            filename = prepare_for_quotes(self.select_next_image())
+                        variables.update({"file": filename, "output": monitor["name"]})
+                        await self._run_one(cmd_template, variables)
+                else:
+                    filename = self.select_next_image().replace('"', '\\"')
+                    variables.update({"file": filename})
                     await self._run_one(cmd_template, variables)
-            else:
-                filename = self.select_next_image().replace('"', '\\"')
-                variables.update({"file": filename})
-                await self._run_one(cmd_template, variables)
 
-            await asyncio.sleep(1)  # wait for the command(s) to start
+                await asyncio.sleep(1)  # wait for the command(s) to start
 
-            # check if the command failed
-            for proc in self.proc:
-                if proc.returncode:
-                    await self.notify_error("wallpaper command failed")
+                # check if the command failed
+                for proc in self.proc:
+                    if proc.returncode:
+                        await self.notify_error("wallpaper command failed")
 
             interval = asyncio.sleep(60 * self.config.get("interval", 10) - 1)
             await asyncio.wait(
@@ -140,6 +142,7 @@ class Extension(CastBoolMixin, Plugin):
     async def run_wall(self, arg: str) -> None:
         """<next|clear> skip the current background image or stop displaying it."""
         if arg.startswith("n"):
+            self._paused = False
             self.next_background_event.set()
         elif arg.startswith("c"):
             clear_command = self.config.get("clear_command")
@@ -149,4 +152,5 @@ class Extension(CastBoolMixin, Plugin):
                 # wait for it to finish
                 await proc.wait()
             else:
+                self._paused = True
                 await self.terminate()
