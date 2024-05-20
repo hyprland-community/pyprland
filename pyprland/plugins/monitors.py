@@ -9,6 +9,8 @@ from ..common import CastBoolMixin, is_rotated, state
 from ..types import MonitorInfo
 from .interface import Plugin
 
+MONITOR_PROPS = {"scale", "transform", "rate", "resolution"}
+
 
 def trim_offset(monitors: list[MonitorInfo]) -> None:
     """Make the monitor set layout start at 0,0."""
@@ -83,6 +85,8 @@ def build_graph(config: dict[str, dict[str, list[str]]]) -> dict[str, list[str]]
     graph = defaultdict(list)
     for name1, positions in config.items():
         for pos, names in positions.items():
+            if pos in MONITOR_PROPS:
+                continue
             tldr_direction = pos.startswith(("left", "top"))
             for name2 in names:
                 if tldr_direction:
@@ -109,8 +113,24 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(self, monitors: list[MonitorInfo] | None = None) -> bool:
+    def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, dict[str, Any]], every_monitor: dict[str, MonitorInfo]) -> str:
+        """Build the monitor command."""
+        name = monitor["name"]
+        this_config = config.get(name, {})
+        rate = this_config.get("rate", every_monitor[name]["refreshRate"])
+        res = this_config.get("resolution", f"{every_monitor[name]['width']}x{every_monitor[name]['height']}")
+        scale = this_config.get("scale", every_monitor[name]["scale"])
+        position = f"{monitor['x']}x{monitor['y']}"
+        transform = this_config.get("transform", every_monitor[name]["transform"])
+        return f"monitor {name},{res}@{rate},{position},{scale},transform,{transform}"
+
+    async def run_relayout(self, monitors: list[MonitorInfo] | str | None = None) -> bool:
         """Recompute & apply every monitors's layout."""
+        if isinstance(monitors, str):
+            self.log.error("relayout doesn't take any argument")
+            await self.notify_error("relayout doesn't take any argument")
+            return False
+
         self._clear_mon_by_pat_cache()
 
         if monitors is None:
@@ -121,24 +141,16 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.debug("Using %s", cleaned_config)
         else:
             self.log.debug("No configuration item is applicable")
+            return False
         graph = build_graph(cleaned_config)
         need_change = self._update_positions(monitors, graph, cleaned_config)
         every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
         if need_change:
-            trim_offset(monitors)
+            if self.cast_bool(self.config.get("trim_offset"), True):
+                trim_offset(monitors)
 
             for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-                name = monitor["name"]
-                this_mon = every_monitor[name]
-                resolution = f"{this_mon['width']}x{this_mon['height']}@{this_mon['refreshRate']}"
-                scale = this_mon["scale"]
-                position = f"{monitor['x']}x{monitor['y']}"
-                transform = this_mon["transform"]
-
-                await self.hyprctl(
-                    f"monitor {name},{resolution},{position},{scale},transform,{transform}",
-                    "keyword",
-                )
+                await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
             return True
         return False
 
@@ -244,6 +256,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         ref_set = {name1, name2}
         for name_a, positions in config.items():
             for pos, names in positions.items():
+                if pos in MONITOR_PROPS:
+                    continue
                 lpos = clean_pos(pos)
                 for name_b in names:
                     if {name_a, name_b} == ref_set:
@@ -274,13 +288,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 continue
             cleaned_config[name] = {}
             for position, descr_list in placement.items():
-                if isinstance(descr_list, str):
-                    descr_list = [descr_list]  # noqa: PLW2901
-                resolved = []
-                for p in descr_list:
-                    r = self._get_mon_by_pat(p, monitors_by_descr, plugged_monitors)
-                    if r:
-                        resolved.append(r["name"])
-                if resolved:
-                    cleaned_config[name][clean_pos(position)] = [r for r in resolved if r in plugged_monitors]
+                if position in MONITOR_PROPS:
+                    cleaned_config[name][position] = descr_list
+                else:
+                    resolved = []
+                    for props in [descr_list] if isinstance(descr_list, str) else descr_list:
+                        info = self._get_mon_by_pat(props, monitors_by_descr, plugged_monitors)
+                        if info:
+                            resolved.append(info["name"])
+                    if resolved:
+                        cleaned_config[name][clean_pos(position)] = [r for r in resolved if r in plugged_monitors]
         return cleaned_config
