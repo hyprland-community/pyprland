@@ -19,13 +19,11 @@ Contributions, suggestions, bug reports and comments are welcome.
 - Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) to tailor your Hyprland setup to your liking.
 - New users, check the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
 
-
 <details>
 <summary>
-About Pyprland
+About Pyprland (latest stable is: **2.2.20**)
 </summary>
 
-Latest stable is: **2.2.20**
 
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
