@@ -277,11 +277,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         Returns:
             dict: cleaned config
         """
-        placement_rules = deepcopy(self.config.get("placement", {}))
         monitors_by_descr = {m["description"]: m for m in monitors}
         cleaned_config: dict[str, dict[str, Any]] = {}
         plugged_monitors = {m["name"]: m for m in monitors}
-        for descr1, placement in placement_rules.items():
+        for descr1, placement in deepcopy(self.config.get("placement", {})).items():
             mon = self._get_mon_by_pat(descr1, monitors_by_descr, plugged_monitors)
             if not mon:
                 continue
@@ -293,6 +292,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 if position in MONITOR_PROPS:
                     cleaned_config[name][position] = descr_list
                 else:
+                    if not isinstance(descr_list, list | str):
+                        errmsg = f'Unexpected monitor setting: {position}: "{descr_list}"'
+                        raise ValueError(errmsg)
                     resolved = []
                     for props in [descr_list] if isinstance(descr_list, str) else descr_list:
                         info = self._get_mon_by_pat(props, monitors_by_descr, plugged_monitors)
