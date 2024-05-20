@@ -34,10 +34,6 @@ git push
 poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
 # }}}
 
-pushd ../aurPkgs/pyprland/
-echo $version | bumpAurPkg.sh
-popd
-
 # Make the release
 
 rel_id=$(http -b -j POST $URL/releases \
@@ -64,6 +60,9 @@ git commit get-pypr ../pyprland/command.py -m "Update get-pypr script" --no-veri
 git push
 popd
 
+pushd ../aurPkgs/pyprland/
+echo $version | bumpAurPkg.sh
+popd
 
 exit 0
 # Upload the standalone version
