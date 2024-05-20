@@ -21,7 +21,7 @@ Contributions, suggestions, bug reports and comments are welcome.
 
 <details>
 <summary>
-About Pyprland (latest stable is: **2.2.20**)
+About Pyprland (latest stable is: <b>2.2.20</b>)
 </summary>
 
 
