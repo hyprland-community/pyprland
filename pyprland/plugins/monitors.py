@@ -119,6 +119,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         this_config = config.get(name, {})
         rate = this_config.get("rate", every_monitor[name]["refreshRate"])
         res = this_config.get("resolution", f"{every_monitor[name]['width']}x{every_monitor[name]['height']}")
+        if isinstance(res, list):
+            res = f"{res[0]}x{res[1]}"
         scale = this_config.get("scale", every_monitor[name]["scale"])
         position = f"{monitor['x']}x{monitor['y']}"
         transform = this_config.get("transform", every_monitor[name]["transform"])
