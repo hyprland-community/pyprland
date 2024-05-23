@@ -99,8 +99,8 @@ preserve_aspect could recall aspect per screen resolution/size
 
 --------------------------------------------------------------------------------
 
-CHECK / fix multi-monitor & attach command
-==========================================
+Fix multi-monitor layout changes (including attached clients)
+==============================================================
 
 :bugid: 40
 :created: 2024-04-23T22:01:39
@@ -123,6 +123,11 @@ Proposed solution
     Compute relative distance from the main scratchpad window
 - on show
     Compute the absolute position from the saved distance and perform an absolute positioning
+
+Blocker
+-------
+
+Hyprland doesn't notify in case of layout change. Querying monitors each time seems overkill...
 
 --------------------------------------------------------------------------------
 
