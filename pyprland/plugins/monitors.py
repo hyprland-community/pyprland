@@ -75,7 +75,7 @@ def get_xy(place: str, main_mon: MonitorInfo, other_mon: MonitorInfo) -> tuple[i
     elif centered:
         y += int((scaled_om_h - scaled_m_h) / 2)
     elif "end" in place:
-        y += scaled_m_h - scaled_om_h
+        y -= scaled_m_h - scaled_om_h
 
     return (x, y)
 
