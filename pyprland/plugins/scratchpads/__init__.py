@@ -664,20 +664,22 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 )
             else:
                 # Absolute positioning
+                commands = []
                 position = Placement.get(
                     animation_type,
                     monitor,
                     scratch.client_info,
                     scratch.conf.get("margin", DEFAULT_MARGIN),
                 )
-                await self.hyprctl(f"movewindowpixel exact {position[0]} {position[1]},address:{scratch.full_address}")
+                commands.append(f"movewindowpixel exact {position[0]} {position[1]},address:{scratch.full_address}")
 
                 if multiwin_enabled:
                     for address in scratch.extra_addr:
                         off = scratch.meta.extra_positions.get(address)
                         if off:
                             pos = apply_offset(position, off)
-                            await self.hyprctl(f"movewindowpixel exact {pos[0]} {pos[1]},address:{address}")
+                            commands.append(f"movewindowpixel exact {pos[0]} {pos[1]},address:{address}")
+                await self.hyprctl(commands)
         else:
             self.log.warning(
                 "No position and no animation provided for %s, don't know where to place it.",
@@ -728,6 +730,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if self.cast_bool(scratch.conf.get("multi"), True):
             clients = await self.hyprctl_json("clients")
             await self._handle_multiwindow(scratch, clients)
+            await scratch.update_client_info(clients=clients)
             ref_position = scratch.client_info["at"]
             positions = {}
             for sub_client in clients:
