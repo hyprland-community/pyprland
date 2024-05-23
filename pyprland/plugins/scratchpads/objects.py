@@ -4,7 +4,7 @@ __all__ = ["Scratch"]
 
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from aiofiles import open as aiopen
@@ -37,6 +37,7 @@ class MetaInfo:
     last_shown: float | int = 0
     space_identifier: tuple[str, str] = ("", "")
     monitor_info: MonitorInfo = None  # type: ignore
+    extra_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 
 class Scratch(CastBoolMixin):  # {{{
@@ -151,7 +152,7 @@ class Scratch(CastBoolMixin):  # {{{
                 msg = f"Client window {self.full_address} not found"
                 raise KeyError(msg)
             # Unexpected type:
-            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)  # type: ignore
+            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)  #
             msg = f"Not a dict: {client_info}"
             raise TypeError(msg)
 

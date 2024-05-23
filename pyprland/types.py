@@ -17,8 +17,8 @@ class ClientInfo(TypedDict):
     address: str
     mapped: bool
     hidden: bool
-    at: list[int]
-    size: list[int]
+    at: tuple[int, int]
+    size: tuple[int, int]
     workspace: WorkspaceDf
     floating: bool
     monitor: int

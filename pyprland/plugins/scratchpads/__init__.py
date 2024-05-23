@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import enum
 import time
 from dataclasses import dataclass
 from functools import partial
@@ -21,6 +22,24 @@ AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0.2  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
+
+
+class AnimationTarget(enum.Enum):
+    """Animation type (selects between main window and satellite windows)."""
+
+    MAIN = "main"
+    EXTRA = "extra"
+    BOTH = "both"
+
+
+def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
+    """Compute the offset between two positions."""
+    return pos1[0] - pos2[0], pos1[1] - pos2[1]
+
+
+def apply_offset(pos: tuple[int, int], offset: tuple[int, int]) -> tuple[int, int]:
+    """Apply the offset to the position."""
+    return pos[0] + offset[0], pos[1] + offset[1]
 
 
 @dataclass
@@ -485,11 +504,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type: str,
         scratch: Scratch,
         offset: tuple[int, int],
-        only_secondary: bool = False,
+        target: AnimationTarget = AnimationTarget.BOTH,
     ) -> None:
         """Slides the window `offset` pixels respecting `animation_type`."""
-        addresses = [] if only_secondary else [scratch.full_address]
-        addresses.extend(scratch.extra_addr)
+        addresses: list[str] = []
+        if target != AnimationTarget.MAIN:
+            addresses.extend(scratch.extra_addr)
+        if target != AnimationTarget.EXTRA:
+            addresses.append(scratch.full_address)
         off_x, off_y = offset
 
         animation_actions = {
@@ -581,7 +603,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             position_fixed = await self._fix_position(scratch, monitor)
 
         clients = await self.hyprctl_json("clients")
-        await self._handle_multiwindow(scratch, clients)  # not very useful but cheap
+        await self._handle_multiwindow(scratch, clients)
         # move
         move_commands = [
             f"moveworkspacetomonitor special:scratch_{scratch.uid} {monitor['name']}",
@@ -629,24 +651,32 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _animate_show(self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool) -> None:
         """Animate the show transition."""
         animation_type = get_animation_type(scratch)
+        multiwin_enabled = self.cast_bool(scratch.conf.get("multi"), True)
         if animation_type:
-            offset = cast(tuple[int, int], tuple(-1 * n for n in await self.get_offsets(scratch, monitor)))
             if relative_animation:
+                offset = cast(tuple[int, int], tuple(-1 * n for n in await self.get_offsets(scratch, monitor)))
                 # Relative positioning
                 if "size" not in scratch.client_info:
                     await self.update_scratch_info(scratch)  # type: ignore
 
-                await self._slide_animation(animation_type, scratch, offset)
+                await self._slide_animation(
+                    animation_type, scratch, offset, target=AnimationTarget.BOTH if multiwin_enabled else AnimationTarget.MAIN
+                )
             else:
                 # Absolute positioning
-                command = getattr(Animations, animation_type)(
+                position = getattr(Animations, animation_type)(
                     monitor,
                     scratch.client_info,
-                    "address:" + scratch.full_address,
                     scratch.conf.get("margin", DEFAULT_MARGIN),
                 )
-                await self.hyprctl(command)
-                await self._slide_animation(animation_type, scratch, offset, only_secondary=True)
+                await self.hyprctl(f"movewindowpixel exact {position[0]} {position[1]},address:{scratch.full_address}")
+
+                if multiwin_enabled:
+                    for address in scratch.extra_addr:
+                        off = scratch.meta.extra_positions.get(address)
+                        if off:
+                            pos = apply_offset(position, off)
+                            await self.hyprctl(f"movewindowpixel exact {pos[0]} {pos[1]},address:{address}")
         else:
             self.log.warning(
                 "No position and no animation provided for %s, don't know where to place it.",
@@ -695,7 +725,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
         # collects window which have been created by the app
         if self.cast_bool(scratch.conf.get("multi"), True):
-            await self._handle_multiwindow(scratch, await self.hyprctl_json("clients"))
+            clients = await self.hyprctl_json("clients")
+            await self._handle_multiwindow(scratch, clients)
+            ref_position = scratch.client_info["at"]
+            positions = {}
+            for sub_client in clients:
+                if sub_client["address"] in scratch.extra_addr:
+                    positions[sub_client["address"]] = compute_offset(sub_client["at"], ref_position)
+            scratch.meta.extra_positions = positions
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)

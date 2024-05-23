@@ -20,7 +20,7 @@ class Animations:  # {{{
     """Animation store."""
 
     @staticmethod
-    def fromtop(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
+    def fromtop(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Slide from/to top."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -31,10 +31,10 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_height, monitor)
 
-        return f"movewindowpixel exact {margin_x} {mon_y + corrected_margin},{client_uid}"
+        return (margin_x, mon_y + corrected_margin)
 
     @staticmethod
-    def frombottom(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
+    def frombottom(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Slide from/to bottom."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -46,10 +46,10 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_height, monitor)
 
-        return f"movewindowpixel exact {margin_x} {mon_y + mon_height - client_height - corrected_margin},{client_uid}"
+        return (margin_x, mon_y + mon_height - client_height - corrected_margin)
 
     @staticmethod
-    def fromleft(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
+    def fromleft(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Slide from/to left."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -60,10 +60,10 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_width, monitor)
 
-        return f"movewindowpixel exact {corrected_margin + mon_x} {margin_y},{client_uid}"
+        return (corrected_margin + mon_x, margin_y)
 
     @staticmethod
-    def fromright(monitor: MonitorInfo, client: ClientInfo, client_uid: str, margin: int) -> str:
+    def fromright(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Slide from/to right."""
         mon_x = monitor["x"]
         mon_y = monitor["y"]
@@ -75,7 +75,7 @@ class Animations:  # {{{
 
         corrected_margin = convert_monitor_dimension(margin, mon_width, monitor)
 
-        return f"movewindowpixel exact {mon_width - client_width - corrected_margin + mon_x} {margin_y},{client_uid}"
+        return (mon_width - client_width - corrected_margin + mon_x, margin_y)
 
 
 # }}}
