@@ -30,7 +30,7 @@ class Extension(Plugin):
 
         if version_str:
             try:
-                state.hyprland_version = VersionInfo(*(int(i) for i in version_str[1:].split(".")[:3]))
+                self.__set_hyprland_version(version_str[1:])
             except Exception:  # pylint: disable=broad-except
                 self.log.exception('Fail to parse version tag "%s"', version_str)
                 await self.notify_error(f"Failed to parse hyprctl version tag: {version_str}")
@@ -56,6 +56,9 @@ class Extension(Plugin):
     async def on_reload(self) -> None:
         """Reload the plugin."""
         state.variables = self.config.get("variables", {})
+        version_override = self.config.get("hyprland_version")
+        if version_override:
+            self.__set_hyprland_version(version_override)
 
     async def event_activewindowv2(self, addr: str) -> None:
         """Keep track of the focused client."""
@@ -80,3 +83,7 @@ class Extension(Plugin):
         """Set some commands, made available as run_`name` methods."""
         for name, fn in cmd_map.items():
             setattr(self, f"run_{name}", fn)
+
+    def __set_hyprland_version(self, version_str: str) -> None:
+        """Set the hyprland version."""
+        state.hyprland_version = VersionInfo(*(int(i) for i in version_str.split(".")[:3]))
