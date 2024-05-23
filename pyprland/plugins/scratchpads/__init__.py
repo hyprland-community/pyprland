@@ -29,7 +29,7 @@ class AnimationTarget(enum.Enum):
 
     MAIN = "main"
     EXTRA = "extra"
-    BOTH = "both"
+    ALL = "all"
 
 
 def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
@@ -504,7 +504,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type: str,
         scratch: Scratch,
         offset: tuple[int, int],
-        target: AnimationTarget = AnimationTarget.BOTH,
+        target: AnimationTarget = AnimationTarget.ALL,
     ) -> None:
         """Slides the window `offset` pixels respecting `animation_type`."""
         addresses: list[str] = []
@@ -660,7 +660,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     await self.update_scratch_info(scratch)  # type: ignore
 
                 await self._slide_animation(
-                    animation_type, scratch, offset, target=AnimationTarget.BOTH if multiwin_enabled else AnimationTarget.MAIN
+                    animation_type, scratch, offset, target=AnimationTarget.ALL if multiwin_enabled else AnimationTarget.MAIN
                 )
             else:
                 # Absolute positioning
