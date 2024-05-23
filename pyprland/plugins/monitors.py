@@ -111,8 +111,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         for mon in state.monitors:
             await self._hotplug_command(name=mon, monitors=monitors)
 
-    # Command
-
     def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, dict[str, Any]], every_monitor: dict[str, MonitorInfo]) -> str:
         """Build the monitor command."""
         name = monitor["name"]
@@ -125,6 +123,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         position = f"{monitor['x']}x{monitor['y']}"
         transform = this_config.get("transform", every_monitor[name]["transform"])
         return f"monitor {name},{res}@{rate},{position},{scale},transform,{transform}"
+
+    # Command
 
     async def run_relayout(self, monitors: list[MonitorInfo] | str | None = None) -> bool:
         """Recompute & apply every monitors's layout."""
