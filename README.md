@@ -42,6 +42,7 @@ Check out the [creating a pull request](https://docs.github.com/fr/pull-requests
 
 - Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues)
 - Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki)
+- Read the [internal ticket list](https://github.com/hyprland-community/pyprland/blob/main/tickets.rst) for some PR ideas
 
 and if you have coding skills you can also
 
