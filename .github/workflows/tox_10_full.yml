@@ -1,5 +1,5 @@
 ---
-name: Tox
+name: Run unit tests
 
 on: [push]
 
@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Finish environment setup
         run: |
           mkdir ~/.config/hypr/
           touch ~/.config/hypr/pyprland.toml
@@ -23,6 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install tox
 
-      - name: Runs all the tests via tox
+      - name: run unit tests (tox)
         run: |
           tox run -e unit
