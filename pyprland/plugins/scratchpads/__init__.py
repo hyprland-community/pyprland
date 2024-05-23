@@ -13,7 +13,7 @@ from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotat
 from ...ipc import get_client_props, get_focused_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo
 from ..interface import Plugin
-from .animations import Animations
+from .animations import Placement
 from .helpers import get_active_space_identifier, get_all_space_identifiers, get_match_fn
 from .lookup import ScratchDB
 from .objects import Scratch
@@ -664,7 +664,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 )
             else:
                 # Absolute positioning
-                position = getattr(Animations, animation_type)(
+                position = Placement.get(
+                    animation_type,
                     monitor,
                     scratch.client_info,
                     scratch.conf.get("margin", DEFAULT_MARGIN),

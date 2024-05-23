@@ -1,6 +1,8 @@
-"""Animations for absolute window positioning."""
+"""Placement for absolute window positioning."""
 
-__all__ = ["Animations"]
+__all__ = ["Placement"]
+
+from typing import cast
 
 from ...adapters.units import convert_monitor_dimension
 from ...common import is_rotated
@@ -16,9 +18,16 @@ def get_size(monitor: MonitorInfo) -> tuple[int, int]:
     return (w, h)
 
 
-class Animations:  # {{{
+class Placement:  # {{{
     """Animation store."""
 
+    # main function
+    @staticmethod
+    def get(animation_type: str, monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
+        """Get destination coordinate for the provided animation type."""
+        return cast(tuple[int, int], getattr(Placement, animation_type)(monitor, client, margin))
+
+    # animation types
     @staticmethod
     def fromtop(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Slide from/to top."""
