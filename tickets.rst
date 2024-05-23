@@ -84,7 +84,7 @@ Instead of making it in "layout_center" by lack of choice, refactor:
 
 else: Add it to "layout_center" overriding prev & next
 
-if groupped, toggle over groups, when at the limit, really changes the focus
+if grouped, toggle over groups, when at the limit, really changes the focus
 
 Option: think about a "chaining" in handlers, (eg: "pypr groups prev OR layout_center prev") in case of a separate plugin called "groups"
 
@@ -106,6 +106,24 @@ CHECK / fix multi-monitor & attach command
 :created: 2024-04-23T22:01:39
 :priority: 0
 
+Status
+------
+
+broken in corner case scenarios (eg: monitor layout change)
+
+Identified problem
+------------------
+
+Position is relative to the last one, without any state in hyprland, as in `preserve` option.
+
+Proposed solution
+-----------------
+
+- on hide
+    Compute relative distance from the main scratchpad window
+- on show
+    Compute the absolute position from the saved distance and perform an absolute positioning
+
 --------------------------------------------------------------------------------
 
 Test a configuration with zero initial command/window
@@ -114,14 +132,3 @@ Test a configuration with zero initial command/window
 :bugid: 46
 :created: 2024-05-01T23:37:31
 :priority: 0
-
---------------------------------------------------------------------------------
-
-monitors: allow "screen descr".transform = 3
-============================================
-
-:bugid: 48
-:created: 2024-05-07T00:50:34
-:priority: 0
-
-also allow `.scale = <something>`
