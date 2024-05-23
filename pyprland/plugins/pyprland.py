@@ -15,10 +15,14 @@ class Extension(Plugin):
     async def init(self) -> None:
         """Initialize the plugin."""
         state.active_window = ""
+        # Examples:
+        # "tag": "v0.40.0-127-g4e42107d", (for git)
+        # "tag": "v0.40.0", (stable)
         version_str = ""
+        auto_increment = False
         try:
             version_info: None | dict[str, str | bool | list] = await self.hyprctl_json("version")
-            assert version_info
+            assert isinstance(version_info, dict)
         except json.JSONDecodeError:
             self.log.exception("Fail to parse hyprctl version")
             await self.notify_error("Error: 'hyprctl version' didn't print valid data")
@@ -27,10 +31,12 @@ class Extension(Plugin):
             if _tag:
                 assert isinstance(_tag, str)
                 version_str = _tag.split("-", 1)[0]
+                if len(version_str) < len(_tag):
+                    auto_increment = True
 
         if version_str:
             try:
-                self.__set_hyprland_version(version_str[1:])
+                self.__set_hyprland_version(version_str[1:], auto_increment)
             except Exception:  # pylint: disable=broad-except
                 self.log.exception('Fail to parse version tag "%s"', version_str)
                 await self.notify_error(f"Failed to parse hyprctl version tag: {version_str}")
@@ -84,6 +90,9 @@ class Extension(Plugin):
         for name, fn in cmd_map.items():
             setattr(self, f"run_{name}", fn)
 
-    def __set_hyprland_version(self, version_str: str) -> None:
+    def __set_hyprland_version(self, version_str: str, auto_increment: bool = False) -> None:
         """Set the hyprland version."""
-        state.hyprland_version = VersionInfo(*(int(i) for i in version_str.split(".")[:3]))
+        split_version = [int(i) for i in version_str.split(".")[:3]]
+        if auto_increment:
+            split_version[-1] += 1
+        state.hyprland_version = VersionInfo(*split_version)
