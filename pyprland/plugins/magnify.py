@@ -3,15 +3,28 @@
 import asyncio
 from collections.abc import Iterable
 
+from ..common import state
+from ..types import VersionInfo
 from .interface import Plugin
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring
+class Extension(Plugin):
     """Control workspace zooming."""
 
     zoomed = False
 
     cur_factor = 1.0
+
+    _initialized = False
+    keyword = "cursor:zoom_factor"
+
+    async def on_reload(self) -> None:
+        """Initialization code."""
+        if self._initialized:
+            return
+        if state.hyprland_version <= VersionInfo(0, 40, 0):
+            self.keyword = "misc:cursor_zoom_factor"
+        self._initialized = True
 
     def ease_out_quad(self, step: float, start: int, end: int, duration: int) -> float:
         """Easing function for animations."""
@@ -64,8 +77,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             start = (2.0 ** (prev_factor - 1) if expo else prev_factor) * 10
             end = (2.0 ** (self.cur_factor - 1) if expo else self.cur_factor) * 10
             for i in self.animated_eased_zoom(start, end, duration):
-                await self.hyprctl(f"misc:cursor_zoom_factor {i / 10}", "keyword")
+                await self.hyprctl(f"{self.keyword} {i / 10}", "keyword")
                 await asyncio.sleep(1.0 / 60)
         self.zoomed = self.cur_factor != 1
         factor = 2 ** (self.cur_factor - 1) if expo else self.cur_factor
-        await self.hyprctl(f"misc:cursor_zoom_factor {factor}", "keyword")
+        await self.hyprctl(f"{self.keyword} {factor}", "keyword")
