@@ -19,7 +19,7 @@ class Extension(Plugin):
 
     async def init(self) -> None:
         """Initialization code."""
-        if state.hyprland_version <= VersionInfo(0, 40, 0):
+        if state.hyprland_version < VersionInfo(0, 41, 0):
             self.keyword = "misc:cursor_zoom_factor"
 
     def ease_out_quad(self, step: float, start: int, end: int, duration: int) -> float:
