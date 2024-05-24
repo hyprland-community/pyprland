@@ -152,7 +152,7 @@ class Scratch(CastBoolMixin):  # {{{
                 msg = f"Client window {self.full_address} not found"
                 raise KeyError(msg)
             # Unexpected type:
-            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)  #
+            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)  # type: ignore
             msg = f"Not a dict: {client_info}"
             raise TypeError(msg)
 
