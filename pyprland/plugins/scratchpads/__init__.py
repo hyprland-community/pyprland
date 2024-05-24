@@ -2,7 +2,6 @@
 
 import asyncio
 import contextlib
-import enum
 import time
 from dataclasses import dataclass
 from functools import partial
@@ -13,8 +12,8 @@ from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotat
 from ...ipc import get_client_props, get_focused_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo
 from ..interface import Plugin
-from .animations import Placement
-from .helpers import get_active_space_identifier, get_all_space_identifiers, get_match_fn
+from .animations import AnimationTarget, Placement
+from .helpers import apply_offset, compute_offset, get_active_space_identifier, get_all_space_identifiers, get_match_fn
 from .lookup import ScratchDB
 from .objects import Scratch
 
@@ -22,24 +21,6 @@ AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0.2  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
-
-
-class AnimationTarget(enum.Enum):
-    """Animation type (selects between main window and satellite windows)."""
-
-    MAIN = "main"
-    EXTRA = "extra"
-    ALL = "all"
-
-
-def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
-    """Compute the offset between two positions."""
-    return pos1[0] - pos2[0], pos1[1] - pos2[1]
-
-
-def apply_offset(pos: tuple[int, int], offset: tuple[int, int]) -> tuple[int, int]:
-    """Apply the offset to the position."""
-    return pos[0] + offset[0], pos[1] + offset[1]
 
 
 @dataclass

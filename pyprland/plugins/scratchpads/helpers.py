@@ -5,14 +5,36 @@ __all__ = [
     "get_active_space_identifier",
     "get_all_space_identifiers",
     "get_match_fn",
+    "get_size",
+    "compute_offset",
+    "apply_offset",
 ]
 
 import re
 from collections.abc import Callable
 from typing import Any
 
-from ...common import state
+from ...common import is_rotated, state
 from ...types import MonitorInfo
+
+
+def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
+    """Compute the offset between two positions."""
+    return pos1[0] - pos2[0], pos1[1] - pos2[1]
+
+
+def apply_offset(pos: tuple[int, int], offset: tuple[int, int]) -> tuple[int, int]:
+    """Apply the offset to the position."""
+    return pos[0] + offset[0], pos[1] + offset[1]
+
+
+def get_size(monitor: MonitorInfo) -> tuple[int, int]:
+    """Get the (width, height) size of the monitor."""
+    s = monitor["scale"]
+    h, w = int(monitor["height"] / s), int(monitor["width"] / s)
+    if is_rotated(monitor):
+        return (h, w)
+    return (w, h)
 
 
 def get_active_space_identifier() -> tuple[str, str]:

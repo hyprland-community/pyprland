@@ -2,20 +2,20 @@
 
 __all__ = ["Placement"]
 
+import enum
 from typing import cast
 
 from ...adapters.units import convert_monitor_dimension
-from ...common import is_rotated
 from ...types import ClientInfo, MonitorInfo
+from .helpers import get_size
 
 
-def get_size(monitor: MonitorInfo) -> tuple[int, int]:
-    """Get the (width, height) size of the monitor."""
-    s = monitor["scale"]
-    h, w = int(monitor["height"] / s), int(monitor["width"] / s)
-    if is_rotated(monitor):
-        return (h, w)
-    return (w, h)
+class AnimationTarget(enum.Enum):
+    """Animation type (selects between main window and satellite windows)."""
+
+    MAIN = "main"
+    EXTRA = "extra"
+    ALL = "all"
 
 
 class Placement:  # {{{
