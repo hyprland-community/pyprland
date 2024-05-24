@@ -304,6 +304,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         for scratch in self.scratches.values():
             if addr in scratch.extra_addr:
                 scratch.extra_addr.remove(addr)
+            if addr in scratch.meta.extra_positions:
+                del scratch.meta.extra_positions[addr]
 
     async def event_monitorremoved(self, monitor_name: str) -> None:
         """Hides scratchpads on the removed screen."""
@@ -520,10 +522,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             "frombottom": f"movewindowpixel 0 {off_y}",
             "fromtop": f"movewindowpixel 0 {-off_y}",
         }
-
-        for addr in addresses:
-            if animation_type in animation_actions:
-                await self.hyprctl(f"{animation_actions[animation_type]},address:{addr}")
+        await self.hyprctl(
+            [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]
+        )
 
     async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name"."""
@@ -653,38 +654,30 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type = get_animation_type(scratch)
         multiwin_enabled = self.cast_bool(scratch.conf.get("multi"), True)
         if animation_type:
-            if relative_animation:
-                offset = cast(tuple[int, int], tuple(-1 * n for n in await self.get_offsets(scratch, monitor)))
-                # Relative positioning
-                if "size" not in scratch.client_info:
-                    await self.update_scratch_info(scratch)  # type: ignore
+            animation_commands = []
 
-                await self._slide_animation(
-                    animation_type, scratch, offset, target=AnimationTarget.ALL if multiwin_enabled else AnimationTarget.MAIN
-                )
+            if "size" not in scratch.client_info:
+                await self.update_scratch_info(scratch)  # type: ignore
+
+            if relative_animation:
+                main_win_position = apply_offset((monitor["x"], monitor["y"]), scratch.meta.extra_positions[scratch.address])
             else:
-                # Absolute positioning
-                commands = []
-                position = Placement.get(
+                main_win_position = Placement.get(
                     animation_type,
                     monitor,
                     scratch.client_info,
                     scratch.conf.get("margin", DEFAULT_MARGIN),
                 )
-                commands.append(f"movewindowpixel exact {position[0]} {position[1]},address:{scratch.full_address}")
+            animation_commands.append(list(main_win_position) + [scratch.full_address])
 
-                if multiwin_enabled:
-                    for address in scratch.extra_addr:
-                        off = scratch.meta.extra_positions.get(address)
-                        if off:
-                            pos = apply_offset(position, off)
-                            commands.append(f"movewindowpixel exact {pos[0]} {pos[1]},address:{address}")
-                await self.hyprctl(commands)
-        else:
-            self.log.warning(
-                "No position and no animation provided for %s, don't know where to place it.",
-                scratch.uid,
-            )
+            if multiwin_enabled:
+                for address in scratch.extra_addr:
+                    off = scratch.meta.extra_positions.get(address)
+                    if off:
+                        pos = apply_offset(main_win_position, off)
+                        animation_commands.append(list(pos) + [address])
+
+            await self.hyprctl([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
 
     async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
         """Apply the size from config."""
@@ -726,21 +719,23 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
+        clients = await self.hyprctl_json("clients")
+        await scratch.update_client_info(clients=clients)
+        ref_position = scratch.client_info["at"]
+        monitor_info = scratch.meta.monitor_info
+        scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # collects window which have been created by the app
         if self.cast_bool(scratch.conf.get("multi"), True):
-            clients = await self.hyprctl_json("clients")
             await self._handle_multiwindow(scratch, clients)
-            await scratch.update_client_info(clients=clients)
-            ref_position = scratch.client_info["at"]
             positions = {}
             for sub_client in clients:
                 if sub_client["address"] in scratch.extra_addr:
                     positions[sub_client["address"]] = compute_offset(sub_client["at"], ref_position)
-            scratch.meta.extra_positions = positions
+            scratch.meta.extra_positions.update(positions)
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)
-        await self._hide_transition(scratch, scratch.meta.monitor_info)
+        await self._hide_transition(scratch, monitor_info)
 
         await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
 
