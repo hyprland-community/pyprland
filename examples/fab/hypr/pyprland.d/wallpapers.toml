@@ -1,0 +1,9 @@
+pyprland.plugins = ["wallpapers"]
+
+[wallpapers]
+path = "~/Images/wallpapers/"
+interval = 60
+unique = true
+recurse = true
+
+

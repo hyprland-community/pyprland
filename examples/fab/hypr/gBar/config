@@ -156,6 +156,8 @@ CheckUpdateInterval: 300
 
 # The network adapter to use. You can query /sys/class/net for all possible values
 NetworkAdapter: wlo1
+NetworkAdapter: eno2
+NetworkAdapter: dock0
 
 # Disables the network widget when set to false
 NetworkWidget: true

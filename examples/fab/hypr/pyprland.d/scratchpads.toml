@@ -1,0 +1,37 @@
+pyprland.plugins = [ "scratchpads" ]
+
+[scratchpads.stb]
+animation = "fromBottom"
+command = "[term_classed] term-stb sstb"
+class = "term-stb"
+lazy = true
+size = "75% 45%"
+
+[scratchpads.stb-logs]
+animation = "fromTop"
+command = "[term_classed] term-stb-logs stbLog"
+class = "term-stb-logs"
+lazy = true
+size = "75% 40%"
+
+[scratchpads.term]
+animation = "fromTop"
+command = "[term_classed] main-dropterm"
+class = "main-dropterm"
+size = "75% 60%"
+max_size = "1920px 100%"
+
+[scratchpads.volume]
+animation = "fromRight"
+command = "pavucontrol"
+class = "org.pulseaudio.pavucontrol"
+lazy = "true"
+size = "40% 90%"
+max_size = "1080px 100%"
+unfocus = "hide"
+preserve_aspect = true
+
+[[scratchpads.volume.per_monitor.DELL]]
+animation = "fromLeft"
+size = "40% 90%"
+position = "10% 10%"
