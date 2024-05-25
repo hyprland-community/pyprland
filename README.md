@@ -71,6 +71,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 ### 2.3
 
 - Supports _Hyprland > 0.40.0_
+- Improved code kwaleetee
 - [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) allows general monitor settings
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
   - better multi-window support
