@@ -68,13 +68,21 @@ Latest major changes
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
+### 2.3
+
+- Supports _Hyprland > 0.40.0_
+- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) allows general monitor settings
+- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
+  - better multi-window support
+  - better `preserve_aspect` implementation (i3 "compatibility")
+
 ### 2.2
 
 - Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
 - Deprecated [class_match](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard) in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
 - Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (using 2.2.19 is recommended)
-- [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
+- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
 - Improve [Nix support](https://github.com/hyprland-community/pyprland/wiki/Nix)
 
 
