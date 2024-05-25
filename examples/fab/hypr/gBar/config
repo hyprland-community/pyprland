@@ -113,14 +113,14 @@ IconsAlwaysUp: true
 # This can cause the right widget to clip outside, if there is not enough space on screen (e.g. when opening the text)
 # Setting this to false will definitely fix this issue, but it won't look very good, since it will be off-center.
 # So try to decrease "TimeSpace" first, before setting this configuration to false.
-CenterTime: false
+CenterWidgets: false
 
 # How much space should be reserved for the time widget. Setting this too high can cause the right widget to clip outside.
 # Therefore try to set it as low as possible if you experience clipping.
 # Although keep in mind, that a value that is too low can cause the widget to be be off-center,
 # which can also cause clipping.
 # If you can't find an optimal value, consider setting 'CenterTime' to false
-TimeSpace: 30
+CenterSpace: 30
 
 # Set datetime style
 DateTimeStyle: %a %d/%m %H:%M
