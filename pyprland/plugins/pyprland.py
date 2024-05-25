@@ -2,7 +2,7 @@
 
 import json
 
-from ..common import MINIMUM_ADDR_LEN, state
+from ..common import state
 from ..types import VersionInfo
 from .interface import Plugin
 
@@ -68,8 +68,8 @@ class Extension(Plugin):
 
     async def event_activewindowv2(self, addr: str) -> None:
         """Keep track of the focused client."""
-        if not addr or len(addr) < MINIMUM_ADDR_LEN:
-            self.log.warning("Active window is incorrect: %s.", addr)
+        if not addr:
+            self.log.debug("no active window")
             state.active_window = ""
         else:
             state.active_window = "0x" + addr
