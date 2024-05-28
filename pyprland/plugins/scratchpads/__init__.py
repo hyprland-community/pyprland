@@ -509,6 +509,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name"."""
+        if uid == "*":
+            commands = (self.run_show(s.uid) for s in self.scratches.values() if not s.visible)
+            await asyncio.gather(*commands)
+            return
         scratch = self.scratches.get(uid)
 
         if not scratch:
@@ -688,6 +692,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if `autohide` is True, skips focus tracking
         `force` ignores the visibility check
         """
+        if uid == "*":
+            commands = (self.run_hide(s.uid) for s in self.scratches.values() if s.visible)
+            await asyncio.gather(*commands)
+            return
         scratch = self.scratches.get(uid)
         active_window = state.active_window
         active_workspace = state.active_workspace
