@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, cast
 
 from .types import MonitorInfo, VersionInfo
+from .utils import get_max_length
 
 __all__ = [
     "DEBUG",
@@ -37,17 +38,24 @@ HYPRLAND_INSTANCE_SIGNATURE = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "NO_
 
 MINIMUM_ADDR_LEN = 4
 
+MAX_SOCKET_FILE_LEN = 15
+
 try:
+    # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
     original_ipc_folder = (
         f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}'
         if os.path.exists(f'{os.environ["XDG_RUNTIME_DIR"]}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}')
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
-    # make a link from short path to original path
-    if not os.path.exists(IPC_FOLDER):
-        os.symlink(original_ipc_folder, IPC_FOLDER)
+    len_threshold = get_max_length(original_ipc_folder) - MAX_SOCKET_FILE_LEN
+    if len(original_ipc_folder) > len_threshold:
+        IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
+        # make a link from short path to original path
+        if not os.path.exists(IPC_FOLDER):
+            os.symlink(original_ipc_folder, IPC_FOLDER)
+    else:
+        IPC_FOLDER = original_ipc_folder
 
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
