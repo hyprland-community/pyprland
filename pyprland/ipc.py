@@ -43,6 +43,9 @@ async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter
     return await asyncio.open_unix_connection(EVENTS)
 
 
+# Hyprctl JSON : cached responses {{{
+
+
 def retry_on_reset(func: Callable) -> Callable:
     """Retry on reset wrapper."""
 
@@ -106,6 +109,10 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONRespon
     return ret
 
 
+# }}}
+
+
+# hyprctl : batched commands {{{
 def _format_command(command_list: list[str] | list[list[str]], default_base_command: str) -> Iterable[str]:
     """Format a list of commands to be sent to Hyprland.
 
@@ -155,6 +162,9 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     if not r:
         logger.error("FAILED %s", resp)
     return r
+
+
+# }}}
 
 
 async def get_focused_monitor_props(logger: Logger | None = None, name: str | None = None) -> MonitorInfo:
