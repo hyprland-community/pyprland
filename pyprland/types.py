@@ -4,7 +4,10 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, TypedDict
+from typing import TypedDict
+
+PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
+JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]]
 
 
 class RetensionTimes(float, Enum):
@@ -20,7 +23,7 @@ class CacheData:
 
     retension_time: float
     expiration_date: float = 0
-    payload: None | dict[str, Any] | list[dict[str, Any]] = field(default_factory=dict)
+    payload: None | JSONResponse = field(default_factory=dict)
     _signal: asyncio.Event = field(default_factory=asyncio.Event)
 
     def set_pending(self, ref_time: float | None = None) -> None:
@@ -32,7 +35,7 @@ class CacheData:
         self.expiration_date = (ref_time or time.time()) + self.retension_time
         self.payload = None
 
-    def set_value(self, value: dict[str, Any] | list[dict[str, Any]]) -> None:
+    def set_value(self, value: JSONResponse) -> None:
         """Set the cached value.
 
         Unblocks awaiters of `wait_update`
@@ -40,7 +43,7 @@ class CacheData:
         self.payload = value
         self._signal.set()
 
-    async def wait_update(self) -> dict[str, Any] | list[dict[str, Any]]:
+    async def wait_update(self) -> JSONResponse:
         """Wait for the cache data to be refreshed."""
         while True:
             if self.payload is not None:

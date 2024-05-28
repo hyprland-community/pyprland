@@ -19,7 +19,7 @@ from logging import Logger
 from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
-from .types import CacheData, ClientInfo, MonitorInfo, PyprError, RetensionTimes
+from .types import CacheData, ClientInfo, JSONResponse, MonitorInfo, PyprError, RetensionTimes
 
 log: Logger | None = None
 
@@ -68,7 +68,7 @@ cached_responses: dict[str, CacheData] = {
 }
 
 
-async def _get_response(command: bytes, logger: Logger) -> dict[str, Any] | list[dict[str, Any]]:
+async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
     """Get response of `command` from the IPC socket."""
     try:
         reader, writer = await asyncio.open_unix_connection(HYPRCTL)
@@ -85,7 +85,7 @@ async def _get_response(command: bytes, logger: Logger) -> dict[str, Any] | list
 
 
 @retry_on_reset
-async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[str, Any]] | dict[str, Any]:
+async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
     """Run an IPC command and return the JSON output."""
     logger = cast(Logger, logger or log)
     now = time.time()
