@@ -406,7 +406,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name"."""
-        uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
+        if uid_or_uids == "*":
+            uids = list(self.scratches)
+        else:
+            uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
 
         for uid in uids:
             self.cancel_task(uid)
@@ -446,8 +449,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 self.log.debug("%s visibility: %s and %s", uid, is_visible, item.visible)
                 if is_visible and await item.is_alive():
-                    tasks.append(partial(self.run_hide, uid))
-                else:
+                    if item.visible:
+                        tasks.append(partial(self.run_hide, uid))
+                elif not item.visible:
                     tasks.append(partial(self.run_show, uid))
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
