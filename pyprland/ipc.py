@@ -19,7 +19,8 @@ from logging import Logger
 from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
-from .types import CacheData, ClientInfo, JSONResponse, MonitorInfo, PyprError, RetensionTimes
+from .types import ClientInfo, JSONResponse, MonitorInfo, PyprError, RetensionTimes
+from .utils import CacheData
 
 log: Logger | None = None
 
