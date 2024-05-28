@@ -92,26 +92,16 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[
     cache_data: CacheData | None = cached_responses.get(command)
     if cache_data and cache_data.expiration_date > now:
         logger.debug("%s (CACHE HIT)", command)
-        resp = cache_data.payload
-        while True:
-            if asyncio.iscoroutine(resp):
-                await cache_data.signal.wait()
-                resp = cache_data.payload
-            else:
-                break
-        return cast(list[dict[str, Any]] | dict[str, Any], resp)
-    logger.debug(command)
-    resp = _get_response(f"-j/{command}".encode(), logger)
-    if cache_data:  # should fill the cache
-        cache_data.signal.clear()
-        cache_data.expiration_date = now + cache_data.retension_time
-        cache_data.payload = resp
+        return await cache_data.wait_update()
 
-    ret = await resp
+    logger.debug(command)
+    if cache_data:  # should fill the cache
+        cache_data.set_pending(ref_time=now)
+
+    ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
     if cache_data:
-        cache_data.payload = ret
-        cache_data.signal.set()
+        cache_data.set_value(ret)
     return ret
 
 
