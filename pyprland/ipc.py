@@ -19,7 +19,7 @@ from logging import Logger
 from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
-from .types import ClientInfo, MonitorInfo, PyprError
+from .types import CacheData, ClientInfo, MonitorInfo, PyprError, RetensionTimes
 
 log: Logger | None = None
 
@@ -60,12 +60,28 @@ def retry_on_reset(func: Callable) -> Callable:
     return wrapper
 
 
-cached_responses: dict[str, list[Any]] = {
-    # <command name>: [expiration_date, payload, retention_time]
-    "monitors": [0, None, 0.03],
-    # "workspaces": [0, None, 0.1],
-    # "clients": [0, None, 0.02],
+cached_responses: dict[str, CacheData] = {
+    # <command name>: CacheData
+    "monitors": CacheData(retension_time=RetensionTimes.LONG),
+    "workspaces": CacheData(retension_time=RetensionTimes.SHORT),
+    "clients": CacheData(retension_time=RetensionTimes.SHORT),
 }
+
+
+async def _get_response(command: bytes, logger: Logger) -> dict[str, Any] | list[dict[str, Any]]:
+    """Get response of `command` from the IPC socket."""
+    try:
+        reader, writer = await asyncio.open_unix_connection(HYPRCTL)
+    except FileNotFoundError as e:
+        logger.critical("hyprctl socket not found! is it running ?")
+        raise PyprError from e
+
+    writer.write(command)
+    await writer.drain()
+    reader_data = await reader.read()
+    writer.close()
+    await writer.wait_closed()
+    return json.loads(reader_data)  # type: ignore
 
 
 @retry_on_reset
@@ -73,26 +89,29 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> list[dict[
     """Run an IPC command and return the JSON output."""
     logger = cast(Logger, logger or log)
     now = time.time()
-    cached = command in cached_responses and cached_responses[command][0] > now
-    if cached:
+    cache_data: CacheData | None = cached_responses.get(command)
+    if cache_data and cache_data.expiration_date > now:
         logger.debug("%s (CACHE HIT)", command)
-        return cached_responses[command][1]  # type: ignore
+        resp = cache_data.payload
+        while True:
+            if asyncio.iscoroutine(resp):
+                await cache_data.signal.wait()
+                resp = cache_data.payload
+            else:
+                break
+        return cast(list[dict[str, Any]] | dict[str, Any], resp)
     logger.debug(command)
-    try:
-        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
-    except FileNotFoundError as e:
-        logger.critical("hyprctl socket not found! is it running ?")
-        raise PyprError from e
-    ctl_writer.write(f"-j/{command}".encode())
-    await ctl_writer.drain()
-    resp = await ctl_reader.read()
-    ctl_writer.close()
-    await ctl_writer.wait_closed()
-    ret = json.loads(resp)
+    resp = _get_response(f"-j/{command}".encode(), logger)
+    if cache_data:  # should fill the cache
+        cache_data.signal.clear()
+        cache_data.expiration_date = now + cache_data.retension_time
+        cache_data.payload = resp
+
+    ret = await resp
     assert isinstance(ret, list | dict)
-    if command in cached_responses:  # should fill the cache
-        cached_responses[command][0] = now + cached_responses[command][2]
-        cached_responses[command][1] = ret
+    if cache_data:
+        cache_data.payload = ret
+        cache_data.signal.set()
     return ret
 
 

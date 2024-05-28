@@ -1,7 +1,27 @@
 """Common types from Hyprland API."""
 
-from dataclasses import dataclass
-from typing import TypedDict
+import asyncio
+from collections.abc import Coroutine
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, TypedDict
+
+
+class RetensionTimes(float, Enum):
+    """Cache retension times."""
+
+    SHORT: float = 0.005
+    LONG: float = 0.05
+
+
+@dataclass
+class CacheData:
+    """Cache data structure."""
+
+    retension_time: float
+    expiration_date: float = 0
+    payload: Coroutine | dict[str, Any] | list[dict[str, Any]] = field(default_factory=dict)
+    signal: asyncio.Event = field(default_factory=asyncio.Event)
 
 
 class WorkspaceDf(TypedDict):
