@@ -105,11 +105,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Reload the plugin."""
         self._clear_mon_by_pat_cache()
         monitors = await self.hyprctl_json("monitors")
-        if self.cast_bool(self.config.get("startup_relayout"), True):
-            await self.run_relayout(monitors)
 
         for mon in state.monitors:
             await self._hotplug_command(name=mon, monitors=monitors)
+
+        if self.cast_bool(self.config.get("startup_relayout"), True):
+            # run relayout after 1second without blocking
+
+            async def _delayed_relayout() -> None:
+                await asyncio.sleep(1)
+                await self.run_relayout(monitors)
+
+            await asyncio.create_task(_delayed_relayout())
 
     def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, dict[str, Any]], every_monitor: dict[str, MonitorInfo]) -> str:
         """Build the monitor command."""
