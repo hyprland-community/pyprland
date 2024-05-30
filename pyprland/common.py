@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from typing import Any, cast
 
 from .types import MonitorInfo, VersionInfo
-from .utils import get_max_length
 
 __all__ = [
     "DEBUG",
@@ -39,6 +38,7 @@ HYPRLAND_INSTANCE_SIGNATURE = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "NO_
 MINIMUM_ADDR_LEN = 4
 
 MAX_SOCKET_FILE_LEN = 15
+MAX_SOCKET_PATH_LEN = 108
 
 try:
     # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
@@ -48,8 +48,7 @@ try:
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    len_threshold = get_max_length(original_ipc_folder) - MAX_SOCKET_FILE_LEN
-    if len(original_ipc_folder) > len_threshold:
+    if len(original_ipc_folder) > MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
         IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
         # make a link from short path to original path
         if not os.path.exists(IPC_FOLDER):
