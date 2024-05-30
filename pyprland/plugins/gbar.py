@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from time import time
 
 from ..common import state
 from .interface import Plugin
@@ -20,10 +21,17 @@ class Extension(Plugin):
         """Create ongoing task restarting gbar in case of crash."""
 
         async def _run_loop() -> None:
+            prev_time = time()
             while True:
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 await self.proc.wait()
-                self.notify_error("gBar crashed, restarting")
+                now = time()
+                delay = 5 - (now - prev_time)
+                text = f"gBar crashed, restarting in {delay:.1f}s." if delay > 0 else "gBar crashed, restarting."
+                await self.notify_error(f"gBar crashed, {text}")
+                prev_time = now
+                if delay > 0:
+                    await asyncio.sleep(delay)
 
         if self.ongoing_task:
             self.ongoing_task.cancel()
