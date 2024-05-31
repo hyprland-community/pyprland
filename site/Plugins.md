@@ -5,7 +5,7 @@
 
 ## Standard plugins
 
-### 🌟🌟🌟 [Scratchpads](scratchpads)
+### 🌟🌟🌟 [scratchpads](scratchpads)
 makes your applications dropdowns & togglable poppups
 
 [![demo video](https://img.youtube.com/vi/ZOhv59VYqkc/1.jpg)](https://www.youtube.com/watch?v=ZOhv59VYqkc)
