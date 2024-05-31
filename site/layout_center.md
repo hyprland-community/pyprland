@@ -1,3 +1,5 @@
+# layout_center
+
 Implements a workspace layout where one window is bigger and centered,
 other windows are tiled as usual in the background.
 
@@ -21,7 +23,7 @@ prev2 = "movefocus u"
 using the following in `hyprland.conf`:
 ```sh
 bind = $mainMod, M, exec, pypr layout_center toggle # toggle the layout
-# focus change keys
+## focus change keys
 bind = $mainMod, left, exec, pypr layout_center prev
 bind = $mainMod, right, exec, pypr layout_center next
 bind = $mainMod, up, exec, pypr layout_center prev2
@@ -37,7 +39,7 @@ bind = $mainMod, down, movefocus, d
 
 > _Added in version 1.8.0_
 
-# Command
+## Command
 
 - `layout_center [command]` where *[command]* can be:
   - toggle
@@ -46,9 +48,9 @@ bind = $mainMod, down, movefocus, d
   - next2
   - prev2
 
-# Configuration
+## Configuration
 
-## `margin` (optional)
+### `margin` (optional)
 
 default value is `60`
 
@@ -59,7 +61,7 @@ Example to make the main window be 100px far from the monitor's limits:
 margin = 100
 ```
 
-## `offset` (optional)
+### `offset` (optional)
 
 default value is `[0, 0]`
 
@@ -70,7 +72,7 @@ Example shift the main window 20px down:
 offset = [0, 20]
 ```
 
-## `next` (optional)
+### `next` (optional)
 
 not set by default
 
@@ -83,12 +85,12 @@ Eg:
 next = "movefocus r"
 ```
 
-## `prev` and `prev2` (optional)
+### `prev` and `prev2` (optional)
 
 Same as `next` but for the `prev` and `prev2` commands.
 
 
-## `captive_focus` (optional)
+### `captive_focus` (optional)
 
 default value is `false`
 

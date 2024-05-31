@@ -1,3 +1,5 @@
+# Getting started
+
 Pypr consists in two things:
 
 - **a tool**: `pypr` which runs the daemon (service), but also allows to interact with it

@@ -1,3 +1,5 @@
+# monitors
+
 > [!note]
 > First version of the plugin is still available under the name `monitors_v0`
 
@@ -17,19 +19,19 @@ Example to set a Sony monitor on top of the BenQ monitor:
 [monitors.placement]
 Sony.topOf = "BenQ"
 
-# Character case is ignored, "_" can be added
+## Character case is ignored, "_" can be added
 Sony.Top_Of = ["BenQ"]
 
-# Thanks to TOML format, complex configurations can use separate "sections" for clarity, eg:
+## Thanks to TOML format, complex configurations can use separate "sections" for clarity, eg:
 
 [monitors.placement."My monitor brand"]
-# You can also use "port" names such as *HDMI-A-1*, *DP-1*, etc...
+## You can also use "port" names such as *HDMI-A-1*, *DP-1*, etc...
 leftOf = "eDP-1"
 
-# lists are possible on the right part of the assignment:
+## lists are possible on the right part of the assignment:
 rightOf = ["Sony", "BenQ"]
 
-# > 2.3.2: you can also set scale, transform & rate for a given monitor
+## > 2.3.2: you can also set scale, transform & rate for a given monitor
 [monitors.placement.Microstep]
 rate = 100
 ```
@@ -39,13 +41,13 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 > [!note]
 > Check [wlr layout UI](https://github.com/fdev31/wlr-layout-ui) which is a nice complement to configure your monitor settings.
 
-# Commands
+## Commands
 
 - `relayout` : Apply the configuration and update the layout
 
-# Configuration
+## Configuration
 
-## `placement`
+### `placement`
 
 Supported placements are:
 
@@ -62,7 +64,7 @@ Supported placements are:
 
 You can separate the terms with "_" to improve the readability, as in "top_center_of".
 
-### monitor settings (since 2.3.2)
+#### monitor settings (since 2.3.2)
 
 Not only can you place monitors relatively to each other, but you can also set specific settings for a given monitor.
 
@@ -81,23 +83,23 @@ transform = 1 # 0: normal, 1: 90°, 2: 180°, 3: 270°, 4: flipped, 5: flipped 9
 resolution = "1920x1080"  # can also be expressed as [1920, 1080]
 ```
 
-## `startup_relayout` (optional)
+### `startup_relayout` (optional)
 
 Default to `ŧrue`.
 
 When set to `false`,
 do not initialize the monitor layout on startup or when configuration is reloaded.
 
-## `full_relayout` (legacy - always enabled now)
+### `full_relayout` (legacy - always enabled now)
 
-## `new_monitor_delay` (optional)
+### `new_monitor_delay` (optional)
 
 By default,
 the layout computation happens one second after the event is received to let time for things to settle.
 
 You can change this value using this option.
 
-## `hotplug_command` (optional)
+### `hotplug_command` (optional)
 
 > _Added in 2.3.0_
 
@@ -109,7 +111,7 @@ None by default, allows to run a command when any monitor is plugged.
 hotplug_commands = "wlrlui -m"
 ```
 
-## `hotplug_commands` (optional)
+### `hotplug_commands` (optional)
 
 > _Added in 2.2.16_
 
@@ -122,7 +124,7 @@ Example to load a specific profile using [wlr layout ui](https://github.com/fdev
 "DELL P2417H CJFH277Q3HCB" = "wlrlui rotated"
 ```
 
-## `unknown` (optional)
+### `unknown` (optional)
 
 > _Added in 2.3.0_
 
@@ -134,7 +136,7 @@ allows to run a command when no monitor layout has been changed (no rule applied
 unknown = "wlrlui"
 ```
 
-## `trim_offset` (optional)
+### `trim_offset` (optional)
 
 > _Added in 2.3.2_
 

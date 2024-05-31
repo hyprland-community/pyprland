@@ -1,3 +1,5 @@
+# Text filters
+
 At the moment there is only one filter, close match of [sed's "s" command](https://www.gnu.org/software/sed/manual/html_node/The-_0022s_0022-Command.html).
 
 The only supported flag is "g"

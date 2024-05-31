@@ -1,3 +1,5 @@
+# expose
+
 Implements the "expose" effect, showing every client window on the focused screen.
 
 For a similar feature using a menu, try the [fetch_client_menu](fetch_client_menu) plugin (less intrusive).
@@ -5,10 +7,10 @@ For a similar feature using a menu, try the [fetch_client_menu](fetch_client_men
 Sample `hyprland.conf`:
 
 ```bash
-# Setup the key binding
+## Setup the key binding
 bind = $mainMod, B, exec, pypr expose
 
-# Add some style to the "exposed" workspace
+## Add some style to the "exposed" workspace
 workspace = special:exposed,gapsout:60,gapsin:30,bordersize:5,border:true,shadow:false
 ```
 
@@ -19,14 +21,14 @@ Check [workspace rules](https://wiki.hyprland.org/Configuring/Workspace-Rules/#r
 > [!note]
 > If you are looking for `toggle_minimized`, check the [toggle_special](toggle_special) plugin
 
-# Commands
+## Commands
 
 - `expose`: expose every client on the active workspace. If expose is already active, then restores everything and move to the focused window.
 
-# Configuration
+## Configuration
 
 
-## `include_special` (optional)
+### `include_special` (optional)
 
 default value is `false`
 

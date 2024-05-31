@@ -1,3 +1,5 @@
+# fetch_client_menu
+
 Bring any window to the active workspace using a menu.
 
 A bit like the [expose](expose) plugin but using a menu instead (less intrusive).
@@ -10,15 +12,15 @@ Sample `hyprland.conf`:
 
 > _Added in 1.10_
 
-# Commands
+## Commands
 
 - `fetch_client_menu`: display the menu allowing selection of the client to show
 
-# Configuration
+## Configuration
 
 All the [Menu](Menu) configuration items are also available.
 
-## `separator` (optional)
+### `separator` (optional)
 
 default value is `"|"`
 

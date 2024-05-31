@@ -1,4 +1,6 @@
-# General
+# Troubleshooting
+
+## General
 
 In case of trouble running a `pypr` command:
 - kill the existing pypr if any
@@ -11,7 +13,7 @@ In case you figure iXXXt's broken only when running from `hyprland.conf` using `
 > If a process isn't behaving properly, try `process_tracking = false` or `match_by = "class"`.
 > Check [this page](scratchpads_nonstandard).
 
-## Disable PID tracking (eg: `emacsclient`)
+### Disable PID tracking (eg: `emacsclient`)
 Some apps may open the graphical client window in a "complicated" way, to work around this, it is possible to disable the process PID matching algorithm and simply rely on window's class.
 The `match_by` attribute can be used to achieve this, eg. for emacsclient:
 ```toml
@@ -20,7 +22,7 @@ command = "/usr/local/bin/emacsStart.sh"
 class = "Emacs"
 match_by = "class"
 ```
-## Disable process management
+### Disable process management
 
 Progressive web apps will share a single process for every window.
 On top of requiring the class based window tracking (using `match_by`), the process can not be managed the same way as usual apps and the correlation between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
@@ -29,14 +31,14 @@ However, this is possible to run those apps in a scratchpad by setting `process_
 
 Check [the `process_tracking` option](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard#process_tracking-optional)
 
-## Scratchpads aren't responding for few seconds after trying to show one (which didn't show!)
+### Scratchpads aren't responding for few seconds after trying to show one (which didn't show!)
 
 This may happen if an application is very slow to start.
 In that case pypr will wait for a window blocking other scratchpad's operation, before giving up after a few seconds.
 
 Note that other plugins shouldn't be blocked by it.
 
-## Force hyprland version detection
+### Force hyprland version detection
 
 _Added in 2.3.3_
 

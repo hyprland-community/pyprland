@@ -1,11 +1,13 @@
+# Nix
+
 You are recommended to get the latest pyprland package from the [flake.nix](https://github.com/hyprland-community/pyprland/blob/main/flake.nix)
 provided within this repository. To use it in your system, you may add pyprland
 to your flake inputs.
 
-# Flake
+## Flake
 
 ```nix
-# flake.nix
+## flake.nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -34,7 +36,7 @@ nix profile install github:nix-community/pyprland
 The package will now be in your latest profile. You may use `nix profile list`
 to verify your installation.
 
-# Nixpkgs
+## Nixpkgs
 
 Pyprland is available under nixpkgs, and can be installed by adding
 `pkgs.pyprland` to either `environment.systemPackages` or `home.packages`

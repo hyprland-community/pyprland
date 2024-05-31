@@ -1,3 +1,5 @@
+# wallpapers
+
 Search folders for images and sets the background image at a regular interval.
 Images are selected randomly from the full list of images found.
 
@@ -24,7 +26,7 @@ path = "/home/fab/Images/wallpapers/"
 interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
 recurse = true
-# Using swww
+## Using swww
 command = "swww img --transition-type any \"[file]\""
 clear_command = "swww clear"
 ```
@@ -33,15 +35,15 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 
 > _Added in version 2.2.0, format changed in 2.2.5_
 
-# Commands
+## Commands
 
 - `wall next`: Changes the current background image
 - `wall clear`: Removes the current background image
 
-# Configuration
+## Configuration
 
 
-## `path`
+### `path`
 
 path to a folder or list of folders that will be searched. Can also be a list, eg:
 
@@ -49,14 +51,14 @@ path to a folder or list of folders that will be searched. Can also be a list, e
 path = ["/home/fab/Images/Portraits/", "/home/fab/Images/Landscapes/"]
 ```
 
-## `interval` (optional)
+### `interval` (optional)
 
 defaults to `10`
 
 How long (in minutes) a background should stay in place
 
 
-## `command` (optional)
+### `command` (optional)
 
 Overrides the default command to set the background image.
 
@@ -66,7 +68,7 @@ Overrides the default command to set the background image.
 swaybg -m fill -i "[file]"
 ```
 
-## `clear_command` (optional)
+### `clear_command` (optional)
 
 By default `clear` command kills the `command` program.
 
@@ -76,19 +78,19 @@ Instead of that, you can provide a command to clear the background. eg:
 clear_command = "swaybg clear"
 ``````
 
-## `extensions` (optional)
+### `extensions` (optional)
 
 defaults to `["png", "jpg", "jpeg"]`
 
 List of valid wallpaper image extensions.
 
-## `recurse` (optional)
+### `recurse` (optional)
 
 defaults to `false`
 
 When enabled, will also search sub-directories recursively.
 
-## `unique` (optional)
+### `unique` (optional)
 
 > _Added in 2.2.5_
 

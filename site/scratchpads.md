@@ -1,3 +1,5 @@
+# scratchpads
+
 Easily toggle the visibility of applications you use the most.
 
 Configurable and flexible, while supporting complex setups it's easy to get started with:
@@ -48,7 +50,7 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 > [!note]
 > If you wish to have a more generic space for any application you may run, check [toggle_special](toggle_special).
 
-# Commands
+## Commands
 
 - `toggle <scratchpad name>`  toggles the given scratchpads
   - use multiple _space separated_ names to synchronize visibility based on the first scratchpad provided
@@ -60,15 +62,15 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 > In version 2.3.5 and up, you can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
 > You'll need to quote or escape the `*` character to avoid interpretation from your shell.
 
-# Configuration
+## Configuration
 
-## `command`
+### `command`
 
 This is the command you wish to run in the scratchpad.
 
 It supports [Variables](Variables)
 
-## `animation` (optional)
+### `animation` (optional)
 
 Type of animation to use, default value is "fromTop":
 
@@ -78,7 +80,7 @@ Type of animation to use, default value is "fromTop":
 - "fromLeft" (stays close to left screen border)
 - "fromRight" (stays close to right screen border)
 
-## `size` (recommended)
+### `size` (recommended)
 
 No default value.
 
@@ -87,7 +89,7 @@ Each time scratchpad is shown, window will be resized according to the provided 
 For example on monitor of size `800x600` and `size= "80% 80%"` in config scratchpad always have size `640x480`,
 regardless of which monitor it was first launched on.
 
-### Format
+#### Format
 
 String with "x y" (or "width height") values using some units suffix:
 
@@ -95,7 +97,7 @@ String with "x y" (or "width height") values using some units suffix:
 - **pixels** for absolute values (`px` suffix), eg: `800px 600px`
 - a mix is possible, eg: `800px 40%`
 
-## `class` (recommended)
+### `class` (recommended)
 
 No default value.
 
@@ -104,7 +106,7 @@ Allows _Pyprland_ prepare the window for a correct animation and initial positio
 > [!important]
 > This will set some rules to every matching class!
 
-## `position` (optional)
+### `position` (optional)
 
 No default value, overrides the automatic margin-based position.
 
@@ -125,7 +127,7 @@ class = "term_quake"
 > [!note]
 > If `position` is not provided, the window is placed according to `margin` on one axis and centered on the other.
 
-## `multi` (optional)
+### `multi` (optional)
 
 > _Added in 2.2.13_
 
@@ -137,7 +139,7 @@ Otherwise other matching windows will be **attach**ed to the scratchpad.
 In case your scratchpad application spawns multiple windows and run
 into troubles check [skip_windowrules](scratchpads_nonstandard#skip_windowrules) option.
 
-# Advanced configuration
+## Advanced configuration
 
 To go beyond the basic setup and have a look at every configuration item, you can read the following pages:
 
@@ -147,7 +149,7 @@ like progressive web apps (PWA) or emacsclient, use only if you can't get it to 
 
 You can also find more
 
-# Monitor specific overrides
+## Monitor specific overrides
 
 > _Added in 2.0.6_
 

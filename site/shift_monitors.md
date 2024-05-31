@@ -1,3 +1,5 @@
+# shift_monitors
+
 Swaps the workspaces of every screen in the given direction.
 
 > [!Note]
@@ -11,7 +13,7 @@ bind = $mainMod, O, exec, pypr shift_monitors +1
 bind = $mainMod SHIFT, O, exec, pypr shift_monitors -1
 ```
 
-# Command
+## Command
 
 - `shift_monitors <direction>`: swaps every monitor's workspace in the given direction
 

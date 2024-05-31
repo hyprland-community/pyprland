@@ -1,3 +1,5 @@
+# shortcuts_menu
+
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
 
 Configuration example:
@@ -25,7 +27,7 @@ Relayout = "pypr relayout"
 
 > _Added in version 1.9.0_
 
-# Command
+## Command
 
 - `menu [name]`: shows a list of options which have been configured in "entries".
 
@@ -37,11 +39,11 @@ Relayout = "pypr relayout"
        pypr menu "utils.local commands"
       ```
 
-# Configuration
+## Configuration
 
 All the [Menu](Menu) configuration items are also available.
 
-## `entries`
+### `entries`
 
 Defines the menu entries. Supports [Variables](Variables)
 
@@ -60,7 +62,7 @@ Submenus can be defined too (there is no depth limit):
 foobar = "ls"
 ```
 
-### Advanced usage (since version 1.10)
+#### Advanced usage (since version 1.10)
 
 Instead of navigating a configured list of menu options and running a pre-defined command, you can collect various *variables* (either static list of options selected by the user, or generated from a shell command) and then run a command using those variables. Eg:
 
@@ -95,7 +97,7 @@ You must define a list of objects, containing:
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-## `command_start` & `command_end` / `submenu_start` & `submenu_end`
+### `command_start` & `command_end` / `submenu_start` & `submenu_end`
 
 > _Added in 1.10.2_
 
@@ -105,16 +107,16 @@ command_* is for final commands, while submenu_* is for entries leading to anoth
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-## `skip_single` (optional)
+### `skip_single` (optional)
 
 > _Added in version 2.0_
 
 Defaults to `true`.
 When disabled, shows the menu even for single options
 
-# Hints
+## Hints
 
-## Multiple menus
+### Multiple menus
 
 To manage multiple distinct menus, always use a name when using the `pypr menu <name>` command.
 
@@ -126,7 +128,7 @@ Example of a multi-menu configuration:
 "entry Y" = "command2"
 
 [shortcuts_menu.entries.menu2]
-# ...
+## ...
 ```
 
 You can then show the first menu using `pypr menu "Basic commands"`

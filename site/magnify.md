@@ -1,4 +1,6 @@
-# Command
+# magnify
+
+## Command
 
 - `zoom [value]`
     - If no value is provided, toggles magnification.
@@ -14,7 +16,7 @@
 > - `zoom ++0.7` → 1.6x, 2.6x, 4.3x, 7.0x, 11.3x, 18.4x...
 > - `zoom ++0.5` → 1.4x, 2x, 2.8x, 4x, 5.7x, 8x, 11.3x, 16x...
 
-# Configuration
+## Configuration
 
 Sample `hyprland.conf`:
 
@@ -24,13 +26,13 @@ bind = $mainMod SHIFT, Z, exec, pypr zoom
 ```
 
 
-## `factor` (optional)
+### `factor` (optional)
 
 default value is `2`
 
 Scaling factor to be used when no value is provided.
 
-# Example
+## Example
 
 ```sh
 pypr zoom  # sets zoom to `factor` (2 by default)
@@ -39,7 +41,7 @@ pypr zoom  # will set zoom to 1x
 pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
 ```
 
-## `duration` (optional)
+### `duration` (optional)
 
 > _Added in version 2.2.9_
 

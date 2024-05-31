@@ -1,6 +1,6 @@
 # Troubleshooting configuration options for scratchpads
 
-## `skip_windowrules` (optional)
+### `skip_windowrules` (optional)
 
 > _Added in 2.2.17_
 
@@ -23,7 +23,7 @@ size = "60% 60%"
 skip_windowrules = ["aspect", "workspace"]
 ```
 
-## `match_by` (optional)
+### `match_by` (optional)
 
 > _Added in 2.2.5_
 
@@ -50,14 +50,14 @@ match_by = "title"
 title = "re:.*some string.*"
 ```
 
-## `class_match` (DEPRECATED)
+### `class_match` (DEPRECATED)
 
 > [!important]
 > Has been replaced by `match_by` in versions > 2.2.4
 
 Will set `match_by="class"` if set to `true` - support will be dropped in the future.
 
-## `process_tracking` (optional)
+### `process_tracking` (optional)
 
 Default value is `true`
 
@@ -69,7 +69,7 @@ This will automatically force `lazy = true` and set `match_by="class"` if no `ma
 It requires defining a `class` option (or the option matching your `match_by` value).
 
 ```toml
-# Chat GPT on Brave
+## Chat GPT on Brave
 [scratchpads.gpt]
 animation = "fromTop"
 command = "brave --profile-directory=Default --app=https://chat.openai.com"
@@ -77,7 +77,7 @@ class = "brave-chat.openai.com__-Default"
 size = "75% 60%"
 process_tracking = false
 
-# Some chrome app
+## Some chrome app
 [scratchpads.music]
 command = "google-chrome --profile-directory=Default --app-id=cinhimbnkkaeohfgghhklpknlkffjgod"
 class = "chrome-cinhimbnkkaeohfgghhklpknlkffjgod-Default"

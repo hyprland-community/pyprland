@@ -1,3 +1,5 @@
+# workspaces_follow_focus
+
 Make non-visible workspaces follow the focused monitor.
 Also provides commands to switch between workspaces while preserving the current monitor assignments:
 
@@ -13,12 +15,12 @@ bind = $mainMod, K, exec, pypr change_workspace +1
 bind = $mainMod, J, exec, pypr change_workspace -1
  ```
 
-# Command
+## Command
 
 - `change_workspace` `<direction>`: changes the workspace of the focused monitor
 
-# Configuration
+## Configuration
 
-## `max_workspaces`
+### `max_workspaces`
 
 Limits the number of workspaces when switching, defaults value is `10`.

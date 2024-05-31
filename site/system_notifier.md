@@ -1,3 +1,5 @@
+# system_notifier
+
 This plugin adds system notifications based on journal logs (or any program's output).
 It monitors specified **sources** for log entries matching predefined **patterns** and generates notifications accordingly (after applying an optional **filter**).
 
@@ -38,9 +40,9 @@ filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 
 > _Added in version 2.2.0_
 
-# Configuration
+## Configuration
 
-## `sources`
+### `sources`
 
 List of sources to enable (by default nothing is enabled)
 
@@ -54,22 +56,22 @@ command = "sudo journalctl -fkn"
 parser = ["journal", "custom_parser"]
 ```
 
-### command
+#### command
 
 This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated. Aa common option is the system journal output (eg: `journalctl -u nginx`)
 
-### parser
+#### parser
 
 Sets the list of rules / parser to be used to extract lines of interest.
 Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.
 
-## `parsers`
+### `parsers`
 
 A list of available parsers that can be used to detect lines of interest in the **sources** and re-format it before issuing a notification.
 
 Each parser definition must contain a **pattern** and optionally a **filter** and a **color**.
 
-### pattern
+#### pattern
 
 ```toml
 [system_notifier.parsers.custom_parser](system_notifier.parsers.custom_parser)
@@ -79,13 +81,13 @@ pattern = 'special value:'
 
 The pattern is any regular expression.
 
-### filter
+#### filter
 
 The [filters](filters) allows to change the text before the notification, eg:
 `filter="s/.*special value: (\d+)/Value=\1/"`
 will set a filter so a string "special value: 42" will lead to the notification "Value=42"
 
-### color
+#### color
 
 You can also provide an optional **color** in `"hex"` or `"rgb()"` format
 
@@ -93,7 +95,7 @@ You can also provide an optional **color** in `"hex"` or `"rgb()"` format
 color = "#FF5500"
 ```
 
-## default_color (optional)
+### default_color (optional)
 
 Sets the notification color that will be used when none is provided in a *parser* definition.
 
