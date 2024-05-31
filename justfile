@@ -4,9 +4,12 @@ testenv := ".tox/py312-unit"
 test *params='tests':
     {{testenv}}/bin/pytest --pdb -s {{params}}
 
-
 all:
     tox run -e unit,linting,wiki
+
+website:
+    npm i
+    npm run docs:dev
 
 compgen:
     tox run -e shellgen
@@ -32,4 +35,3 @@ htmlcov:
 
 types:
     {{pyenv}}/bin/mypy --check-untyped-defs pyprland
-
