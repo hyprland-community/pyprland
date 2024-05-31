@@ -15,12 +15,14 @@ class Extension(Plugin):
 
     cur_factor = 1.0
 
-    keyword = "cursor:zoom_factor"
+    keyword = ""
 
-    async def init(self) -> None:
+    async def on_reload(self) -> None:
         """Initialization code."""
-        if state.hyprland_version < VersionInfo(0, 41, 0):
+        if state.hyprland_version < VersionInfo(0, 40, 1):
             self.keyword = "misc:cursor_zoom_factor"
+        else:
+            self.keyword = "cursor:zoom_factor"
 
     def ease_out_quad(self, step: float, start: int, end: int, duration: int) -> float:
         """Easing function for animations."""
