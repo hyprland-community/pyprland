@@ -51,7 +51,7 @@ match_by = "title"
 title = "re:.*some string.*"
 ```
 
-> [!Rationale]
+> [!note]
 > Some apps may open the graphical client window in a "complicated" way, to work around this, it is possible to disable the process PID matching algorithm and simply rely on window's class.
 >
 > The `match_by` attribute can be used to achieve this, eg. for emacsclient:
@@ -102,7 +102,7 @@ process_tracking = false
 > - `hyprctl -j clients | jq '.[]|[.class,.title]'`
 > - or if you prefer a graphical tool: `rofi -show window`
 
-> [!Rationale]
+> [!note]
 > Progressive web apps will share a single process for every window.
 > On top of requiring the class based window tracking (using `match_by`), the process can not be managed the same way as usual apps and the correlation between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
 >

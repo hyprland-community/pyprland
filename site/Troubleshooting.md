@@ -8,7 +8,7 @@ In case of trouble running a `pypr` command:
 
 If the client says it can't connect, then there is a high chance pypr daemon didn't start, check if it's running using `ps axuw |grep pypr`. You can try to run it from a terminal with the same technique: `pypr --debug /dev/null` and see if any error occurs.
 
-## Force hyprland version detection
+## Force hyprland version
 
 _Added in 2.3.3_
 
@@ -22,7 +22,9 @@ hyprland_version = "0.41.0"
 > If a process isn't behaving properly, try `process_tracking = false` or `match_by = "class"`.
 > Check [this page](scratchpads_nonstandard).
 
-## Scratchpads aren't responding for few seconds after trying to show one (which didn't show!)
+## Unresponsive scratchpads
+
+Scratchpads aren't responding for few seconds after trying to show one (which didn't show!)
 
 This may happen if an application is very slow to start.
 In that case pypr will wait for a window blocking other scratchpad's operation, before giving up after a few seconds.
