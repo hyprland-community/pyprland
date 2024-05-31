@@ -1,6 +1,6 @@
 # Troubleshooting configuration options for scratchpads
 
-### `skip_windowrules` (optional)
+## `skip_windowrules` (optional)
 
 > _Added in 2.2.17_
 
@@ -23,7 +23,7 @@ size = "60% 60%"
 skip_windowrules = ["aspect", "workspace"]
 ```
 
-### `match_by` (optional)
+## `match_by` (optional)
 
 > _Added in 2.2.5_
 
@@ -62,14 +62,14 @@ title = "re:.*some string.*"
 > match_by = "class"
 > ```
 
-### `class_match` (DEPRECATED)
+## `class_match` (DEPRECATED)
 
 > [!important]
 > Has been replaced by `match_by` in versions > 2.2.4
 
 Will set `match_by="class"` if set to `true` - support will be dropped in the future.
 
-### `process_tracking` (optional)
+## `process_tracking` (optional)
 
 Default value is `true`
 
