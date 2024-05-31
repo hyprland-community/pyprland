@@ -49,7 +49,8 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/fdev31/pyprland' }
+      { icon: 'github', link: 'https://github.com/fdev31/pyprland' },
+      { icon: 'discord', link: 'https://discord.com/channels/1055990214411169892/1230972154330218526' }
     ]
   }
 })
