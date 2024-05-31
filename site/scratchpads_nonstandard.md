@@ -29,6 +29,7 @@ skip_windowrules = ["aspect", "workspace"]
 
 Default value is `"pid"`
 When set to a sensitive client property value (eg: `class`, `initialClass`, `title`, `initialTitle`), will match the client window using the provided property instead of the PID of the process.
+
 This property must be set accordingly, eg:
 
 ```toml
@@ -49,6 +50,17 @@ You can add the "re:" prefix to use a regular expression, eg:
 match_by = "title"
 title = "re:.*some string.*"
 ```
+
+> [!Rationale]
+> Some apps may open the graphical client window in a "complicated" way, to work around this, it is possible to disable the process PID matching algorithm and simply rely on window's class.
+>
+> The `match_by` attribute can be used to achieve this, eg. for emacsclient:
+> ```toml
+> [scratchpads.emacs]
+> command = "/usr/local/bin/emacsStart.sh"
+> class = "Emacs"
+> match_by = "class"
+> ```
 
 ### `class_match` (DEPRECATED)
 
@@ -89,3 +101,11 @@ process_tracking = false
 > To list windows by class and title you can use:
 > - `hyprctl -j clients | jq '.[]|[.class,.title]'`
 > - or if you prefer a graphical tool: `rofi -show window`
+
+> [!Rationale]
+> Progressive web apps will share a single process for every window.
+> On top of requiring the class based window tracking (using `match_by`), the process can not be managed the same way as usual apps and the correlation between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
+>
+> However, this is possible to run those apps in a scratchpad by setting `process_tracking = false`.
+>
+> Check [the `process_tracking` option](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard#process_tracking-optional)
