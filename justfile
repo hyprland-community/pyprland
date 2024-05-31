@@ -1,12 +1,8 @@
 pyenv := ".tox/py312-linting"
-
-
-testenv := ".tox/coverage"
+testenv := ".tox/py312-unit"
 
 test *params='tests':
-    {{testenv}}/bin/coverage erase
-    {{testenv}}/bin/coverage run -m pytest --pdb -s {{params}}
-    {{testenv}}/bin/coverage report
+    {{testenv}}/bin/pytest --pdb -s {{params}}
 
 
 all:
