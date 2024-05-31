@@ -16,7 +16,7 @@ class Extension(Plugin):
         """Show the number of focus switches and monitors."""
         # The doc string above is used in `pypr help`
 
-        monitor_list = await self.hyprctlJSON("monitors")
+        monitor_list = await self.hyprctl_json("monitors")
         color = self.config.get("color", "3333BB")
         await self.notify_info(
             f"Focus changed {self.focus_changes} times on {len(monitor_list)} monitor(s)",
