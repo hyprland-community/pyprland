@@ -34,18 +34,23 @@ a workspace layout where one client window is almost maximized and others seat i
 
 [![demo video](https://img.youtube.com/vi/vEr9eeSJYDc/1.jpg)](https://www.youtube.com/watch?v=vEr9eeSJYDc)
 
-### 🌟🌟 [system_notifier](system_notifier)
+### 🌟🌟🌟 [system_notifier](system_notifier)
 open streams (eg: journal logs) and trigger notifications
 
-### 🌟🌟 [wallpapers](wallpapers)
+### 🌟🌟🌟 [wallpapers](wallpapers)
 handles random wallpapers at regular interval (from a folder)
 
-### 🌟 [expose](expose)
+### 🌟🌟🌟 [gbar](gbar)
+
+improves multi-monitor handling of the status bar - only *gBar* is supported at the moment
+
+
+### 🌟🌟 [expose](expose)
 exposes all the windows for a quick "jump to" feature
 
 [![demo video](https://img.youtube.com/vi/ce5HQZ3na8M/1.jpg)](https://www.youtube.com/watch?v=ce5HQZ3na8M)
 
-### [lost_windows](lost_windows)
+### 🌟 [lost_windows](lost_windows)
 brings lost floating windows (which are out of reach) to the current workspace
 
 ### [toggle_dpms](toggle_dpms)
@@ -65,8 +70,4 @@ moves workspaces from monitor to monitor (caroussel)
 ### 🌟🌟🌟 [monitors](monitors)
 
 allows relative placement of monitors
-
-### 🌟 [gbar](gbar)
-
-improves multi-monitor handling of the status bar - only *gBar* is supported at the moment
 
