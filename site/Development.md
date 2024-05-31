@@ -33,7 +33,7 @@ The `Extension` interface provides a couple of built-in attributes:
 
 # Documentation
 
-Run `tox run -e doc` and visit http://localhost:8080
+Run `tox run -e doc` and visit `http://localhost:8080`
 
 # Workflow
 
@@ -91,7 +91,7 @@ Similar as a command, implement some `async def event_<the event you are interes
 Pypr ensures only one `run_` or `event_` handler runs at a time, allowing the plugins code to stay simple and avoid the need for concurrency handling.
 However, each plugin can run its handlers in parallel.
 
-# Re-usable code
+# Reusable code
 
 ```py
 from ..common import state, CastBoolMixin

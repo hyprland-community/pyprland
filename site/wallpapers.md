@@ -60,7 +60,7 @@ How long (in minutes) a background should stay in place
 
 Overrides the default command to set the background image.
 
-[Variables](variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path. eg:
+[variables](Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path. eg:
 
 ```
 swaybg -m fill -i "[file]"

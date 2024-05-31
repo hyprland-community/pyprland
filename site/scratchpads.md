@@ -135,7 +135,7 @@ When set to `false`, only one client window is supported for this scratchpad.
 Otherwise other matching windows will be **attach**ed to the scratchpad.
 
 In case your scratchpad application spawns multiple windows and run
-into troubles check the [skip_windowrules|scratchpads_nonstandard#skip_windowrules](skip_windowrules|scratchpads_nonstandard#skip_windowrules) option.
+into troubles check [skip_windowrules](scratchpads_nonstandard#skip_windowrules) option.
 
 # Advanced configuration
 
