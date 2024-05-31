@@ -5,18 +5,22 @@
 
 [Documentation](https://github.com/hyprland-community/pyprland/wiki) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
-
 ## Enhance your Hyprland experience with Pyprland
 
-Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/). Pyprland offers a plethora of plugins designed for simplicity and efficiency, allowing you to supercharge your productivity and customize your user experience.
+Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/).
+Pyprland offers a plethora of plugins designed for simplicity and efficiency,
+allowing you to supercharge your productivity and customize your user experience.
 
-You can think of it as a *Gnome tweak tool* but for Hyprland users (involves editing text files). With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use.
+You can think of it as a *Gnome tweak tool* but for Hyprland users (involves editing text files).
+With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use.
 
-Note that usage of Python and architecture of the software encourages using many plugins with little impact on the footprint and performance.
+Note that usage of Python and architecture of the software encourages using many plugins
+with little impact on the footprint and performance.
 
 Contributions, suggestions, bug reports and comments are welcome.
 
-- Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins) to tailor your Hyprland setup to your liking.
+- Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins)
+  to tailor your Hyprland setup to your liking.
 - New users, check the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
 
 <details>
@@ -24,12 +28,13 @@ Contributions, suggestions, bug reports and comments are welcome.
 About Pyprland (latest stable is: <b>2.2.20</b>)
 </summary>
 
-
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
 🎉 Hear what others are saying:
+
 - ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
 - [You NEED This in your Hyprland Config - LibrePhoenix (video)](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*Now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
+
 </details>
 
 <details>
@@ -70,7 +75,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 ### 2.3
 
-- Supports _Hyprland > 0.40.0_
+- Supports *Hyprland > 0.40.0*
 - Improved code kwaleetee
 - [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) allows general monitor settings
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
@@ -85,7 +90,6 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 - [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (using 2.2.19 is recommended)
 - [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
 - Improve [Nix support](https://github.com/hyprland-community/pyprland/wiki/Nix)
-
 
 ### 2.1
 
