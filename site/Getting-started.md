@@ -46,30 +46,7 @@ plugin_option = 42
 suboption = "config value"
 ```
 
-### Multiple configuration files
-
-You can also split your configuration into multiple files that will be loaded in the provided order after the main file (added in 2.2.4):
-```toml
-[pyprland]
-include = ["/shared/pyprland.toml", "~/pypr_extra_config.toml"]
-```
-Since 2.2.16 you can also load folders, in which case TOML files in the folder will be loaded in alphabetical order:
-```toml
-[pyprland]
-include = ["~/.config/pypr.d/"]
-```
-
-And then add a `~/.config/pypr.d/monitors.toml` file:
-```toml
-pyprland.plugins = [ "monitors" ]
-
-[monitors.placement]
-BenQ.Top_Center_Of = "DP-1" # projo
-"CJFH277Q3HCB".top_of = "eDP-1" # work
-```
-
-> [!tip]
-> To check the final merged configuration, you can use the `dumpjson` command.
+You can also split your configuration into [Multiple configuration files](MultipleConfigurationFiles).
 
 ## Installation
 
@@ -123,7 +100,10 @@ plugins = [
 ]
 ```
 
-More complex example:
+<details>
+  <summary>
+More complex example
+  </summary>
 
 ```toml
 [pyprland]
@@ -191,35 +171,9 @@ bind = $mainMod,A,exec,pypr toggle term
 bind = $mainMod,V,exec,pypr toggle volume
 ```
 
+</details>
+
 > [!tip]
 > Consult or share [configuration files](https://github.com/hyprland-community/pyprland/tree/main/examples)
-
-## Optimization
-
-### Plugins
-
-Only enable the plugins you are using in the `plugins` array (in `[pyprland]` section).
-
-Leaving the configuration for plugins which are not enabled will have no impact.
-
-### Pypr command
-
-In case you want to save some time when interacting with the daemon
-you can use `socat` instead (needs to be installed). Example of a `pypr-cli` command (should be reachable from your environment's `PATH`):
-```sh
-#!/bin/sh
-socat - "UNIX-CONNECT:${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.pyprland.sock" <<< $@
-```
-On slow systems this may make a difference.
-Note that the "help" command will require usage of the standard `pypr` command.
-
-## Troubleshoot
-
-You can enable debug logging and saving to file using the `--debug` argument, eg:
-
-```sh
-pypr --debug /tmp/pypr.log
-```
-
-More info in the [troubleshooting](Troubleshooting) page.
-
+>
+> You might also be interested in [optimizations](Optimizations).
