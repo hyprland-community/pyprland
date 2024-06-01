@@ -9,7 +9,10 @@ With `next` and `prev` you can cycle the active window, keeping the same layout 
 If the layout_center isn't active and `next` or `prev` is used, it will call the "next" and "prev" configuration options.
 To allow full override of the focus keys, `next2` and `prev2` are provided, they do the same actions as "next" and "prev" but allow different fallback commands.
 
-Configuration sample:
+> _Added in version 1.8.0_
+
+<details>
+<summary>Configuration sample</summary>
 ```toml
 [layout_center]
 margin = 60
@@ -37,7 +40,8 @@ bind = $mainMod, up, movefocus, u
 bind = $mainMod, down, movefocus, d
 ```
 
-> _Added in version 1.8.0_
+</details>
+
 
 ## Command
 

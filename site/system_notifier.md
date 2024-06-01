@@ -5,7 +5,10 @@ It monitors specified **sources** for log entries matching predefined **patterns
 
 Sources are commands that return a stream of text (eg: journal, mqtt, tail -f, ...) which is sent to a parser that will use a [regular expression pattern](https://en.wikipedia.org/wiki/Regular_expression) to detect lines of interest and optionally transform them before sending the notification.
 
-Minimal configuration:
+> _Added in version 2.2.0_
+
+<details>
+    <summary>Minimal configuration</summary>
 
 ```toml
 [system_notifier.sources](system_notifier.sources)
@@ -37,8 +40,8 @@ color= "#aa0000"
 pattern = "usb \d+-[0-9.]+: Product: "
 filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 ```
+</details>
 
-> _Added in version 2.2.0_
 
 ## Configuration
 

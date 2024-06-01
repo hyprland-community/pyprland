@@ -13,7 +13,8 @@ Syntax:
 "description match".placement = "other description match"
 ```
 
-Example to set a Sony monitor on top of the BenQ monitor:
+<details>
+    <summary>Example to set a Sony monitor on top of a BenQ monitor</summary>
 
 ```toml
 [monitors.placement]
@@ -40,6 +41,8 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 > [!note]
 > Check [wlr layout UI](https://github.com/fdev31/wlr-layout-ui) which is a nice complement to configure your monitor settings.
+
+</details>
 
 ## Commands
 

@@ -10,7 +10,10 @@ It serves two purposes:
 
 It allows "zapping" current backgrounds, clearing it to go distraction free and optionally make them different for each screen.
 
-Minimal example (uses `swaybg` by default):
+> _Added in version 2.2.0, format changed in 2.2.5_
+
+<details>
+    <summary>Minimal example (uses swaybg by default)</summary>
 
 ```toml
 [wallpapers]
@@ -18,7 +21,10 @@ path = "~/Images/wallpapers/" # path to the folder with background images
 unique = true # set a different wallpaper for each screen
 ```
 
-More complex, using `swww` as a backend (not recommended because of its stability):
+</details>
+
+<details>
+<summary>More complex, using swww as a backend (not recommended because of its stability)</summary>
 
 ```toml
 [wallpapers]
@@ -32,8 +38,8 @@ clear_command = "swww clear"
 ```
 
 Note that for applications like `swww`, you'll need to start a daemon separately (eg: from `hyprland.conf`).
+</details>
 
-> _Added in version 2.2.0, format changed in 2.2.5_
 
 ## Commands
 

@@ -2,7 +2,10 @@
 
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
 
-Configuration example:
+> _Added in version 1.9.0_
+
+<details>
+   <summary>Configuration example</summary>
 
 ```toml
 [shortcuts_menu.entries]
@@ -25,7 +28,8 @@ Relayout = "pypr relayout"
 ]
 ```
 
-> _Added in version 1.9.0_
+</details>
+
 
 ## Command
 

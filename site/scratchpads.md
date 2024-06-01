@@ -11,12 +11,14 @@ class = "the window's class"  # check: hyprctl clients | grep class
 size = "<width> <height>"  # size of the window relative to the screen size
 ```
 
+<details>
+<summary>Example</summary>
+
 As an example, defining two scratchpads:
 
 - _term_ which would be a kitty terminal on upper part of the screen
 - _volume_ which would be a pavucontrol window on the right part of the screen
 
-Example:
 
 ```toml
 [scratchpads.term]
@@ -49,6 +51,8 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 
 > [!note]
 > If you wish to have a more generic space for any application you may run, check [toggle_special](toggle_special).
+
+</details>
 
 ## Commands
 
