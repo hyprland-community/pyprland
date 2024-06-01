@@ -35,21 +35,30 @@ The `Extension` interface provides a couple of built-in attributes:
 
 # Documentation
 
-Run `tox run -e doc` and visit `http://localhost:8080`
+Run `tox run -e doc` then visit `http://localhost:8080`
+
+The most important to know are:
+
+- `hyprctlJSON` to get a response from an IPC query
+- `hyprctl` to trigger general IPC commands
+- `on_reload` to be implemented, called when the config is (re)loaded
+- `run_<command_name>` to implement a command
+- `event_<event_name>` called when the given event is emitted by Hyprland
+
+All those methods are _async_
+
+On top of that:
+
+- `self.config` in your _Extension_ contains the entry corresponding to your plugin name in the TOML file
+- `state` from `..common` module contains ready to use information
+- there is a `MenuMixin` in `..adapters.menus` to make menu-based plugins easy
 
 # Workflow
 
-Instead of killing the existing `pypr`, use:
-```
-pypr exit
-```
+Just `^C` when you make a change and repeat:
 
-The "hidden" `exit` command will exit cleanly, removing the IPC socket, so you can start pypr again without any complication.
-
-Then you can run `pypr` in the terminal, getting the logs in real time and in a log file, `^C` will also exit cleanly so you can re-run the command with no hassle:
-
-```
-pypr --debug /tmp/output.log
+```sh
+pypr exit ; pypr --debug /tmp/output.log
 ```
 
 
