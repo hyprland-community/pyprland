@@ -49,6 +49,7 @@ All those methods are _async_
 
 On top of that:
 
+- the first line of a `run_*` command's docstring will be used by the `help` command
 - `self.config` in your _Extension_ contains the entry corresponding to your plugin name in the TOML file
 - `state` from `..common` module contains ready to use information
 - there is a `MenuMixin` in `..adapters.menus` to make menu-based plugins easy
