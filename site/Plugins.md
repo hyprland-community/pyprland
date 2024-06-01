@@ -1,7 +1,5 @@
-# Built-In plugins
-
-> - You may install more plugins by using 3rd party or custom Python packages.
-> - "🌟" indicates some maturity & reliability level of the plugin, considering age, attention paid and complexity - from 0 to 3.
+- You can also install more plugins by using 3rd party or custom Python packages
+- "🌟" indicates some maturity & reliability level of the plugin, considering age, attention paid and complexity - from 0 to 3.
 
 ## Standard plugins
 

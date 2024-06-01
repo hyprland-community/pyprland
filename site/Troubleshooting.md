@@ -30,3 +30,5 @@ This may happen if an application is very slow to start.
 In that case pypr will wait for a window blocking other scratchpad's operation, before giving up after a few seconds.
 
 Note that other plugins shouldn't be blocked by it.
+
+More scratchpads troubleshooting can be found [here](scratchpads_nonstandard).

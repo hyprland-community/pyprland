@@ -26,10 +26,10 @@ export default defineConfig({
         text: 'standard plugins',
         items: [
           { text: "Expose", link: "expose" },
-          { text: "Fetch_client_menu", link: "fetch_client_menu" },
+          { text: "Fetch client menu", link: "fetch_client_menu" },
           { text: "Gbar", link: "gbar" },
           { text: "Layout center", link: "layout_center" },
-          { text: "Lost_windows", link: "lost_windows" },
+          { text: "Lost windows", link: "lost_windows" },
           { text: "Magnify", link: "magnify" },
           { text: "Monitors", link: "monitors" },
           { text: "Scratchpads", link: "scratchpads" },
@@ -44,7 +44,7 @@ export default defineConfig({
         items: [
           { text: "Monitors", link: "monitors" },
           { text: "Shift monitors", link: "shift_monitors" },
-          { text: "Workspaces_follow focus", link: "workspaces_follow_focus" },
+          { text: "Workspaces follow focus", link: "workspaces_follow_focus" },
         ]
       }
     ],

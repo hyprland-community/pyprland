@@ -74,7 +74,6 @@ Will set `match_by="class"` if set to `true` - support will be dropped in the fu
 Default value is `true`
 
 Allows disabling the process management. Use only if running a progressive web app (Chrome based apps) or similar.
-Check [this wiki page](https://github.com/hyprland-community/pyprland/wiki/Troubleshooting#disable-process-management) for some details.
 
 This will automatically force `lazy = true` and set `match_by="class"` if no `match_by` rule is provided, to help with the fuzzy client window matching.
 
@@ -104,8 +103,6 @@ process_tracking = false
 
 > [!note]
 > Progressive web apps will share a single process for every window.
-> On top of requiring the class based window tracking (using `match_by`), the process can not be managed the same way as usual apps and the correlation between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
->
-> However, this is possible to run those apps in a scratchpad by setting `process_tracking = false`.
->
-> Check [the `process_tracking` option](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard#process_tracking-optional)
+> On top of requiring the class based window tracking (using `match_by`),
+> the process can not be managed the same way as usual apps and the correlation
+> between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
