@@ -104,7 +104,7 @@ EOF
 
 **Congratulations!**, you've installed and configured _Pyprland_.
 
-Check the [plugins](/Plugins) page to understand how to configure and use each plugin.
+Check the [plugins](/Plugins) page to know more about each plugin and how to customize them.
 
 ## Uninstall
 
