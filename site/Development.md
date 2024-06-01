@@ -33,7 +33,7 @@ The `Extension` interface provides a couple of built-in attributes:
 > [!Note]
 > If your extension is at the root of the plugin (this is not recommended, preferable add a name space, as in `johns_pyprland.super_feature`, rather than `super_feature`) you can still import it using the `external:` prefix when you refer to it in the `plugins` list.
 
-# Documentation
+# API Documentation
 
 Run `tox run -e doc` then visit `http://localhost:8080`
 
