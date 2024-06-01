@@ -1,4 +1,4 @@
-# Troubleshooting configuration options for scratchpads
+# Troubleshooting scratchpads
 
 ## `skip_windowrules` (optional)
 

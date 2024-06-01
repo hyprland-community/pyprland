@@ -1,4 +1,4 @@
-# Fine tuning configuration options for scratchpads
+# Fine tuning scratchpads
 
 ## `excludes` (optional)
 
