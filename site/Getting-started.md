@@ -86,7 +86,11 @@ Once the `pypr` daemon is started (cf `exec-once`), you can list the eventual co
 
 ## Configuring
 
-Create a configuration file in `~/.config/hypr/pyprland.toml` enabling a list of plugins, each plugin may have its own configuration needs or don't need any configuration at all. Most default values should be okay, just set when you are not satisfied with the default.
+Create a configuration file in `~/.config/hypr/pyprland.toml` enabling a list of plugins, each plugin may have its own configuration needs or don't need any configuration at all.
+Most default values should be acceptable for most users, options which hare not mandatory are marked as such.
+
+> [!important]
+> Provide the values for the configuration options which have no annotation such as "(optional)"
 
 Check the [TOML format](https://toml.io/) for details about the syntax.
 
