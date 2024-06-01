@@ -22,7 +22,7 @@ features:
   - title: Customizable
     details: Create your own Hyprland experience
   - title: Fast and easy
-    details: Designed performance and ease of use
+    details: Designed for performance and ease of use
 ---
 
 ## What is Pyprland?
