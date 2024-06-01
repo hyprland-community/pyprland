@@ -52,6 +52,8 @@ You need to download [get-pypr](https://raw.githubusercontent.com/hyprland-commu
 
 ## Configure
 
+Paste the content of the code blocks one after another in the same terminal:
+
  ```sh
 cat <<EOF > ~/.config/hypr/pyprland.toml
 ```
