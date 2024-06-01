@@ -21,7 +21,7 @@ The `Extension` interface provides a couple of built-in attributes:
 
 - `config` : object exposing the plugin section in `pyprland.toml`
 - `notify` ,`notify_error`, `notify_info` : access to Hyprland's notification system
-- `hyprctl`, `hyprctlJSON` : invoke [Hyprland's IPC system](https://wiki.hyprland.org/Configuring/Dispatchers/)
+- `hyprctl`, `hyprctl_json` : invoke [Hyprland's IPC system](https://wiki.hyprland.org/Configuring/Dispatchers/)
 
 
 > [!important]
@@ -39,7 +39,7 @@ Run `tox run -e doc` then visit `http://localhost:8080`
 
 The most important to know are:
 
-- `hyprctlJSON` to get a response from an IPC query
+- `hyprctl_json` to get a response from an IPC query
 - `hyprctl` to trigger general IPC commands
 - `on_reload` to be implemented, called when the config is (re)loaded
 - `run_<command_name>` to implement a command
