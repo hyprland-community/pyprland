@@ -16,7 +16,12 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: menu,
     logo: './icon.png',
-
+    search: {
+      provider: 'local'
+    },
+    outline: {
+      level: 2,
+    },
     sidebar: [
       {
         text: 'Navigation',
