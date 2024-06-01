@@ -50,6 +50,8 @@ You need to download [get-pypr](https://raw.githubusercontent.com/hyprland-commu
  curl https://raw.githubusercontent.com/hyprland-community/pyprland/main/scripts/get-pypr | sh
  ```
 
+You now have the latest release installed.
+
 ## Configure
 
 Paste the content of the code blocks one after another in the same terminal:
