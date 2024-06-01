@@ -54,11 +54,14 @@ You need to download [get-pypr](https://raw.githubusercontent.com/hyprland-commu
 
  ```sh
 cat <<EOF > ~/.config/hypr/pyprland.toml
+```
+
+ ```toml
 [pyprland]
 
 plugins = [
   "expose",
-  "fetch_client_menu"
+  "fetch_client_menu",
   "lost_windows",
   "magnify",
   "scratchpads",
@@ -76,6 +79,9 @@ command = "[term_classed] main-dropterm"
 class = "main-dropterm"
 size = "75% 60%"
 max_size = "1920px 100%"
+```
+
+```sh
 EOF
 
 cat <<EOF >> ~/.config/hypr/hyprland.conf
