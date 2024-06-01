@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 48
+:total-count: 49
 
 --------------------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ preserve_aspect could recall aspect per screen resolution/size
 --------------------------------------------------------------------------------
 
 Fix multi-monitor layout changes (including attached clients)
-==============================================================
+=============================================================
 
 :bugid: 40
 :created: 2024-04-23T22:01:39
@@ -136,4 +136,13 @@ Test a configuration with zero initial command/window
 
 :bugid: 46
 :created: 2024-05-01T23:37:31
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+Add a fallback to aiofiles (removes one dependency)
+===================================================
+
+:bugid: 49
+:created: 2024-06-02T01:41:33
 :priority: 0
