@@ -22,7 +22,7 @@ Other commands are implemented by adding [plugins](Plugins).
 >
 > - if you pass parameters, it will interact with the daemon instead.
 
-> [!note]
+> [!tip]
 > Pypr *command* names are documented using underscores (`_`) but you can use dashes (`-`) instead.
 > Eg: `pypr shift_monitors` and `pypr shift-monitors` will run the same command
 
@@ -68,7 +68,7 @@ BenQ.Top_Center_Of = "DP-1" # projo
 "CJFH277Q3HCB".top_of = "eDP-1" # work
 ```
 
-> [!note]
+> [!tip]
 > To check the final merged configuration, you can use the `dumpjson` command.
 
 ## Installation
@@ -84,21 +84,9 @@ Otherwise, use the python package manager *inside a virtual environment* (`pytho
 pip install pyprland
 ```
 
-> [!tip]
-> In case you don't want to deal with `pip` or `virtualenv` and don't have it in your package manager, ensure you have `asyncio` python package installed and use the following command:
->
-> ```sh
-> curl https://raw.githubusercontent.com/hyprland-community/pyprland/main/scripts/get-pypr | sh
-> ```
-> To **completely** remove it from your system, run:
-> ```sh
-> sudo rm -fr /var/cache/pypr /usr/local/bin/pypr
-> ```
-
-
 ## Running
 
-> [!warning]
+> [!caution]
 > If you messed with something else than your OS packaging system to get `pypr` installed, use the full path to the `pypr` command.
 
 Preferably start the process with hyprland, adding to `hyprland.conf`:
@@ -113,7 +101,7 @@ or if you run into troubles (use the first version once your configuration is st
 exec-once = /usr/bin/pypr --debug /tmp/pypr.log
 ```
 
-> [!note]
+> [!warning]
 > To avoid issues (eg: you have a complex setup, maybe using a virtual environment), you may want to set the full path (eg: `/home/bob/venv/bin/pypr`).
 > You can get it from `which pypr` in a working terminal
 

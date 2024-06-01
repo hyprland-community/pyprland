@@ -14,7 +14,7 @@ Minimal example (uses `swaybg` by default):
 
 ```toml
 [wallpapers]
-path = "/home/fab/Images/wallpapers/" # path to the folder with background images
+path = "~/Images/wallpapers/" # path to the folder with background images
 unique = true # set a different wallpaper for each screen
 ```
 
@@ -22,12 +22,12 @@ More complex, using `swww` as a backend (not recommended because of its stabilit
 
 ```toml
 [wallpapers]
-path = "/home/fab/Images/wallpapers/"
+path = "~/Images/wallpapers/"
 interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
 recurse = true
 ## Using swww
-command = "swww img --transition-type any \"[file]\""
+command = 'swww img --transition-type any "[file]"'
 clear_command = "swww clear"
 ```
 
@@ -48,7 +48,7 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 path to a folder or list of folders that will be searched. Can also be a list, eg:
 
 ```toml
-path = ["/home/fab/Images/Portraits/", "/home/fab/Images/Landscapes/"]
+path = ["~/Images/Portraits/", "~/Images/Landscapes/"]
 ```
 
 ### `interval` (optional)

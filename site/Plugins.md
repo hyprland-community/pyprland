@@ -1,5 +1,6 @@
-- You can also install more plugins by using 3rd party or custom Python packages
-- "🌟" indicates some maturity & reliability level of the plugin, considering age, attention paid and complexity - from 0 to 3.
+This page lists every plugin provided by Pyprland out of the box, more can be enabled if you install the matching package.
+
+"🌟" indicates some maturity & reliability level of the plugin, considering age, attention paid and complexity - from 0 to 3.
 
 ## Standard plugins
 
