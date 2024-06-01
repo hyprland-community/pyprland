@@ -15,6 +15,7 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: menu,
+    logo: '/icon.png',
 
     sidebar: [
       {
