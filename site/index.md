@@ -62,7 +62,6 @@ cat <<EOF > ~/.config/hypr/pyprland.toml
 
  ```toml
 [pyprland]
-
 plugins = [
   "expose",
   "fetch_client_menu",
@@ -74,6 +73,7 @@ plugins = [
   "workspaces_follow_focus",
 ]
 
+# using variables for demonstration purposes (not needed)
 [pyprland.variables]
 term_classed = "kitty --class"
 
@@ -88,17 +88,18 @@ max_size = "1920px 100%"
 ```sh
 EOF
 
+
 cat <<EOF >> ~/.config/hypr/hyprland.conf
 exec-once = /usr/local/bin/pypr --debug /tmp/pypr.log
-bind = \$mainMod, A, exec, pypr toggle term
-bind = \$mainMod, B, exec, pypr expose
-bind = \$mainMod, J, exec, pypr change_workspace -1
-bind = \$mainMod, K, exec, pypr change_workspace +1
-bind = \$mainMod, N, exec, pypr toggle_special minimized
-bind = \$mainMod SHIFT, N, togglespecialworkspace, minimized
-bind = \$mainMod SHIFT, O, exec, pypr shift_monitors +1
-bind = \$mainMod SHIFT, Z, exec, pypr zoom ++0.5
-bind = \$mainMod, Z, exec, pypr zoom
+bind = \$mainMod, A, exec, pypr toggle term                  # toggles the "term" scratchpad visibility
+bind = \$mainMod, B, exec, pypr expose                       # exposes every window temporarily or "jump" to the fucused one
+bind = \$mainMod, J, exec, pypr change_workspace -1          # alternative multi-monitor workspace switcher
+bind = \$mainMod, K, exec, pypr change_workspace +1          # alternative multi-monitor workspace switcher
+bind = \$mainMod, N, exec, pypr toggle_special minimized     # toggle a window from/to the "minimized" special workspace
+bind = \$mainMod SHIFT, N, togglespecialworkspace, minimized   # toggle the "minimized" special workspace visibility
+bind = \$mainMod SHIFT, O, exec, pypr shift_monitors +1      # swaps workspaces between monitors
+bind = \$mainMod SHIFT, Z, exec, pypr zoom ++0.5             # zooms in the focused workspace
+bind = \$mainMod, Z, exec, pypr zoom                         # toggle zooming
 EOF
 ```
 
