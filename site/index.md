@@ -6,7 +6,7 @@ hero:
   text: "Hyprland extensions"
   tagline: Enhance your Hyprland experience with Pyprland
   image:
-    src: /logo.png
+    src: ./logo.png
     alt: logo
   actions:
     - theme: brand
