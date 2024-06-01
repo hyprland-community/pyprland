@@ -85,6 +85,7 @@ bind = \$mainMod, B, exec, pypr expose
 bind = \$mainMod, J, exec, pypr change_workspace -1
 bind = \$mainMod, K, exec, pypr change_workspace +1
 bind = \$mainMod, N, exec, pypr toggle_special minimized
+bind = \$mainMod SHIFT, N, togglespecialworkspace, minimized
 bind = \$mainMod SHIFT, O, exec, pypr shift_monitors +1
 bind = \$mainMod SHIFT, Z, exec, pypr zoom ++0.5
 bind = \$mainMod, Z, exec, pypr zoom
