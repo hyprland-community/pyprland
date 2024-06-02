@@ -154,14 +154,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         graph = build_graph(cleaned_config)
         need_change = self._update_positions(monitors, graph, cleaned_config)
         every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
-        if need_change:
-            if self.cast_bool(self.config.get("trim_offset"), True):
-                trim_offset(monitors)
+        if self.cast_bool(self.config.get("trim_offset"), True):
+            trim_offset(monitors)
 
-            for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-                await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
-            return True
-        return False
+        for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
+            await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
+        return need_change
 
     # Event handlers
 
