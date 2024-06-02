@@ -8,7 +8,7 @@
                     <span>&nbsp;{{ '🌟'.repeat(plugin.stars) }}</span>
                     <span>{{ plugin.multimon ? ' (multi-monitor)' : '' }}</span>
                 </h3>
-                <p>{{ plugin.description }}</p>
+                <p v-html="plugin.description" />
             </div>
             <a v-if="plugin.demoVideoId" :href="'https://www.youtube.com/watch?v=' + plugin.demoVideoId"
                 class="plugin-video">
@@ -111,7 +111,7 @@ export default {
                 {
                     name: 'gbar',
                     stars: 3,
-                    description: 'improves multi-monitor handling of the status bar - only *gBar* is supported at the moment'
+                    description: 'improves multi-monitor handling of the status bar - only <tt>gBar</tt> is supported at the moment'
                 },
                 {
                     name: 'expose',
@@ -133,7 +133,7 @@ export default {
                     name: 'workspaces_follow_focus',
                     multimon: true,
                     stars: 3,
-                    description: 'makes non visible workspaces available on the currently focused screen. If you think the multi-screen behavior of Hyprland is not usable or broken/unexpected, this is probably for you.'
+                    description: 'makes non visible workspaces available on the currently focused screen.<br/> If you think the multi-screen behavior of Hyprland is not usable or broken/unexpected, this is probably for you.'
 
                 },
                 {
