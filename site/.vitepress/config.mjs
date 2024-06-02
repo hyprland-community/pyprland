@@ -37,7 +37,6 @@ export default defineConfig({
           { text: "Lost windows", link: "lost_windows" },
           { text: "Magnify", link: "magnify" },
           { text: "Monitors", link: "monitors" },
-          { text: "Monitors", link: "monitors" },
           { text: "Scratchpads", link: "scratchpads" },
           { text: "Shift monitors", link: "shift_monitors" },
           { text: "Shortcuts menu", link: "shortcuts_menu" },
