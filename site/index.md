@@ -15,6 +15,9 @@ hero:
     - theme: alt
       text: Plugins
       link: /Plugins
+    - theme: alt
+      text: Report something
+      link: https://github.com/hyprland-community/pyprland/issues/new/choose
 
 features:
   - title: TOML format
