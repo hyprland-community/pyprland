@@ -39,6 +39,16 @@ This process targets quick testing and not recommended in the long run, use your
 
 Refer to the [Getting Started](/Getting-started) page for long term installation instructions.
 
+## Uninstall
+
+Before everything, the following installation method can fully be undone this way:
+
+ ```sh
+ sudo rm -fr /var/cache/pypr /usr/local/bin/pypr ; rm ~/.config/hypr/pyprland.toml
+ ```
+
+Ensure it's not conflicting with any existing file on your system before proceeding.
+
 ## Install
 
 > [!important]
@@ -106,11 +116,3 @@ EOF
 **Congratulations!**, you've installed and configured _Pyprland_.
 
 Check the [plugins](/Plugins) page to know more about each plugin and how to customize them.
-
-## Uninstall
-
- ```sh
- sudo rm -fr /var/cache/pypr /usr/local/bin/pypr
- ```
-
-
