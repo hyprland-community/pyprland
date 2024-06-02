@@ -42,6 +42,7 @@
 
 
 <script>
+
 export default {
     computed: {
         sortedPlugins() {
@@ -143,9 +144,8 @@ export default {
                 },
                 {
                     name: 'monitors',
-                    multimon: true,
                     stars: 3,
-                    description: 'allows relative placement of monitors'
+                    description: 'allows relative placement and configuration of monitors'
                 }
             ]
         }
