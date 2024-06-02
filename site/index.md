@@ -47,7 +47,7 @@ Before everything, the following installation method can fully be undone this wa
  sudo rm -fr /var/cache/pypr /usr/local/bin/pypr ; rm ~/.config/hypr/pyprland.toml
  ```
 
-Ensure it's not conflicting with any existing file on your system before proceeding.
+In case you already installed pyprland, ensure it's not conflicting with any existing file on your system before proceeding.
 
 ## Install
 
