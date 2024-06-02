@@ -19,9 +19,6 @@ In case your `hyprctl version -j` command isn't returning an accurate version, y
 hyprland_version = "0.41.0"
 ```
 
-> If a process isn't behaving properly, try `process_tracking = false` or `match_by = "class"`.
-> Check [this page](scratchpads_nonstandard).
-
 ## Unresponsive scratchpads
 
 Scratchpads aren't responding for few seconds after trying to show one (which didn't show!)
