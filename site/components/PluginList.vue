@@ -133,7 +133,7 @@ export default {
                     name: 'workspaces_follow_focus',
                     multimon: true,
                     stars: 3,
-                    description: 'makes non visible workspaces available on the currently focused screen.<br/>If you think the multi-screen behavior of Hyprland is not usable or broken/unexpected, this is probably for you.'
+                    description: 'makes non visible workspaces available on the currently focused screen. If you think the multi-screen behavior of Hyprland is not usable or broken/unexpected, this is probably for you.'
 
                 },
                 {
