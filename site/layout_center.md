@@ -7,6 +7,7 @@ On `toggle`, the active window is made floating and centered if the layout wasn'
 
 With `next` and `prev` you can cycle the active window, keeping the same layout type.
 If the layout_center isn't active and `next` or `prev` is used, it will call the "next" and "prev" configuration options.
+
 To allow full override of the focus keys, `next2` and `prev2` are provided, they do the same actions as "next" and "prev" but allow different fallback commands.
 
 <details>
@@ -44,13 +45,33 @@ bind = $mainMod, down, movefocus, d
 ## Command
 
 - `layout_center [command]` where *[command]* can be:
-  - toggle
-  - next
-  - prev
-  - next2
-  - prev2
+  - `toggle` : toggles the layout on and off
+  - `next`: switches to the next window (if layout is on) else runs the `next` command
+  - `prev`: switches to the previous window (if layout is on) else runs the `prev` command
+  - `next2`: switches to the next window (if layout is on) else runs the `next2` command
+  - `prev2`: switches to the previous window (if layout is on) else runs the `prev2` command
 
 ## Configuration
+
+### `on_new_client` (optional)
+
+Defaults to `"foreground"`.
+
+Changes the behavior when a new window opens, possible options are:
+
+- "foreground" to make the new window the main window
+- "background" to make the new window appear in the background
+- "close" to stop the centered layout when a new window opens
+
+### `style` (optional)
+
+Not set by default.
+
+Allow to set a list of styles to the main (centered) window, eg:
+
+```toml
+style = ["opacity 1", "bordercolor rgb(FFFF00)"]
+```
 
 ### `margin` (optional)
 
@@ -61,6 +82,11 @@ margin (in pixels) used when placing the center window, calculated from the bord
 Example to make the main window be 100px far from the monitor's limits:
 ```toml
 margin = 100
+```
+
+You can also set a different margin for width and height by using a list:
+```toml
+margin = [10, 60]
 ```
 
 ### `offset` (optional)
