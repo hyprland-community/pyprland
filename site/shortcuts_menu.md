@@ -93,13 +93,17 @@ You must define a list of objects, containing:
 > [!tip]
 > You can apply post-filters to the `command` output, eg:
 > ```toml
-> { name="entry", command="cliphist list", filter="s/\t.*//" }
+> {
+>   name="entry",
+>   command="cliphist list",
+>   filter="s/\t.*//"  # will remove everything after the TAB character
+> }
 > ```
 > check the [filters](filters) page for more details
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start` & `command_end` / `submenu_start` & `submenu_end`
+### `command_start` & `command_end` / `submenu_start` & `submenu_end` (optional)
 
 Allow adding some text (eg: icon) before / after a menu entry.
 
