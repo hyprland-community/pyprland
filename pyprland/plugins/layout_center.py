@@ -39,15 +39,14 @@ class Extension(CastBoolMixin, Plugin):
                 break
 
         if new_client:
+            self.last_index = new_client_idx
             if behavior == "background" and not new_client["floating"]:
                 # focus back to main client unless it's a floating window
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
-                self.last_index = i
             elif behavior == "foreground":
                 # make the new client the main window
                 await self.unprepare_window(clients)
                 self.main_window_addr = win_addr
-                self.last_index = new_client_idx
                 await self.prepare_window(clients)
             else:  # close
                 await self._run_toggle()
