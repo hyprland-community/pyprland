@@ -27,11 +27,30 @@ class Extension(CastBoolMixin, Plugin):
         if not self.enabled:
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
-        for i, cli in enumerate(await self.get_clients()):
-            if cli["address"] == win_addr and not cli["floating"]:
+
+        behavior = self.config.get("on_new_client", "focus")
+        new_client: ClientInfo | None = None
+        clients = await self.get_clients()
+        new_client_idx = 0
+        for i, cli in enumerate(clients):
+            if cli["address"] == win_addr:
+                new_client = cli
+                new_client_idx = i
+                break
+
+        if new_client:
+            if behavior == "background" and not new_client["floating"]:
+                # focus back to main client unless it's a floating window
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
                 self.last_index = i
-                break
+            elif behavior == "foreground":
+                # make the new client the main window
+                await self.unprepare_window(clients)
+                self.main_window_addr = win_addr
+                self.last_index = new_client_idx
+                await self.prepare_window(clients)
+            else:  # close
+                await self._run_toggle()
 
     async def event_activewindowv2(self, _: str) -> None:
         """Keep track of focused client."""
@@ -74,6 +93,8 @@ class Extension(CastBoolMixin, Plugin):
 
     async def on_reload(self) -> None:
         """Loads the configuration and apply the tag style."""
+        if not self.config.get("style"):
+            return
         await self.hyprctl("windowrulev2 unset, tag:layout_center")
         commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
         if commands:
@@ -95,7 +116,9 @@ class Extension(CastBoolMixin, Plugin):
         for cli in clients:
             if cli["address"] == addr and cli["floating"]:
                 await self.hyprctl(f"togglefloating address:{addr}")
-                await self.hyprctl(f"tagwindow -layout_center address:{addr}")
+                if self.config.get("style"):
+                    await self.hyprctl(f"tagwindow -layout_center address:{addr}")
+                break
 
     async def prepare_window(self, clients: list[ClientInfo] | None = None) -> None:
         """Set the window as centered."""
@@ -105,7 +128,9 @@ class Extension(CastBoolMixin, Plugin):
         for cli in clients:
             if cli["address"] == addr and not cli["floating"]:
                 await self.hyprctl(f"togglefloating address:{addr}")
-                await self.hyprctl(f"tagwindow +layout_center address:{addr}")
+                if self.config.get("style"):
+                    await self.hyprctl(f"tagwindow +layout_center address:{addr}")
+                break
         width = 100
         height = 100
         x, y = self.offset
