@@ -48,7 +48,7 @@ try:
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    if len(original_ipc_folder) > MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
+    if len(original_ipc_folder) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
         IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
         # make a link from short path to original path
         if not os.path.exists(IPC_FOLDER):
