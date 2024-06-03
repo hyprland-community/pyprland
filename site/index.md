@@ -11,10 +11,10 @@ hero:
   actions:
     - theme: brand
       text: Getting started
-      link: /Getting-started
+      link: ./Getting-started
     - theme: alt
       text: Plugins
-      link: /Plugins
+      link: ./Plugins
     - theme: alt
       text: Report something
       link: https://github.com/hyprland-community/pyprland/issues/new/choose
