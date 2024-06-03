@@ -9,7 +9,7 @@
 from collections import defaultdict
 from typing import Any, cast
 
-from ..common import CastBoolMixin, state
+from ..common import CastBoolMixin, is_rotated, state
 from ..types import ClientInfo
 from .interface import Plugin
 
@@ -107,6 +107,8 @@ class Extension(CastBoolMixin, Plugin):
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin)
                 height = monitor["height"] - (2 * margin)
+                if is_rotated(monitor):
+                    width, height = height, width
                 x += monitor["x"] + margin
                 y += monitor["y"] + margin
                 break
