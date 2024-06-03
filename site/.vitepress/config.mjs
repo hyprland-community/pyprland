@@ -6,7 +6,7 @@ const version_names = ['2.3.5']
 const extra_versions = {
   items: [
     {
-      text: 'Latest (Git)',
+      text: 'Latest',
       link: '/'
     }
   ]
@@ -26,11 +26,12 @@ const menu = [
   { text: 'Plugins', link: './Plugins' },
   { text: 'Troubleshooting', link: './Troubleshooting' },
   { text: 'Development', link: './Development' },
-
 ]
 
 const plugin_list = {
-  text: 'Built-in plugins',
+  text: 'Featured plugins',
+  collapsible: true,
+  collapsed: true,
   items: [
     { text: "Expose", link: "./expose" },
     { text: "Fetch client menu", link: "./fetch_client_menu" },
@@ -66,18 +67,16 @@ export default defineConfig({
       level: 2,
     },
     sidebar: {
+      collapsible: true,
+      collapsed: true,
       '/versions': [
-        {
-          text: 'Navigation',
-          items: menu,
-        },
         plugin_list,
+        {
+          text: 'Return to latest version',
+          link: '/'
+        }
       ],
       '/': [
-        {
-          text: 'Navigation',
-          items: menu,
-        },
         plugin_list,
         {
           text: 'Versions',
