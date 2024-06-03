@@ -2,8 +2,6 @@
 
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
 
-> _Added in version 1.9.0_
-
 <details>
    <summary>Configuration example</summary>
 
@@ -37,7 +35,7 @@ Relayout = "pypr relayout"
 
   If "name" is provided it will show the given sub-menu.
 
-  - On versions >= 1.10.2 you can use "." to reach any level of the configured menus.
+  - You can use "." to reach any level of the configured menus.
       Example to reach `[shortcuts_menu.entries.utils."local commands"]`:
       ```sh
        pypr menu "utils.local commands"
@@ -66,7 +64,7 @@ Submenus can be defined too (there is no depth limit):
 foobar = "ls"
 ```
 
-#### Advanced usage (since version 1.10)
+#### Advanced usage
 
 Instead of navigating a configured list of menu options and running a pre-defined command, you can collect various *variables* (either static list of options selected by the user, or generated from a shell command) and then run a command using those variables. Eg:
 
@@ -93,7 +91,7 @@ You must define a list of objects, containing:
     - `command` to get the list of options from a shell command's output
 
 > [!tip]
-> Since 2.0.2 you can apply post-filters to the `command` output, eg:
+> You can apply post-filters to the `command` output, eg:
 > ```toml
 > {name="entry", command="cliphist list", filter="s/\t.*//"},
 > ```
@@ -103,8 +101,6 @@ The last item of the list must be a string which is the command to run. Variable
 
 ### `command_start` & `command_end` / `submenu_start` & `submenu_end`
 
-> _Added in 1.10.2_
-
 Allow adding some text (eg: icon) before / after a menu entry.
 
 command_* is for final commands, while submenu_* is for entries leading to another menu.
@@ -112,8 +108,6 @@ command_* is for final commands, while submenu_* is for entries leading to anoth
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
 ### `skip_single` (optional)
-
-> _Added in version 2.0_
 
 Defaults to `true`.
 When disabled, shows the menu even for single options

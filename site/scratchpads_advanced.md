@@ -17,12 +17,10 @@ Use `hysteresis` to change the reactivity
 
 ## `hysteresis` (optional)
 
-> _Added in 2.0.1_
-
 Defaults to `0.4` (seconds)
 
 Controls how fast a scratchpad hiding on unfocus will react. Check `unfocus` option.
-Set to `0` to disable (immediate reaction, as in versions < 2.0.1)
+Set to `0` to disable.
 
 > [!important]
 > Only relevant when `unfocus="hide"` is used.
@@ -34,7 +32,7 @@ default value is `60`.
 number of pixels separating the scratchpad from the screen border, depends on the [animation](#animation) set.
 
 > [!tip]
-> Since version 2.2.4 it is also possible to set a string to express percentages of the screen (eg: '`3%`').
+> It is also possible to set a string to express percentages of the screen (eg: '`3%`').
 
 ## `max_size` (optional)
 
@@ -61,8 +59,6 @@ when set to `true`, prevents the command from being started when pypr starts, it
 
 ## `preserve_aspect` (optional)
 
-> _Added in 2.0.7_
-
 Not set by default.
 When set to `true`, will preserve the size and position of the scratchpad when called repeatedly from the same monitor and workspace even though an `animation` , `position` or `size` is used (those will be used for the initial setting only).
 
@@ -75,13 +71,11 @@ In pixels, default to `0` (client's window size + margin).
 Number of pixels for the **hide** sliding animation (how far the window will go).
 
 > [!tip]
-> - Since version 2.2.4 it is also possible to set a string to express percentages of the client window
+> - It is also possible to set a string to express percentages of the client window
 > - `margin` is automatically added to the offset
 > - automatic (value not set) is same as `"100%"`
 
 ## `hide_delay` (optional)
-
-> _Added in 2.2.4_
 
 Defaults to `0.2`
 
@@ -99,13 +93,9 @@ Enabled by default, set to `false` if you don't want the focused state to be res
 
 ## `force_monitor` (optional)
 
-> _Added in 2.1.1_
-
 If set to some monitor name (eg: `"DP-1"`), it will always use this monitor to show the scratchpad.
 
 ## `alt_toggle` (optional)
-
-> _Added in 2.2.4_
 
 Default value is `false`
 
@@ -116,16 +106,12 @@ Instead of moving the scratchpad to the focused screen, it will hide the scratch
 
 ## `allow_special_workspaces` (optional)
 
-> _Added in 2.2.9_
-
 Default value is `false` (can't be enabled when using *Hyprland* < 0.39 where this behavior can't be controlled and is disabled).
 
 When enabled, you can toggle a scratchpad over a special workspace.
 It will always use the "normal" workspace otherwise.
 
 ## `smart_focus` (optional)
-
-> _Added in 2.2.13_
 
 Default value is `true`.
 

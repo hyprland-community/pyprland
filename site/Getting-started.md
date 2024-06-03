@@ -9,8 +9,8 @@ The `pypr` tool only have a few built-in commands:
 
 - `help` lists available commands (including plugins commands)
 - `exit` will terminate the service process
-- `edit` edit the configuration using your `$EDITOR` (or `vi`), reloads on exit - added in 2.2.4
-- `dumpjson` shows a JSON representation of the configuration (after other files have been `include`d) - added in 2.2.11
+- `edit` edit the configuration using your `$EDITOR` (or `vi`), reloads on exit
+- `dumpjson` shows a JSON representation of the configuration (after other files have been `include`d)
 - `reload` reads the configuration file and apply some changes:
   - new plugins will be loaded
   - configuration items will be updated (most plugins will use the new values on the next usage)

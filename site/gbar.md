@@ -4,8 +4,6 @@ Runs [gBar](https://github.com/scorpion-26/gBar) on the "best" monitor from a li
 
 Will take care of starting gbar on startup (you must not run it from another source like `hyprland.conf`).
 
-> _Added in 2.2.6_
-
 ## Commands
 
 - `gbar restart` - Restart/refresh gBar on the "best" monitor.

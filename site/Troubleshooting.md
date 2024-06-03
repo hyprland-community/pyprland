@@ -10,8 +10,6 @@ If the client says it can't connect, then there is a high chance pypr daemon did
 
 ## Force hyprland version
 
-_Added in 2.3.3_
-
 In case your `hyprctl version -j` command isn't returning an accurate version, you can make Pyprland ignore it and use a provided value instead:
 
 ```toml

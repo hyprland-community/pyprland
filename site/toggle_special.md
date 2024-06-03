@@ -13,8 +13,6 @@ bind = $mainMod, N, exec, pypr toggle_special stash # moves window to/from the "
 
 No other configuration needed, here `MOD+SHIFT+N` will show every window in "stash" while `MOD+N` will move the focused window out of it/ to it.
 
-> _Added in version 1.8.0_
-
 ## Commands
 
 - `toggle_special [name]`: moves the focused window to the special workspace `name`, or move it back to the active workspace.

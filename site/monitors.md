@@ -67,7 +67,7 @@ Supported placements are:
 
 You can separate the terms with "_" to improve the readability, as in "top_center_of".
 
-#### monitor settings (since 2.3.2)
+#### monitor settings
 
 Not only can you place monitors relatively to each other, but you can also set specific settings for a given monitor.
 
@@ -104,8 +104,6 @@ You can change this value using this option.
 
 ### `hotplug_command` (optional)
 
-> _Added in 2.3.0_
-
 None by default, allows to run a command when any monitor is plugged.
 
 
@@ -115,8 +113,6 @@ hotplug_commands = "wlrlui -m"
 ```
 
 ### `hotplug_commands` (optional)
-
-> _Added in 2.2.16_
 
 None by default, allows to run a command when a given monitor is plugged.
 
@@ -129,8 +125,6 @@ Example to load a specific profile using [wlr layout ui](https://github.com/fdev
 
 ### `unknown` (optional)
 
-> _Added in 2.3.0_
-
 None by default,
 allows to run a command when no monitor layout has been changed (no rule applied).
 
@@ -140,8 +134,6 @@ unknown = "wlrlui"
 ```
 
 ### `trim_offset` (optional)
-
-> _Added in 2.3.2_
 
 `true` by default,
 

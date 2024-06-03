@@ -63,7 +63,7 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 - `attach`  toggles attaching/anchoring the currently focused window to the (last used) scratchpad
 
 > [!note]
-> In version 2.3.5 and up, you can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
+> You can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
 > You'll need to quote or escape the `*` character to avoid interpretation from your shell.
 
 ## Configuration
@@ -133,8 +133,6 @@ class = "term_quake"
 
 ### `multi` (optional)
 
-> _Added in 2.2.13_
-
 Defaults to `true`.
 
 When set to `false`, only one client window is supported for this scratchpad.
@@ -154,8 +152,6 @@ like progressive web apps (PWA) or emacsclient, use only if you can't get it to 
 You can also find more
 
 ## Monitor specific overrides
-
-> _Added in 2.0.6_
 
 You can use different settings for a specific screen.
 Most attributes related to the display can be changed (not `command`, `class` or `process_tracking` for instance).

@@ -10,8 +10,6 @@ This feature can also be provided by this plugin in the future, faster [if reque
 
 Sample `hyprland.conf`:
 
-> _Added in 1.10_
-
 ## Commands
 
 - `fetch_client_menu`: display the menu allowing selection of the client to show

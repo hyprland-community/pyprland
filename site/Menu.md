@@ -30,7 +30,7 @@ Extra parameters added to the engine command, the default value is specific to e
 > In general, *rofi*-like programs will require at least `-dmenu` option.
 
 > [!tip]
-> *Since version 2.0*, you can use '[prompt]' in the parameters, it will be replaced by the prompt, eg:
+> You can use '[prompt]' in the parameters, it will be replaced by the prompt, eg:
 > ```sh
 > -dmenu -matching fuzzy -i -p '[prompt]'
 > ```

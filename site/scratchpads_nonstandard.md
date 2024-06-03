@@ -2,8 +2,6 @@
 
 ## `skip_windowrules` (optional)
 
-> _Added in 2.2.17_
-
 Default value is `[]`
 Allows you to skip the window rules for a specific scratchpad.
 Available rules are:
@@ -24,8 +22,6 @@ skip_windowrules = ["aspect", "workspace"]
 ```
 
 ## `match_by` (optional)
-
-> _Added in 2.2.5_
 
 Default value is `"pid"`
 When set to a sensitive client property value (eg: `class`, `initialClass`, `title`, `initialTitle`), will match the client window using the provided property instead of the PID of the process.
@@ -61,13 +57,6 @@ title = "re:.*some string.*"
 > class = "Emacs"
 > match_by = "class"
 > ```
-
-## `class_match` (DEPRECATED)
-
-> [!important]
-> Has been replaced by `match_by` in versions > 2.2.4
-
-Will set `match_by="class"` if set to `true` - support will be dropped in the future.
 
 ## `process_tracking` (optional)
 

@@ -10,8 +10,6 @@ It serves two purposes:
 
 It allows "zapping" current backgrounds, clearing it to go distraction free and optionally make them different for each screen.
 
-> _Added in version 2.2.0, format changed in 2.2.5_
-
 <details>
     <summary>Minimal example (uses swaybg by default)</summary>
 
@@ -97,8 +95,6 @@ defaults to `false`
 When enabled, will also search sub-directories recursively.
 
 ### `unique` (optional)
-
-> _Added in 2.2.5_
 
 defaults to `false`
 

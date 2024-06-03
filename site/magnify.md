@@ -5,8 +5,8 @@
 - `zoom [value]`
     - If no value is provided, toggles magnification.
     - If an integer is provided, it will set as scaling factor.
-    - If this integer is prefixed with "+" or "-", it will *update* the current scale factor (added in version 2.1.4).
-        - Use "++" or "--", to use a more natural non-linear scale (added in version 2.2.9).
+    - If this integer is prefixed with "+" or "-", it will *update* the current scale factor.
+        - Use "++" or "--", to use a more natural non-linear scale.
 
 > [!NOTE]
 >
@@ -42,8 +42,6 @@ pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
 ```
 
 ### `duration` (optional)
-
-> _Added in version 2.2.9_
 
 Default value is `15`
 
