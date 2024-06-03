@@ -72,6 +72,13 @@ class Extension(CastBoolMixin, Plugin):
         else:
             await self.notify_error(f"unknown layout_center command: {what}")
 
+    async def on_reload(self) -> None:
+        """Loads the configuration and apply the tag style."""
+        await self.hyprctl("windowrulev2 unset, tag:layout_center")
+        commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
+        if commands:
+            await self.hyprctl(commands)
+
     # Utils
 
     async def get_clients(self, *_) -> list[ClientInfo]:  # pylint: disable=arguments-differ
@@ -88,6 +95,7 @@ class Extension(CastBoolMixin, Plugin):
         for cli in clients:
             if cli["address"] == addr and cli["floating"]:
                 await self.hyprctl(f"togglefloating address:{addr}")
+                await self.hyprctl(f"tagwindow -layout_center address:{addr}")
 
     async def prepare_window(self, clients: list[ClientInfo] | None = None) -> None:
         """Set the window as centered."""
@@ -97,6 +105,7 @@ class Extension(CastBoolMixin, Plugin):
         for cli in clients:
             if cli["address"] == addr and not cli["floating"]:
                 await self.hyprctl(f"togglefloating address:{addr}")
+                await self.hyprctl(f"tagwindow +layout_center address:{addr}")
         width = 100
         height = 100
         x, y = self.offset
