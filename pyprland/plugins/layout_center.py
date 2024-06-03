@@ -133,17 +133,18 @@ class Extension(CastBoolMixin, Plugin):
         width = 100
         height = 100
         x, y = self.offset
-        margin = self.margin
+        m = self.margin
+        margin: tuple[int, int] = (m, m) if isinstance(m, int) else m
         scale = 1
         for monitor in cast(list[dict[str, Any]], await self.hyprctl_json("monitors")):
             scale = monitor["scale"]
             if monitor["focused"]:
-                width = monitor["width"] - (2 * margin)
-                height = monitor["height"] - (2 * margin)
+                width = monitor["width"] - (2 * margin[0])
+                height = monitor["height"] - (2 * margin[1])
                 if is_rotated(cast(MonitorInfo, monitor)):
                     width, height = height, width
-                x += monitor["x"] + margin
-                y += monitor["y"] + margin
+                x += monitor["x"] + margin[0]
+                y += monitor["y"] + margin[1]
                 break
         await self.hyprctl(f"resizewindowpixel exact {int(width / scale)} {int(height / scale)},address:{addr}")
         await self.hyprctl(f"movewindowpixel exact {int(x / scale)} {int(y / scale)},address:{addr}")
