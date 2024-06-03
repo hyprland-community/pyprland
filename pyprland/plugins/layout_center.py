@@ -34,14 +34,17 @@ class Extension(CastBoolMixin, Plugin):
         new_client_idx = 0
         for i, cli in enumerate(clients):
             if cli["address"] == win_addr:
+                if cli["floating"]:
+                    # Ignore floating windows
+                    return
                 new_client = cli
                 new_client_idx = i
                 break
 
         if new_client:
             self.last_index = new_client_idx
-            if behavior == "background" and not new_client["floating"]:
-                # focus back to main client unless it's a floating window
+            if behavior == "background":
+                # focus the main client
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
             elif behavior == "foreground":
                 # make the new client the main window
