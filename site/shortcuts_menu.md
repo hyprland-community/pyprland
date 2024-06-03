@@ -86,14 +86,14 @@ Instead of navigating a configured list of menu options and running a pre-define
 
 You must define a list of objects, containing:
 - `name`: the variable name
-- then the list of options, must one of:
+- then the list of options, must be one of:
     - `options` for a static list of options
     - `command` to get the list of options from a shell command's output
 
 > [!tip]
 > You can apply post-filters to the `command` output, eg:
 > ```toml
-> {name="entry", command="cliphist list", filter="s/\t.*//"},
+> { name="entry", command="cliphist list", filter="s/\t.*//" }
 > ```
 > check the [filters](filters) page for more details
 
