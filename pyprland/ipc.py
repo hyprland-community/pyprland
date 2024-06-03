@@ -158,6 +158,8 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     resp = await ctl_reader.read(100)
     ctl_writer.close()
     await ctl_writer.wait_closed()
+    # remove "\n" from the response
+    resp = b"".join(resp.split(b"\n"))
     r: bool = resp == b"ok" * nb_cmds
     if not r:
         logger.error("FAILED %s", resp)
