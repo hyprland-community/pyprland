@@ -46,13 +46,13 @@ class Extension(CastBoolMixin, Plugin):
             if behavior == "background":
                 # focus the main client
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
-            elif behavior == "foreground":
+            elif behavior == "close":
+                await self._run_toggle()
+            else:  # foreground
                 # make the new client the main window
                 await self.unprepare_window(clients)
                 self.main_window_addr = win_addr
                 await self.prepare_window(clients)
-            else:  # close
-                await self._run_toggle()
 
     async def event_activewindowv2(self, _: str) -> None:
         """Keep track of focused client."""
