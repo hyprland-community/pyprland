@@ -19,22 +19,23 @@ class Extension(Plugin):
 
     def _run_gbar(self, cmd: str) -> None:
         """Create ongoing task restarting gbar in case of crash."""
+        if self.ongoing_task:
+            self.ongoing_task.cancel()
 
         async def _run_loop() -> None:
             prev_time = time()
             while True:
+                self.cur_monitor = await self.get_best_monitor()
+                now = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 await self.proc.wait()
-                now = time()
-                delay = 5 - (now - prev_time)
-                text = f"gBar crashed, restarting in {delay:.1f}s." if delay > 0 else "gBar crashed, restarting."
-                await self.notify_error(f"gBar crashed, {text}")
+                delay = 60 - (now - prev_time)
+                text = f"gBar crashed, restarting in {delay // 2}s." if delay > 0 else "gBar crashed, restarting."
+                await self.notify_error(text)
                 prev_time = now
                 if delay > 0:
-                    await asyncio.sleep(delay)
+                    await asyncio.sleep(delay / 2)
 
-        if self.ongoing_task:
-            self.ongoing_task.cancel()
         self.ongoing_task = asyncio.create_task(_run_loop())
 
     async def run_gbar(self, args: str) -> None:
@@ -59,8 +60,10 @@ class Extension(Plugin):
     async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
         preferred: list[str] = self.config.get("monitors", [])
+        monitors = [m for m in await self.hyprctl_json("monitors") if m.get("currentFormat") != "Invalid"]
+        names = [m["name"] for m in monitors]
         for monitor in preferred:
-            if monitor in state.monitors:
+            if monitor in names:
                 return monitor
         return ""
 
