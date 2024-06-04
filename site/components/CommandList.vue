@@ -1,10 +1,9 @@
 <template>
     <dl>
     </dl>
-    <template v-for="command in commands" :key="command.name">
-        <dl><code>{{ command.name }}</code></dl>
-        <dt v-html="command.description"> </dt>
-    </template>
+    <ul v-for="command in commands" :key="command.name">
+        <li><code>{{ command.name }}</code> <span v-html="command.description" /></li>
+    </ul>
 </template>
 
 <script>
