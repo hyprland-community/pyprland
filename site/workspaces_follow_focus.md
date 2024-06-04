@@ -27,6 +27,6 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 ## Configuration
 
-### `max_workspaces`
+### `max_workspaces` (optional)
 
 Limits the number of workspaces when switching, defaults value is `10`.
