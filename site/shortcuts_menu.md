@@ -32,11 +32,10 @@ Relayout = "pypr relayout"
 ## Command
 
 - `menu [name]`: shows a list of options which have been configured in "entries".
-
-  If "name" is provided it will show the given sub-menu.
-
+  - If "name" is provided it will show the given sub-menu.
   - You can use "." to reach any level of the configured menus.
-      Example to reach `[shortcuts_menu.entries.utils."local commands"]`:
+
+      Example to reach `shortcuts_menu.entries.utils."local commands"`, use:
       ```sh
        pypr menu "utils.local commands"
       ```
@@ -94,12 +93,12 @@ You must define a list of objects, containing:
 > You can apply post-filters to the `command` output, eg:
 > ```toml
 > {
->   name="entry",
->   command="cliphist list",
->   filter="s/\t.*//"  # will remove everything after the TAB character
+>   name = "entry",
+>   command = "cliphist list",
+>   filter = "s/\t.*//"  # will remove everything after the TAB character
 > }
 > ```
-> check the [filters](filters) page for more details
+> check the [filters](./filters) page for more details
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
