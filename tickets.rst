@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 49
+:total-count: 50
 
 --------------------------------------------------------------------------------
 
@@ -145,4 +145,13 @@ Add a fallback to aiofiles (removes one dependency)
 
 :bugid: 49
 :created: 2024-06-02T01:41:33
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+Generalize a "monitors" call filtering out the invalid ones (cf gBar)
+=====================================================================
+
+:bugid: 50
+:created: 2024-06-04T22:53:36
 :priority: 0
