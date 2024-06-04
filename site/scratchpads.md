@@ -50,7 +50,7 @@ Note that when `class` is provided, the window is automatically managed by pyprl
 When you create a scratchpad called "name", it will be hidden in `special:scratch_<name>`.
 
 > [!note]
-> If you wish to have a more generic space for any application you may run, check [toggle_special](toggle_special).
+> If you wish to have a more generic space for any application you may run, check [toggle_special](./toggle_special).
 
 </details>
 
@@ -72,7 +72,7 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 
 This is the command you wish to run in the scratchpad.
 
-It supports [Variables](Variables)
+It supports [Variables](./Variables)
 
 ### `animation` (optional)
 
@@ -138,15 +138,12 @@ Defaults to `true`.
 When set to `false`, only one client window is supported for this scratchpad.
 Otherwise other matching windows will be **attach**ed to the scratchpad.
 
-In case your scratchpad application spawns multiple windows and run
-into troubles check [skip_windowrules](scratchpads_nonstandard#skip_windowrules) option.
-
 ## Advanced configuration
 
 To go beyond the basic setup and have a look at every configuration item, you can read the following pages:
 
-- [Advanced](scratchpads_advanced) contains options for fine-tuners or specific tastes (eg: i3 compatibility)
-- [Non-Standard](scratchpads_nonstandard) contains options for "broken" applications
+- [Advanced](./scratchpads_advanced) contains options for fine-tuners or specific tastes (eg: i3 compatibility)
+- [Non-Standard](./scratchpads_nonstandard) contains options for "broken" applications
 like progressive web apps (PWA) or emacsclient, use only if you can't get it to work otherwise
 
 You can also find more

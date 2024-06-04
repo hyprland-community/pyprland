@@ -86,7 +86,7 @@ The pattern is any regular expression.
 
 #### filter
 
-The [filters](filters) allows to change the text before the notification, eg:
+The [filters](./filters) allows to change the text before the notification, eg:
 `filter="s/.*special value: (\d+)/Value=\1/"`
 will set a filter so a string "special value: 42" will lead to the notification "Value=42"
 

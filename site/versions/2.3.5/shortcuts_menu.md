@@ -45,11 +45,11 @@ Relayout = "pypr relayout"
 
 ## Configuration
 
-All the [Menu](Menu) configuration items are also available.
+All the [Menu](./Menu) configuration items are also available.
 
 ### `entries`
 
-Defines the menu entries. Supports [Variables](Variables)
+Defines the menu entries. Supports [Variables](./Variables)
 
 ```toml
 [shortcuts_menu.entries]

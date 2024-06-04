@@ -29,7 +29,7 @@ Set to `0` to disable.
 
 default value is `60`.
 
-number of pixels separating the scratchpad from the screen border, depends on the [animation](#animation) set.
+number of pixels separating the scratchpad from the screen border, depends on the [animation](./scratchpads#animation) set.
 
 > [!tip]
 > It is also possible to set a string to express percentages of the screen (eg: '`3%`').

@@ -34,13 +34,13 @@ It's a software that extends the functionality of the great [Hyprland](https://h
 
 It also enables a high degree of customization and automation, making it easier to adapt to your workflow.
 
-To understand the potential of Pyprland, you can check the [plugins](/Plugins) page.
+To understand the potential of Pyprland, you can check the [plugins](./Plugins) page.
 
 # Quick start
 
 This process targets quick testing and not recommended in the long run, use your OS packages if possible.
 
-Refer to the [Getting Started](/Getting-started) page for long term installation instructions.
+Refer to the [Getting Started](./Getting-started) page for long term installation instructions.
 
 ## Uninstall
 
@@ -118,4 +118,4 @@ EOF
 
 **Congratulations!**, you've installed and configured _Pyprland_.
 
-Check the [plugins](/Plugins) page to know more about each plugin and how to customize them.
+Check the [plugins](./Plugins) page to know more about each plugin and how to customize them.

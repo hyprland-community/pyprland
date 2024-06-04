@@ -2,7 +2,7 @@
 
 Implements the "expose" effect, showing every client window on the focused screen.
 
-For a similar feature using a menu, try the [fetch_client_menu](fetch_client_menu) plugin (less intrusive).
+For a similar feature using a menu, try the [fetch_client_menu](./fetch_client_menu) plugin (less intrusive).
 
 Sample `hyprland.conf`:
 
@@ -19,7 +19,7 @@ workspace = special:exposed,gapsout:60,gapsin:30,bordersize:5,border:true,shadow
 Check [workspace rules](https://wiki.hyprland.org/Configuring/Workspace-Rules/#rules) for styling options.
 
 > [!note]
-> If you are looking for `toggle_minimized`, check the [toggle_special](toggle_special) plugin
+> If you are looking for `toggle_minimized`, check the [toggle_special](./toggle_special) plugin
 
 ## Commands
 

@@ -15,7 +15,7 @@ The `pypr` tool only have a few built-in commands:
   - new plugins will be loaded
   - configuration items will be updated (most plugins will use the new values on the next usage)
 
-Other commands are implemented by adding [plugins](Plugins).
+Other commands are implemented by adding [plugins](./Plugins).
 
 > [!important]
 > - with no argument it runs the daemon (doesn't fork in the background)
@@ -46,14 +46,14 @@ plugin_option = 42
 suboption = "config value"
 ```
 
-You can also split your configuration into [Multiple configuration files](MultipleConfigurationFiles).
+You can also split your configuration into [Multiple configuration files](./MultipleConfigurationFiles).
 
 ## Installation
 
 Check your OS package manager first, eg:
 
 - Archlinux: you can find it on AUR, eg with [yay](https://github.com/Jguer/yay): `yay pyprland`
-- NixOS: Instructions in the [Nix](Nix) page
+- NixOS: Instructions in the [Nix](./Nix) page
 
 Otherwise, use the python package manager *inside a virtual environment* (`python -m venv somefolder && source ./somefolder/bin/activate`):
 
@@ -180,4 +180,4 @@ bind = $mainMod,V,exec,pypr toggle volume
 > [!tip]
 > Consult or share [configuration files](https://github.com/hyprland-community/pyprland/tree/main/examples)
 >
-> You might also be interested in [optimizations](Optimizations).
+> You might also be interested in [optimizations](./Optimizations).

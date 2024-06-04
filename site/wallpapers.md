@@ -66,7 +66,7 @@ How long (in minutes) a background should stay in place
 
 Overrides the default command to set the background image.
 
-[variables](Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path. eg:
+[variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path. eg:
 
 ```
 swaybg -m fill -i "[file]"
@@ -100,6 +100,6 @@ defaults to `false`
 
 When enabled, will set a different wallpaper for each screen.
 
-If you are not using the default application, ensure you are using "[output]" in the [command](#command) template.
+If you are not using the default application, ensure you are using `"[output]"` in the [command](#command) template.
 
-Example for swaybg: `swaybg -o [output] -m fill -i "[file]"`
+Example for swaybg: `swaybg -o "[output]" -m fill -i "[file]"`
