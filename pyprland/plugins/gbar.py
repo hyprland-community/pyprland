@@ -17,7 +17,7 @@ class Extension(Plugin):
 
     ongoing_task: asyncio.Task | None = None
 
-    def _run_gbar(self, cmd: str) -> None:
+    def _run_gbar(self) -> None:
         """Create ongoing task restarting gbar in case of crash."""
         if self.ongoing_task:
             self.ongoing_task.cancel()
@@ -25,7 +25,8 @@ class Extension(Plugin):
         async def _run_loop() -> None:
             prev_time = time()
             while True:
-                self.cur_monitor = await self.get_best_monitor()
+                await self.set_best_monitor()
+                cmd = f"gBar bar {self.cur_monitor}"
                 now = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 await self.proc.wait()
@@ -44,18 +45,12 @@ class Extension(Plugin):
             self.kill()
             await self.on_reload()
 
-    async def on_reload(self) -> None:
-        """Initialize if not done."""
-        if not self.proc:
-            self.cur_monitor = await self.get_best_monitor()
-            if not self.cur_monitor:
-                first_mon = next(iter(state.monitors))
-                await self.notify_info(f"gBar: No preferred monitor found, using {first_mon}")
-                cmd = f"gBar bar {first_mon}"
-            else:
-                cmd = f"gBar bar {self.cur_monitor}"
-            self.log.info("starting gBar: %s", cmd)
-            self._run_gbar(cmd)
+    async def set_best_monitor(self) -> None:
+        """Set the best monitor to use in `cur_monitor`."""
+        self.cur_monitor = await self.get_best_monitor()
+        if not self.cur_monitor:
+            self.cur_monitor = next(iter(state.monitors))
+            await self.notify_info(f"gBar: No preferred monitor found, using {self.cur_monitor}")
 
     async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
