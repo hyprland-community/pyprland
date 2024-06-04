@@ -79,10 +79,10 @@ It supports [Variables](./Variables)
 Type of animation to use, default value is "fromTop":
 
 - `null` / `""` (no animation)
-- "fromTop" (stays close to top screen border)
-- "fromBottom" (stays close to bottom screen border)
-- "fromLeft" (stays close to left screen border)
-- "fromRight" (stays close to right screen border)
+- `fromTop` (stays close to top screen border)
+- `fromBottom` (stays close to bottom screen border)
+- `fromLeft` (stays close to left screen border)
+- `fromRight` (stays close to right screen border)
 
 ### `size` (recommended)
 
@@ -93,13 +93,13 @@ Each time scratchpad is shown, window will be resized according to the provided 
 For example on monitor of size `800x600` and `size= "80% 80%"` in config scratchpad always have size `640x480`,
 regardless of which monitor it was first launched on.
 
-#### Format
-
-String with "x y" (or "width height") values using some units suffix:
-
-- **percents** relative to the focused screen size (`%` suffix), eg: `60% 30%`
-- **pixels** for absolute values (`px` suffix), eg: `800px 600px`
-- a mix is possible, eg: `800px 40%`
+> #### Format
+>
+> String with "x y" (or "width height") values using some units suffix:
+>
+> - **percents** relative to the focused screen size (`%` suffix), eg: `60% 30%`
+> - **pixels** for absolute values (`px` suffix), eg: `800px 600px`
+> - a mix is possible, eg: `800px 40%`
 
 ### `class` (recommended)
 
