@@ -5,8 +5,7 @@ import os.path
 import random
 from collections.abc import AsyncIterator
 
-from aiofiles.os import listdir
-
+from ..aioops import ailistdir
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
@@ -18,7 +17,7 @@ def expand_path(path: str) -> str:
 
 async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = True) -> AsyncIterator[str]:
     """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders.."""
-    for fname in await listdir(path):
+    for fname in await ailistdir(path):
         ext = fname.rsplit(".", 1)[-1]
         full_path = os.path.join(path, fname)
         if ext.lower() in extensions:

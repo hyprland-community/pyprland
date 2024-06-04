@@ -7,9 +7,7 @@ import os
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
-from aiofiles import open as aiopen
-from aiofiles import os as aios
-
+from ...aioops import aiexists, aiopen
 from ...common import CastBoolMixin, state
 from ...ipc import notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
@@ -94,7 +92,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Is the process running ?."""
         if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
-            if await aios.path.exists(path):
+            if await aiexists(path):
                 async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
                     for line in await f.readlines():
                         if line.startswith("State"):

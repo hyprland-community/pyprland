@@ -54,9 +54,6 @@ In case you already installed pyprland, ensure it's not conflicting with any exi
 
 ## Install
 
-> [!important]
-> you'll need to install the `aiofiles` python package on your operating system first - _Pyprland_ depends on it.
-
 You need to download [get-pypr](https://raw.githubusercontent.com/hyprland-community/pyprland/main/scripts/get-pypr) and run it with `sh` or `bash`, eg:
 
  ```sh
