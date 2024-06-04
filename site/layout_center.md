@@ -1,3 +1,17 @@
+---
+commands:
+  - name: layout_center toggle
+    description: toggles the layout on and off
+  - name: layout_center next
+    description: switches to the next window (if layout is on) else runs the `next` command
+  - name: layout_center prev
+    description: switches to the previous window (if layout is on) else runs the `prev` command
+  - name: layout_center next2
+    description: switches to the next window (if layout is on) else runs the `next2` command
+  - name: layout_center prev2
+    description: switches to the previous window (if layout is on) else runs the `prev2` command
+
+---
 # layout_center
 
 Implements a workspace layout where one window is bigger and centered,
@@ -42,14 +56,9 @@ bind = $mainMod, down, movefocus, d
 </details>
 
 
-## Command
+## Commands
 
-- `layout_center [command]` where *[command]* can be:
-  - `toggle` : toggles the layout on and off
-  - `next`: switches to the next window (if layout is on) else runs the `next` command
-  - `prev`: switches to the previous window (if layout is on) else runs the `prev` command
-  - `next2`: switches to the next window (if layout is on) else runs the `next2` command
-  - `prev2`: switches to the previous window (if layout is on) else runs the `prev2` command
+<CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
 

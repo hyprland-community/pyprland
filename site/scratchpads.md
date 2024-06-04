@@ -1,3 +1,14 @@
+---
+commands:
+  - name: toggle <scratchpad name>
+    description: Toggle the given scratchpad
+  - name: show <scratchpad name>
+    description: Show the given scratchpad
+  - name: hide <scratchpad name>
+    description: Hide the given scratchpad
+  - name: attach
+    description: Toggle attaching/anchoring the currently focused window to the (last used) scratchpad
+---
 # scratchpads
 
 Easily toggle the visibility of applications you use the most.
@@ -56,13 +67,9 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 
 ## Commands
 
-- `toggle <scratchpad name>`  toggles the given scratchpads
-  - use multiple _space separated_ names to synchronize visibility based on the first scratchpad provided
-- `show <scratchpad name>`  shows the given scratchpad
-- `hide <scratchpad name>`  hides the given scratchpad
-- `attach`  toggles attaching/anchoring the currently focused window to the (last used) scratchpad
+<CommandList :commands="$frontmatter.commands" />
 
-> [!note]
+> [!tip]
 > You can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
 > You'll need to quote or escape the `*` character to avoid interpretation from your shell.
 
@@ -145,8 +152,6 @@ To go beyond the basic setup and have a look at every configuration item, you ca
 - [Advanced](./scratchpads_advanced) contains options for fine-tuners or specific tastes (eg: i3 compatibility)
 - [Non-Standard](./scratchpads_nonstandard) contains options for "broken" applications
 like progressive web apps (PWA) or emacsclient, use only if you can't get it to work otherwise
-
-You can also find more
 
 ## Monitor specific overrides
 

@@ -1,12 +1,54 @@
+---
+commands:
+    - name: zoom [value]
+      description: Set the current zoom level (absolute or relative) - toggle zooming if no value is provided
+---
 # magnify
+
+Zooms in and out with an optional animation.
+
+
+<details>
+    <summary>Example</summary>
+
+```sh
+pypr zoom  # sets zoom to `factor` (2 by default)
+pypr zoom +1  # will set zoom to 3x
+pypr zoom  # will set zoom to 1x
+pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
+```
+
+Sample `hyprland.conf`:
+
+```sh
+bind = $mainMod , Z, exec, pypr zoom ++0.5
+bind = $mainMod SHIFT, Z, exec, pypr zoom
+```
+
+</details>
 
 ## Command
 
-- `zoom [value]`
-    - If no value is provided, toggles magnification.
-    - If an integer is provided, it will set as scaling factor.
-    - If this integer is prefixed with "+" or "-", it will *update* the current scale factor.
-        - Use "++" or "--", to use a more natural non-linear scale.
+<CommandList :commands="$frontmatter.commands" />
+
+### `[value]`
+
+#### unset / not specified
+
+Will zoom to [factor](#factor) if not zoomed, else will set the zoom to 1x.
+
+#### floating or integer value
+
+Will set the zoom to the provided value.
+
+#### +value / -value
+
+Update (increment or decrement) the current zoom level by the provided value.
+
+#### ++value / --value
+
+Update (increment or decrement) the current zoom level by a non-linear scale.
+It _looks_ more linear changes than using a single + or -.
 
 > [!NOTE]
 >
@@ -18,28 +60,11 @@
 
 ## Configuration
 
-Sample `hyprland.conf`:
-
-```sh
-bind = $mainMod , Z, exec, pypr zoom ++0.5
-bind = $mainMod SHIFT, Z, exec, pypr zoom
-```
-
-
 ### `factor` (optional)
 
 default value is `2`
 
 Scaling factor to be used when no value is provided.
-
-## Example
-
-```sh
-pypr zoom  # sets zoom to `factor` (2 by default)
-pypr zoom +1  # will set zoom to 3x
-pypr zoom  # will set zoom to 1x
-pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
-```
 
 ### `duration` (optional)
 

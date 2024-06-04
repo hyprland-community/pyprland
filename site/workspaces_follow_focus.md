@@ -1,3 +1,9 @@
+---
+commands:
+    - name: change_workspace [direction]
+      description: Changes the workspace of the focused monitor in the given direction.
+---
+
 # workspaces_follow_focus
 
 Make non-visible workspaces follow the focused monitor.
@@ -17,7 +23,7 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 ## Command
 
-- `change_workspace` `<direction>`: changes the workspace of the focused monitor
+<CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
 

@@ -1,3 +1,9 @@
+---
+commands:
+    - name: menu [name]
+      description: Displays the full menu or part of it if "name" is provided
+---
+
 # shortcuts_menu
 
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
@@ -31,14 +37,16 @@ Relayout = "pypr relayout"
 
 ## Command
 
-- `menu [name]`: shows a list of options which have been configured in "entries".
-  - If "name" is provided it will show the given sub-menu.
-  - You can use "." to reach any level of the configured menus.
+<CommandList :commands="$frontmatter.commands" />
 
-      Example to reach `shortcuts_menu.entries.utils."local commands"`, use:
-      ```sh
-       pypr menu "utils.local commands"
-      ```
+> [!tip]
+> - If "name" is provided it will show the given sub-menu.
+> - You can use "." to reach any level of the configured menus.
+>
+>      Example to reach `shortcuts_menu.entries.utils."local commands"`, use:
+>      ```sh
+>       pypr menu "utils.local commands"
+>      ```
 
 ## Configuration
 

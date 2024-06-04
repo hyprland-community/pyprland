@@ -1,3 +1,8 @@
+---
+commands:
+    - name: attract_lost
+      description: Bring windows which are not reachable in the currently focused workspace.
+---
 # lost_windows
 
 Bring windows which are not reachable in the currently focused workspace.
@@ -5,5 +10,4 @@ Bring windows which are not reachable in the currently focused workspace.
 
 ## Command
 
-- `attract_lost`: brings the lost windows to the current screen / workspace
-
+<CommandList :commands="$frontmatter.commands" />

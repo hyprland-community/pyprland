@@ -1,3 +1,9 @@
+---
+commands:
+  - name: fetch_client_menu
+    description: Bring any window to the active workspace using a menu.
+---
+
 # fetch_client_menu
 
 Bring any window to the active workspace using a menu.
@@ -10,9 +16,9 @@ This feature can also be provided by this plugin in the future, faster [if reque
 
 Sample `hyprland.conf`:
 
-## Commands
+## Command
 
-- `fetch_client_menu`: display the menu allowing selection of the client to show
+<CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
 

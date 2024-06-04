@@ -31,7 +31,7 @@ const menu = [
 const plugin_list = {
   text: 'Featured plugins',
   collapsible: true,
-  collapsed: true,
+  collapsed: false,
   items: [
     { text: "Expose", link: "./expose" },
     { text: "Fetch client menu", link: "./fetch_client_menu" },
@@ -40,7 +40,14 @@ const plugin_list = {
     { text: "Lost windows", link: "./lost_windows" },
     { text: "Magnify", link: "./magnify" },
     { text: "Monitors", link: "./monitors" },
-    { text: "Scratchpads", link: "./scratchpads" },
+    {
+      text: "Scratchpads", link: "./scratchpads",
+      items: [
+        { text: "Advanced", link: "./scratchpads_advanced" },
+        { text: "Special cases", link: "./scratchpads_nonstandard" }
+
+      ]
+    },
     { text: "Shift monitors", link: "./shift_monitors" },
     { text: "Shortcuts menu", link: "./shortcuts_menu" },
     { text: "System notifier", link: "./system_notifier" },
@@ -64,7 +71,7 @@ export default defineConfig({
       provider: 'local'
     },
     outline: {
-      level: 2,
+      level: [2, 3],
     },
     sidebar: {
       collapsible: true,

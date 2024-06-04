@@ -1,3 +1,9 @@
+---
+commands:
+    - name: shift_monitors <direction>
+      description: Swaps the workspaces of every screen in the given direction.
+---
+
 # shift_monitors
 
 Swaps the workspaces of every screen in the given direction.
@@ -15,5 +21,5 @@ bind = $mainMod SHIFT, O, exec, pypr shift_monitors -1
 
 ## Command
 
-- `shift_monitors <direction>`: swaps every monitor's workspace in the given direction
+<CommandList :commands="$frontmatter.commands" />
 

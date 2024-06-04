@@ -1,25 +1,6 @@
 # Troubleshooting scratchpads
 
-## `skip_windowrules` (optional)
-
-Default value is `[]`
-Allows you to skip the window rules for a specific scratchpad.
-Available rules are:
-
-- "aspect" controlling size and position
-- "float" controlling the floating state
-- "workspace" which moves the window to its own workspace
-
-If you are using an application which can spawn multiple windows and you can't see them, you can skip rules made to improve the initial display of the window.
-
-```toml
-[scratchpads.filemanager]
-animation = "fromBottom"
-command = "nemo"
-class = "nemo"
-size = "60% 60%"
-skip_windowrules = ["aspect", "workspace"]
-```
+Options that should only be used for applications that are not behaving in a "standard" way.
 
 ## `match_by` (optional)
 
@@ -95,3 +76,24 @@ process_tracking = false
 > On top of requiring the class based window tracking (using `match_by`),
 > the process can not be managed the same way as usual apps and the correlation
 > between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
+
+## `skip_windowrules` (optional)
+
+Default value is `[]`
+Allows you to skip the window rules for a specific scratchpad.
+Available rules are:
+
+- "aspect" controlling size and position
+- "float" controlling the floating state
+- "workspace" which moves the window to its own workspace
+
+If you are using an application which can spawn multiple windows and you can't see them, you can skip rules made to improve the initial display of the window.
+
+```toml
+[scratchpads.filemanager]
+animation = "fromBottom"
+command = "nemo"
+class = "nemo"
+size = "60% 60%"
+skip_windowrules = ["aspect", "workspace"]
+```

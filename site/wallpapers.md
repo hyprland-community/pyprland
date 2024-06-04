@@ -1,3 +1,11 @@
+---
+commands:
+    - name: wall next
+      description: Changes the current background image
+    - name: wall clear
+      description: Removes the current background image
+---
+
 # wallpapers
 
 Search folders for images and sets the background image at a regular interval.
@@ -41,8 +49,7 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 
 ## Commands
 
-- `wall next`: Changes the current background image
-- `wall clear`: Removes the current background image
+<CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
 

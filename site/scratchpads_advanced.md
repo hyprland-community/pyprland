@@ -1,5 +1,7 @@
 # Fine tuning scratchpads
 
+Advanced configuration options
+
 ## `excludes` (optional)
 
 No default value.

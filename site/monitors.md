@@ -1,7 +1,12 @@
+---
+commands:
+  - name: relayout
+    description: Apply the configuration and update the layout
+---
+
 # monitors
 
-> [!note]
-> First version of the plugin is still available under the name `monitors_v0`
+> First, simpler version of the plugin is still available under the name `monitors_v0`
 
 Allows relative placement of monitors depending on the model ("description" returned by `hyprctl monitors`).
 Useful if you have multiple monitors connected to a video signal switch or using a laptop and plugging monitors having different relative positions.
@@ -44,9 +49,9 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 </details>
 
-## Commands
+## Command
 
-- `relayout` : Apply the configuration and update the layout
+<CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
 

@@ -1,12 +1,19 @@
+---
+commands:
+  - name: gbar restart
+    description: Restart/refresh gBar on the "best" monitor.
+---
+
 # gbar
 
 Runs [gBar](https://github.com/scorpion-26/gBar) on the "best" monitor from a list of monitors.
 
 Will take care of starting gbar on startup (you must not run it from another source like `hyprland.conf`).
 
-## Commands
+## Command
 
-- `gbar restart` - Restart/refresh gBar on the "best" monitor.
+<CommandList :commands="$frontmatter.commands" />
+
 
 ## Configuration
 

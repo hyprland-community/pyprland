@@ -6,7 +6,9 @@
                 <h3>
                     <a :href="plugin.name + '.html'">{{ plugin.name }}</a>
                     <span>&nbsp;{{ '🌟'.repeat(plugin.stars) }}</span>
-                    <span>{{ plugin.multimon ? ' (multi-monitor)' : '' }}</span>
+                    <span v-if="plugin.multimon">
+                        <Badge type="tip" text="multi-monitor" />
+                    </span>
                 </h3>
                 <p v-html="plugin.description" />
             </div>

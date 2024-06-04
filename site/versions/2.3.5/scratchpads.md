@@ -148,8 +148,6 @@ To go beyond the basic setup and have a look at every configuration item, you ca
 - [Non-Standard](./scratchpads_nonstandard) contains options for "broken" applications
 like progressive web apps (PWA) or emacsclient, use only if you can't get it to work otherwise
 
-You can also find more
-
 ## Monitor specific overrides
 
 > _Added in 2.0.6_
