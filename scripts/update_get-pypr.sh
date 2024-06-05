@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-url=$(http https://pypi.org/pypi/pyprland/json | jq '.urls[] |.url' |grep 'whl"$')
+url=$(curl https://pypi.org/pypi/pyprland/json | jq '.urls[] |.url' |grep 'whl"$')
 
 sed -i "s#^URL=.*#URL=${url}#" get-pypr
