@@ -3,7 +3,7 @@
 [![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
 [![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.com/channels/1055990214411169892/1230972154330218526)
 
-[Documentation](https://github.com/hyprland-community/pyprland/wiki) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
+[Documentation](https://hyprland-community.github.io/pyprland) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## Enhance your Hyprland experience with Pyprland
 
@@ -19,9 +19,9 @@ with little impact on the footprint and performance.
 
 Contributions, suggestions, bug reports and comments are welcome.
 
-- Explore our variety of [plugins](https://github.com/hyprland-community/pyprland/wiki/Plugins)
+- Explore our variety of [plugins](https://hyprland-community.github.io/pyprland/Plugins.html)
   to tailor your Hyprland setup to your liking.
-- New users, check the [getting started](https://github.com/hyprland-community/pyprland/wiki/Getting-started) guide.
+- New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide.
 
 <details>
 <summary>
@@ -46,7 +46,7 @@ Contributing
 Check out the [creating a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) document for guidance.
 
 - Report bugs or propose features [here](https://github.com/hyprland-community/pyprland/issues)
-- Improve our [wiki](https://github.com/hyprland-community/pyprland/wiki)
+- Improve our [wiki](https://hyprland-community.github.io/pyprland/)
 - Read the [internal ticket list](https://github.com/hyprland-community/pyprland/blob/main/tickets.rst) for some PR ideas
 
 and if you have coding skills you can also
@@ -77,42 +77,42 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 
 - Supports *Hyprland > 0.40.0*
 - Improved code kwaleetee
-- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) allows general monitor settings
-- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
+- [monitors](https://hyprland-community.github.io/pyprland/monitors) allows general monitor settings
+- [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads)
   - better multi-window support
   - better `preserve_aspect` implementation (i3 "compatibility")
 
 ### 2.2
 
-- Added [wallpapers](https://github.com/hyprland-community/pyprland/wiki/wallpapers) and [system_notifier](https://github.com/hyprland-community/pyprland/wiki/system_notifier) plugins.
-- Deprecated [class_match](https://github.com/hyprland-community/pyprland/wiki/scratchpads_nonstandard) in [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads)
-- Added [gbar](https://github.com/hyprland-community/pyprland/wiki/gbar) in 2.2.6
-- [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports multiple client windows (using 2.2.19 is recommended)
-- [monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) and [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads) supports rotation in 2.2.13
-- Improve [Nix support](https://github.com/hyprland-community/pyprland/wiki/Nix)
+- Added [wallpapers](https://hyprland-community.github.io/pyprland/wallpapers) and [system_notifier](https://hyprland-community.github.io/pyprland/system_notifier) plugins.
+- Deprecated [class_match](https://hyprland-community.github.io/pyprland/scratchpads_nonstandard) in [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads)
+- Added [gbar](https://hyprland-community.github.io/pyprland/gbar) in 2.2.6
+- [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads) supports multiple client windows (using 2.2.19 is recommended)
+- [monitors](https://hyprland-community.github.io/pyprland/monitors) and [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads) supports rotation in 2.2.13
+- Improve [Nix support](https://hyprland-community.github.io/pyprland/Nix)
 
 ### 2.1
 
 - Requires Hyprland >= 0.37
-- [Monitors](https://github.com/hyprland-community/pyprland/wiki/monitors) plugin improvements.
+- [Monitors](https://hyprland-community.github.io/pyprland/monitors) plugin improvements.
 
 ### 2.0
 
 - New dependency: [aiofiles](https://pypi.org/project/aiofiles/)
-- Added [hysteresis](https://github.com/hyprland-community/pyprland/wiki/scratchpads#hysteresis-optional) support for [scratchpads](https://github.com/hyprland-community/pyprland/wiki/scratchpads).
+- Added [hysteresis](https://hyprland-community.github.io/pyprland/scratchpads#hysteresis-optional) support for [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads).
 
 ### 1.10
 
-- New [fetch_client_menu](https://github.com/hyprland-community/pyprland/wiki/fetch_client_menu) and [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugins.
+- New [fetch_client_menu](https://hyprland-community.github.io/pyprland/fetch_client_menu) and [shortcuts_menu](https://hyprland-community.github.io/pyprland/shortcuts_menu) plugins.
 
 ### 1.9
 
-- Introduced [shortcuts_menu](https://github.com/hyprland-community/pyprland/wiki/shortcuts_menu) plugin.
+- Introduced [shortcuts_menu](https://hyprland-community.github.io/pyprland/shortcuts_menu) plugin.
 
 ### 1.8
 
 - Requires Hyprland >= 0.30
-- Added [layout_center](https://github.com/hyprland-community/pyprland/wiki/layout_center) plugin.
+- Added [layout_center](https://hyprland-community.github.io/pyprland/layout_center) plugin.
 
 </details>
 
