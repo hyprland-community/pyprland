@@ -3,13 +3,13 @@ commands:
   - name: layout_center toggle
     description: toggles the layout on and off
   - name: layout_center next
-    description: switches to the next window (if layout is on) else runs the `next` command
+    description: switches to the next window (if layout is on) else runs the <a href="#next-optional">next</a> command
   - name: layout_center prev
-    description: switches to the previous window (if layout is on) else runs the `prev` command
+    description: switches to the previous window (if layout is on) else runs the <a href="#next-optional">prev</a> command
   - name: layout_center next2
-    description: switches to the next window (if layout is on) else runs the `next2` command
+    description: switches to the next window (if layout is on) else runs the <a href="#next-optional">next2</a> command
   - name: layout_center prev2
-    description: switches to the previous window (if layout is on) else runs the `prev2` command
+    description: switches to the previous window (if layout is on) else runs the <a href="#next-optional">prev2</a> command
 
 ---
 # layout_center
@@ -20,9 +20,9 @@ other windows are tiled as usual in the background.
 On `toggle`, the active window is made floating and centered if the layout wasn't enabled, else reverts the floating status.
 
 With `next` and `prev` you can cycle the active window, keeping the same layout type.
-If the layout_center isn't active and `next` or `prev` is used, it will call the "next" and "prev" configuration options.
+If the layout_center isn't active and `next` or `prev` is used, it will call the [next](#next-optional) and [prev](#prev-optional) configuration options.
 
-To allow full override of the focus keys, `next2` and `prev2` are provided, they do the same actions as "next" and "prev" but allow different fallback commands.
+To allow full override of the focus keys, [next2](#next2-optional) and [prev2](#prev2-optional) are provided, they do the same actions as "next" and "prev" but allow different fallback commands.
 
 <details>
 <summary>Configuration sample</summary>
@@ -113,6 +113,7 @@ offset = [0, 20]
 ```
 
 ### `next` (optional)
+### `next2` (optional)
 
 not set by default
 
@@ -125,7 +126,8 @@ Eg:
 next = "movefocus r"
 ```
 
-### `prev` and `prev2` (optional)
+### `prev` (optional)
+### `prev2` (optional)
 
 Same as `next` but for the `prev` and `prev2` commands.
 
