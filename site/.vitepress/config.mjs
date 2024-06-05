@@ -22,10 +22,10 @@ for (const version of version_names) {
 
 
 const menu = [
-  { text: 'Getting started', link: './Getting-started' },
-  { text: 'Plugins', link: './Plugins' },
-  { text: 'Troubleshooting', link: './Troubleshooting' },
-  { text: 'Development', link: './Development' },
+  {
+    text: 'Versions',
+    items: [extra_versions],
+  }
 ]
 
 const plugin_list = {
@@ -77,6 +77,10 @@ export default defineConfig({
       collapsible: true,
       collapsed: true,
       '/versions': [
+        { text: 'Getting started', link: './Getting-started' },
+        { text: 'Plugins', link: './Plugins' },
+        { text: 'Troubleshooting', link: './Troubleshooting' },
+        { text: 'Development', link: './Development' },
         plugin_list,
         {
           text: 'Return to latest version',
@@ -84,11 +88,11 @@ export default defineConfig({
         }
       ],
       '/': [
+        { text: 'Getting started', link: './Getting-started' },
+        { text: 'Plugins', link: './Plugins' },
+        { text: 'Troubleshooting', link: './Troubleshooting' },
+        { text: 'Development', link: './Development' },
         plugin_list,
-        {
-          text: 'Versions',
-          items: [extra_versions],
-        }
       ]
     },
     socialLinks: [
