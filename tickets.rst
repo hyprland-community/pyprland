@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 50
+:total-count: 51
 
 --------------------------------------------------------------------------------
 
@@ -154,4 +154,13 @@ Generalize a "monitors" call filtering out the invalid ones (cf gBar)
 
 :bugid: 50
 :created: 2024-06-04T22:53:36
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+Experiment with minisearch on the website
+=========================================
+
+:bugid: 51
+:created: 2024-06-05T22:21:07
 :priority: 0
