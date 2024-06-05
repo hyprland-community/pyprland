@@ -38,7 +38,7 @@ HYPRLAND_INSTANCE_SIGNATURE = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "NO_
 MINIMUM_ADDR_LEN = 4
 
 MAX_SOCKET_FILE_LEN = 15
-MAX_SOCKET_PATH_LEN = 108
+MAX_SOCKET_PATH_LEN = 107
 
 try:
     # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
