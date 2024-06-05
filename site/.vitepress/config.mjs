@@ -68,7 +68,24 @@ export default defineConfig({
     nav: menu,
     logo: '/icon.png',
     search: {
-      provider: 'local'
+      provider: 'local',
+      options: {
+        miniSearch: {
+          // options: {
+          //   storeFields: ['term']
+          // },
+          searchOptions: {
+            processTerm: (text) => {
+              console.log(text)
+              // if matching '/versions/' return null
+              if (text.includes('/versions/')) {
+                return null
+              }
+              return text;
+            }
+          }
+        }
+      }
     },
     outline: {
       level: [2, 3],
