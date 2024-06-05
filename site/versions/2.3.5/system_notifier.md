@@ -11,7 +11,7 @@ Sources are commands that return a stream of text (eg: journal, mqtt, tail -f, .
     <summary>Minimal configuration</summary>
 
 ```toml
-[system_notifier.sources](system_notifier.sources)
+[system_notifier.sources]
 command = "sudo journalctl -fx"
 parser = "journal"
 ```
@@ -21,22 +21,22 @@ By default a **"journal"** parser is provided, otherwise you need to define your
 This built-in configuration is close to this one, provided as an example:
 
 ```toml
-[system_notifier.parsers.journal](system_notifier.parsers.journal)
+[system_notifier.parsers.journal]
 pattern = "([a-z0-9]+): Link UP$"
 filter = "s/.*\[\d+\]: ([a-z0-9]+): Link.*/\1 is active/"
 color= "#00aa00"
 
-[system_notifier.parsers.journal](system_notifier.parsers.journal)
+[system_notifier.parsers.journal]
 pattern = "([a-z0-9]+): Link DOWN$"
 filter = "s/.*\[\d+\]: ([a-z0-9]+): Link.*/\1 is inactive/"
 color= "#ff8800"
 
-[system_notifier.parsers.journal](system_notifier.parsers.journal)
+[system_notifier.parsers.journal]
 pattern = "Process \d+ \(.*\) of .* dumped core."
 filter = "s/.*Process \d+ \((.*)\) of .* dumped core./\1 dumped core/"
 color= "#aa0000"
 
-[system_notifier.parsers.journal](system_notifier.parsers.journal)
+[system_notifier.parsers.journal]
 pattern = "usb \d+-[0-9.]+: Product: "
 filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 ```

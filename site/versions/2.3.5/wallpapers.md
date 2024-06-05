@@ -13,7 +13,7 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 > _Added in version 2.2.0, format changed in 2.2.5_
 
 <details>
-    <summary>Minimal example (uses swaybg by default)</summary>
+    <summary>Minimal example (requires <b>swaybg</b> by default)</summary>
 
 ```toml
 [wallpapers]
@@ -24,7 +24,7 @@ unique = true # set a different wallpaper for each screen
 </details>
 
 <details>
-<summary>More complex, using swww as a backend (not recommended because of its stability)</summary>
+<summary>More complex, using <b>swww</b> as a backend (not recommended because of its stability)</summary>
 
 ```toml
 [wallpapers]

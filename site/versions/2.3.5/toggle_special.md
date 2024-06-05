@@ -2,7 +2,7 @@
 
 Allows moving the focused window to a special workspace and back (based on the visibility status of that workspace).
 
-It's a companion of `togglespecialworkspace` Hyprland's command which toggles a special workspace's visibility.
+It's a companion of the `togglespecialworkspace` Hyprland's command which toggles a special workspace's visibility.
 
 You most likely will need to configure the two commands for a complete user experience, eg:
 
