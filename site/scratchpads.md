@@ -114,9 +114,6 @@ No default value.
 
 Allows _Pyprland_ prepare the window for a correct animation and initial positioning.
 
-> [!important]
-> This will set some rules to every matching class!
-
 ### `position` (optional)
 
 No default value, overrides the automatic margin-based position.
