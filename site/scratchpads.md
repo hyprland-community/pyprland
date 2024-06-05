@@ -1,10 +1,10 @@
 ---
 commands:
-  - name: toggle <scratchpad name>
+  - name: toggle [scratchpad name]
     description: Toggle the given scratchpad
-  - name: show <scratchpad name>
+  - name: show [scratchpad name]
     description: Show the given scratchpad
-  - name: hide <scratchpad name>
+  - name: hide [scratchpad name]
     description: Hide the given scratchpad
   - name: attach
     description: Toggle attaching/anchoring the currently focused window to the (last used) scratchpad
