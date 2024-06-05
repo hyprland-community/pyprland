@@ -74,6 +74,8 @@ Changes the behavior when a new window opens, possible options are:
 
 ### `style` (optional)
 
+| Requires Hyprland > 0.40.0
+
 Not set by default.
 
 Allow to set a list of styles to the main (centered) window, eg:
