@@ -19,7 +19,7 @@ Configurable and flexible, while supporting complex setups it's easy to get star
 [scratchpads.name]
 command = "command to run"
 class = "the window's class"  # check: hyprctl clients | grep class
-size = "<width> <height>"  # size of the window relative to the screen size
+size = "[width] [height]"  # size of the window relative to the screen size
 ```
 
 <details>
