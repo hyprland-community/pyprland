@@ -48,8 +48,8 @@ rel_id=$(http -b -j POST $URL/releases \
 
 echo "RELEASE ID: $rel_id"
 
-echo "Waiting 10s for pypi to update..."
-for n in $(seq 10); do
+echo "Waiting 15s for pypi to update..."
+for n in $(seq 15); do
     echo $n
     sleep 1
 done
