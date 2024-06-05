@@ -8,7 +8,9 @@ commands:
 
 Runs [gBar](https://github.com/scorpion-26/gBar) on the "best" monitor from a list of monitors.
 
-Will take care of starting gbar on startup (you must not run it from another source like `hyprland.conf`).
+- Will take care of starting gbar on startup (you must not run it from another source like `hyprland.conf`).
+- Automatically restarts gbar on crash
+- Checks which monitors are on and take the best one from a provided list
 
 ## Command
 
