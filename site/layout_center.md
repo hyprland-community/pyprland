@@ -26,6 +26,7 @@ To allow full override of the focus keys, `next2` and `prev2` are provided, they
 
 <details>
 <summary>Configuration sample</summary>
+
 ```toml
 [layout_center]
 margin = 60
