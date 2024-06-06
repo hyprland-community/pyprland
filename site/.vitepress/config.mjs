@@ -1,7 +1,7 @@
 const enableVersions = true;
 import { defineConfig } from 'vitepress'
 
-const version_names = ['2.3.5', '2.3.6']
+const version_names = ['2.3.5', '2.3.6,7']
 
 const extra_versions = {
   items: [
