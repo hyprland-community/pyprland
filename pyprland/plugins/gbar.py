@@ -17,6 +17,10 @@ class Extension(Plugin):
 
     ongoing_task: asyncio.Task | None = None
 
+    async def on_reload(self) -> None:
+        """Start the process."""
+        self._run_gbar()
+
     def _run_gbar(self) -> None:
         """Create ongoing task restarting gbar in case of crash."""
         if self.ongoing_task:
