@@ -11,7 +11,7 @@ try:
 except ImportError:
     import os
 
-    async def aioopen(*args, **kwargs) -> io.TextIOWrapper:
+    async def aiopen(*args, **kwargs) -> io.TextIOWrapper:
         """Async > sync wrapper."""
         f = open(*args, **kwargs)  # noqa
         _orig_readlines = f.readlines
