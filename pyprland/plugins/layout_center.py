@@ -100,7 +100,7 @@ class Extension(CastBoolMixin, Plugin):
         await self.hyprctl("windowrulev2 unset, tag:layout_center")
         commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
         if commands:
-            await self.hyprctl(commands)
+            await self.hyprctl(commands, "keyword")
 
     # Utils
 
