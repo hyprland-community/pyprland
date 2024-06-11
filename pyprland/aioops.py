@@ -2,25 +2,34 @@
 
 __all__ = ["aiopen", "aiexists", "ailistdir"]
 
+import contextlib
 import io
 
 try:
+    import aiofiles.os
     from aiofiles import open as aiopen
     from aiofiles.os import listdir as ailistdir
-    from aiofiles.path import exists as aiexists
+
+    aiexists = aiofiles.os.path.exists
 except ImportError:
     import os
 
-    async def aiopen(*args, **kwargs) -> io.TextIOWrapper:
-        """Async > sync wrapper."""
-        f = open(*args, **kwargs)  # noqa
-        _orig_readlines = f.readlines
+    class AsyncFile:
+        def __init__(self, file: io.TextIOWrapper):
+            self.file = file
 
-        async def _new_readlines(*args, **kwargs) -> list[str]:
-            return _orig_readlines(*args, **kwargs)
+        async def readlines(self) -> list[str]:
+            return self.file.readlines()
 
-        f.readlines = _new_readlines
-        return f
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            self.file.close()
+
+    @contextlib.asynccontextmanager
+    async def aiopen(*args, **kwargs) -> AsyncFile:
+        yield AsyncFile(open(*args, **kwargs))
 
     async def aiexists(*args, **kwargs) -> bool:
         """Async > sync wrapper."""
