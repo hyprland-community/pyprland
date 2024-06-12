@@ -97,7 +97,7 @@ class Extension(CastBoolMixin, Plugin):
         """Loads the configuration and apply the tag style."""
         if not self.config.get("style"):
             return
-        await self.hyprctl("windowrulev2 unset, tag:layout_center")
+        await self.hyprctl("windowrulev2 unset, tag:layout_center", "keyword")
         commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
         if commands:
             await self.hyprctl(commands, "keyword")
