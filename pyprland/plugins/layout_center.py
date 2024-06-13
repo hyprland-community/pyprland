@@ -167,7 +167,7 @@ class Extension(CastBoolMixin, Plugin):
     async def _run_changefocus(self, direction: int, default_override: str | None = None) -> None:
         """Change the focus in the given direction (-1 or 1)."""
         if self.enabled:
-            clients = await self.get_clients()
+            clients = [cli for cli in await self.get_clients() if not cli.get("floating") or cli["address"] == self.main_window_addr]
             if await self._sanity_check(clients):
                 addresses = [c["address"] for c in clients]
                 try:
