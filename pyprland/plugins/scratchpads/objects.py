@@ -56,6 +56,14 @@ class Scratch(CastBoolMixin):  # {{{
         self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
 
+    @property
+    def forced_monitor(self) -> str | None:
+        """Returns forced monitor if available, else None."""
+        forced_monitor = self.conf.get("force_monitor")
+        if forced_monitor in state.monitors:
+            return forced_monitor
+        return None
+
     def set_config(self, opts: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
         if "class_match" in opts:  # NOTE: legacy, to be removed

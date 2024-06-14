@@ -121,7 +121,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         defined_class: str = scratch.conf.get("class", "")
         skipped_windowrules = scratch.conf.get("skip_windowrules", [])
         if defined_class:
-            monitor = await self.get_focused_monitor_props(name=scratch.conf.get("force_monitor"))
+            forced_monitor = scratch.conf.get("force_monitor")
+            if forced_monitor and forced_monitor not in state.monitors:
+                self.log.error("forced monitor %s doesn't exist", forced_monitor)
+                await self.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
+                forced_monitor = None
+            monitor = await self.get_focused_monitor_props(name=forced_monitor)
             width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
 
             ipc_commands = []
@@ -435,7 +440,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             )  # visible on the currently focused monitor
 
         is_visible = first_scratch.visible and (
-            first_scratch.conf.get("force_monitor") or extra_visibility_check
+            first_scratch.forced_monitor or extra_visibility_check
         )  # always showing on the same monitor
         tasks = []
 
@@ -455,7 +460,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Return offset from config or use margin as a ref."""
         offset = scratch.conf.get("offset")
         if monitor is None:
-            monitor = await get_focused_monitor_props(self.log, name=scratch.conf.get("force_monitor"))
+            monitor = await get_focused_monitor_props(self.log, name=scratch.forced_monitor)
         rotated = is_rotated(monitor)
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
@@ -540,7 +545,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         scratch.visible = True
         scratch.meta.space_identifier = get_active_space_identifier()
-        monitor = await self.get_focused_monitor_props(name=scratch.conf.get("force_monitor"))
+        monitor = await self.get_focused_monitor_props(name=scratch.forced_monitor)
 
         assert monitor
         assert scratch.full_address, "No address !"
