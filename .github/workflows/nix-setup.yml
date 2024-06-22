@@ -29,11 +29,9 @@ jobs:
           token: "${{ secrets.GH_TOKEN }}"
 
       - name: "Set up QEMU support"
-        run: |
-          # This will allow for cross-compilation using Nix
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update -q -y
-          sudo apt-get install -q -y binfmt-support qemu-efi qemu-system-aarch64 qemu-user-static
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
       - name: "Install nix"
         uses: cachix/install-nix-action@master
