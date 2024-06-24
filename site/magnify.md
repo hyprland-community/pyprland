@@ -35,7 +35,7 @@ bind = $mainMod SHIFT, Z, exec, pypr zoom
 
 #### unset / not specified
 
-Will zoom to [factor](#factor) if not zoomed, else will set the zoom to 1x.
+Will zoom to [factor](#factor-optional) if not zoomed, else will set the zoom to 1x.
 
 #### floating or integer value
 
