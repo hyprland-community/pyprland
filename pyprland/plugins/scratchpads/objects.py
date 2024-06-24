@@ -164,6 +164,11 @@ class Scratch(CastBoolMixin):  # {{{
 
         self.client_info.update(client_info)
 
+    def event_workspace(self, name: str) -> None:
+        """Check if the workspace changed."""
+        if self.conf.get("pinned", True):
+            self.meta.space_identifier = name, self.meta.space_identifier[1]
+
     def __str__(self) -> str:
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 

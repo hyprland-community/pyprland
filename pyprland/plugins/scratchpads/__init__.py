@@ -283,6 +283,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+    async def event_workspace(self, name: str) -> None:
+        """Workspace hook."""
+        for scratch in self.scratches.values():
+            scratch.event_workspace(name)
+
+        self.workspace = name
+
     async def event_closewindow(self, addr: str) -> None:
         """Close window hook."""
         # removes this address from the extra_addr
@@ -615,6 +622,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
             await self._animate_show(scratch, monitor, relative_animation)
         await self.hyprctl(f"focuswindow address:{scratch.full_address}")
+
+        if scratch.conf.get("pinned", True) and not scratch.client_info["pinned"]:
+            await self.hyprctl(f"pin address:{scratch.full_address}")
+
         scratch.meta.last_shown = time.time()
         scratch.meta.monitor_info = monitor
 
@@ -729,6 +740,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self.log.info("Hiding %s", uid)
         await self._hide_transition(scratch, monitor_info)
 
+        if scratch.conf.get("pinned", True):
+            await self.hyprctl(f"pin address:{scratch.full_address}")
         await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
 
         for addr in scratch.extra_addr:
