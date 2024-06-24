@@ -2,6 +2,12 @@
 
 Advanced configuration options
 
+## `pinned` (optional)
+
+`true` by default
+
+Makes the scratchpad "sticky" to the monitor, following any workspace change.
+
 ## `excludes` (optional)
 
 No default value.
