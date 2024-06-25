@@ -73,6 +73,10 @@ Latest major changes
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
+### 2.4
+
+- Scratchpads are now pinned by default (set `pinned = false` for the old behavior)
+
 ### 2.3
 
 - Supports *Hyprland > 0.40.0*
