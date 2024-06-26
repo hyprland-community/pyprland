@@ -19,6 +19,7 @@ class Extension(Plugin):
 
     async def on_reload(self) -> None:
         """Start the process."""
+        self.kill()
         self._run_gbar()
 
     def _run_gbar(self) -> None:
