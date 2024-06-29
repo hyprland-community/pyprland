@@ -1,6 +1,6 @@
 # Troubleshooting scratchpads
 
-Options that should only be used for applications that are not behaving in a "standard" way.
+Options that should only be used for applications that are not behaving in a "standard" way, such as `emacsclient` or progressive web apps.
 
 ## `match_by` (optional)
 
