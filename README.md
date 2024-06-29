@@ -25,7 +25,7 @@ Contributions, suggestions, bug reports and comments are welcome.
 
 <details>
 <summary>
-About Pyprland (latest stable is: <b>2.3.8</b>)
+About Pyprland (latest stable is: <b>2.4.0</b>)
 </summary>
 
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
