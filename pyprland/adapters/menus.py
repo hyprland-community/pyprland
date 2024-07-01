@@ -115,7 +115,7 @@ class AnyrunMenu(MenuEngine):
     """A bemenu based menu."""
 
     proc_name = "anyrun"
-    proc_extra_parameters = "--plugins libstdin.so"
+    proc_extra_parameters = "--plugins libstdin.so --show-results-immediately true"
 
 
 every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu]
