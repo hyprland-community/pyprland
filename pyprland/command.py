@@ -26,6 +26,31 @@ PYPR_DEMO = os.environ.get("PYPR_DEMO", False)
 
 __all__: list[str] = []
 
+_dedup_last_call: dict[str, tuple[str, tuple[str, ...]]] = {}
+
+
+def remove_duplicate(names: list[str]) -> Callable:
+    """Decorator that removes duplicated calls to handlers in `names`.
+
+    Will check arguments as well
+    """
+
+    def _remove_duplicates(fn: Callable) -> Callable:
+        """Wrapper for the decorator."""
+
+        async def _wrapper(self: Self, full_name: str, *params: str, notify: str = "") -> bool:
+            """Wrapper for the function."""
+            if full_name in names:
+                key = (full_name, params)
+                if key == _dedup_last_call.get(full_name):
+                    return True
+                _dedup_last_call[full_name] = key
+            return await fn(self, full_name, *params, notify)
+
+        return _wrapper
+
+    return _remove_duplicates
+
 
 class Pyprland:
     """Main app object."""
@@ -188,6 +213,7 @@ class Pyprland:
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
+    @remove_duplicate(names=["active_window"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
         """Call an event handler with params."""
         handled = False
