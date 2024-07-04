@@ -38,14 +38,15 @@ def remove_duplicate(names: list[str]) -> Callable:
     def _remove_duplicates(fn: Callable) -> Callable:
         """Wrapper for the decorator."""
 
-        async def _wrapper(self: Self, full_name: str, *params: str, notify: str = "") -> bool:
+        async def _wrapper(self: Self, full_name: str, *args, **kwargs) -> bool:
             """Wrapper for the function."""
             if full_name in names:
-                key = (full_name, params)
+                key = (full_name, args)
+                print(key)
                 if key == _dedup_last_call.get(full_name):
                     return True
                 _dedup_last_call[full_name] = key
-            return await fn(self, full_name, *params, notify)
+            return await fn(self, full_name, *args, **kwargs)
 
         return _wrapper
 
@@ -213,7 +214,7 @@ class Pyprland:
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    @remove_duplicate(names=["active_window"])
+    @remove_duplicate(names=["active_window", "active_windowv2"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
         """Call an event handler with params."""
         handled = False
