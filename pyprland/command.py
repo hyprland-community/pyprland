@@ -42,7 +42,6 @@ def remove_duplicate(names: list[str]) -> Callable:
             """Wrapper for the function."""
             if full_name in names:
                 key = (full_name, args)
-                print(key)
                 if key == _dedup_last_call.get(full_name):
                     return True
                 _dedup_last_call[full_name] = key
