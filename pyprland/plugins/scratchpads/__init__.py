@@ -759,7 +759,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         tracker = self.focused_window_tracking.get(scratch.uid)
         if tracker and not tracker.prev_focused_window_wrkspc.startswith("special:"):
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
-            if scratch.have_address(active_window) and same_workspace and not scratch.have_address(tracker.prev_focused_window):
+            clients = await self.hyprctl_json("clients")
+            client = next(filter(lambda d: d.get("address") == tracker.prev_focused_window, clients), None)
+            if (
+                scratch.have_address(active_window)
+                and same_workspace
+                and not scratch.have_address(tracker.prev_focused_window)
+                and not client["workspace"]["name"].startswith("special")
+            ):
                 await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
 
     # }}}
