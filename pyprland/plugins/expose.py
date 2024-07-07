@@ -23,9 +23,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         If expose is active restores everything and move to the focused window
         """
         if self.exposed:
-            commands = [
-                f"movetoworkspacesilent {client['workspace']['name']},address:{client['address']}" for client in self.exposed_clients
-            ]
+            commands = [f"movetoworkspacesilent {client['workspace']['id']},address:{client['address']}" for client in self.exposed_clients]
             commands.extend(
                 (
                     "togglespecialworkspace exposed",
