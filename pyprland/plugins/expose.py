@@ -24,8 +24,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """
         if self.exposed:
             commands = [
-                f"movetoworkspacesilent {client['workspace']['name']},address:{client['address']}"
-                for client in self.exposed_clients
+                f"movetoworkspacesilent {client['workspace']['name']},address:{client['address']}" for client in self.exposed_clients
             ]
             commands.extend(
                 (
@@ -39,8 +38,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.exposed = await self.get_clients(workspace_bl=state.active_workspace)
             commands = []
             for client in self.exposed_clients:
-                commands.append(
-                    f"movetoworkspacesilent special:exposed,address:{client['address']}"
-                )
+                commands.append(f"movetoworkspacesilent special:exposed,address:{client['address']}")
             commands.append("togglespecialworkspace exposed")
             await self.hyprctl(commands)
