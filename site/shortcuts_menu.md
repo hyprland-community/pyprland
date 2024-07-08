@@ -53,7 +53,7 @@ annotate = [
 
 "Update/Change password" = [
     {name="what", command="gopass ls --flat"},
-    "[term] -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
+    "kitty -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
 ]
 ```
 
