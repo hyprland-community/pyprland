@@ -32,6 +32,7 @@ About Pyprland (latest stable is: <b>2.4.0</b>)
 
 🎉 Hear what others are saying:
 
+- [Archlinux Hyprland dotfiles](https://github.com/DinDotDout/.dotfiles/blob/main/conf-hyprland/.config/hypr/pyprland.toml) + [video](https://www.youtube.com/watch?v=jHuzcjf-FGM)
 - ["It just works very very well" - The Linux Cast (video)](https://youtu.be/Cjn0SFyyucY?si=hGb0TM9IDvlbcD6A&t=131) - February 2024
 - [You NEED This in your Hyprland Config - LibrePhoenix (video)](https://www.youtube.com/watch?v=CwGlm-rpok4) - October 2023 (*Now [TOML](https://toml.io/en/) format is preferred over [JSON](https://www.w3schools.com/js/js_json_intro.asp))
 
