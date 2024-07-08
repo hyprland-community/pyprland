@@ -86,8 +86,8 @@ It supports [Variables](./Variables)
 Type of animation to use, default value is "fromTop":
 
 - `null` / `""` (no animation)
-- `fromTop` (stays close to top screen border)
-- `fromBottom` (stays close to bottom screen border)
+- `fromTop` (stays close to upper screen border)
+- `fromBottom` (stays close to lower screen border)
 - `fromLeft` (stays close to left screen border)
 - `fromRight` (stays close to right screen border)
 
