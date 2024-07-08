@@ -9,7 +9,7 @@ commands:
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
 
 <details>
-   <summary>Configuration example</summary>
+   <summary>Configuration examples</summary>
 
 ```toml
 [shortcuts_menu.entries]
@@ -29,6 +29,31 @@ Relayout = "pypr relayout"
 "Color picker" = [
     {name="format", options=["hex", "rgb", "hsv", "hsl", "cmyk"]},
     "sleep 0.2; hyprpicker --format [format] | wl-copy" # sleep to let the menu close before the picker opens
+]
+
+screenshot = [
+    {name="what", options=["output", "window", "region", "active"]},
+    "hyprshot -m [what] -o /tmp -f shot_[what].png"
+]
+
+annotate = [
+    {name="fname", command="ls /tmp/shot_*.png"},
+    "satty --filename '[fname]' --output-filename '/tmp/annotated.png'"
+]
+
+"Clipboard history" = [
+    {name="entry", command="cliphist list", filter="s/\t.*//"},
+    "cliphist decode '[entry]' | wl-copy"
+]
+
+"Copy password" = [
+    {name="what", command="gopass ls --flat"},
+    "gopass show -c [what]"
+]
+
+"Update/Change password" = [
+    {name="what", command="gopass ls --flat"},
+    "[term] -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
 ]
 ```
 
