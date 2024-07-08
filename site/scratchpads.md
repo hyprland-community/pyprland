@@ -75,13 +75,13 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 
 ## Configuration
 
-### `command`
+### `command` (REQUIRED)
 
 This is the command you wish to run in the scratchpad.
 
 It supports [Variables](./Variables)
 
-### `animation` (optional)
+### `animation`
 
 Type of animation to use, default value is "fromTop":
 
@@ -114,7 +114,7 @@ No default value.
 
 Allows _Pyprland_ prepare the window for a correct animation and initial positioning.
 
-### `position` (optional)
+### `position`
 
 No default value, overrides the automatic margin-based position.
 
@@ -135,7 +135,7 @@ class = "term_quake"
 > [!note]
 > If `position` is not provided, the window is placed according to `margin` on one axis and centered on the other.
 
-### `multi` (optional)
+### `multi`
 
 Defaults to `true`.
 

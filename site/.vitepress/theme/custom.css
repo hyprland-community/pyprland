@@ -1,0 +1,7 @@
+summary {
+    cursor: help;
+}
+
+summary:hover {
+    text-decoration: underline;
+}

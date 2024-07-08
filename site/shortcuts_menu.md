@@ -77,7 +77,7 @@ annotate = [
 
 All the [Menu](./Menu) configuration items are also available.
 
-### `entries`
+### `entries` (REQUIRED)
 
 Defines the menu entries. Supports [Variables](./Variables)
 
@@ -135,10 +135,10 @@ You must define a list of objects, containing:
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start` (optional)
-### `command_end` (optional)
-### `submenu_start` (optional)
-### `submenu_end` (optional)
+### `command_start`
+### `command_end`
+### `submenu_start`
+### `submenu_end`
 
 Allow adding some text (eg: icon) before / after a menu entry.
 
@@ -146,7 +146,7 @@ command_* is for final commands, while submenu_* is for entries leading to anoth
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-### `skip_single` (optional)
+### `skip_single`
 
 Defaults to `true`.
 When disabled, shows the menu even for single options

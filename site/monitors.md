@@ -55,7 +55,7 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 ## Configuration
 
-### `placement`
+### `placement` (REQUIRED)
 
 Supported placements are:
 
@@ -91,23 +91,21 @@ transform = 1 # 0: normal, 1: 90°, 2: 180°, 3: 270°, 4: flipped, 5: flipped 9
 resolution = "1920x1080"  # can also be expressed as [1920, 1080]
 ```
 
-### `startup_relayout` (optional)
+### `startup_relayout`
 
 Default to `ŧrue`.
 
 When set to `false`,
 do not initialize the monitor layout on startup or when configuration is reloaded.
 
-### `full_relayout` (legacy - always enabled now)
-
-### `new_monitor_delay` (optional)
+### `new_monitor_delay`
 
 By default,
 the layout computation happens one second after the event is received to let time for things to settle.
 
 You can change this value using this option.
 
-### `hotplug_command` (optional)
+### `hotplug_command`
 
 None by default, allows to run a command when any monitor is plugged.
 
@@ -117,7 +115,7 @@ None by default, allows to run a command when any monitor is plugged.
 hotplug_commands = "wlrlui -m"
 ```
 
-### `hotplug_commands` (optional)
+### `hotplug_commands`
 
 None by default, allows to run a command when a given monitor is plugged.
 
@@ -128,7 +126,7 @@ Example to load a specific profile using [wlr layout ui](https://github.com/fdev
 "DELL P2417H CJFH277Q3HCB" = "wlrlui rotated"
 ```
 
-### `unknown` (optional)
+### `unknown`
 
 None by default,
 allows to run a command when no monitor layout has been changed (no rule applied).
@@ -138,7 +136,7 @@ allows to run a command when no monitor layout has been changed (no rule applied
 unknown = "wlrlui"
 ```
 
-### `trim_offset` (optional)
+### `trim_offset`
 
 `true` by default,
 

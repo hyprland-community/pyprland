@@ -43,7 +43,7 @@ filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 
 ## Configuration
 
-### `sources`
+### `sources` (recommended)
 
 List of sources to enable (by default nothing is enabled)
 
@@ -57,7 +57,7 @@ command = "sudo journalctl -fkn"
 parser = ["journal", "custom_parser"]
 ```
 
-#### command
+#### command (recommended)
 
 This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated. Aa common option is the system journal output (eg: `journalctl -u nginx`)
 
@@ -66,7 +66,7 @@ This is the long-running command (eg: `tail -f <filename>`) returning the stream
 Sets the list of rules / parser to be used to extract lines of interest.
 Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.
 
-### `parsers`
+### `parsers` (recommended)
 
 A list of available parsers that can be used to detect lines of interest in the **sources** and re-format it before issuing a notification.
 
@@ -96,7 +96,7 @@ You can also provide an optional **color** in `"hex"` or `"rgb()"` format
 color = "#FF5500"
 ```
 
-### default_color (optional)
+### default_color
 
 Sets the notification color that will be used when none is provided in a *parser* definition.
 

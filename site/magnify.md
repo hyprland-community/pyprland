@@ -60,13 +60,13 @@ It _looks_ more linear changes than using a single + or -.
 
 ## Configuration
 
-### `factor` (optional)
+### `factor`
 
 default value is `2`
 
 Scaling factor to be used when no value is provided.
 
-### `duration` (optional)
+### `duration`
 
 Default value is `15`
 

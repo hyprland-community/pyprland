@@ -2,7 +2,7 @@
 
 Options that should only be used for applications that are not behaving in a "standard" way, such as `emacsclient` or progressive web apps.
 
-## `match_by` (optional)
+## `match_by`
 
 Default value is `"pid"`
 When set to a sensitive client property value (eg: `class`, `initialClass`, `title`, `initialTitle`), will match the client window using the provided property instead of the PID of the process.
@@ -39,7 +39,7 @@ title = "re:.*some string.*"
 > match_by = "class"
 > ```
 
-## `process_tracking` (optional)
+## `process_tracking`
 
 Default value is `true`
 
@@ -77,7 +77,7 @@ process_tracking = false
 > the process can not be managed the same way as usual apps and the correlation
 > between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
 
-## `skip_windowrules` (optional)
+## `skip_windowrules`
 
 Default value is `[]`
 Allows you to skip the window rules for a specific scratchpad.
