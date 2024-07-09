@@ -9,7 +9,7 @@ commands:
 Presents some menu to run shortcut commands. Supports nested menus (aka categories / sub-menus).
 
 <details>
-   <summary>Configuration example</summary>
+   <summary>Configuration examples</summary>
 
 ```toml
 [shortcuts_menu.entries]
@@ -29,6 +29,31 @@ Relayout = "pypr relayout"
 "Color picker" = [
     {name="format", options=["hex", "rgb", "hsv", "hsl", "cmyk"]},
     "sleep 0.2; hyprpicker --format [format] | wl-copy" # sleep to let the menu close before the picker opens
+]
+
+screenshot = [
+    {name="what", options=["output", "window", "region", "active"]},
+    "hyprshot -m [what] -o /tmp -f shot_[what].png"
+]
+
+annotate = [
+    {name="fname", command="ls /tmp/shot_*.png"},
+    "satty --filename '[fname]' --output-filename '/tmp/annotated.png'"
+]
+
+"Clipboard history" = [
+    {name="entry", command="cliphist list", filter="s/\t.*//"},
+    "cliphist decode '[entry]' | wl-copy"
+]
+
+"Copy password" = [
+    {name="what", command="gopass ls --flat"},
+    "gopass show -c [what]"
+]
+
+"Update/Change password" = [
+    {name="what", command="gopass ls --flat"},
+    "kitty -- gopass generate -s --strict -t '[what]' && gopass show -c '[what]'"
 ]
 ```
 
@@ -52,7 +77,7 @@ Relayout = "pypr relayout"
 
 All the [Menu](./Menu) configuration items are also available.
 
-### `entries`
+### `entries` (REQUIRED)
 
 Defines the menu entries. Supports [Variables](./Variables)
 
@@ -110,10 +135,10 @@ You must define a list of objects, containing:
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start` (optional)
-### `command_end` (optional)
-### `submenu_start` (optional)
-### `submenu_end` (optional)
+### `command_start`
+### `command_end`
+### `submenu_start`
+### `submenu_end`
 
 Allow adding some text (eg: icon) before / after a menu entry.
 
@@ -121,7 +146,7 @@ command_* is for final commands, while submenu_* is for entries leading to anoth
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-### `skip_single` (optional)
+### `skip_single`
 
 Defaults to `true`.
 When disabled, shows the menu even for single options

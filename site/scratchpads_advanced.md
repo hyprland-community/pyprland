@@ -2,20 +2,20 @@
 
 Advanced configuration options
 
-## `pinned` (optional)
+## `pinned`
 
 `true` by default
 
 Makes the scratchpad "sticky" to the monitor, following any workspace change.
 
-## `excludes` (optional)
+## `excludes`
 
 No default value.
 
 List of scratchpads to hide when this one is displayed, eg: `excludes = ["term", "volume"]`.
 If you want to hide every displayed scratch you can set this to the string `"*"` instead of a list: `excludes = "*"`.
 
-## `unfocus` (optional)
+## `unfocus`
 
 No default value.
 
@@ -23,7 +23,7 @@ When set to `"hide"`, allow to hide the window when the focus is lost.
 
 Use `hysteresis` to change the reactivity
 
-## `hysteresis` (optional)
+## `hysteresis`
 
 Defaults to `0.4` (seconds)
 
@@ -33,7 +33,7 @@ Set to `0` to disable.
 > [!important]
 > Only relevant when `unfocus="hide"` is used.
 
-## `margin` (optional)
+## `margin`
 
 default value is `60`.
 
@@ -42,7 +42,7 @@ number of pixels separating the scratchpad from the screen border, depends on th
 > [!tip]
 > It is also possible to set a string to express percentages of the screen (eg: '`3%`').
 
-## `max_size` (optional)
+## `max_size`
 
 No default value.
 
@@ -56,7 +56,7 @@ size = "60% 30%"
 max_size = "1200px 100%"
 ```
 
-## `lazy` (optional)
+## `lazy`
 
 default to `false`.
 
@@ -65,14 +65,14 @@ when set to `true`, prevents the command from being started when pypr starts, it
 - Good: saves resources when the scratchpad isn't needed
 - Bad: slows down the first display (app has to launch before showing)
 
-## `preserve_aspect` (optional)
+## `preserve_aspect`
 
 Not set by default.
 When set to `true`, will preserve the size and position of the scratchpad when called repeatedly from the same monitor and workspace even though an `animation` , `position` or `size` is used (those will be used for the initial setting only).
 
 Forces the `lazy` option.
 
-## `offset` (optional)
+## `offset`
 
 In pixels, default to `0` (client's window size + margin).
 
@@ -83,7 +83,7 @@ Number of pixels for the **hide** sliding animation (how far the window will go)
 > - `margin` is automatically added to the offset
 > - automatic (value not set) is same as `"100%"`
 
-## `hide_delay` (optional)
+## `hide_delay`
 
 Defaults to `0.2`
 
@@ -95,15 +95,15 @@ Rule of thumb, if you have an animation with speed "7", as in:
 ```
 You can divide the value by two and round to the lowest value, here `3`, then divide by 10, leading to `hide_delay = 0.3`.
 
-## `restore_focus` (optional)
+## `restore_focus`
 
 Enabled by default, set to `false` if you don't want the focused state to be restored when a scratchpad is hidden.
 
-## `force_monitor` (optional)
+## `force_monitor`
 
 If set to some monitor name (eg: `"DP-1"`), it will always use this monitor to show the scratchpad.
 
-## `alt_toggle` (optional)
+## `alt_toggle`
 
 Default value is `false`
 
@@ -112,14 +112,14 @@ It applies when the `toggle` command is triggered and the toggled scratchpad is 
 
 Instead of moving the scratchpad to the focused screen, it will hide the scratchpad.
 
-## `allow_special_workspaces` (optional)
+## `allow_special_workspaces`
 
 Default value is `false` (can't be enabled when using *Hyprland* < 0.39 where this behavior can't be controlled and is disabled).
 
 When enabled, you can toggle a scratchpad over a special workspace.
 It will always use the "normal" workspace otherwise.
 
-## `smart_focus` (optional)
+## `smart_focus`
 
 Default value is `true`.
 

@@ -18,22 +18,25 @@ It serves two purposes:
 
 It allows "zapping" current backgrounds, clearing it to go distraction free and optionally make them different for each screen.
 
+> [!tip]
+> Uses **swaybg** by default, but can be configured to use any other application.
+
 <details>
-    <summary>Minimal example (requires <b>swaybg</b> by default)</summary>
+    <summary>Minimal example using defaults(requires <b>swaybg</b>)</summary>
 
 ```toml
 [wallpapers]
 path = "~/Images/wallpapers/" # path to the folder with background images
-unique = true # set a different wallpaper for each screen
 ```
 
 </details>
 
 <details>
-<summary>More complex, using <b>swww</b> as a backend (not recommended because of its stability)</summary>
+<summary>More complete, using the custom <b>swww</b> command (not recommended because of its stability)</summary>
 
 ```toml
 [wallpapers]
+unique = true # set a different wallpaper for each screen
 path = "~/Images/wallpapers/"
 interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
@@ -54,7 +57,7 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 ## Configuration
 
 
-### `path`
+### `path` (REQUIRED)
 
 path to a folder or list of folders that will be searched. Can also be a list, eg:
 
@@ -62,14 +65,14 @@ path to a folder or list of folders that will be searched. Can also be a list, e
 path = ["~/Images/Portraits/", "~/Images/Landscapes/"]
 ```
 
-### `interval` (optional)
+### `interval`
 
 defaults to `10`
 
 How long (in minutes) a background should stay in place
 
 
-### `command` (optional)
+### `command`
 
 Overrides the default command to set the background image.
 
@@ -79,7 +82,7 @@ Overrides the default command to set the background image.
 swaybg -m fill -i "[file]"
 ```
 
-### `clear_command` (optional)
+### `clear_command`
 
 By default `clear` command kills the `command` program.
 
@@ -89,19 +92,19 @@ Instead of that, you can provide a command to clear the background. eg:
 clear_command = "swaybg clear"
 ``````
 
-### `extensions` (optional)
+### `extensions`
 
 defaults to `["png", "jpg", "jpeg"]`
 
 List of valid wallpaper image extensions.
 
-### `recurse` (optional)
+### `recurse`
 
 defaults to `false`
 
 When enabled, will also search sub-directories recursively.
 
-### `unique` (optional)
+### `unique`
 
 defaults to `false`
 

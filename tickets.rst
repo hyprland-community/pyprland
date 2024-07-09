@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 51
+:total-count: 52
 
 --------------------------------------------------------------------------------
 
@@ -70,26 +70,6 @@ Can parse hyprland config in such way:
 
 --------------------------------------------------------------------------------
 
-improve groups support
-======================
-
-:bugid: 37
-:created: 2024-04-15T00:27:52
-:priority: 0
-
-Instead of making it in "layout_center" by lack of choice, refactor:
-
-- make run_command return a code compatible with shell (0 = success, < 0 = error)
-- by default it returns 0
-
-else: Add it to "layout_center" overriding prev & next
-
-if grouped, toggle over groups, when at the limit, really changes the focus
-
-Option: think about a "chaining" in handlers, (eg: "pypr groups prev OR layout_center prev") in case of a separate plugin called "groups"
-
---------------------------------------------------------------------------------
-
 preserve_aspect could recall aspect per screen resolution/size
 ==============================================================
 
@@ -140,15 +120,6 @@ Test a configuration with zero initial command/window
 
 --------------------------------------------------------------------------------
 
-Add a fallback to aiofiles (removes one dependency)
-===================================================
-
-:bugid: 49
-:created: 2024-06-02T01:41:33
-:priority: 0
-
---------------------------------------------------------------------------------
-
 Generalize a "monitors" call filtering out the invalid ones (cf gBar)
 =====================================================================
 
@@ -163,4 +134,13 @@ Experiment with minisearch on the website
 
 :bugid: 51
 :created: 2024-06-05T22:21:07
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+Wiki: remove optional and add mandatory (to the titles for the configuration options)
+=====================================================================================
+
+:bugid: 52
+:created: 2024-07-08T21:51:28
 :priority: 0
