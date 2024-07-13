@@ -35,7 +35,7 @@ Check [workspace rules](https://wiki.hyprland.org/Configuring/Workspace-Rules/#r
 ## Configuration
 
 
-### `include_special` (optional)
+### `include_special`
 
 default value is `false`
 

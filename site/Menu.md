@@ -2,7 +2,7 @@
 
 Menu based plugins have the following configuration options:
 
-### `engine` (optional)
+### `engine`
 
 Not set by default, will autodetect the available menu engine.
 
@@ -20,7 +20,7 @@ Supported engines:
 >
 > In case the engine isn't recognized, `engine` + `parameters` configuration options will be used to start the process, it requires a dmenu-like behavior.
 
-### `parameters` (optional)
+### `parameters`
 
 Extra parameters added to the engine command, the default value is specific to each engine.
 

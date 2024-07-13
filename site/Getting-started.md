@@ -55,7 +55,7 @@ Check your OS package manager first, eg:
 - Archlinux: you can find it on AUR, eg with [yay](https://github.com/Jguer/yay): `yay pyprland`
 - NixOS: Instructions in the [Nix](./Nix) page
 
-Otherwise, use the python package manager *inside a virtual environment* (`python -m venv somefolder && source ./somefolder/bin/activate`):
+Otherwise, use the python package manager (pip) [inside a virtual environment](InstallVirtualEnvironment)
 
 ```sh
 pip install pyprland

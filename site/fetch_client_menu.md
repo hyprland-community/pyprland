@@ -20,7 +20,7 @@ It brings the window to the current workspace, while [expose](./expose) moves th
 
 All the [Menu](Menu) configuration items are also available.
 
-### `separator` (optional)
+### `separator`
 
 default value is `"|"`
 

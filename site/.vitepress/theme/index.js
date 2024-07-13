@@ -2,6 +2,7 @@
 import DefaultTheme from 'vitepress/theme'
 
 import CommandList from '/components/CommandList.vue'
+import './custom.css'
 
 /** @type {import('vitepress').Theme} */
 export default {

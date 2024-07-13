@@ -20,7 +20,7 @@ Runs [gBar](https://github.com/scorpion-26/gBar) on the "best" monitor from a li
 ## Configuration
 
 
-### `monitors`
+### `monitors` (REQUIRED)
 
 List of monitors to chose from, the first have higher priority over the second one etc...
 

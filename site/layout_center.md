@@ -47,7 +47,7 @@ bind = $mainMod, up, exec, pypr layout_center prev2
 bind = $mainMod, down, exec, pypr layout_center next2
 ```
 
-You can completely ignore `next2` and `prev2` if you are allowing focus change (when the layout is enabled) in a single direction, eg:
+You can completely ignore `next2` and `prev2` if you are allowing focus change in a single direction (when the layout is enabled), eg:
 
 ```sh
 bind = $mainMod, up, movefocus, u
@@ -63,7 +63,7 @@ bind = $mainMod, down, movefocus, d
 
 ## Configuration
 
-### `on_new_client` (optional)
+### `on_new_client`
 
 Defaults to `"foreground"`.
 
@@ -73,7 +73,7 @@ Changes the behavior when a new window opens, possible options are:
 - "background" to make the new window appear in the background
 - "close" to stop the centered layout when a new window opens
 
-### `style` (optional)
+### `style`
 
 | Requires Hyprland > 0.40.0
 
@@ -85,7 +85,7 @@ Allow to set a list of styles to the main (centered) window, eg:
 style = ["opacity 1", "bordercolor rgb(FFFF00)"]
 ```
 
-### `margin` (optional)
+### `margin`
 
 default value is `60`
 
@@ -101,7 +101,7 @@ You can also set a different margin for width and height by using a list:
 margin = [10, 60]
 ```
 
-### `offset` (optional)
+### `offset`
 
 default value is `[0, 0]`
 
@@ -112,8 +112,8 @@ Example shift the main window 20px down:
 offset = [0, 20]
 ```
 
-### `next` (optional)
-### `next2` (optional)
+### `next`
+### `next2`
 
 not set by default
 
@@ -126,13 +126,13 @@ Eg:
 next = "movefocus r"
 ```
 
-### `prev` (optional)
-### `prev2` (optional)
+### `prev`
+### `prev2`
 
 Same as `next` but for the `prev` and `prev2` commands.
 
 
-### `captive_focus` (optional)
+### `captive_focus`
 
 default value is `false`
 
