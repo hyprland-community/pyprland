@@ -48,6 +48,7 @@ class Scratch(CastBoolMixin):  # {{{
     uid = ""
     monitor = ""
     pid = -1
+    excluded_scratches = []
 
     def __init__(self, uid: str, opts: dict[str, Any]) -> None:
         self.uid = uid
