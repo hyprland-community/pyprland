@@ -61,6 +61,7 @@ bind = $mainMod,Y,exec,pypr attach
 > [!note]
 > - If you wish to have a more generic space for any application you may run, check [toggle_special](./toggle_special).
 > - When you create a scratchpad called "name", it will be hidden in `special:scratch_<name>`.
+> - Providing `class` allows a glitch free experience, mostly noticeable when using animations
 
 
 ## Commands
