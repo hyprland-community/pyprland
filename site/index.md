@@ -21,7 +21,7 @@ hero:
 
 features:
   - title: TOML format
-    details: Simple but powerful configuration
+    details: Simple and flexible configuration file(s)
   - title: Customizable
     details: Create your own Hyprland experience
   - title: Fast and easy
