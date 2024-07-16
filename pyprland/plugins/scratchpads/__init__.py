@@ -5,7 +5,7 @@ import contextlib
 import time
 from dataclasses import dataclass
 from functools import partial
-from typing import cast, List
+from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
@@ -539,6 +539,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.error("Failed to show %s, aborting.", uid)
             return
 
+        excluded_ids = scratch.conf.get("excludes", [])
+        excludes_stash = scratch.conf.get("excludes_stash", False)
+        excludes_stash = self.cast_bool(excludes_stash, False)
+        if excluded_ids == "*":
+            excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
+        for e_uid in excluded_ids:
+            excluded = self.scratches.get(e_uid)
+            assert excluded
+            if excluded.visible:
+                await self.run_hide(e_uid, autohide=True)
+                if excludes_stash:
+                    scratch.excluded_scratches.append(e_uid)
+
         await scratch.initialize(self)
 
         scratch.visible = True
@@ -548,16 +561,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         assert monitor
         assert scratch.full_address, "No address !"
 
-        excluded_ids = scratch.conf.get("excludes", [])
-        excludes_stash = scratch.conf.get("excludes_stash", False)
-        if excluded_ids == "*":
-            excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
-        for e_uid in excluded_ids:
-            excluded = self.scratches.get(e_uid)
-            if excluded.visible:
-                await self.run_hide(e_uid, autohide=True)
-                if self.cast_bool(excludes_stash, False):
-                    scratch.excluded_scratches.append(e_uid)
         await self._show_transition(scratch, monitor, was_alive)
         scratch.monitor = monitor["name"]
 
@@ -751,10 +754,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         for e_uid in scratch.excluded_scratches:
             await self.run_show(e_uid)
-            scratch.excluded_scratches.remove(e_uid)
-        await self._handle_focus_tracking(scratch, active_window, active_workspace)
+        scratch.excluded_scratches.clear()
+        await self._handle_focus_tracking(scratch, active_window, active_workspace, clients)
 
-    async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str) -> None:
+    async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str, clients: ClientInfo | dict) -> None:
         """Handle focus tracking."""
         if not self.cast_bool(scratch.conf.get("smart_focus"), True):
             return
@@ -764,7 +767,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         tracker = self.focused_window_tracking.get(scratch.uid)
         if tracker and not tracker.prev_focused_window_wrkspc.startswith("special:"):
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
-            clients = await self.hyprctl_json("clients")
             client = next(filter(lambda d: d.get("address") == tracker.prev_focused_window, clients), None)
             if (
                 scratch.have_address(active_window)
