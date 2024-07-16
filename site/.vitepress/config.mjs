@@ -6,7 +6,7 @@ const version_names = ['2.3.5', '2.3.6,7', '2.3.8']
 const extra_versions = {
   items: [
     {
-      text: 'Latest',
+      text: 'Current',
       link: '/'
     }
   ]
