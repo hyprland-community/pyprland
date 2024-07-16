@@ -56,6 +56,7 @@ bind = $mainMod,V,exec,pypr toggle volume
 bind = $mainMod,A,exec,pypr toggle term
 bind = $mainMod,Y,exec,pypr attach
 ```
+</details>
 
 Note that when `class` is provided, the window is automatically managed by pyprland.
 When you create a scratchpad called "name", it will be hidden in `special:scratch_<name>`.
@@ -63,7 +64,6 @@ When you create a scratchpad called "name", it will be hidden in `special:scratc
 > [!note]
 > If you wish to have a more generic space for any application you may run, check [toggle_special](./toggle_special).
 
-</details>
 
 ## Commands
 
