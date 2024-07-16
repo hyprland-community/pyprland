@@ -64,7 +64,7 @@ You now have the latest release installed.
 
 ## Configure
 
-Paste the content of the code blocks one after another in the same terminal:
+Copy & Paste the content of the code blocks one after another in the same terminal:
 
  ```sh
 cat <<EOF > ~/.config/hypr/pyprland.toml
