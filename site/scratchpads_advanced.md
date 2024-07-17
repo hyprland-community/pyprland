@@ -15,6 +15,12 @@ No default value.
 List of scratchpads to hide when this one is displayed, eg: `excludes = ["term", "volume"]`.
 If you want to hide every displayed scratch you can set this to the string `"*"` instead of a list: `excludes = "*"`.
 
+## `restore_excluded`
+
+`false` by default.
+
+When enabled, will remember the scratchpads which have been closed due to `excludes` rules, so when the scratchpad is hidden, those previously hidden scratchpads will be shown again.
+
 ## `unfocus`
 
 No default value.

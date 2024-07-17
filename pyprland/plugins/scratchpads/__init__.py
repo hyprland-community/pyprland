@@ -540,8 +540,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
 
         excluded_ids = scratch.conf.get("excludes", [])
-        excludes_stash = scratch.conf.get("excludes_stash", False)
-        excludes_stash = self.cast_bool(excludes_stash, False)
+        restore_excluded = self.cast_bool(scratch.conf.get("restore_excluded", False))
         if excluded_ids == "*":
             excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
         for e_uid in excluded_ids:
@@ -549,7 +548,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             assert excluded
             if excluded.visible:
                 await self.run_hide(e_uid, autohide=True)
-                if excludes_stash:
+                if restore_excluded:
                     scratch.excluded_scratches.append(e_uid)
 
         await scratch.initialize(self)
