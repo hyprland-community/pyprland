@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import time
 from dataclasses import dataclass
+from enum import Flag, auto
 from functools import partial
 from typing import cast
 
@@ -21,6 +22,15 @@ AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0.2  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
+
+
+class HideFlavors(Flag):
+    """Flags for different hide behavior."""
+
+    NONE = auto()
+    FORCED = auto()
+    TRIGGERED_BY_AUTOHIDE = auto()
+    IGNORE_TILED = auto()
 
 
 @dataclass
@@ -283,6 +293,15 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.info("Didn't update scratch info %s", self)
 
     # Events {{{
+
+    async def event_changefloatingmode(self, args: str) -> None:
+        """Update the floating mode of scratchpads."""
+        addr, _onoff = args.split(",")
+        onoff = int(_onoff)
+        for scratch in self.scratches.values():
+            if scratch.address == addr:
+                scratch.client_info["floating"] = bool(onoff)
+
     async def event_workspace(self, name: str) -> None:
         """Workspace hook."""
         for scratch in self.scratches.values():
@@ -304,7 +323,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Hides scratchpads on the removed screen."""
         for scratch in self.scratches.values():
             if scratch.monitor == monitor_name:
-                await self.run_hide(scratch.uid, autohide=True)
+                await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
 
     async def event_configreloaded(self, _nothing: str) -> None:
         """Re-apply windowrules when hyprland is restarted."""
@@ -341,7 +360,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             async def _task(scratch: Scratch, delay: float) -> None:
                 await asyncio.sleep(delay)
                 self.log.debug("hide %s because another client is active", scratch.uid)
-                await self.run_hide(scratch.uid, autohide=True)
+                await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
 
                 with contextlib.suppress(KeyError):
                     del self._hysteresis_tasks[scratch.uid]
@@ -349,7 +368,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self._hysteresis_tasks[scratch.uid] = asyncio.create_task(_task(scratch, hysteresis))
         else:
             self.log.debug("hide %s because another client is active", scratch.uid)
-            await self.run_hide(scratch.uid, autohide=True)
+            await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
 
     async def _alternative_lookup(self) -> bool:
         """If not matching by pid, use specific matching and return True."""
@@ -382,7 +401,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.info("Updating Scratch info")
                 await self.update_scratch_info()
             if item and item.meta.should_hide:
-                await self.run_hide(item.uid, force=True)
+                await self.run_hide(item.uid, flavor=HideFlavors.FORCED)
 
     # }}}
     def cancel_task(self, uid: str) -> bool:
@@ -547,7 +566,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             excluded = self.scratches.get(e_uid)
             assert excluded
             if excluded.visible:
-                await self.run_hide(e_uid, autohide=True)
+                await self.run_hide(e_uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE | HideFlavors.IGNORE_TILED)
                 if restore_excluded:
                     scratch.excluded_scratches.append(e_uid)
 
@@ -704,27 +723,30 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return True
         return False
 
-    async def run_hide(self, uid: str, force: bool = False, autohide: bool = False) -> None:
-        """<name> hides scratchpad "name".
-
-        if `autohide` is True, skips focus tracking
-        `force` ignores the visibility check
-        """
+    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: C901
+        """<name> hides scratchpad "name"."""
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))
             return
+
         scratch = self.scratches.get(uid)
-        active_window = state.active_window
-        active_workspace = state.active_workspace
 
         if not scratch:
             await notify_error(f"Scratchpad '{uid}' not found, check your configuration or the hide parameter")
             self.log.warning("%s is not configured", uid)
             return
-        if not scratch.visible and not force and not autohide:
+
+        if flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
+            return
+
+        active_window = state.active_window
+        active_workspace = state.active_workspace
+
+        if not scratch.visible and not flavor & HideFlavors.FORCED and not flavor & HideFlavors.TRIGGERED_BY_AUTOHIDE:
             await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
+
         clients = await self.hyprctl_json("clients")
         await scratch.update_client_info(clients=clients)
         ref_position = scratch.client_info["at"]
