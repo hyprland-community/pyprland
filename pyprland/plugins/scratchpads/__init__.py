@@ -241,6 +241,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         item = self.scratches.get(name=uid)
         assert item
 
+        if not item.have_command:
+            return True
+
         if self.cast_bool(item.conf.get("process_tracking"), True):
             if not await item.is_alive():
                 await self._configure_windowrules(item)
@@ -389,9 +392,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_openwindow(self, params: str) -> None:
         """Open windows hook."""
-        addr, _wrkspc, _kls, _title = params.split(",", 3)
+        addr, _wrkspc, klass, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
         respawned = list(self.scratches.get_by_state("respawned"))
+
         if item:
             # ensure initialized (no-op if already initialized)
             await item.initialize(self)

@@ -80,25 +80,39 @@ class Scratch(CastBoolMixin):  # {{{
 
         self.conf = opts
 
+        if not self.have_command:
+            self.conf["match_by"] = "class"
+
     def have_address(self, addr: str) -> bool:
         """Check if the address is the same as the client."""
         return addr == self.full_address or addr in self.extra_addr
+
+    @property
+    def have_command(self) -> bool:
+        """Check if the command is provided."""
+        return bool(self.conf.get("command"))
 
     async def initialize(self, ex: "_scratchpads_extension_m.Extension") -> None:
         """Initialize the scratchpad."""
         if self.meta.initialized:
             return
-        self.meta.initialized = True
-        await self.update_client_info()
+        if self.have_command:
+            await self.update_client_info()
+        else:
+            self.client_info = await self.fetch_matching_client()
+            assert self.client_info, "couldn't find a matching client"
         await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
         if "class_match" in self.conf:  # NOTE: legacy, to be removed
             await notify_error(
                 f'scratchpad {self.uid} should use match_by="class" instead of the deprecated class_match',
                 logger=self.log,
             )
+        self.meta.initialized = True
 
     async def is_alive(self) -> bool:
         """Is the process running ?."""
+        if not self.have_command:
+            return True
         if self.cast_bool(self.conf.get("process_tracking"), True):
             path = f"/proc/{self.pid}"
             if await aiexists(path):
@@ -152,16 +166,15 @@ class Scratch(CastBoolMixin):  # {{{
     ) -> None:
         """Update the internal client info property, if not provided, refresh based on the current address."""
         if client_info is None:
-            client_info = await self.get_client_props(addr=self.full_address, clients=clients)
-        if not isinstance(client_info, dict):
-            if client_info is None:
-                self.log.error("The client window %s vanished", self.full_address)
-                msg = f"Client window {self.full_address} not found"
-                raise KeyError(msg)
-            # Unexpected type:
-            self.log.error("client_info of %s must be a dict: %s", self.address, client_info)  # type: ignore
-            msg = f"Not a dict: {client_info}"
-            raise TypeError(msg)
+            if self.have_command:
+                client_info = await self.get_client_props(addr=self.full_address, clients=clients)
+            else:
+                client_info = await self.fetch_matching_client(clients=clients)
+
+        if client_info is None:
+            self.log.error("The client window %s vanished", self.full_address)
+            msg = f"Client window {self.full_address} not found"
+            raise KeyError(msg)
 
         self.client_info.update(client_info)
 
