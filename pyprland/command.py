@@ -45,7 +45,7 @@ def remove_duplicate(names: list[str]) -> Callable:
                 if key == _dedup_last_call.get(full_name):
                     return True
                 _dedup_last_call[full_name] = key
-            return await fn(self, full_name, *args, **kwargs)
+            return cast(bool, await fn(self, full_name, *args, **kwargs))
 
         return _wrapper
 

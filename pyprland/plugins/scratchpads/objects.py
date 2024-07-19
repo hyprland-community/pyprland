@@ -48,7 +48,7 @@ class Scratch(CastBoolMixin):  # {{{
     uid = ""
     monitor = ""
     pid = -1
-    excluded_scratches = []
+    excluded_scratches: list[str] = []
 
     def __init__(self, uid: str, opts: dict[str, Any]) -> None:
         self.uid = uid
@@ -62,7 +62,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Returns forced monitor if available, else None."""
         forced_monitor = self.conf.get("force_monitor")
         if forced_monitor in state.monitors:
-            return forced_monitor
+            return cast(str, forced_monitor)
         return None
 
     def set_config(self, opts: dict[str, Any]) -> None:
@@ -99,7 +99,9 @@ class Scratch(CastBoolMixin):  # {{{
         if self.have_command:
             await self.update_client_info()
         else:
-            self.client_info = await self.fetch_matching_client()
+            m_client = await self.fetch_matching_client()
+            if m_client:
+                self.client_info = m_client
             assert self.client_info, "couldn't find a matching client"
         await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
         if "class_match" in self.conf:  # NOTE: legacy, to be removed
