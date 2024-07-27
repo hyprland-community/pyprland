@@ -392,7 +392,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_openwindow(self, params: str) -> None:
         """Open windows hook."""
-        addr, _wrkspc, klass, _title = params.split(",", 3)
+        addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
         respawned = list(self.scratches.get_by_state("respawned"))
 
