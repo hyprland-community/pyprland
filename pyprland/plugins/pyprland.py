@@ -36,7 +36,7 @@ class Extension(Plugin):
 
         if version_str:
             try:
-                self.__set_hyprland_version(version_str[1:], auto_increment)
+                self.__set_hyprland_version(version_str[1:] if version_str.startswith("v") else version_str, auto_increment)
             except Exception:  # pylint: disable=broad-except
                 self.log.exception('Fail to parse version tag "%s"', version_str)
                 await self.notify_error(f"Failed to parse hyprctl version tag: {version_str}")
