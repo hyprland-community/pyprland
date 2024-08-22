@@ -65,7 +65,7 @@ Dependencies
 
 - **Hyprland** >= 0.37
 - **Python** >= 3.11
-    - **aiofiles**
+    - **aiofiles** (optional but recommended)
 </details>
 
 <details>
