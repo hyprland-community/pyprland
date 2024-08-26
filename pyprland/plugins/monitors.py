@@ -113,8 +113,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             # run relayout after 1second without blocking
 
             async def _delayed_relayout() -> None:
+                await self._run_relayout(monitors)
                 await asyncio.sleep(1)
-                await self.run_relayout(monitors)
+                await self._run_relayout()
 
             await asyncio.create_task(_delayed_relayout())
 
@@ -133,7 +134,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     # Command
 
-    async def run_relayout(self, monitors: list[MonitorInfo] | str | None = None) -> bool:
+    async def run_relayout(self) -> bool:
+        """Recompute & apply every monitors's layout."""
+        return await self._run_relayout()
+
+    async def _run_relayout(self, monitors: list[MonitorInfo] | str | None = None) -> bool:
         """Recompute & apply every monitors's layout."""
         if isinstance(monitors, str):
             self.log.error("relayout doesn't take any argument")
@@ -169,7 +174,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         monitors = await self.hyprctl_json("monitors")
         await self._hotplug_command(monitors, name)
 
-        if not await self.run_relayout(monitors):
+        if not await self._run_relayout(monitors):
             default_command = self.config.get("unknown")
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
