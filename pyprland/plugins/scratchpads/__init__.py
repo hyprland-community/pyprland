@@ -92,13 +92,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def on_reload(self) -> None:
         """Config loader."""
         # Create new scratches with fresh config items
-        scratches = {name: Scratch(name, options) for name, options in self.config.items()}
+        scratches = {name: Scratch(name, self.config) for name, options in self.config.items()}
 
         scratches_to_spawn = set()
         for name in scratches:
             scratch = self.scratches.get(name)
             if scratch:  # if existing scratch exists, overrides the conf object
-                scratch.set_config(scratches[name].conf)
+                scratch.set_config(self.config)
             else:
                 # else register it
                 self.scratches.register(scratches[name], name)

@@ -65,8 +65,18 @@ class Scratch(CastBoolMixin):  # {{{
             return cast(str, forced_monitor)
         return None
 
-    def set_config(self, opts: dict[str, Any]) -> None:
+    def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
+        opts = full_config[self.uid].copy()
+        if "inherit" in opts:
+            inheritance = opts["inherit"]
+            if isinstance(inheritance, str):
+                inheritance = [inheritance]
+            for source in inheritance:
+                opts.update(full_config.get(source, {}))
+
+        opts.update(full_config[self.uid])
+
         if "class_match" in opts:  # NOTE: legacy, to be removed
             opts["match_by"] = "class"
         if self.cast_bool(opts.get("preserve_aspect")):
