@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
 from ...common import CastBoolMixin, state
-from ...ipc import notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import OverridableConfig, get_match_fn
 
@@ -67,18 +66,20 @@ class Scratch(CastBoolMixin):  # {{{
 
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
-        opts = full_config[self.uid].copy()
+        opts = {}
         if "inherit" in opts:
             inheritance = opts["inherit"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
             for source in inheritance:
-                opts.update(full_config.get(source, {}))
+                try:
+                    opts.update(full_config[source])
+                except KeyError:
+                    text = f"Scratchpad {self.uid} tried to inherit from {source}, but it doesn't exist"
+                    self.log.exception(text)
 
         opts.update(full_config[self.uid])
 
-        if "class_match" in opts:  # NOTE: legacy, to be removed
-            opts["match_by"] = "class"
         if self.cast_bool(opts.get("preserve_aspect")):
             opts["lazy"] = True
         if not opts.get("process_tracking", True):
@@ -114,11 +115,6 @@ class Scratch(CastBoolMixin):  # {{{
                 self.client_info = m_client
             assert self.client_info, "couldn't find a matching client"
         await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
-        if "class_match" in self.conf:  # NOTE: legacy, to be removed
-            await notify_error(
-                f'scratchpad {self.uid} should use match_by="class" instead of the deprecated class_match',
-                logger=self.log,
-            )
         self.meta.initialized = True
 
     async def is_alive(self) -> bool:
