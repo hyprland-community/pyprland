@@ -67,8 +67,10 @@ class Scratch(CastBoolMixin):  # {{{
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
         opts = {}
-        if "inherit" in opts:
-            inheritance = opts["inherit"]
+        orig_config = full_config[self.uid]
+        # apply inheritance
+        if "inherit" in orig_config:
+            inheritance = orig_config["inherit"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
             for source in inheritance:
@@ -78,21 +80,23 @@ class Scratch(CastBoolMixin):  # {{{
                     text = f"Scratchpad {self.uid} tried to inherit from {source}, but it doesn't exist"
                     self.log.exception(text)
 
-        opts.update(full_config[self.uid])
+        # apply specific config
+        opts.update(orig_config)
 
+        # apply the config
+        self.conf = opts
+
+        # apply constraints
         if self.cast_bool(opts.get("preserve_aspect")):
             opts["lazy"] = True
+        if not self.have_command:
+            opts["match_by"] = "class"
         if not opts.get("process_tracking", True):
             opts["lazy"] = True
             if "match_by" not in opts:
                 opts["match_by"] = "class"
         if state.hyprland_version < VersionInfo(0, 39, 0):
             opts["allow_special_workspace"] = False
-
-        self.conf = opts
-
-        if not self.have_command:
-            self.conf["match_by"] = "class"
 
     def have_address(self, addr: str) -> bool:
         """Check if the address is the same as the client."""
