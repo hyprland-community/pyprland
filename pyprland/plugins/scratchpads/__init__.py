@@ -48,7 +48,7 @@ class FocusTracker:
 
 def get_animation_type(scratch: Scratch) -> str:
     """Get the animation type or an empty string if not set."""
-    return (scratch.conf.get("animation") or "").lower()
+    return scratch.conf.get("animation", "").lower()
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
@@ -800,7 +800,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 and not scratch.have_address(tracker.prev_focused_window)
                 and not client["workspace"]["name"].startswith("special")
             ):
-                self.log.info(self.scratches.get(addr=tracker.prev_focused_window))
+                self.log.debug("Previous scratch: %s", self.scratches.get(addr=tracker.prev_focused_window))
                 await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
 
     # }}}
