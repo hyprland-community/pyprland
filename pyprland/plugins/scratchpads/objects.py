@@ -73,10 +73,11 @@ class Scratch(CastBoolMixin):  # {{{
             inheritance = orig_config["inherit"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
+
             for source in inheritance:
-                try:
+                if source in full_config:
                     opts.update(full_config[source])
-                except KeyError:
+                else:
                     text = f"Scratchpad {self.uid} tried to inherit from {source}, but it doesn't exist"
                     self.log.exception(text)
 

@@ -78,6 +78,10 @@ class OverridableConfig(dict):
     def __setitem__(self, name: str, value: float | bool | str | list) -> None:
         self.ref[name] = value
 
+    def update(self, other: dict[str, float | bool | str | list]) -> None:
+        """Update the configuration with another dictionary."""
+        self.ref.update(other)
+
     def __getitem__(self, name: str) -> float | bool | str | list:
         override = self.mon_override.get(state.active_monitor, {})
         if name in override:
