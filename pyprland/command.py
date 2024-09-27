@@ -233,7 +233,7 @@ class Pyprland:
         """Consume the event loop and calls corresponding handlers."""
         while not self.stopped:
             try:
-                data = (await self.event_reader.readline()).decode()
+                data = (await self.event_reader.readline()).decode(errors="replace")
             except RuntimeError:
                 self.log.exception("Aborting event loop")
                 return

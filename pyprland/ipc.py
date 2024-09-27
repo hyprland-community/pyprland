@@ -85,7 +85,8 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
     reader_data = await reader.read()
     writer.close()
     await writer.wait_closed()
-    return json.loads(reader_data)  # type: ignore
+    decoded_data = reader_data.decode("utf-8", errors="replace")
+    return json.loads(decoded_data)  # type: ignore
 
 
 @retry_on_reset
