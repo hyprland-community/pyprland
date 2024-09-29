@@ -64,25 +64,27 @@ class Scratch(CastBoolMixin):  # {{{
             return cast(str, forced_monitor)
         return None
 
-    def set_config(self, full_config: dict[str, Any]) -> None:
-        """Apply constraints to the configuration."""
+    def _get_intial_config(self, config: dict) -> dict:
+        """Return a fresh configuration for the scratchpad."""
         opts = {}
-        scratch_config = full_config[self.uid]
-        # apply inheritance
+        scratch_config = config[self.uid]
         if "use" in scratch_config:
             inheritance = scratch_config["use"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
 
             for source in inheritance:
-                if source in full_config:
-                    opts.update(full_config[source])
+                if source in config:
+                    opts.update(config[source])
                 else:
                     text = f"Scratchpad {self.uid} tried to use {source}, but it doesn't exist"
                     self.log.exception(text)
-
-        # apply specific config
         opts.update(scratch_config)
+        return opts
+
+    def set_config(self, full_config: dict[str, Any]) -> None:
+        """Apply constraints to the configuration."""
+        opts = self._get_intial_config(full_config)
 
         # apply the config
         self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
