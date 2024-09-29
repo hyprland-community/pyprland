@@ -66,11 +66,11 @@ class Scratch(CastBoolMixin):  # {{{
 
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
-        opts = DynMonitorConfig({}, full_config.get("monitor", {}))
-        orig_config = full_config[self.uid]
+        opts = {}
+        scratch_config = full_config[self.uid]
         # apply inheritance
-        if "use" in orig_config:
-            inheritance = orig_config["use"]
+        if "use" in scratch_config:
+            inheritance = scratch_config["use"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
 
@@ -82,10 +82,10 @@ class Scratch(CastBoolMixin):  # {{{
                     self.log.exception(text)
 
         # apply specific config
-        opts.update(orig_config)
+        opts.update(scratch_config)
 
         # apply the config
-        self.conf = opts
+        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
 
         # apply constraints
         if self.cast_bool(opts.get("preserve_aspect")):
