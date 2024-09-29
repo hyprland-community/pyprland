@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 from ...aioops import aiexists, aiopen
 from ...common import CastBoolMixin, state
 from ...types import ClientInfo, MonitorInfo, VersionInfo
-from .helpers import OverridableConfig, get_match_fn
+from .helpers import DynMonitorConfig, get_match_fn
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -51,7 +51,7 @@ class Scratch(CastBoolMixin):  # {{{
 
     def __init__(self, uid: str, opts: dict[str, Any]) -> None:
         self.uid = uid
-        self.set_config(OverridableConfig(opts, opts.get("monitor", {})))
+        self.set_config(opts)
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
@@ -66,7 +66,7 @@ class Scratch(CastBoolMixin):  # {{{
 
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
-        opts = {}
+        opts = DynMonitorConfig({}, full_config.get("monitor", {}))
         orig_config = full_config[self.uid]
         # apply inheritance
         if "inherit" in orig_config:
