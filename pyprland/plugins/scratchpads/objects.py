@@ -69,8 +69,8 @@ class Scratch(CastBoolMixin):  # {{{
         opts = DynMonitorConfig({}, full_config.get("monitor", {}))
         orig_config = full_config[self.uid]
         # apply inheritance
-        if "inherit" in orig_config:
-            inheritance = orig_config["inherit"]
+        if "use" in orig_config:
+            inheritance = orig_config["use"]
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
 
@@ -78,7 +78,7 @@ class Scratch(CastBoolMixin):  # {{{
                 if source in full_config:
                     opts.update(full_config[source])
                 else:
-                    text = f"Scratchpad {self.uid} tried to inherit from {source}, but it doesn't exist"
+                    text = f"Scratchpad {self.uid} tried to use {source}, but it doesn't exist"
                     self.log.exception(text)
 
         # apply specific config
