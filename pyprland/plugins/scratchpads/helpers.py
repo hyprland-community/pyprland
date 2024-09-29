@@ -66,7 +66,7 @@ def get_match_fn(prop_name: str, prop_value: float | bool | str | list) -> Calla
     return lambda value1, value2: value1 == value2
 
 
-class DynMonitorConfig(dict):
+class DynMonitorConfig:
     """A `dict`-like object allowing per-monitor overrides."""
 
     def __init__(
@@ -74,10 +74,6 @@ class DynMonitorConfig(dict):
     ) -> None:
         self.ref = ref
         self.mon_override = monitor_override
-
-    def update(self, other: dict[str, float | bool | list | str]) -> None:
-        """Update the configuration with the given dictionary."""
-        self.ref.update(other)
 
     def __setitem__(self, name: str, value: float | bool | str | list) -> None:
         self.ref[name] = value
