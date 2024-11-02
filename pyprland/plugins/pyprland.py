@@ -33,6 +33,8 @@ class Extension(Plugin):
                 version_str = _tag.split("-", 1)[0]
                 if len(version_str) < len(_tag):
                     auto_increment = True
+            else:
+                version_str = version_info["version"]
 
         if version_str:
             try:
