@@ -1,5 +1,11 @@
 #!/bin/sh
+echo -n "Current is: "
+pypr version
+echo -n "Available: "
+ls versions
+
 if [ -z "$1" ]; then
+    echo -n "Archive current version as: "
     read version
 else
     version=$1
