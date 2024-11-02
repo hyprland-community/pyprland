@@ -2,6 +2,26 @@
 
 Advanced configuration options
 
+## `use`
+
+No default value.
+
+List of scratchpads (or single string) that will be used for the default values of this scratchpad.
+Think about *templates*:
+
+```toml
+[scratchpads.terminals]
+animation = "fromTop"
+margin = 50
+size = "75% 60%"
+max_size = "1920px 100%"
+
+[scratchpads.term]
+command = "kitty --class kitty-dropterm"
+class = "kitty-dropterm"
+use = "terminals"
+```
+
 ## `pinned`
 
 `true` by default
