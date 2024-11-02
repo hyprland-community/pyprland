@@ -64,8 +64,8 @@ class Scratch(CastBoolMixin):  # {{{
             return cast(str, forced_monitor)
         return None
 
-    def _get_intial_config(self, config: dict) -> dict:
-        """Return a fresh configuration for the scratchpad."""
+    def _make_intial_config(self, config: dict) -> dict:
+        """Return configuration for the scratchpad."""
         opts = {}
         scratch_config = config[self.uid]
         if "use" in scratch_config:
@@ -84,7 +84,7 @@ class Scratch(CastBoolMixin):  # {{{
 
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
-        opts = self._get_intial_config(full_config)
+        opts = self._make_intial_config(full_config)
 
         # apply the config
         self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
