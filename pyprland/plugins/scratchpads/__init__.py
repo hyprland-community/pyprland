@@ -93,19 +93,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Config loader."""
         # Sanity checks
         _scratch_classes: dict[str:Scratch] = {}
-        for scratch in self.config.values():
+        for uid, scratch in self.config.items():
             _klass = scratch.get("class")
             if _klass:
                 if _klass in _scratch_classes:
                     text = "Scratch class %s is duplicated (in %s and %s)"
                     args = (
                         scratch["class"],
-                        scratch.uid,
-                        _scratch_classes[scratch["class"].uid],
+                        uid,
+                        _scratch_classes[_klass],
                     )
                     self.log.error(text, *args)
                     await self.notify_error(text % args)
-                _scratch_classes[_klass] = scratch
+                _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
         scratches = {name: Scratch(name, self.config) for name, options in self.config.items()}
