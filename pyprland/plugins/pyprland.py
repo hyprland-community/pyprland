@@ -34,7 +34,7 @@ class Extension(Plugin):
                 if len(version_str) < len(_tag):
                     auto_increment = True
             else:
-                version_str = version_info["version"]
+                version_str = version_info.get("version")
 
         if version_str:
             try:
@@ -45,7 +45,7 @@ class Extension(Plugin):
                 version_str = ""
 
         if not version_str:
-            self.log.error("Fail to parse version information: %s", version_info)
+            self.log.error("Fail to parse version information: %s - using default", version_info)
             state.hyprland_version = DEFAULT_VERSION
 
         state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
