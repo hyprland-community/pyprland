@@ -342,7 +342,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Hides scratchpads on the removed screen."""
         for scratch in self.scratches.values():
             if scratch.monitor == monitor_name:
-                await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
+                try:
+                    await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
+                except Exception as e:
+                    self.log.exception("Failed to hide %s", scratch.uid)
+                    await self.notify_info(f"Failed to hide {scratch.uid}: {e}")
 
     async def event_configreloaded(self, _nothing: str) -> None:
         """Re-apply windowrules when hyprland is restarted."""
