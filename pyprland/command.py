@@ -213,7 +213,7 @@ class Pyprland:
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
-    @remove_duplicate(names=["active_window", "active_windowv2"])
+    @remove_duplicate(names=["event_activewindow", "event_activewindowv2"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
         """Call an event handler with params."""
         handled = False
@@ -295,7 +295,7 @@ class Pyprland:
         full_name = f"run_{cmd}"
 
         if PYPR_DEMO:
-            os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC102
+            os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221
 
         if not await self._call_handler(full_name, *args, notify=cmd):
             self.log.warning("No such command: %s", cmd)
