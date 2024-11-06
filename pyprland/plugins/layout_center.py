@@ -7,6 +7,8 @@
 """
 
 from collections import defaultdict
+from collections.abc import Callable
+from functools import partial
 from typing import Any, cast
 
 from ..common import CastBoolMixin, is_rotated, state
@@ -19,6 +21,17 @@ class Extension(CastBoolMixin, Plugin):
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
     last_index = 0
+    command_handlers: dict[str, Callable]
+
+    async def init(self) -> None:
+        """Initialize the plugin."""
+        self.command_handlers = {
+            "toggle": self._run_toggle,
+            "next": partial(self._run_changefocus, 1, default_override="next"),
+            "prev": partial(self._run_changefocus, -1, default_override="prev"),
+            "next2": partial(self._run_changefocus, 1, default_override="next2"),
+            "prev2": partial(self._run_changefocus, -1, default_override="prev2"),
+        }
 
     # Events
 
@@ -80,16 +93,9 @@ class Extension(CastBoolMixin, Plugin):
 
     async def run_layout_center(self, what: str) -> None:
         """<toggle|next|prev> turn on/off or change the active window."""
-        if what == "toggle":
-            await self._run_toggle()
-        elif what == "next":
-            await self._run_changefocus(1, default_override="next")
-        elif what == "prev":
-            await self._run_changefocus(-1, default_override="prev")
-        elif what == "next2":
-            await self._run_changefocus(1, default_override="next2")
-        elif what == "prev2":
-            await self._run_changefocus(-1, default_override="prev2")
+        fn = self.command_handlers.get(what)
+        if fn:
+            await fn()
         else:
             await self.notify_error(f"unknown layout_center command: {what}")
 
