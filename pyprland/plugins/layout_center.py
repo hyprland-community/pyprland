@@ -146,11 +146,11 @@ class Extension(CastBoolMixin, Plugin):
                 height = monitor["height"] - (2 * margin[1])
                 if is_rotated(cast(MonitorInfo, monitor)):
                     width, height = height, width
-                x += monitor["x"] + margin[0]
-                y += monitor["y"] + margin[1]
+                x += monitor["x"] + (margin[0] / scale)
+                y += monitor["y"] + (margin[1] / scale)
                 break
         await self.hyprctl(f"resizewindowpixel exact {int(width / scale)} {int(height / scale)},address:{addr}")
-        await self.hyprctl(f"movewindowpixel exact {int(x / scale)} {int(y / scale)},address:{addr}")
+        await self.hyprctl(f"movewindowpixel exact {int(x)} {int(y)},address:{addr}")
 
     # Subcommands
 
