@@ -641,9 +641,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         )  # not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
-        position_fixed = False
-        if should_set_aspect:
-            position_fixed = await self._fix_position(scratch, monitor)
 
         clients = await self.hyprctl_json("clients")
         await self._handle_multiwindow(scratch, clients)
@@ -663,6 +660,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         await self.hyprctl(move_commands)
         await self._update_infos(scratch, clients)
+
+        position_fixed = False
+        if should_set_aspect:
+            position_fixed = await self._fix_position(scratch, monitor)
 
         if not position_fixed:
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
