@@ -5,6 +5,7 @@ import importlib
 import itertools
 import json
 import os
+import signal
 import sys
 import tomllib
 from collections.abc import Callable
@@ -77,6 +78,7 @@ class Pyprland:
         self.log = get_logger()
         self.queues: dict[str, asyncio.Queue] = {}
         self._set_instance(self)
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
     async def initialize(self) -> None:
         """Initialize the main structures."""
