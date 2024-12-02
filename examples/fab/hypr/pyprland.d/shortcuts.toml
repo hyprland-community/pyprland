@@ -24,7 +24,7 @@ parameters = "-p 🍰 -dmenu -i -theme ~/.config/rofi/rounded-nord-dark.rasi"
 
 "Color picker" = [
     {name="format", options=["hex", "rgb", "hsv", "hsl", "cmyk"]},
-    "sleep 0.2; hyprpicker --format [format] | wl-copy"
+    "sleep 0.5; hyprpicker --format [format] | wl-copy"
 ]
 
 "Copy password" = [

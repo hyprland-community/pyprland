@@ -111,6 +111,13 @@ class BemenuMenu(MenuEngine):
     proc_extra_parameters = "-c"
 
 
+class WalkerMenu(MenuEngine):
+    """A walker based menu."""
+
+    proc_name = "walker"
+    proc_extra_parameters = "-d -k -p '[prompt]'"
+
+
 class AnyrunMenu(MenuEngine):
     """A bemenu based menu."""
 
@@ -118,7 +125,7 @@ class AnyrunMenu(MenuEngine):
     proc_extra_parameters = "--plugins libstdin.so --show-results-immediately true"
 
 
-every_menu_engine = [TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu]
+every_menu_engine = [WalkerMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu]
 
 
 async def init(force_engine: str | None = None, extra_parameters: str = "") -> MenuEngine:
