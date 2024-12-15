@@ -111,9 +111,9 @@ export default {
                     description: 'handles random wallpapers at regular interval (from a folder)'
                 },
                 {
-                    name: 'gbar',
+                    name: 'bar',
                     stars: 3,
-                    description: 'improves multi-monitor handling of the status bar - only <tt>gBar</tt> is supported at the moment'
+                    description: 'improves multi-monitor handling of the status bar - restarts it on crashes too'
                 },
                 {
                     name: 'expose',
