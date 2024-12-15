@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 52
+:total-count: 53
 
 --------------------------------------------------------------------------------
 
@@ -144,3 +144,22 @@ Wiki: remove optional and add mandatory (to the titles for the configuration opt
 :bugid: 52
 :created: 2024-07-08T21:51:28
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+AI voice assistant / task manager
+=================================
+
+:bugid: 53
+:created: 2024-11-30T23:17:37
+:priority: 0
+
+Allow setting tasks with different properties
+urgent: bool
+due date: date
+description: text
+priority: int
+
+Will sort them according to priorities, making urgent or soon due tasks first (so priority applies last - have less importance than those)
+
+Will speak when a user event is received every X minutes depending on the urgency of the task
