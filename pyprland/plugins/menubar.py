@@ -1,15 +1,15 @@
-"""Run gbar on the first available display from a list of displays."""
+"""Run a bar."""
 
 import asyncio
 import contextlib
 from time import time
 
-from ..common import state
+from ..common import apply_variables, state
 from .interface import Plugin
 
 
 class Extension(Plugin):
-    """Manage gBar application."""
+    """Manage desktop bars application."""
 
     monitors: set[str]
     proc = None
@@ -20,9 +20,9 @@ class Extension(Plugin):
     async def on_reload(self) -> None:
         """Start the process."""
         self.kill()
-        self._run_gbar()
+        self._run_program()
 
-    def _run_gbar(self) -> None:
+    def _run_program(self) -> None:
         """Create ongoing task restarting gbar in case of crash."""
         if self.ongoing_task:
             self.ongoing_task.cancel()
@@ -31,12 +31,12 @@ class Extension(Plugin):
             prev_time = time()
             while True:
                 await self.set_best_monitor()
-                cmd = f"gBar bar {self.cur_monitor}"
+                cmd = apply_variables(self.config.get("command", "gBar bar [monitor]"), {"monitor": self.cur_monitor})
                 now = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 await self.proc.wait()
                 delay = 60 - (now - prev_time)
-                text = f"gBar crashed, restarting in {delay // 2}s." if delay > 0 else "gBar crashed, restarting."
+                text = f"Menu Bar crashed, restarting in {delay // 2}s." if delay > 0 else "Menu Bar crashed, restarting."
                 await self.notify_error(text)
                 prev_time = now
                 if delay > 0:
@@ -44,7 +44,7 @@ class Extension(Plugin):
 
         self.ongoing_task = asyncio.create_task(_run_loop())
 
-    async def run_gbar(self, args: str) -> None:
+    async def run_bar(self, args: str) -> None:
         """Start gBar on the first available monitor."""
         if args.startswith("re"):
             self.kill()

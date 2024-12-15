@@ -20,7 +20,7 @@ _shtab_pypr_commands() {
         "expose:Show all windows in the current workspace. [expose]"
         "fetch_client_menu:Fetch a client menu. [fetch_client_menu]"
         "unfetch_client:Unfetch a client. [fetch_client_menu]"
-        "gbar:restart gBar on the first available monitor. [gbar]"
+        "bar:restart MenuBar on the first available monitor. [menubar]"
         "layout_center:Change the active window. [layout_center]"
         "menu:Show a menu. [shortcuts_menu]"
         "relayout:Relayout the current workspace. [monitors]"
@@ -63,7 +63,7 @@ _shtab_pypr_expose_options=(
 _shtab_pypr_fetch_client_menu_options=(
 )
 
-_shtab_pypr_gbar_options=(
+_shtab_pypr_bar_options=(
     ":action:(restart)"
 )
 
@@ -144,7 +144,7 @@ _shtab_pypr() {
                 exit) _arguments -C -s $_shtab_pypr_exit_options ;;
                 expose) _arguments -C -s $_shtab_pypr_expose_options ;;
                 fetch_client_menu) _arguments -C -s $_shtab_pypr_fetch_client_menu_options ;;
-                gbar) _arguments -C -s $_shtab_pypr_gbar_options ;;
+                bar) _arguments -C -s $_shtab_pypr_bar_options ;;
                 help) _arguments -C -s $_shtab_pypr_help_options ;;
                 hide) _arguments -C -s $_shtab_pypr_hide_options ;;
                 layout_center) _arguments -C -s $_shtab_pypr_layout_center_options ;;
