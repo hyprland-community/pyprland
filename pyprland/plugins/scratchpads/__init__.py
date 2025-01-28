@@ -68,9 +68,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
-        self.get_client_props = partial(get_client_props, logger=self.log)
+        self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
         Scratch.get_client_props = self.get_client_props
-        self.get_focused_monitor_props = partial(get_focused_monitor_props, logger=self.log)
+        self.get_focused_monitor_props = staticmethod(partial(get_focused_monitor_props, logger=self.log))
 
     async def exit(self) -> None:
         """Exit hook."""
