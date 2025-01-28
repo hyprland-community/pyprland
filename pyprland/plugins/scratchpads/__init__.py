@@ -507,7 +507,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
 
     async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None) -> tuple[int, int]:
-        """Return offset from config or computed from window & screen positions."""
+        """Return offset from config or use margin as a ref."""
         offset = scratch.conf.get("offset")
         if monitor is None:
             monitor = await get_focused_monitor_props(self.log, name=scratch.forced_monitor)
@@ -517,19 +517,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if offset:
             return cast(tuple[int, int], (convert_monitor_dimension(offset, ref, monitor) for ref in aspect))
 
-        mon_size = tuple(
-            int(m / monitor["scale"]) for m in ([monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]])
-        )
-        win_position = apply_offset((monitor["x"], monitor["y"]), scratch.meta.extra_positions[scratch.address])
-        win_size = convert_coords(scratch.conf.get("size"), monitor)
-        scaled = []
+        # compute from client size & margin
+        margin = scratch.conf.get("margin", DEFAULT_MARGIN)
 
-        if get_animation_type(scratch) in ("fromtop", "fromleft"):
-            for v1, v2 in zip(win_position, win_size, strict=True):
-                scaled.append(v1 + v2)
-        else:
-            scaled = [m - w for m, w in zip(mon_size, win_position, strict=True)]
+        mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
 
+        margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
+        scaled = map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins, strict=False)])
         return cast(tuple[int, int], scaled)
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
