@@ -517,14 +517,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if offset:
             return cast(tuple[int, int], (convert_monitor_dimension(offset, ref, monitor) for ref in aspect))
 
-        # compute from client size & margin
-        margin = scratch.conf.get("margin", DEFAULT_MARGIN)
-
         mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
 
-        margins = [convert_monitor_dimension(margin, dim, monitor) for dim in mon_size]
-        scaled = map(int, [(a + m) / monitor["scale"] for a, m in zip(aspect, margins, strict=False)])
-        return cast(tuple[int, int], scaled)
+        offsets = [convert_monitor_dimension("100%", dim, monitor) for dim in mon_size]
+        return cast(tuple[int, int], offsets)
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Animate hiding a scratchpad."""
