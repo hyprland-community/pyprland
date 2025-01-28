@@ -10,7 +10,7 @@ from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
-from ...ipc import get_client_props, get_focused_monitor_props, notify_error
+from ...ipc import get_client_props, get_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
@@ -70,7 +70,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self._hysteresis_tasks = {}
         self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
         Scratch.get_client_props = self.get_client_props
-        self.get_focused_monitor_props = staticmethod(partial(get_focused_monitor_props, logger=self.log))
+        self.get_monitor_props = staticmethod(partial(get_monitor_props, logger=self.log))
 
     async def exit(self) -> None:
         """Exit hook."""
@@ -152,7 +152,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
                 await self.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
-            monitor = await self.get_focused_monitor_props(name=forced_monitor)
+            monitor = await self.get_monitor_props(name=forced_monitor)
             width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
 
             ipc_commands = []
@@ -510,7 +510,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Return offset from config or use margin as a ref."""
         offset = scratch.conf.get("offset")
         if monitor is None:
-            monitor = await get_focused_monitor_props(self.log, name=scratch.forced_monitor)
+            monitor = await get_monitor_props(self.log, name=scratch.forced_monitor)
         rotated = is_rotated(monitor)
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
@@ -598,7 +598,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         scratch.visible = True
         scratch.meta.space_identifier = get_active_space_identifier()
-        monitor = await self.get_focused_monitor_props(name=scratch.forced_monitor)
+        monitor = await self.get_monitor_props(name=scratch.forced_monitor)
 
         assert monitor
         assert scratch.full_address, "No address !"

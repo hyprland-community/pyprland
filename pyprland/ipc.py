@@ -2,7 +2,7 @@
 
 __all__ = [
     "get_client_props",
-    "get_focused_monitor_props",
+    "get_monitor_props",
     "hyprctl",
     "hyprctl_json",
     "notify",
@@ -170,7 +170,7 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
 # }}}
 
 
-async def get_focused_monitor_props(logger: Logger | None = None, name: str | None = None) -> MonitorInfo:
+async def get_monitor_props(logger: Logger | None = None, name: str | None = None) -> MonitorInfo:
     """Return focused monitor data if `name` is not defined, else use monitor's name.
 
     Args:
