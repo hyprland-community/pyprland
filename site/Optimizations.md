@@ -6,6 +6,18 @@
 - Leaving the configuration for plugins which are not enabled will have no impact.
 - Using multiple configuration files only have a small impact on the startup time.
 
+### Pypr
+
+You can run `pypr` using `pypy` (version 3) for a more snappy experience.
+One way is to use a `pypy3` virtual environment:
+
+```bash
+pypy3 -m venv pypr-venv
+source ./pypr-venv/bin/activate
+cd <pypr source folder>
+pip install -e .
+```
+
 ### Pypr command
 
 In case you want to save some time when interacting with the daemon
