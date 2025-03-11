@@ -59,7 +59,10 @@ class Extension(Plugin):
 
     async def event_monitorremoved(self, name: str) -> None:
         """Track monitor."""
-        state.monitors.remove(name)
+        try:
+            state.monitors.remove(name)
+        except ValueError:
+            self.log.warning("Monitor %s not found in state - can't be removed", name)
 
     async def on_reload(self) -> None:
         """Reload the plugin."""
