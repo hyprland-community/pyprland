@@ -11,7 +11,7 @@ import (
 func main() {
 	// If no argument passed, just exit
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "No command passed!\n")
+		fmt.Fprintf(os.Stderr, "No command passed! Try 'help'\n")
 		os.Exit(0);
 	}
 	// if the argument is help, print the help text
