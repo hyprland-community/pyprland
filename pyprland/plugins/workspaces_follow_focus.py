@@ -52,9 +52,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             next_workspace = available_workspaces[0 if increment > 0 else -1]
         else:
             next_workspace = available_workspaces[(idx + increment) % len(available_workspaces)]
+
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor {next_workspace},{monitor['name']}",
+                f"moveworkspacetomonitor {next_workspace} {monitor['name']}",
                 f"workspace {next_workspace}",
             ]
         )
