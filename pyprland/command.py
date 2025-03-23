@@ -262,8 +262,8 @@ class Pyprland:
         """Receive a socket command."""
         data = (await reader.readline()).decode()
         if not data:
-            self.log.critical("Server starved")
-            data = "exit"
+            self.log.warning("Empty command received")
+            return
         data = data.strip()
         if data == "exit":
 
