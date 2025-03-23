@@ -11,7 +11,7 @@ from typing import cast
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
 from ...ipc import get_client_props, get_monitor_props, notify_error
-from ...types import ClientInfo, MonitorInfo
+from ...types import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
 from .helpers import apply_offset, compute_offset, get_active_space_identifier, get_all_space_identifiers, get_match_fn
@@ -68,6 +68,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
+        self._class_rule_prefix = ""
         self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
         Scratch.get_client_props = self.get_client_props
         self.get_monitor_props = staticmethod(partial(get_monitor_props, logger=self.log))
@@ -91,6 +92,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def on_reload(self) -> None:
         """Config loader."""
+        self._class_rule_prefix = "class:" if state.hyprland_version > VersionInfo(0, 47, 2) else ""
         # Sanity checks
         _scratch_classes: dict[str:Scratch] = {}
         for uid, scratch in self.config.items():
@@ -111,7 +113,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         scratches = {name: Scratch(name, self.config) for name, options in self.config.items()}
 
         scratches_to_spawn = set()
-        for name in scratches:
+        for name in scratches:  # noqa: PLC0206
             scratch = self.scratches.get(name)
             if scratch:  # if existing scratch exists, overrides the conf object
                 scratch.set_config(self.config)
@@ -138,7 +140,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Unset the windowrules."""
         defined_class = scratch.conf.get("class", "")
         if defined_class:
-            await self.hyprctl(f"windowrule unset,^({defined_class})$", "keyword")
+            await self.hyprctl(f"windowrule unset,{self._class_rule_prefix}^({defined_class})$", "keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
@@ -158,9 +160,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             ipc_commands = []
 
             if "float" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule float,^({defined_class})$")
+                ipc_commands.append(f"windowrule float,{self._class_rule_prefix}^({defined_class})$")
             if "workspace" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule workspace special:scratch_{scratch.uid} silent,^({defined_class})$")
+                ipc_commands.append(
+                    f"windowrule workspace special:scratch_{scratch.uid} silent,{self._class_rule_prefix}^({defined_class})$"
+                )
             set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
@@ -177,10 +181,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     "fromleft": f"-200% {margin_y}",
                 }[animation_type]
                 if set_aspect:
-                    ipc_commands.append(f"windowrule move {t_pos},^({defined_class})$")
+                    ipc_commands.append(f"windowrule move {t_pos},{self._class_rule_prefix}^({defined_class})$")
 
             if set_aspect:
-                ipc_commands.append(f"windowrule size {width} {height},^({defined_class})$")
+                ipc_commands.append(f"windowrule size {width} {height},{self._class_rule_prefix}^({defined_class})$")
 
             await self.hyprctl(ipc_commands, "keyword")
 
