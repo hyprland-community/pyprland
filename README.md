@@ -78,6 +78,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 ### 2.4
 
 - Scratchpads are now pinned by default (set `pinned = false` for the old behavior)
+- Version 2.4.4 is required for Hyprland 0.48.0
 
 ### 2.3
 
