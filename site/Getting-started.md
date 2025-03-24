@@ -3,6 +3,7 @@
 Pypr consists in two things:
 
 - **a tool**: `pypr` which runs the daemon (service), but also allows to interact with it
+  - `pypr-client` is a more limited, faster version, meant to be used in your `hyprland.conf` keyboard bindings **only**
 - **some config file**: `~/.config/hypr/pyprland.toml` (or the path set using `--config`) using the [TOML](https://toml.io/en/) format
 
 The `pypr` tool only have a few built-in commands:
@@ -163,17 +164,25 @@ unfocus = "hide"
 Some of those plugins may require changes in your `hyprland.conf` to fully operate or to provide a convenient access to a command, eg:
 
 ```bash
-bind = $mainMod SHIFT, Z, exec, pypr zoom
-bind = $mainMod ALT, P,exec, pypr toggle_dpms
-bind = $mainMod SHIFT, O, exec, pypr shift_monitors +1
-bind = $mainMod, B, exec, pypr expose
-bind = $mainMod, K, exec, pypr change_workspace +1
-bind = $mainMod, J, exec, pypr change_workspace -1
-bind = $mainMod,L,exec, pypr toggle_dpms
-bind = $mainMod SHIFT,M,exec,pypr toggle stb stb-logs
-bind = $mainMod,A,exec,pypr toggle term
-bind = $mainMod,V,exec,pypr toggle volume
+
+$pypr = uwsm app -- /usr/local/bin/pypr-client
+
+bind = $mainMod SHIFT, Z, exec, $pypr zoom
+bind = $mainMod ALT, P,exec, $pypr toggle_dpms
+bind = $mainMod SHIFT, O, exec, $pypr shift_monitors +1
+bind = $mainMod, B, exec, $pypr expose
+bind = $mainMod, K, exec, $pypr change_workspace +1
+bind = $mainMod, J, exec, $pypr change_workspace -1
+bind = $mainMod,L,exec, $pypr toggle_dpms
+bind = $mainMod SHIFT,M,exec, $pypr toggle stb stb-logs
+bind = $mainMod,A,exec, $pypr toggle term
+bind = $mainMod,V,exec, $pypr toggle volume
 ```
+
+This example makes use of the faster `pypr-client` which may not be available depending on how you installed,
+in case you want to install it manually, just download [the source code](https://github.com/hyprland-community/pyprland/blob/main/client/) and compile it (eg: `gcc -o pypr-client pypr-client.c`).
+Rust, Go and C versions are available.
+
 
 </details>
 
