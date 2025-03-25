@@ -165,7 +165,7 @@ Some of those plugins may require changes in your `hyprland.conf` to fully opera
 
 ```bash
 
-$pypr = uwsm app -- /usr/local/bin/pypr-client
+$pypr = uwsm-app -- /usr/local/bin/pypr-client
 
 bind = $mainMod SHIFT, Z, exec, $pypr zoom
 bind = $mainMod ALT, P,exec, $pypr toggle_dpms
