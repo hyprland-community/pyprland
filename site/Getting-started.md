@@ -167,16 +167,16 @@ Some of those plugins may require changes in your `hyprland.conf` to fully opera
 
 $pypr = uwsm-app -- /usr/local/bin/pypr-client
 
-bind = $mainMod SHIFT, Z, exec, $pypr zoom
-bind = $mainMod ALT, P,exec, $pypr toggle_dpms
-bind = $mainMod SHIFT, O, exec, $pypr shift_monitors +1
-bind = $mainMod, B, exec, $pypr expose
-bind = $mainMod, K, exec, $pypr change_workspace +1
-bind = $mainMod, J, exec, $pypr change_workspace -1
-bind = $mainMod,L,exec, $pypr toggle_dpms
-bind = $mainMod SHIFT,M,exec, $pypr toggle stb stb-logs
-bind = $mainMod,A,exec, $pypr toggle term
-bind = $mainMod,V,exec, $pypr toggle volume
+bind = $mainMod SHIFT,  Z, exec, $pypr zoom
+bind = $mainMod ALT,    P, exec, $pypr toggle_dpms
+bind = $mainMod SHIFT,  O, exec, $pypr shift_monitors +1
+bind = $mainMod,        B, exec, $pypr expose
+bind = $mainMod,        K, exec, $pypr change_workspace +1
+bind = $mainMod,        J, exec, $pypr change_workspace -1
+bind = $mainMod,        L, exec, $pypr toggle_dpms
+bind = $mainMod  SHIFT, M, exec, $pypr toggle stb stb-logs
+bind = $mainMod,        A, exec, $pypr toggle term
+bind = $mainMod,        V, exec, $pypr toggle volume
 ```
 
 This example makes use of the faster `pypr-client` which may not be available depending on how you installed,
