@@ -21,11 +21,8 @@ func main() {
 Syntax: pypr-client [command]
 
 Available commands:
-dumpjson             Dump the configuration in JSON format.
-edit                 Edit the configuration file.
 exit                 Exit the daemon.
 help                 Show this help.
-version              Show the version.
 reload               Load the configuration (new plugins will be added & config updated). [pyprland]
 toggle_special       [name] Toggles switching the focused window to the special workspace "name" (default: minimized). [toggle_special]
 attract_lost         Brings lost floating windows to the current workspace. [lost_windows]
