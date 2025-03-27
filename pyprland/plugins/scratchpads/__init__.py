@@ -20,7 +20,7 @@ from .objects import Scratch
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
-DEFAULT_HIDE_DELAY = 0.05  # in seconds
+DEFAULT_HIDE_DELAY = 0  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
