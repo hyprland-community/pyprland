@@ -20,8 +20,10 @@ pip install -e .
 
 ### Pypr command
 
-In case you want to save some time when interacting with the daemon
-you can use `socat` instead (needs to be installed). Example of a `pypr-cli` command (should be reachable from your environment's `PATH`):
+In case you want to save some time when interacting with the daemon, the simplest is to use one of the `pypr-client` implementations as mentioned in the [getting started page](./Getting-started.md). If for some reason `pypr-client` isn't made available by the package of your OS and can not compile code,
+you can use `socat` instead (needs to be installed).
+
+Example of a `pypr-cli` command (should be reachable from your environment's `PATH`):
 ```sh
 #!/bin/sh
 socat - "UNIX-CONNECT:${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.pyprland.sock" <<< $@
