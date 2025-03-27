@@ -20,10 +20,11 @@ from .objects import Scratch
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
-DEFAULT_HIDE_DELAY = 0.2  # in seconds
+DEFAULT_HIDE_DELAY = 0.05  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
+# Ad-hoc classes & functions {{{
 class HideFlavors(Flag):
     """Flags for different hide behavior."""
 
@@ -59,6 +60,9 @@ def class_decorator_old(name: str) -> str:
 def class_decorator_new(name: str) -> str:
     """Return the class rule for new hyprland versions."""
     return f"class:{name}"
+
+
+# }}}
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring {{{
@@ -471,6 +475,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         else:
             scratch.extra_addr.add(focused)
 
+        if scratch.conf.get("pinned", True):
+            await self.hyprctl(f"pin address:{focused}")
+
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name"."""
         uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
@@ -542,7 +549,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return False
 
         await self._slide_animation(animation_type, scratch, await self.get_offsets(scratch, monitor))
-        await asyncio.sleep(scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY))  # await for animation to finish
+        delay = scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY)
+        if delay:
+            await asyncio.sleep(delay)  # await for animation to finish
         return True
 
     async def _slide_animation(
@@ -678,11 +687,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await self._animate_show(scratch, monitor, relative_animation)
         await self.hyprctl(f"focuswindow address:{scratch.full_address}")
 
-        if scratch.conf.get("pinned", True) and not scratch.client_info["pinned"]:
-            await self.hyprctl(f"pin address:{scratch.full_address}")
+        if not scratch.client_info["pinned"]:
+            await self._pin_scratch(scratch)
 
         scratch.meta.last_shown = time.time()
         scratch.meta.monitor_info = monitor
+
+    async def _pin_scratch(self, scratch: Scratch) -> None:
+        """Pin the scratchpad."""
+        if not scratch.conf.get("pinned", True):
+            return
+        await self.hyprctl(f"pin address:{scratch.full_address}")
+        for addr in scratch.extra_addr:
+            await self.hyprctl(f"pin address:{addr}")
 
     async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]) -> None:
         """Update the client info."""
@@ -796,10 +813,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", uid)
+        await self._pin_scratch(scratch)
         await self._hide_transition(scratch, monitor_info)
 
-        if scratch.conf.get("pinned", True):
-            await self.hyprctl(f"pin address:{scratch.full_address}")
         await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
 
         for addr in scratch.extra_addr:
@@ -835,5 +851,4 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     # }}}
 
 
-# }}}
 # }}}
