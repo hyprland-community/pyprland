@@ -130,13 +130,14 @@ def _format_command(command_list: list[str] | list[list[str]], default_base_comm
 
 
 @retry_on_reset
-async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger: Logger | None = None) -> bool:
+async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger: Logger | None = None, weak: bool = False) -> bool:
     """Run an IPC command. Returns success value.
 
     Args:
         command: single command (str) or list of commands to send to Hyprland
         base_command: type of command to send
         logger: logger to use in case of error
+        weak: if True, only log a warning on failure
 
     Returns:
         True on success
@@ -163,7 +164,10 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     resp = b"".join(resp.split(b"\n"))
     r: bool = resp == b"ok" * nb_cmds
     if not r:
-        logger.error("FAILED %s", resp)
+        if weak:
+            logger.warning("FAILED %s", resp)
+        else:
+            logger.error("FAILED %s", resp)
     return r
 
 

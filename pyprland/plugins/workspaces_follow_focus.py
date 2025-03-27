@@ -55,7 +55,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         await self.hyprctl(
             [
-                f"moveworkspacetomonitor {next_workspace} {monitor['name']}",
+                f"moveworkspacetomonitor name:{next_workspace} {monitor['name']}",
                 f"workspace {next_workspace}",
-            ]
+            ],
+            weak=True,
         )
