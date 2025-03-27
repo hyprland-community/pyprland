@@ -173,7 +173,7 @@ async def test_no_proc(no_proc_scratchpads, subprocess_shell_mock, server_fixtur
 
     mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
-    await wait_called(mocks.hyprctl, count=2)
+    await wait_called(mocks.hyprctl, count=3)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
     assert any(x.startswith("movewindowpixel") for x in call_set)
