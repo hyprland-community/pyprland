@@ -1,8 +1,14 @@
-pyprland.plugins = ["layout_center"]
+[pyprland]
+plugins = [
+    "layout_center",
+]
 
 [layout_center]
 margin = 60
-offset = [0, 30]
+offset = [
+    0,
+    30,
+]
 next = "movefocus r"
 prev = "movefocus l"
 next2 = "movefocus d"

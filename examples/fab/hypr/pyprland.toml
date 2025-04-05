@@ -1,18 +1,19 @@
 [pyprland]
-include = ["~/.config/hypr/pyprland.d"]
-
+include = [
+    "~/.config/hypr/pyprland.d",
+]
 plugins = [
-  "gbar",
-  "toggle_special",
-  "lost_windows",
-  "toggle_special",
-  "shift_monitors",
-  "toggle_dpms",
-  "magnify",
-  "expose",
-  "shift_monitors",
-  "workspaces_follow_focus",
-  "fetch_client_menu"
+    "gbar",
+    "toggle_special",
+    "lost_windows",
+    "toggle_special",
+    "shift_monitors",
+    "toggle_dpms",
+    "magnify",
+    "expose",
+    "shift_monitors",
+    "workspaces_follow_focus",
+    "fetch_client_menu",
 ]
 
 [workspaces_follow_focus]
@@ -22,4 +23,9 @@ max_workspaces = 9
 include_special = false
 
 [gbar]
- monitors = ["eDP-1", "DP-1", "HDMI-A-1"]
+monitors = [
+    "eDP-1",
+    "DP-1",
+    "HDMI-A-1",
+]
+

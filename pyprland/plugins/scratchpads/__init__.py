@@ -322,7 +322,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
                 self.scratches.register(scratch, addr=client["address"][2:])
-                await scratch.update_client_info(cast(ClientInfo, client))
+                await scratch.update_client_info(cast("ClientInfo", client))
                 break
         else:
             self.log.info("Didn't update scratch info %s", self)
@@ -346,7 +346,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_closewindow(self, addr: str) -> None:
         """Close window hook."""
-        # removes this address from the extra_addr
+        # Removes this address from the extra_addr
         addr = "0x" + addr
         for scratch in self.scratches.values():
             if addr in scratch.extra_addr:
@@ -360,7 +360,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if scratch.monitor == monitor_name:
                 try:
                     await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-except
                     self.log.exception("Failed to hide %s", scratch.uid)
                     await self.notify_info(f"Failed to hide {scratch.uid}: {e}")
 
@@ -415,7 +415,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not class_lookup_hack:
             return False
         self.log.debug("Lookup hack triggered")
-        clients = cast(list[ClientInfo], await self.hyprctl_json("clients"))
+        clients = cast("list[ClientInfo]", await self.hyprctl_json("clients"))
         for pending_scratch in class_lookup_hack:
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
@@ -433,7 +433,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         respawned = list(self.scratches.get_by_state("respawned"))
 
         if item:
-            # ensure initialized (no-op if already initialized)
+            # Ensure initialized (no-op if already initialized)
             await item.initialize(self)
         elif respawned:
             # NOTE: for windows which aren't related to the process (see #8)
@@ -506,11 +506,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             # Needs to be on the active monitor+workspace
             extra_visibility_check = (
                 first_scratch.meta.space_identifier == get_active_space_identifier()
-            )  # visible on the currently focused monitor
+            )  # Visible on the currently focused monitor
 
         is_visible = first_scratch.visible and (
             first_scratch.forced_monitor or extra_visibility_check
-        )  # always showing on the same monitor
+        )  # Always showing on the same monitor
         tasks = []
 
         for uid in uids:
@@ -534,12 +534,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
         if offset:
-            return cast(tuple[int, int], (convert_monitor_dimension(offset, ref, monitor) for ref in aspect))
+            return cast("tuple[int, int]", (convert_monitor_dimension(offset, ref, monitor) for ref in aspect))
 
         mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
 
         offsets = [convert_monitor_dimension("100%", dim, monitor) for dim in mon_size]
-        return cast(tuple[int, int], offsets)
+        return cast("tuple[int, int]", offsets)
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Animate hiding a scratchpad."""
@@ -655,7 +655,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         preserve_aspect = self.cast_bool(scratch.conf.get("preserve_aspect"))
         should_set_aspect = (
             not (preserve_aspect and was_alive) or scratch.monitor != state.active_monitor
-        )  # not aspect preserving or it's newly spawned
+        )  # Not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
 
@@ -704,11 +704,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]) -> None:
         """Update the client info."""
         try:
-            # update position, size & workspace information (workspace properties have been created)
+            # Update position, size & workspace information (workspace properties have been created)
             await scratch.update_client_info(clients=clients)
         except KeyError:
             for alt_addr in scratch.extra_addr:
-                # get the client info for the extra addresses
+                # Get the client info for the extra addresses
                 try:
                     client_info = await self.get_client_props(addr="0x" + alt_addr, clients=clients)
                     if not client_info:
