@@ -76,7 +76,8 @@ class Extension(Plugin):
                 await task
         for source in self.sources.values():
             if source.pid is not None:
-                source.kill()
+                with contextlib.suppress(ProcessLookupError):
+                    source.kill()
         self.tasks[:] = []
 
     async def start_source(self, props: dict[str, str]) -> None:
