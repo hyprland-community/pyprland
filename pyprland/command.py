@@ -23,6 +23,8 @@ CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
+TASK_TIMEOUT = 120.0
+
 PYPR_DEMO = os.environ.get("PYPR_DEMO", False)
 
 __all__: list[str] = []
@@ -170,7 +172,7 @@ class Pyprland:
             if init:
                 try:
                     await self.plugins[name].load_config(self.config)
-                    await asyncio.wait_for(self.plugins[name].on_reload(), timeout=5.0)
+                    await asyncio.wait_for(self.plugins[name].on_reload(), timeout=TASK_TIMEOUT / 2)
                 except TimeoutError:
                     self.plugins[name].log.info("timed out on reload")
                 except Exception as e:
@@ -253,10 +255,8 @@ class Pyprland:
 
     async def exit_plugins(self) -> None:
         """Exit all plugins."""
-        for plugin in self.plugins.values():
-            if not plugin.aborted:
-                plugin.aborted = True
-                await asyncio.wait_for(plugin.exit(), timeout=2.0)
+        active_plugins = (p.exit() for p in self.plugins.values() if not p.aborted)
+        await asyncio.wait_for(asyncio.gather(*active_plugins), timeout=TASK_TIMEOUT / 2)
 
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command."""
@@ -325,7 +325,7 @@ class Pyprland:
                 self.log.exception("Aborting [%s] loop", name)
                 return
             try:
-                await asyncio.wait_for(task(), timeout=12.0)
+                await asyncio.wait_for(task(), timeout=TASK_TIMEOUT)
             except TimeoutError:
                 self.log.exception("Timeout running plugin %s::%s", name, task)
             except Exception:  # pylint: disable=W0718
