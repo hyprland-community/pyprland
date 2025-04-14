@@ -277,18 +277,24 @@ class Pyprland:
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command."""
         data = (await reader.readline()).decode()
+        processed = False
+
         if not data:
             self.log.warning("Empty command received")
-            return
-        data = data.strip()
+            processed = True
+        else:
+            data = data.strip()
+
         if data == "exit":
             self.stopped = True
             asyncio.create_task(self._abort_plugins(writer))
-            return
-        if data == "help":
+            processed = True
+        if data == "version":
+            writer.write(f"{VERSION}\n".encode())
+        elif data == "help":
             txt = get_help(self)
             writer.write(txt.encode("utf-8"))
-        else:
+        elif not processed:
             args = data.split(None, 1)
             if len(args) == 1:
                 cmd = args[0]
@@ -305,6 +311,7 @@ class Pyprland:
             if not await self._call_handler(full_name, *args, notify=cmd):
                 self.log.warning("No such command: %s", cmd)
 
+        await writer.drain()
         writer.close()
 
     async def serve(self) -> None:
@@ -404,8 +411,8 @@ async def run_daemon() -> None:
 
 def get_commands_help(manager: Pyprland) -> dict:
     docs = {
-        "dumpjson": "Dump the configuration in JSON format.",
-        "edit": "Edit the configuration file.",
+        "dumpjson": "Dump the configuration in JSON format. (not in pypr-client)",
+        "edit": "Edit the configuration file. (not in pypr-client)",
         "exit": "Exit the daemon.",
         "help": "Show this help.",
         "version": "Show the version.",
