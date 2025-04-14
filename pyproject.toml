@@ -120,7 +120,7 @@ select = [
     "TCH",
     "TD",
     "TID",
-    "TRIO",
+    "ASYNC1",
     "UP",
     "W",
     "YTT",
