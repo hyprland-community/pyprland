@@ -93,13 +93,19 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         async def die_in_piece(scratch: Scratch) -> None:
             if scratch.uid in self.procs:
                 proc = self.procs[scratch.uid]
-                proc.terminate()
-                for _ in range(10):
-                    if not await scratch.is_alive():
-                        break
-                    await asyncio.sleep(0.1)
-                if await scratch.is_alive():
-                    proc.kill()
+
+                try:
+                    proc.terminate()
+                except ProcessLookupError:
+                    pass
+                else:
+                    for _ in range(10):
+                        if not await scratch.is_alive():
+                            break
+                        await asyncio.sleep(0.1)
+                    if await scratch.is_alive():
+                        with contextlib.suppress(ProcessLookupError):
+                            proc.kill()
                 await proc.wait()
 
         await asyncio.gather(*(die_in_piece(scratch) for scratch in self.scratches.values()))
