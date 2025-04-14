@@ -258,6 +258,22 @@ class Pyprland:
         active_plugins = (p.exit() for p in self.plugins.values() if not p.aborted)
         await asyncio.wait_for(asyncio.gather(*active_plugins), timeout=TASK_TIMEOUT / 2)
 
+    async def _abort_plugins(self, writer: asyncio.StreamWriter) -> None:
+        await self.exit_plugins()
+        # cancel the task group
+        for task in self.tasks:
+            task.cancel()
+        writer.close()
+        await writer.wait_closed()
+        for q in self.queues.values():
+            await q.put(None)
+        self.server.close()
+        # Ensure the process exits
+        await asyncio.sleep(1)
+        if os.path.exists(CONTROL):
+            os.unlink(CONTROL)
+        os._exit(0)
+
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command."""
         data = (await reader.readline()).decode()
@@ -266,41 +282,30 @@ class Pyprland:
             return
         data = data.strip()
         if data == "exit":
-
-            async def _abort() -> None:
-                await self.exit_plugins()
-                # cancel the task group
-                for task in self.tasks:
-                    task.cancel()
-                writer.close()
-                await writer.wait_closed()
-                for q in self.queues.values():
-                    await q.put(None)
-                self.server.close()
-                # Ensure the process exits
-                await asyncio.sleep(1)
-                if os.path.exists(CONTROL):
-                    os.unlink(CONTROL)
-                os._exit(0)
-
             self.stopped = True
-            asyncio.create_task(_abort())
+            asyncio.create_task(self._abort_plugins(writer))
             return
-        args = data.split(None, 1)
-        if len(args) == 1:
-            cmd = args[0]
-            args = []
+        if data == "help":
+            txt = get_help(self)
+            writer.write(txt.encode("utf-8"))
         else:
-            cmd = args[0]
-            args = args[1:]
+            args = data.split(None, 1)
+            if len(args) == 1:
+                cmd = args[0]
+                args = []
+            else:
+                cmd = args[0]
+                args = args[1:]
 
-        full_name = f"run_{cmd}"
+            full_name = f"run_{cmd}"
 
-        if PYPR_DEMO:
-            os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221
+            if PYPR_DEMO:
+                os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221
 
-        if not await self._call_handler(full_name, *args, notify=cmd):
-            self.log.warning("No such command: %s", cmd)
+            if not await self._call_handler(full_name, *args, notify=cmd):
+                self.log.warning("No such command: %s", cmd)
+
+        writer.close()
 
     async def serve(self) -> None:
         """Run the server."""
@@ -397,38 +402,36 @@ async def run_daemon() -> None:
         await manager.server.wait_closed()
 
 
-def show_help(manager: Pyprland) -> None:
-    """Show the documentation."""
-
-    def format_doc(txt: str) -> str:
-        return txt.split("\n")[0]
-
-    print(
-        """Syntax: pypr [command]
-
-If the command is omitted, runs the daemon which will start every configured plugin.
-
-Available commands:
-"""
-    )
-    builtins_docs = {
+def get_commands_help(manager: Pyprland) -> dict:
+    docs = {
         "dumpjson": "Dump the configuration in JSON format.",
         "edit": "Edit the configuration file.",
         "exit": "Exit the daemon.",
         "help": "Show this help.",
         "version": "Show the version.",
     }
-    for name, doc in builtins_docs.items():
-        print(f" {name:20s} {doc}")
-
     for plug in manager.plugins.values():
         for name in dir(plug):
             if not name.startswith("run_"):
                 continue
             fn = getattr(plug, name)
             if callable(fn):
-                doc_txt = format_doc(fn.__doc__) if fn.__doc__ else "N/A"
-                print(f" {name[4:]:20s} {doc_txt} [{plug.name}]")
+                doc_txt = fn.__doc__ or "N/A"
+                docs[name[4:]] = f"{doc_txt} [{plug.name}]"
+    return docs
+
+
+def get_help(manager: Pyprland) -> str:
+    """Get the documentation."""
+    intro = """Syntax: pypr [command]
+
+If the command is omitted, runs the daemon which will start every configured plugin.
+
+Available commands:
+"""
+
+    docs = get_commands_help(manager)
+    return intro + "\n".join(f" {name:20s} {doc.split('\n')[0]}" for name, doc in docs.items())
 
 
 async def run_client() -> None:
@@ -437,7 +440,7 @@ async def run_client() -> None:
 
     if sys.argv[1] == "version":
         print(VERSION)
-        return None
+        return
 
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
@@ -445,18 +448,17 @@ async def run_client() -> None:
         run_interactive_program(f'{editor} "{filename}"')
         sys.argv[1] = "reload"
 
-    if sys.argv[1] in {"--help", "-h", "help"}:
-        await manager.load_config(init=False)
-        return show_help(manager)
+    elif sys.argv[1] in {"--help", "-h"}:
+        sys.argv = "help"
 
-    if sys.argv[1] in ("dumpjson"):
+    elif sys.argv[1] in ("dumpjson"):
         await manager.load_config(init=False)
         # Dump manager.config in TOML format
         print(json.dumps(manager.config, indent=2))
-        return None
+        return
 
     try:
-        _, writer = await asyncio.open_unix_connection(CONTROL)
+        reader, writer = await asyncio.open_unix_connection(CONTROL)
     except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
         await notify_error("Pypr can't connect, is daemon running ?")
@@ -465,7 +467,10 @@ async def run_client() -> None:
     args = sys.argv[1:]
     args[0] = args[0].replace("-", "_")
     writer.write((" ".join(args)).encode())
+    writer.write_eof()
     await writer.drain()
+    return_value = await reader.read()
+    print(return_value.decode("utf-8"))
     writer.close()
     await writer.wait_closed()
 
