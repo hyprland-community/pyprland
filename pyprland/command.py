@@ -440,8 +440,10 @@ If the command is omitted, runs the daemon which will start every configured plu
 Available commands:
 """
 
-    docs = get_commands_help(manager)
-    return intro + "\n".join(f" {name:20s} {doc.split('\n')[0]}" for name, doc in docs.items())
+    def keep_first_line(txt: str) -> str:
+        return txt.split("\n", 1)[0]
+
+    return intro + "\n".join(f" {name:20s} {keep_first_line(doc)}" for name, doc in get_commands_help(manager).items())
 
 
 async def run_client() -> None:
