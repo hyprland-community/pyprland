@@ -78,7 +78,7 @@ Check the [Releases change log](https://github.com/hyprland-community/pyprland/r
 ### 2.4
 
 - Scratchpads are now pinned by default (set `pinned = false` for the old behavior)
-- Version 2.4.4 is required for Hyprland 0.48.0
+- Version >=2.4.4 is required for Hyprland 0.48.0
 - A snappier `pypr-client` command is available, meant to be used in the keyboard bindings (NOT to start pypr on startup!), eg:
 ```sh
 $pypr = uwsm-app -- pypr-client
