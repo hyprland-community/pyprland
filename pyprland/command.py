@@ -291,6 +291,9 @@ class Pyprland:
             processed = True
         if data == "version":
             writer.write(f"{VERSION}\n".encode())
+        elif data == "dumpjson":
+            writer.write(json.dumps(self.config, indent=2).encode())
+            writer.write(b"\n")
         elif data == "help":
             txt = get_help(self)
             writer.write(txt.encode("utf-8"))
@@ -453,12 +456,6 @@ async def run_client() -> None:
 
     elif sys.argv[1] in {"--help", "-h"}:
         sys.argv = "help"
-
-    elif sys.argv[1] in ("dumpjson"):
-        await manager.load_config(init=False)
-        # Dump manager.config in TOML format
-        print(json.dumps(manager.config, indent=2))
-        return
 
     try:
         reader, writer = await asyncio.open_unix_connection(CONTROL)
