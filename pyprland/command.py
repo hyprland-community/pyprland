@@ -414,8 +414,8 @@ async def run_daemon() -> None:
 
 def get_commands_help(manager: Pyprland) -> dict:
     docs = {
-        "dumpjson": "Dump the configuration in JSON format. (not in pypr-client)",
         "edit": "Edit the configuration file. (not in pypr-client)",
+        "dumpjson": "Dump the configuration in JSON format.",
         "exit": "Exit the daemon.",
         "help": "Show this help.",
         "version": "Show the version.",
