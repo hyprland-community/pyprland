@@ -455,7 +455,7 @@ async def run_client() -> None:
         sys.argv[1] = "reload"
 
     elif sys.argv[1] in {"--help", "-h"}:
-        sys.argv = "help"
+        sys.argv[1] = "help"
 
     try:
         reader, writer = await asyncio.open_unix_connection(CONTROL)
