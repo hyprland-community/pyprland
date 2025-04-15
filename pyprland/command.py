@@ -293,7 +293,6 @@ class Pyprland:
             writer.write(f"{VERSION}\n".encode())
         elif data == "dumpjson":
             writer.write(json.dumps(self.config, indent=2).encode())
-            writer.write(b"\n")
         elif data == "help":
             txt = get_help(self)
             writer.write(txt.encode("utf-8"))
@@ -314,6 +313,7 @@ class Pyprland:
             if not await self._call_handler(full_name, *args, notify=cmd):
                 self.log.warning("No such command: %s", cmd)
 
+        writer.write(b"\n")
         await writer.drain()
         writer.close()
 
