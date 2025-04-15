@@ -445,10 +445,6 @@ async def run_client() -> None:
     """Run the client (CLI)."""
     manager = Pyprland()
 
-    if sys.argv[1] == "version":
-        print(VERSION)
-        return
-
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
         filename = os.path.expanduser(CONFIG_FILE)
