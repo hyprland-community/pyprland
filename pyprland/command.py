@@ -25,7 +25,7 @@ CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
 TASK_TIMEOUT = 120.0
 
-PYPR_DEMO = os.environ.get("PYPR_DEMO", False)
+PYPR_DEMO = os.environ.get("PYPR_DEMO")
 
 __all__: list[str] = []
 
@@ -48,7 +48,7 @@ def remove_duplicate(names: list[str]) -> Callable:
                 if key == _dedup_last_call.get(full_name):
                     return True
                 _dedup_last_call[full_name] = key
-            return cast(bool, await fn(self, full_name, *args, **kwargs))
+            return cast("bool", await fn(self, full_name, *args, **kwargs))
 
         return _wrapper
 
@@ -389,7 +389,7 @@ async def run_daemon() -> None:
     if events_reader is None:
         manager.log.critical("Failed to open hyprland event stream: %s.", events_writer)
         await notify_fatal("Failed to open hyprland event stream")
-        raise PyprError from cast(Exception, events_writer)
+        raise PyprError from cast("Exception", events_writer)
 
     manager.event_reader = events_reader
 
