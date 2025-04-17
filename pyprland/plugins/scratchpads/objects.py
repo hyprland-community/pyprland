@@ -2,6 +2,7 @@
 
 __all__ = ["Scratch"]
 
+import asyncio
 import logging
 import os
 from dataclasses import dataclass, field
@@ -122,6 +123,7 @@ class Scratch(CastBoolMixin):  # {{{
                 self.client_info = m_client
             assert self.client_info, "couldn't find a matching client"
         await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
+        await asyncio.sleep(0.001)  # workaround
         self.meta.initialized = True
 
     async def is_alive(self) -> bool:
