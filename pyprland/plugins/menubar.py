@@ -2,10 +2,38 @@
 
 import asyncio
 import contextlib
+import os
 from time import time
 
 from ..common import apply_variables, state
 from .interface import Plugin
+
+COOLDOWN_TIME = 60
+IDLE_LOOP_INTERVAL = 10
+
+
+def get_pid_from_layers(layers: dict) -> bool | int:
+    """Get the PID of the bar from the layers."""
+    for screen in layers:
+        for layer in layers[screen]["levels"].values():
+            for instance in layer:
+                if instance["namespace"].startswith("bar-"):
+                    return instance["pid"] > 0 and instance["pid"]
+    return False
+
+
+async def is_bar_alive(pid: int, hyprctl_json: dict) -> int | bool:
+    """Check if the bar is running."""
+    is_running = os.path.exists(f"/proc/{pid}")
+    if is_running:
+        print("found running", pid)
+        return pid
+    layers = await hyprctl_json("layers")
+    pid = get_pid_from_layers(layers)
+    if pid:
+        print("found layer", pid)
+        return pid
+    return False
 
 
 class Extension(Plugin):
@@ -28,19 +56,30 @@ class Extension(Plugin):
             self.ongoing_task.cancel()
 
         async def _run_loop() -> None:
-            prev_time = time()
+            pid = 0
             while True:
+                if pid:
+                    pid = await is_bar_alive(pid, self.hyprctl_json)
+                    if pid:
+                        await asyncio.sleep(IDLE_LOOP_INTERVAL)
+                        continue
+
                 await self.set_best_monitor()
                 cmd = apply_variables(self.config.get("command", "gBar bar [monitor]"), {"monitor": self.cur_monitor})
-                now = time()
+                start_time = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
+                pid = self.proc.pid
                 await self.proc.wait()
-                delay = 60 - (now - prev_time)
-                text = f"Menu Bar crashed, restarting in {delay // 2}s." if delay > 0 else "Menu Bar crashed, restarting."
-                await self.notify_error(text)
-                prev_time = now
-                if delay > 0:
-                    await asyncio.sleep(delay / 2)
+
+                now = time()
+
+                elapsed_time = now - start_time
+                delay = 0 if elapsed_time >= COOLDOWN_TIME else int((COOLDOWN_TIME - elapsed_time) / 2)
+                text = f"Menu Bar crashed, restarting in {delay}s." if delay > 0 else "Menu Bar crashed, restarting immediately."
+                self.log.warning(text)
+                if delay:
+                    await self.notify_warn(text)
+                await asyncio.sleep(delay or 0.1)
 
         self.ongoing_task = asyncio.create_task(_run_loop())
 
