@@ -62,10 +62,10 @@ class Scratch(CastBoolMixin):  # {{{
         """Returns forced monitor if available, else None."""
         forced_monitor = self.conf.get("force_monitor")
         if forced_monitor in state.monitors:
-            return cast(str, forced_monitor)
+            return cast("str", forced_monitor)
         return None
 
-    def _make_intial_config(self, config: dict) -> dict:
+    def _make_initial_config(self, config: dict) -> dict:
         """Return configuration for the scratchpad."""
         opts = {}
         scratch_config = config[self.uid]
@@ -85,7 +85,7 @@ class Scratch(CastBoolMixin):  # {{{
 
     def set_config(self, full_config: dict[str, Any]) -> None:
         """Apply constraints to the configuration."""
-        opts = self._make_intial_config(full_config)
+        opts = self._make_initial_config(full_config)
 
         # apply the config
         self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
@@ -174,7 +174,7 @@ class Scratch(CastBoolMixin):  # {{{
     @property
     def full_address(self) -> str:
         """Return the client address."""
-        return cast(str, self.client_info.get("address", ""))
+        return cast("str", self.client_info.get("address", ""))
 
     async def update_client_info(
         self,
