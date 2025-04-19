@@ -320,6 +320,6 @@ async def test_events4():
 @pytest.mark.usefixtures("empty_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_nothing():
-    await tst.pypr("inexistant")
+    await tst.pypr("inexistent")
     assert tst.hyprctl.call_args_list[0][0][1] == "notify"
     assert tst.hyprctl.call_count == 1
