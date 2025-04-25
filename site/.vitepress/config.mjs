@@ -55,6 +55,7 @@ const plugin_list = {
     { text: "Toggle special", link: "./toggle_special" },
     { text: "Wallpapers", link: "./wallpapers" },
     { text: "Workspaces follow focus", link: "./workspaces_follow_focus" },
+    { text: "Fcitx5 Switcher", link: "./fcitx5_switcher" }
   ]
 }
 
