@@ -148,6 +148,11 @@ export default {
                     name: 'monitors',
                     stars: 3,
                     description: 'allows relative placement and configuration of monitors'
+                },
+                {
+                    name: 'fcitx5_switcher',
+                    stars: 0,
+                    description: 'Automatically switch fcitx5 input method status based on window class and title.'
                 }
             ]
         }
