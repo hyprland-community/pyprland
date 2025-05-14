@@ -41,7 +41,7 @@ def remove_duplicate(names: list[str]) -> Callable:
     def _remove_duplicates(fn: Callable) -> Callable:
         """Wrapper for the decorator."""
 
-        async def _wrapper(self: Self, full_name: str, *args, **kwargs) -> bool:
+        async def _wrapper(self: "Pyprland", full_name: str, *args, **kwargs) -> bool:
             """Wrapper for the function."""
             if full_name in names:
                 key = (full_name, args)
