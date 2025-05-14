@@ -23,7 +23,7 @@ CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
 OLD_CONFIG_FILE = "~/.config/hypr/pyprland.json"
 CONFIG_FILE = "~/.config/hypr/pyprland.toml"
 
-TASK_TIMEOUT = 120.0
+TASK_TIMEOUT = 35.0
 
 PYPR_DEMO = os.environ.get("PYPR_DEMO")
 
