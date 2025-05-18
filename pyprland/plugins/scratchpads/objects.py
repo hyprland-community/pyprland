@@ -99,6 +99,8 @@ class Scratch(CastBoolMixin):  # {{{
             opts["lazy"] = True
             if "match_by" not in opts:
                 opts["match_by"] = "class"
+        if opts.get("close_on_hide", False):
+            opts["lazy"] = True
         if state.hyprland_version < VersionInfo(0, 39, 0):
             opts["allow_special_workspace"] = False
 

@@ -825,11 +825,18 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._pin_scratch(scratch)
         await self._hide_transition(scratch, monitor_info)
 
-        await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
+        if not self.cast_bool(scratch.conf.get("close_on_hide"), False):
+            await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
 
-        for addr in scratch.extra_addr:
-            await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{addr}")
-            await asyncio.sleep(0.01)
+            for addr in scratch.extra_addr:
+                await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{addr}")
+                await asyncio.sleep(0.01)
+        else:
+            await self.hyprctl(f"closewindow address:{scratch.full_address}")
+
+            for addr in scratch.extra_addr:
+                await self.hyprctl(f"closewindow address:{addr}")
+                await asyncio.sleep(0.01)
 
         for e_uid in scratch.excluded_scratches:
             await self.run_show(e_uid)
