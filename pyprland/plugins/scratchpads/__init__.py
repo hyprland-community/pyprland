@@ -792,6 +792,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             self.log.warning("%s is not configured", uid)
             return
 
+        if not await scratch.is_alive():
+            return
+
         if flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
             return
 
