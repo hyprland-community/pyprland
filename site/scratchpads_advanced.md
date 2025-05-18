@@ -152,3 +152,13 @@ Default value is `true`.
 When enabled, the focus will be restored in a best effort way as en attempt to improve the user experience.
 If you face issues such as spontaneous workspace changes, you can disable this feature.
 
+## `close_on_hide`
+
+Default value is `false`.
+
+When enabled, the window in the scratchpad is closed instead of hidden when `pypr hide <name>` is run.
+This option implies `lazy = true`.
+This can be useful on laptops where background apps may increase battery power draw.
+
+Note: Currently this option changed the hide animation to use hyprland's close window animation.
+
