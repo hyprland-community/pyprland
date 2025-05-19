@@ -160,5 +160,5 @@ When enabled, the window in the scratchpad is closed instead of hidden when `pyp
 This option implies `lazy = true`.
 This can be useful on laptops where background apps may increase battery power draw.
 
-Note: Currently this option changed the hide animation to use hyprland's close window animation.
+Note: Currently this option changes the hide animation to use hyprland's close window animation.
 
