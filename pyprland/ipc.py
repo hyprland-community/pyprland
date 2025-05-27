@@ -12,15 +12,13 @@ __all__ = [
 
 import asyncio
 import json
-import time
 from collections.abc import Callable, Iterable
 from functools import partial
 from logging import Logger
 from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
-from .types import ClientInfo, JSONResponse, MonitorInfo, PyprError, RetensionTimes
-from .utils import CacheData
+from .types import ClientInfo, JSONResponse, MonitorInfo, PyprError
 
 log: Logger | None = None
 
@@ -43,9 +41,6 @@ async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter
     return await asyncio.open_unix_connection(EVENTS)
 
 
-# Hyprctl JSON : cached responses {{{
-
-
 def retry_on_reset(func: Callable) -> Callable:
     """Retry on reset wrapper."""
 
@@ -62,14 +57,6 @@ def retry_on_reset(func: Callable) -> Callable:
         raise ConnectionResetError from exc
 
     return wrapper
-
-
-cached_responses: dict[str, CacheData] = {
-    # <command name>: CacheData
-    "monitors": CacheData(retension_time=RetensionTimes.LONG),
-    "workspaces": CacheData(retension_time=RetensionTimes.SHORT),
-    "clients": CacheData(retension_time=RetensionTimes.SHORT),
-}
 
 
 async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
@@ -93,20 +80,8 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
     """Run an IPC command and return the JSON output."""
     logger = cast(Logger, logger or log)
-    now = time.time()
-    cache_data: CacheData | None = cached_responses.get(command)
-    if cache_data and cache_data.expiration_date > now:
-        logger.debug("%s (CACHE HIT)", command)
-        return await cache_data.wait_update()
-
-    logger.debug(command)
-    if cache_data:  # should fill the cache
-        cache_data.set_pending(ref_time=now)
-
     ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
-    if cache_data:
-        cache_data.set_value(ret)
     return ret
 
 
