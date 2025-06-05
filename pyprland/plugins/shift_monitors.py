@@ -28,4 +28,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def event_monitorremoved(self, monitor: str) -> None:
         """Keep track of monitors."""
-        self.monitors.remove(monitor)
+        try:
+            state.monitors.remove(name)
+        except ValueError:
+            self.log.warning("Monitor %s not found in state - can't be removed", name)
