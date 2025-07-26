@@ -84,7 +84,14 @@ class Pyprland:
 
     async def initialize(self) -> None:
         """Initialize the main structures."""
-        await self.load_config()  # ensure sockets are connected first
+        try:
+            await self.load_config()  # ensure sockets are connected first
+        except KeyError as e:
+            # Config file is invalid
+            txt = f"Failed to load config, missing {e} section"
+            self.log.critical(txt)
+            await notify_fatal(txt)
+            raise PyprError from e
 
     async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
         """Load config file as self.config."""
