@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 53
+:total-count: 54
 
 --------------------------------------------------------------------------------
 
@@ -138,15 +138,6 @@ Experiment with minisearch on the website
 
 --------------------------------------------------------------------------------
 
-Wiki: remove optional and add mandatory (to the titles for the configuration options)
-=====================================================================================
-
-:bugid: 52
-:created: 2024-07-08T21:51:28
-:priority: 0
-
---------------------------------------------------------------------------------
-
 AI voice assistant / task manager
 =================================
 
@@ -163,3 +154,12 @@ priority: int
 Will sort them according to priorities, making urgent or soon due tasks first (so priority applies last - have less importance than those)
 
 Will speak when a user event is received every X minutes depending on the urgency of the task
+
+--------------------------------------------------------------------------------
+
+configreloaded event should trigger a reload of pyprload
+========================================================
+
+:bugid: 54
+:created: 2025-08-07T21:27:25
+:priority: 0
