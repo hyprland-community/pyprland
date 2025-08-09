@@ -148,7 +148,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         self._clear_mon_by_pat_cache()
 
         if monitors is None:
-            monitors = cast(list[MonitorInfo], await self.hyprctl_json("monitors"))
+            monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors"))
 
         cleaned_config = self.resolve_names(monitors)
         if cleaned_config:
@@ -167,6 +167,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         return need_change
 
     # Event handlers
+
+    async def event_configreloaded(self, _: str = "") -> None:
+        """Relayout screens after settings has been lost."""
+        await self.run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
         """Triggers when a monitor is plugged."""
