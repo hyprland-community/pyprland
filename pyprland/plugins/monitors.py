@@ -80,11 +80,26 @@ def get_xy(place: str, main_mon: MonitorInfo, other_mon: MonitorInfo) -> tuple[i
     return (x, y)
 
 
-def build_graph(config: dict[str, dict[str, list[str]]]) -> dict[str, list[str]]:
+def clean_graph(disabled: set[str], graph: dict[str, list[str]], config: dict[str, dict[str, list[str]]]) -> None:
+    """Remove disabled monitors from graph and config."""
+    for name in disabled:
+        if name in graph:
+            del graph[name]
+        if name in config:
+            del config[name]
+
+
+def build_graph(config: dict[str, dict[str, list[str]]]) -> [dict[str, list[str]], set[str]]:
     """Make a sorted graph based on the cleaned_config."""
     graph = defaultdict(list)
+    disabled = set()
     for name1, positions in config.items():
         for pos, names in positions.items():
+            if pos == "disables":
+                ports = names if isinstance(names, list) else [names]
+                for name in ports:
+                    disabled.add(name)
+                continue
             if pos in MONITOR_PROPS:
                 continue
             tldr_direction = pos.startswith(("left", "top"))
@@ -93,7 +108,8 @@ def build_graph(config: dict[str, dict[str, list[str]]]) -> dict[str, list[str]]
                     graph[name1].append(name2)
                 else:
                     graph[name2].append(name1)
-    return graph
+    clean_graph(disabled, graph, config)
+    return graph, disabled
 
 
 class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring
@@ -156,7 +172,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         else:
             self.log.debug("No configuration item is applicable")
             return False
-        graph = build_graph(cleaned_config)
+        graph, to_disabled = build_graph(cleaned_config)
         need_change = self._update_positions(monitors, graph, cleaned_config)
         every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
         if self.cast_bool(self.config.get("trim_offset"), True):
@@ -164,6 +180,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
             await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
+        for monitor in to_disabled:
+            await self.hyprctl(f"monitor {monitor},disable", "keyword")
         return need_change
 
     # Event handlers
