@@ -1,6 +1,7 @@
 """The monitors plugin."""
 
 import asyncio
+import time
 from collections import defaultdict
 from copy import deepcopy
 from typing import Any, cast
@@ -116,6 +117,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     """Control monitors layout."""
 
     _mon_by_pat_cache: dict[str, MonitorInfo] = {}
+    _disabled_monitors: set[str] = set()  # Track monitors we've disabled
+    _recently_added: set[str] = set()  # Track recently added monitors to prevent race conditions
+    _last_add_time: dict[str, float] = {}  # Track when monitors were added
 
     async def on_reload(self) -> None:
         """Reload the plugin."""
@@ -179,9 +183,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             trim_offset(monitors)
 
         for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
+            result = await self.hyprctl(f"monitor {monitor},enable", "keyword")
             await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
         for monitor in to_disabled:
-            await self.hyprctl(f"monitor {monitor},disable", "keyword")
+            result = await self.hyprctl(f"monitor {monitor},disable", "keyword")
+            self._disabled_monitors.add(monitor)
         return need_change
 
     # Event handlers
@@ -190,8 +196,48 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Relayout screens after settings has been lost."""
         await self.run_relayout()
 
+    async def event_monitorremoved(self, name: str) -> None:
+        """Triggers when a monitor is unplugged."""
+        import time
+
+        current_time = time.time()
+
+        # Check if this monitor was recently added (race condition)
+        if name in self._recently_added:
+            return
+
+        # Also check if this monitor was added very recently (within 5 seconds)
+        if name in self._last_add_time:
+            time_since_add = current_time - self._last_add_time[name]
+            if time_since_add < 5.0:  # Less than 5 seconds ago
+                return
+
+        # Get current available monitors
+        all_monitors = await self.hyprctl_json("monitors all")
+        available_monitors = {m["name"]: m for m in all_monitors}
+        available_descriptions = {m["description"]: m for m in all_monitors}
+
+        # Re-enable any monitors we previously disabled that are now available
+        for disabled_monitor in list(self._disabled_monitors):
+            # Try to find the disabled monitor by name or description
+            target_monitor = None
+            if disabled_monitor in available_monitors:
+                target_monitor = disabled_monitor
+            elif disabled_monitor in available_descriptions:
+                target_monitor = available_descriptions[disabled_monitor]["name"]
+            if target_monitor:
+                await self.hyprctl(f"monitor {target_monitor},enable", "keyword")
+                self._disabled_monitors.discard(disabled_monitor)
+
+        # Run relayout after re-enabling monitors
+        await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
+        await self.run_relayout()
+
     async def event_monitoradded(self, name: str) -> None:
         """Triggers when a monitor is plugged."""
+        current_time = time.time()
+        self._recently_added.add(name)
+        self._last_add_time[name] = current_time
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
         monitors = await self.hyprctl_json("monitors")
         await self._hotplug_command(monitors, name)
@@ -200,6 +246,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             default_command = self.config.get("unknown")
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
+        self._recently_added.discard(name)
 
     # Utils
 
@@ -323,6 +370,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             for position, descr_list in placement.items():
                 if position in MONITOR_PROPS:
                     cleaned_config[name][position] = descr_list
+                elif position == "disables":
+                    pass
                 else:
                     if not isinstance(descr_list, list | str):
                         errmsg = f'Unexpected monitor setting: {position}: "{descr_list}"'
