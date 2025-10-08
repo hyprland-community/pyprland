@@ -12,6 +12,8 @@ from .interface import Plugin
 
 MONITOR_PROPS = {"scale", "transform", "rate", "resolution"}
 
+ADDED_MONITOR_IGNORE_TIME = 5.0  # seconds to ignore a monitor removal after it was added
+
 
 def trim_offset(monitors: list[MonitorInfo]) -> None:
     """Make the monitor set layout start at 0,0."""
@@ -183,10 +185,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             trim_offset(monitors)
 
         for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-            result = await self.hyprctl(f"monitor {monitor},enable", "keyword")
+            await self.hyprctl(f"monitor {monitor},enable", "keyword")
             await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
         for monitor in to_disabled:
-            result = await self.hyprctl(f"monitor {monitor},disable", "keyword")
+            await self.hyprctl(f"monitor {monitor},disable", "keyword")
             self._disabled_monitors.add(monitor)
         return need_change
 
@@ -198,8 +200,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_monitorremoved(self, name: str) -> None:
         """Triggers when a monitor is unplugged."""
-        import time
-
         current_time = time.time()
 
         # Check if this monitor was recently added (race condition)
@@ -209,7 +209,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         # Also check if this monitor was added very recently (within 5 seconds)
         if name in self._last_add_time:
             time_since_add = current_time - self._last_add_time[name]
-            if time_since_add < 5.0:  # Less than 5 seconds ago
+            if time_since_add < ADDED_MONITOR_IGNORE_TIME:
                 return
 
         # Get current available monitors
@@ -273,9 +273,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if cached is None:
             cached = name_db.get(pat)
             if cached is None:
-                for full_descr in description_db:
+                for full_descr, value in description_db.items():
                     if pat in full_descr:
-                        cached = description_db[full_descr]
+                        cached = value
                         break
             if cached:
                 self._mon_by_pat_cache[pat] = cached
