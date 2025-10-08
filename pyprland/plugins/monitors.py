@@ -368,10 +368,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 continue
             cleaned_config[name] = {}
             for position, descr_list in placement.items():
-                if position in MONITOR_PROPS:
+                if position in MONITOR_PROPS or position == "disables":
                     cleaned_config[name][position] = descr_list
-                elif position == "disables":
-                    pass
                 else:
                     if not isinstance(descr_list, list | str):
                         errmsg = f'Unexpected monitor setting: {position}: "{descr_list}"'
