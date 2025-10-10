@@ -87,7 +87,7 @@ class RofiMenu(MenuEngine):
     """A rofi based menu."""
 
     proc_name = "rofi"
-    proc_extra_parameters = "-dmenu -matching fuzzy -i -p '[prompt]'"
+    proc_extra_parameters = "-dmenu -i -p '[prompt]'"
 
 
 class WofiMenu(MenuEngine):
