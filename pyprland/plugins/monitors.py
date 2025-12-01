@@ -170,6 +170,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_configreloaded(self, _: str = "") -> None:
         """Relayout screens after settings has been lost."""
+        await asyncio.sleep(1)
         await self.run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
