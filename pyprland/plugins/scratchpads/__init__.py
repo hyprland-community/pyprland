@@ -14,7 +14,14 @@ from ...ipc import get_client_props, get_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
-from .helpers import apply_offset, compute_offset, get_active_space_identifier, get_all_space_identifiers, get_match_fn
+from .helpers import (
+    apply_offset,
+    compute_offset,
+    get_active_space_identifier,
+    get_all_space_identifiers,
+    get_match_fn,
+    mk_scratch_name,
+)
 from .lookup import ScratchDB
 from .objects import Scratch
 
@@ -182,7 +189,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             if "float" not in skipped_windowrules:
                 ipc_commands.append(f"windowrule float,{self._classify(defined_class)}")
             if "workspace" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule workspace special:scratch_{scratch.uid} silent,{self._classify(defined_class)}")
+                ipc_commands.append(f"windowrule workspace {mk_scratch_name(scratch.uid)} silent,{self._classify(defined_class)}")
             set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
@@ -669,7 +676,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._handle_multiwindow(scratch, clients)
         # move
         move_commands = [
-            f"moveworkspacetomonitor special:scratch_{scratch.uid} {monitor['name']}",
+            f"moveworkspacetomonitor {mk_scratch_name(scratch.uid)} {monitor['name']}",
             f"movetoworkspacesilent {wrkspc},address:{scratch.full_address}",
             f"alterzorder top,address:{scratch.full_address}",
         ]
@@ -779,7 +786,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return True
         return False
 
-    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: C901
+    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: PLR0912, C901
         """<name> hides scratchpad "name"."""
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))
@@ -826,10 +833,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._hide_transition(scratch, monitor_info)
 
         if not self.cast_bool(scratch.conf.get("close_on_hide"), False):
-            await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{scratch.full_address}")
+            await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(uid)},address:{scratch.full_address}")
 
             for addr in scratch.extra_addr:
-                await self.hyprctl(f"movetoworkspacesilent special:scratch_{uid},address:{addr}")
+                await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(uid)},address:{addr}")
                 await asyncio.sleep(0.01)
         else:
             await self.hyprctl(f"closewindow address:{scratch.full_address}")

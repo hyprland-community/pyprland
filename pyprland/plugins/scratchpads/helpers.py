@@ -18,6 +18,12 @@ from ...common import is_rotated, state
 from ...types import MonitorInfo
 
 
+def mk_scratch_name(uid: str) -> str:
+    """Return scratchpad name as register in Hyprland."""
+    escaped = uid.replace(":", "_").replace("/", "_").replace(" ", "_")
+    return f"special:S-{escaped}"
+
+
 def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
     """Compute the offset between two positions."""
     return pos1[0] - pos2[0], pos1[1] - pos2[1]

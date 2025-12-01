@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 from ...aioops import aiexists, aiopen
 from ...common import CastBoolMixin, state
 from ...types import ClientInfo, MonitorInfo, VersionInfo
-from .helpers import DynMonitorConfig, get_match_fn
+from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -124,7 +124,7 @@ class Scratch(CastBoolMixin):  # {{{
             if m_client:
                 self.client_info = m_client
             assert self.client_info, "couldn't find a matching client"
-        await ex.hyprctl(f"movetoworkspacesilent special:scratch_{self.uid},address:{self.full_address}")
+        await ex.hyprctl(f"movetoworkspacesilent {mk_scratch_name(self.uid)},address:{self.full_address}")
         await asyncio.sleep(0.05)  # workaround
         self.meta.initialized = True
 
