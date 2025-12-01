@@ -92,8 +92,8 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
     await wait_called(mocks.hyprctl, count=3)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     for expected in {
-        "movetoworkspacesilent special:scratch_term,address:0x12345677890",
-        "moveworkspacetomonitor special:scratch_term DP-1",
+        "movetoworkspacesilent special:S-term,address:0x12345677890",
+        "moveworkspacetomonitor special:S-term DP-1",
         "alterzorder top,address:0x12345677890",
         "focuswindow address:0x12345677890",
         "logger",
@@ -103,19 +103,19 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
 
     # check if it matches the hide calls
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=4)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
     await mocks.send_event("activewindowv2>>address:44444677890")
     await asyncio.sleep(0.1)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
     for expected in {
-        "moveworkspacetomonitor special:scratch_term DP-1",
+        "moveworkspacetomonitor special:S-term DP-1",
         "alterzorder top,address:0x12345677890",
         "focuswindow address:0x12345677890",
-        "movetoworkspacesilent special:scratch_term,address:0x12345677890",
+        "movetoworkspacesilent special:S-term,address:0x12345677890",
         "logger",
         "movetoworkspacesilent 1,address:0x12345677890",
     }:
@@ -141,7 +141,7 @@ async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixt
     await wait_called(mocks.hyprctl, count=2)
     await asyncio.sleep(0.2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
     assert any(x.startswith("movewindowpixel") for x in call_set)
     await _send_window_events("7777745", "plop", "notthat")
     await wait_called(mocks.hyprctl, count=2)
@@ -169,13 +169,13 @@ async def test_no_proc(no_proc_scratchpads, subprocess_shell_mock, server_fixtur
     await wait_called(mocks.hyprctl, count=4)
     await asyncio.sleep(0.2)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
 
     mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=3)
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
-    call_set.remove("movetoworkspacesilent special:scratch_term,address:0x12345677890")
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
     assert any(x.startswith("movewindowpixel") for x in call_set)
     await _send_window_events("745", "plop", "notthat")
     await wait_called(mocks.hyprctl, count=2)
