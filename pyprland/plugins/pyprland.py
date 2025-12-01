@@ -28,7 +28,7 @@ class Extension(Plugin):
             await self.notify_error("Error: 'hyprctl version' didn't print valid data")
         else:
             _tag = version_info.get("tag")
-            if _tag:
+            if _tag and _tag != "unknown":
                 assert isinstance(_tag, str)
                 version_str = _tag.split("-", 1)[0]
                 if len(version_str) < len(_tag):
