@@ -14,6 +14,8 @@ from ..aioops import ailistdir
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
+IMAGE_FORMAT = "png"
+
 
 def expand_path(path: str) -> str:
     """Expand the path."""
@@ -54,7 +56,9 @@ class RoundedImageManager:
     def __init__(self, radius: int) -> None:
         """Initialize the manager."""
         self.radius = radius
-        self.tmpdir = tempfile.TemporaryDirectory(prefix="pyprland_wall_")
+        cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "pyprland")
+        os.makedirs(cache_dir, exist_ok=True)
+        self.tmpdir = tempfile.TemporaryDirectory(prefix="wallpaper_", dir=cache_dir)
         self.generated: dict[str, str] = {}
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
@@ -62,7 +66,7 @@ class RoundedImageManager:
 
     def get_path(self, key: str) -> str:
         """Get the path for a given key."""
-        return os.path.join(self.tmpdir.name, f"{abs(hash((key, self.radius)))}.png")
+        return os.path.join(self.tmpdir.name, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor."""
@@ -97,9 +101,13 @@ class RoundedImageManager:
             mask_draw_full.rectangle((self.radius, 0, width - self.radius, height), fill=255)
             mask_draw_full.rectangle((0, self.radius, width, height - self.radius), fill=255)
 
-            rounded = ImageOps.fit(resized, resized.size)
+            rounded = ImageOps.fit(resized.convert("RGBA"), resized.size)
             rounded.putalpha(mask)
-            rounded.convert("RGB")
+            alpha = rounded.getchannel("A")
+            result = Image.new("RGB", rounded.size, "black")
+            result.paste(rounded, mask=alpha)
+            result.save(dest)
+            # rounded.convert("RGB")
 
             rounded.save(dest)
 
