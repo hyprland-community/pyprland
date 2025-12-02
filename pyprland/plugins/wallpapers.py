@@ -77,36 +77,19 @@ class RoundedImageManager:
         dest = self.get_path(key)
         with Image.open(src) as img:
             width, height = (monitor.width, monitor.height) if monitor.transform % 2 == 0 else (monitor.height, monitor.width)
-            resized = ImageOps.fit(img, (width, height), method=Image.Resampling.LANCZOS)
+            resample = Image.Resampling.LANCZOS
+            resized = ImageOps.fit(img, (width, height), method=resample)
 
             scale = 4
             hi_width, hi_height = resized.width * scale, resized.height * scale
             hi_radius = self.radius * scale
-            hi_diameter = hi_radius * 2
             hi_mask = Image.new("L", (hi_width, hi_height), 0)
-            hi_corner = Image.new("L", (hi_diameter, hi_diameter), 0)
-            hi_corner_draw = ImageDraw.Draw(hi_corner)
-            hi_corner_draw.ellipse((0, 0, hi_diameter, hi_diameter), fill=255)
-
-            hi_mask.paste(hi_corner, (0, 0))
-            hi_mask.paste(hi_corner.rotate(90), (0, hi_height - hi_diameter))
-            hi_mask.paste(
-                hi_corner.rotate(180),
-                (hi_width - hi_diameter, hi_height - hi_diameter),
-            )
-            hi_mask.paste(hi_corner.rotate(270), (hi_width - hi_diameter, 0))
-
             hi_draw = ImageDraw.Draw(hi_mask)
-            hi_draw.rectangle((hi_radius, 0, hi_width - hi_radius, hi_height), fill=255)
-            hi_draw.rectangle((0, hi_radius, hi_width, hi_height - hi_radius), fill=255)
+            hi_draw.rounded_rectangle((0, 0, hi_width - 1, hi_height - 1), radius=hi_radius, fill=255)
+            mask = hi_mask.resize(resized.size, resample=resample)
 
-            mask = hi_mask.resize(resized.size, resample=Image.Resampling.LANCZOS)
-
-            rounded = resized.convert("RGBA")
-            rounded.putalpha(mask)
-            alpha = rounded.getchannel("A")
-            result = Image.new("RGB", rounded.size, "black")
-            result.paste(rounded, mask=alpha)
+            result = Image.new("RGB", resized.size, "black")
+            result.paste(resized.convert("RGB"), mask=mask)
             result.save(dest)
 
         self.generated[key] = dest
