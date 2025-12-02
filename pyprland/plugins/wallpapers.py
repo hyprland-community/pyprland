@@ -76,17 +76,18 @@ class RoundedImageManager:
 
         dest = self.get_path(key)
         with Image.open(src) as img:
-            width, height = (monitor.width, monitor.height) if monitor.transform % 2 == 0 else (monitor.height, monitor.width)
+            is_rotated = monitor.transform % 2
+            width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
             resample = Image.Resampling.LANCZOS
             resized = ImageOps.fit(img, (width, height), method=resample)
 
             scale = 4
-            hi_width, hi_height = resized.width * scale, resized.height * scale
-            hi_radius = self.radius * scale
-            hi_mask = Image.new("L", (hi_width, hi_height), 0)
-            hi_draw = ImageDraw.Draw(hi_mask)
-            hi_draw.rounded_rectangle((0, 0, hi_width - 1, hi_height - 1), radius=hi_radius, fill=255)
-            mask = hi_mask.resize(resized.size, resample=resample)
+            corner_width, corner_height = resized.width * scale, resized.height * scale
+            corner_radius = self.radius * scale
+            corner_mask = Image.new("L", (corner_width, corner_height), 0)
+            corner_draw = ImageDraw.Draw(corner_mask)
+            corner_draw.rounded_rectangle((0, 0, corner_width - 1, corner_height - 1), radius=corner_radius, fill=255)
+            mask = corner_mask.resize(resized.size, resample=resample)
 
             result = Image.new("RGB", resized.size, "black")
             result.paste(resized.convert("RGB"), mask=mask)
