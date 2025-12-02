@@ -76,40 +76,37 @@ class RoundedImageManager:
 
         dest = self.get_path(key)
         with Image.open(src) as img:
-            width, height = (
-                (
-                    monitor.width,
-                    monitor.height,
-                )
-                if monitor.transform % 2 == 0
-                else (
-                    monitor.height,
-                    monitor.width,
-                )
-            )
+            width, height = (monitor.width, monitor.height) if monitor.transform % 2 == 0 else (monitor.height, monitor.width)
             resized = ImageOps.fit(img, (width, height), method=Image.Resampling.LANCZOS)
-            mask = Image.new("L", resized.size, 0)
-            mask_draw = Image.new("L", (self.radius * 2, self.radius * 2), 0)
-            mask_draw_obj = ImageDraw.Draw(mask_draw)
-            mask_draw_obj.ellipse((0, 0, self.radius * 2, self.radius * 2), fill=255)
 
-            mask.paste(mask_draw, (0, 0))
-            mask.paste(mask_draw.rotate(90), (0, height - self.radius * 2))
-            mask.paste(mask_draw.rotate(180), (width - self.radius * 2, height - self.radius * 2))
-            mask.paste(mask_draw.rotate(270), (width - self.radius * 2, 0))
-            mask_draw_full = ImageDraw.Draw(mask)
-            mask_draw_full.rectangle((self.radius, 0, width - self.radius, height), fill=255)
-            mask_draw_full.rectangle((0, self.radius, width, height - self.radius), fill=255)
+            scale = 4
+            hi_width, hi_height = resized.width * scale, resized.height * scale
+            hi_radius = self.radius * scale
+            hi_mask = Image.new("L", (hi_width, hi_height), 0)
+            hi_corner = Image.new("L", (hi_radius * 2, hi_radius * 2), 0)
+            hi_corner_draw = ImageDraw.Draw(hi_corner)
+            hi_corner_draw.ellipse((0, 0, hi_radius * 2, hi_radius * 2), fill=255)
 
-            rounded = ImageOps.fit(resized.convert("RGBA"), resized.size)
+            hi_mask.paste(hi_corner, (0, 0))
+            hi_mask.paste(hi_corner.rotate(90), (0, hi_height - hi_radius * 2))
+            hi_mask.paste(
+                hi_corner.rotate(180),
+                (hi_width - hi_radius * 2, hi_height - hi_radius * 2),
+            )
+            hi_mask.paste(hi_corner.rotate(270), (hi_width - hi_radius * 2, 0))
+
+            hi_draw = ImageDraw.Draw(hi_mask)
+            hi_draw.rectangle((hi_radius, 0, hi_width - hi_radius, hi_height), fill=255)
+            hi_draw.rectangle((0, hi_radius, hi_width, hi_height - hi_radius), fill=255)
+
+            mask = hi_mask.resize(resized.size, resample=Image.Resampling.LANCZOS)
+
+            rounded = resized.convert("RGBA")
             rounded.putalpha(mask)
             alpha = rounded.getchannel("A")
             result = Image.new("RGB", rounded.size, "black")
             result.paste(rounded, mask=alpha)
             result.save(dest)
-            # rounded.convert("RGB")
-
-            rounded.save(dest)
 
         self.generated[key] = dest
         return dest
