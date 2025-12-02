@@ -82,18 +82,19 @@ class RoundedImageManager:
             scale = 4
             hi_width, hi_height = resized.width * scale, resized.height * scale
             hi_radius = self.radius * scale
+            hi_diameter = hi_radius * 2
             hi_mask = Image.new("L", (hi_width, hi_height), 0)
-            hi_corner = Image.new("L", (hi_radius * 2, hi_radius * 2), 0)
+            hi_corner = Image.new("L", (hi_diameter, hi_diameter), 0)
             hi_corner_draw = ImageDraw.Draw(hi_corner)
-            hi_corner_draw.ellipse((0, 0, hi_radius * 2, hi_radius * 2), fill=255)
+            hi_corner_draw.ellipse((0, 0, hi_diameter, hi_diameter), fill=255)
 
             hi_mask.paste(hi_corner, (0, 0))
-            hi_mask.paste(hi_corner.rotate(90), (0, hi_height - hi_radius * 2))
+            hi_mask.paste(hi_corner.rotate(90), (0, hi_height - hi_diameter))
             hi_mask.paste(
                 hi_corner.rotate(180),
-                (hi_width - hi_radius * 2, hi_height - hi_radius * 2),
+                (hi_width - hi_diameter, hi_height - hi_diameter),
             )
-            hi_mask.paste(hi_corner.rotate(270), (hi_width - hi_radius * 2, 0))
+            hi_mask.paste(hi_corner.rotate(270), (hi_width - hi_diameter, 0))
 
             hi_draw = ImageDraw.Draw(hi_mask)
             hi_draw.rectangle((hi_radius, 0, hi_width - hi_radius, hi_height), fill=255)
