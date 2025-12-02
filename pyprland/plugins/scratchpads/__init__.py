@@ -377,11 +377,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     self.log.exception("Failed to hide %s", scratch.uid)
                     await self.notify_info(f"Failed to hide {scratch.uid}: {e}")
 
-    async def event_configreloaded(self, _nothing: str) -> None:
-        """Re-apply windowrules when hyprland is restarted."""
-        for scratch in list(self.scratches.get_by_state("configured")):
-            await self._configure_windowrules(scratch)
-
     async def event_activewindowv2(self, addr: str) -> None:
         """Active windows hook."""
         full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
