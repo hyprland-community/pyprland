@@ -145,32 +145,35 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             await self.notify_error("relayout doesn't take any argument")
             return False
 
-        self._clear_mon_by_pat_cache()
+        iterations = 3
+        for n in range(iterations):
+            await asyncio.sleep(0.2)
+            self._clear_mon_by_pat_cache()
 
-        if monitors is None:
-            monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors"))
+            if monitors is None or n < iterations - 1:
+                monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors"))
 
-        cleaned_config = self.resolve_names(monitors)
-        if cleaned_config:
-            self.log.debug("Using %s", cleaned_config)
-        else:
-            self.log.debug("No configuration item is applicable")
-            return False
-        graph = build_graph(cleaned_config)
-        need_change = self._update_positions(monitors, graph, cleaned_config)
-        every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
-        if self.cast_bool(self.config.get("trim_offset"), True):
-            trim_offset(monitors)
+            cleaned_config = self.resolve_names(monitors)
+            if cleaned_config:
+                self.log.debug("Using %s", cleaned_config)
+            else:
+                self.log.debug("No configuration item is applicable")
+                return False
+            graph = build_graph(cleaned_config)
+            print(graph)
+            need_change = self._update_positions(monitors, graph, cleaned_config)
+            every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
+            if self.cast_bool(self.config.get("trim_offset"), True):
+                trim_offset(monitors)
 
-        for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-            await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
+            for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
+                await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
         return need_change
 
     # Event handlers
 
     async def event_configreloaded(self, _: str = "") -> None:
         """Relayout screens after settings has been lost."""
-        await asyncio.sleep(1)
         await self.run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
