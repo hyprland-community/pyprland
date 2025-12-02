@@ -174,7 +174,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def event_configreloaded(self, _: str = "") -> None:
         """Relayout screens after settings has been lost."""
-        await self.run_relayout()
+        if self.config.get("relayout_on_config_change", True):
+            await asyncio.sleep(1.0)
+            await self.run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
         """Triggers when a monitor is plugged."""

@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 54
+:total-count: 55
 
 --------------------------------------------------------------------------------
 
@@ -162,4 +162,13 @@ configreloaded event should trigger a reload of pyprload
 
 :bugid: 54
 :created: 2025-08-07T21:27:25
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+Skip "configreloaded" in monitors plugin if it's due to the post_command of wallpaper for instance
+==================================================================================================
+
+:bugid: 55
+:created: 2025-12-02T22:10:17
 :priority: 0
