@@ -79,7 +79,7 @@ Overrides the default command to set the background image.
 [variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path and `"[output]"` for the screen. eg:
 
 ```
-swaybg -m fill -i "[file]" -o "[output]"
+swaybg -m fill -i '[file]' -o '[output]'
 ```
 
 ### `clear_command`
@@ -94,16 +94,19 @@ clear_command = "swaybg clear"
 
 ### `post_command`
 
-Executes a command after a wallpaper change. Can use `[file]`.
+Executes a command after a wallpaper change. Can use `[file]`, eg:
 
 ```
-post_command = "matugen image [file]"
+post_command = "matugen image '[file]'"
 ```
 
 ### `radius`
 
 When set, adds rounded borders to the wallpapers. Expressed in pixels. Disabled by default.
 
+For this feature to work, you must use '[output]' in your `command` to specify the screen port name to use in the command.
+
+eg:
 ```
 radius = 16
 ```

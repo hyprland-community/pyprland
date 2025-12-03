@@ -195,11 +195,15 @@ class Extension(CastBoolMixin, Plugin):
                 cmd_template = self.config.get("command", 'swaybg -o [output] -m fill -i "[file]"')
 
                 filename = None
-                for monitor in monitors:
-                    if unique or filename is None:
-                        img_path = self.select_next_image()
-                    filename = await self._prepare_wallpaper(monitor, img_path)
-                    variables.update({"file": filename, "output": monitor.name})
+                if "[output]" in cmd_template:
+                    for monitor in monitors:
+                        if unique or filename is None:
+                            img_path = self.select_next_image()
+                        filename = await self._prepare_wallpaper(monitor, img_path)
+                        variables.update({"file": filename, "output": monitor.name})
+                        await self._run_one(cmd_template, variables)
+                else:
+                    variables.update({"file": img_path})
                     await self._run_one(cmd_template, variables)
 
                 if self.config.get("post_command"):
