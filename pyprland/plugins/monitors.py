@@ -160,7 +160,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 self.log.debug("No configuration item is applicable")
                 return False
             graph = build_graph(cleaned_config)
-            print(graph)
             need_change = self._update_positions(monitors, graph, cleaned_config)
             every_monitor = {v["name"]: v for v in await self.hyprctl_json("monitors all")}
             if self.cast_bool(self.config.get("trim_offset"), True):
