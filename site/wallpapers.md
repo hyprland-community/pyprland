@@ -89,17 +89,24 @@ By default `clear` command kills the `command` program.
 Instead of that, you can provide a command to clear the background. eg:
 
 ```
+clear_command = "swaybg clear"
+```
 
 ### `post_command`
 
 Executes a command after a wallpaper change. Can use `[file]`.
-clear_command = "swaybg clear"
-``````
+
+```
+post_command = "mutagen image [file]"
+```
 
 ### `radius`
 
-When set, adds rounded borders to the wallpapers. Expressed in pixels.
+When set, adds rounded borders to the wallpapers. Expressed in pixels. Disabled by default.
 
+```
+radius = 16
+```
 
 ### `extensions`
 
