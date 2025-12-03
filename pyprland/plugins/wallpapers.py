@@ -82,12 +82,11 @@ class RoundedImageManager:
             resized = ImageOps.fit(img, (width, height), method=resample)
 
             scale = 4
-            corner_width, corner_height = resized.width * scale, resized.height * scale
-            corner_radius = self.radius * scale
-            corner_mask = Image.new("L", (corner_width, corner_height), 0)
-            corner_draw = ImageDraw.Draw(corner_mask)
-            corner_draw.rounded_rectangle((0, 0, corner_width - 1, corner_height - 1), radius=corner_radius, fill=255)
-            mask = corner_mask.resize(resized.size, resample=resample)
+            image_width, image_height = resized.width * scale, resized.height * scale
+            rounded_mask = Image.new("L", (image_width, image_height), 0)
+            corner_draw = ImageDraw.Draw(rounded_mask)
+            corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
+            mask = rounded_mask.resize(resized.size, resample=resample)
 
             result = Image.new("RGB", resized.size, "black")
             result.paste(resized.convert("RGB"), mask=mask)
