@@ -97,7 +97,7 @@ clear_command = "swaybg clear"
 Executes a command after a wallpaper change. Can use `[file]`.
 
 ```
-post_command = "mutagen image [file]"
+post_command = "matugen image [file]"
 ```
 
 ### `radius`
