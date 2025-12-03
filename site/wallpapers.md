@@ -76,10 +76,10 @@ How long (in minutes) a background should stay in place
 
 Overrides the default command to set the background image.
 
-[variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path. eg:
+[variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path and `"[output]"` for the screen. eg:
 
 ```
-swaybg -m fill -i "[file]"
+swaybg -m fill -i "[file]" -o "[output]"
 ```
 
 ### `clear_command`
@@ -89,8 +89,17 @@ By default `clear` command kills the `command` program.
 Instead of that, you can provide a command to clear the background. eg:
 
 ```
+
+### `post_command`
+
+Executes a command after a wallpaper change. Can use `[file]`.
 clear_command = "swaybg clear"
 ``````
+
+### `radius`
+
+When set, adds rounded borders to the wallpapers. Expressed in pixels.
+
 
 ### `extensions`
 
