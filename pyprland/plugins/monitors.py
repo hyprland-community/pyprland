@@ -147,7 +147,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         iterations = 3
         for n in range(iterations):
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
             self._clear_mon_by_pat_cache()
 
             if monitors is None or n < iterations - 1:
@@ -167,7 +167,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 trim_offset(monitors)
 
             for monitor in sorted(monitors, key=lambda x: x["x"] + x["y"]):
-                await self.hyprctl(self._build_monitor_command(monitor, cleaned_config, every_monitor), "keyword")
+                cmd = self._build_monitor_command(monitor, cleaned_config, every_monitor)
+                self.log.debug(cmd)
+                await self.hyprctl(cmd, "keyword")
         return need_change
 
     # Event handlers
