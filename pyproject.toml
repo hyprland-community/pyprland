@@ -18,6 +18,7 @@ pypr = "pyprland.command:main"
 [tool.poetry.dependencies]
 python = ">=3.11"
 aiofiles = ">=23.2.1"
+pillow = "^12.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
