@@ -4,9 +4,9 @@ import asyncio
 import os
 import os.path
 import random
-import tempfile
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
 
@@ -56,9 +56,9 @@ class RoundedImageManager:
     def __init__(self, radius: int) -> None:
         """Initialize the manager."""
         self.radius = radius
-        cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "pyprland")
-        os.makedirs(cache_dir, exist_ok=True)
-        self.tmpdir = tempfile.TemporaryDirectory(prefix="wallpaper_", dir=cache_dir)
+
+        self.tmpdir = Path("~").expanduser() / ".cache" / "pyprland" / "wallpapers"
+        self.tmpdir.mkdir(parents=True, exist_ok=True)
         self.generated: dict[str, str] = {}
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
@@ -66,7 +66,7 @@ class RoundedImageManager:
 
     def get_path(self, key: str) -> str:
         """Get the path for a given key."""
-        return os.path.join(self.tmpdir.name, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
+        return os.path.join(self.tmpdir, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor."""
@@ -97,7 +97,6 @@ class RoundedImageManager:
 
     def cleanup(self) -> None:
         """Clear temporary files."""
-        self.tmpdir.cleanup()
         self.generated.clear()
 
 
