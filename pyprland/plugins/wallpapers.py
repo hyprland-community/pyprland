@@ -8,7 +8,12 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageOps
+try:
+    from PIL import Image, ImageDraw, ImageOps
+
+    can_edit_image = True
+except ImportError:
+    can_edit_image = False
 
 from ..aioops import ailistdir
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
@@ -130,7 +135,7 @@ class Extension(CastBoolMixin, Plugin):
             async for fname in get_files_with_ext(path, extensions, recurse=self.cast_bool(self.config.get("recurse")))
         ]
 
-        if radius > 0:
+        if radius > 0 and can_edit_image:
             self.rounded_manager = RoundedImageManager(radius)
         else:
             if self.rounded_manager:
@@ -202,7 +207,7 @@ class Extension(CastBoolMixin, Plugin):
                         variables.update({"file": filename, "output": monitor.name})
                         await self._run_one(cmd_template, variables)
                 else:
-                    variables.update({"file": img_path})
+                    variables.update({"file": prepare_for_quotes(img_path)})
                     await self._run_one(cmd_template, variables)
 
                 if self.config.get("post_command"):
