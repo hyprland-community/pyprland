@@ -14,7 +14,7 @@ from ..aioops import ailistdir
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
-IMAGE_FORMAT = "png"
+IMAGE_FORMAT = "jpg"
 
 
 def expand_path(path: str) -> str:
@@ -90,7 +90,7 @@ class RoundedImageManager:
 
             result = Image.new("RGB", resized.size, "black")
             result.paste(resized.convert("RGB"), mask=mask)
-            result.save(dest)
+            result.convert("RGB").save(dest)
 
         self.generated[key] = dest
         return dest
