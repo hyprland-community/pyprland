@@ -8,7 +8,7 @@ repos:
         language: system
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: "v0.7.2"
+    rev: "v0.14.8"
     hooks:
       # Run the linter.
       - id: ruff
@@ -16,23 +16,23 @@ repos:
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-yaml
       - id: check-json
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys']
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         args: [--max-line-length=140]
   - repo: https://github.com/lovesegfault/beautysh
-    rev: "v6.2.1"
+    rev: "v6.4.2"
     hooks:
       - id: beautysh
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.35.1"
+    rev: "v1.37.1"
     hooks:
       - id: yamllint
 #        types: [python]

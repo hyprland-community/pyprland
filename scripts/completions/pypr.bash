@@ -12,7 +12,7 @@ _shtab_pypr___print_completion_choices=('bash' 'zsh' 'tcsh')
 _shtab_pypr_bar_pos_0_choices=('restart')
 _shtab_pypr_layout_center_pos_0_choices=('toggle' 'next' 'prev')
 _shtab_pypr_change_workspace_pos_0_choices=('-1' '+1')
-_shtab_pypr_wall_pos_0_choices=('next' 'clear')
+_shtab_pypr_wall_pos_0_choices=('next' 'clear' 'pause')
 
 _shtab_pypr_pos_0_nargs=A...
 

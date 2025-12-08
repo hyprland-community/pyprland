@@ -114,7 +114,7 @@ _shtab_pypr_version_options=(
 )
 
 _shtab_pypr_wall_options=(
-    ":wallpaper action:(next clear)"
+    ":wallpaper action:(next clear pause)"
 )
 
 _shtab_pypr_zoom_options=(

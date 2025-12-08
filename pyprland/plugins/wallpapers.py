@@ -242,16 +242,15 @@ class Extension(CastBoolMixin, Plugin):
 
     async def run_wall(self, arg: str) -> None:
         """<next|clear> skip the current background image or stop displaying it."""
-        if arg.startswith("n"):
+        if arg.startswith("n"):  # next
             self._paused = False
             self.next_background_event.set()
-        elif arg.startswith("c"):
+        elif arg.startswith("p"):  # pause
+            self._paused = True
+        elif arg.startswith("c"):  # clear
+            self._paused = True
+            await self.terminate()
             clear_command = self.config.get("clear_command")
             if clear_command:
-                # call clear_command subprocess
                 proc = await asyncio.create_subprocess_shell(clear_command)
-                # wait for it to finish
                 await proc.wait()
-            else:
-                self._paused = True
-                await self.terminate()

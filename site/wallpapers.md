@@ -1,15 +1,17 @@
 ---
 commands:
     - name: wall next
-      description: Changes the current background image
+      description: Changes the current background image, resume cycling if paused
     - name: wall clear
-      description: Removes the current background image
+      description: Removes the current background image and pause cycling
+    - name: wall pause
+      description: Stop cycling the wallpaper after a delay
 ---
 
 # wallpapers
 
 Search folders for images and sets the background image at a regular interval.
-Images are selected randomly from the full list of images found.
+Pictures are selected randomly from the full list of images found.
 
 It serves two purposes:
 
@@ -26,7 +28,7 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 
 ```toml
 [wallpapers]
-path = "~/Images/wallpapers/" # path to the folder with background images
+path = "~/Pictures/wallpapers/" # path to the folder with background images
 ```
 
 </details>
@@ -37,7 +39,7 @@ path = "~/Images/wallpapers/" # path to the folder with background images
 ```toml
 [wallpapers]
 unique = true # set a different wallpaper for each screen
-path = "~/Images/wallpapers/"
+path = "~/Pictures/wallpapers/"
 interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
 recurse = true
@@ -62,7 +64,7 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 path to a folder or list of folders that will be searched. Can also be a list, eg:
 
 ```toml
-path = ["~/Images/Portraits/", "~/Images/Landscapes/"]
+path = ["~/Pictures/Portraits/", "~/Pictures/Landscapes/"]
 ```
 
 ### `interval`
