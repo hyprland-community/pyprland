@@ -47,12 +47,16 @@ class MonitorInfo:
     width: int
     height: int
     transform: int
+    scale: float
 
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
     """Fetch monitor information from hyprctl."""
     monitors = await extension.hyprctl_json("monitors")
-    return [MonitorInfo(name=m["name"], width=int(m["width"]), height=int(m["height"]), transform=m["transform"]) for m in monitors]
+    return [
+        MonitorInfo(name=m["name"], width=int(m["width"]), height=int(m["height"]), transform=m["transform"], scale=m["scale"])
+        for m in monitors
+    ]
 
 
 class RoundedImageManager:
@@ -67,7 +71,7 @@ class RoundedImageManager:
         self.generated: dict[str, str] = {}
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
-        return f"{monitor.name}:{monitor.width}x{monitor.height}:{image_path}"
+        return f"{monitor.name}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def get_path(self, key: str) -> str:
         """Get the path for a given key."""
@@ -83,6 +87,9 @@ class RoundedImageManager:
         with Image.open(src) as img:
             is_rotated = monitor.transform % 2
             width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
+            width = int(width / monitor.scale)
+            height = int(height / monitor.scale)
+            print(monitor.name, width, height)
             resample = Image.Resampling.LANCZOS
             resized = ImageOps.fit(img, (width, height), method=resample)
 
@@ -196,7 +203,7 @@ class Extension(CastBoolMixin, Plugin):
                 self.next_background_event.clear()
 
                 # Define the command template based on the 'unique' flag
-                cmd_template = self.config.get("command", 'swaybg -o [output] -m fill -i "[file]"')
+                cmd_template = self.config.get("command", 'swww img -o "[output]" "[file]"')
 
                 filename = None
                 if "[output]" in cmd_template:
