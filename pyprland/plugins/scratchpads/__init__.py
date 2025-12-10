@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from enum import Flag, auto
 from functools import partial
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
@@ -24,6 +24,9 @@ from .helpers import (
 )
 from .lookup import ScratchDB
 from .objects import Scratch
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
@@ -89,7 +92,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
-        self._classify: callable
+        self._classify: Callable
         self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
         Scratch.get_client_props = self.get_client_props
         self.get_monitor_props = staticmethod(partial(get_monitor_props, logger=self.log))
@@ -121,7 +124,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Config loader."""
         self._classify = class_decorator_new if state.hyprland_version > VersionInfo(0, 47, 2) else class_decorator_old
         # Sanity checks
-        _scratch_classes: dict[str:Scratch] = {}
+        _scratch_classes: dict[str, str] = {}
         for uid, scratch in self.config.items():
             _klass = scratch.get("class")
             if _klass:
@@ -140,14 +143,14 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         scratches = {name: Scratch(name, self.config) for name, options in self.config.items()}
 
         scratches_to_spawn = set()
-        for name in scratches:  # noqa: PLC0206
+        for name, new_scratch in scratches.items():
             scratch = self.scratches.get(name)
             if scratch:  # if existing scratch exists, overrides the conf object
                 scratch.set_config(self.config)
             else:
                 # else register it
-                self.scratches.register(scratches[name], name)
-                is_lazy = self.cast_bool(scratches[name].conf.get("lazy"), False)
+                self.scratches.register(new_scratch, name)
+                is_lazy = self.cast_bool(new_scratch.conf.get("lazy"), False)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
@@ -172,9 +175,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
         self.scratches.set_state(scratch, "configured")
-        animation_type: str = scratch.conf.get("animation", "fromTop").lower()
-        defined_class: str = scratch.conf.get("class", "")
-        skipped_windowrules = scratch.conf.get("skip_windowrules", [])
+        animation_type: str = cast("str", scratch.conf.get("animation", "fromTop")).lower()
+        defined_class: str = cast("str", scratch.conf.get("class", ""))
+        skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules", []))
         if defined_class:
             forced_monitor = scratch.conf.get("force_monitor")
             if forced_monitor and forced_monitor not in state.monitors:
@@ -182,7 +185,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 await self.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
             monitor = await self.get_monitor_props(name=forced_monitor)
-            width, height = convert_coords(scratch.conf.get("size", "80% 80%"), monitor)
+            width, height = convert_coords(cast("str", scratch.conf.get("size", "80% 80%")), monitor)
 
             ipc_commands = []
 
@@ -289,7 +292,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         if not item.have_command:
             return True
 
-        if self.cast_bool(item.conf.get("process_tracking"), True):
+        if self.cast_bool(cast("bool", item.conf.get("process_tracking")), True):
             if not await item.is_alive():
                 await self._configure_windowrules(item)
                 self.log.info("%s is not running, starting...", uid)
@@ -535,7 +538,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None) -> tuple[int, int]:
         """Return offset from config or use margin as a ref."""
-        offset = scratch.conf.get("offset")
+        offset: int | str = scratch.conf.get("offset")
         if monitor is None:
             monitor = await get_monitor_props(self.log, name=scratch.forced_monitor)
         rotated = is_rotated(monitor)
@@ -557,7 +560,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return False
 
         await self._slide_animation(animation_type, scratch, await self.get_offsets(scratch, monitor))
-        delay = scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY)
+        delay: float = scratch.conf.get("hide_delay", DEFAULT_HIDE_DELAY)
         if delay:
             await asyncio.sleep(delay)  # await for animation to finish
         return True
