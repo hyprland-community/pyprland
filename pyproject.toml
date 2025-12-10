@@ -1,9 +1,9 @@
-[tool.poetry]
+[project]
 name = "pyprland"
 version = "2.5.0"
 description = "Hyperland plugin system - batteries included"
 authors = [
-    "fdev31 <fdev31@gmail.com>",
+    { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
 ]
 license = "MIT"
 readme = "README.md"
@@ -11,14 +11,13 @@ homepage = "https://github.com/hyprland-community/pyprland/"
 packages = [
     { include = "pyprland" },
 ]
+dependencies = [
+    "aiofiles >=23.2.1",
+]
+requires-python = ">=3.11"
 
-[tool.poetry.scripts]
+[project.scripts]
 pypr = "pyprland.command:main"
-
-[tool.poetry.dependencies]
-python = ">=3.11"
-aiofiles = ">=23.2.1"
-pillow = "^12.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
