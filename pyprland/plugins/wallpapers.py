@@ -68,7 +68,6 @@ class RoundedImageManager:
 
         self.tmpdir = Path("~").expanduser() / ".cache" / "pyprland" / "wallpapers"
         self.tmpdir.mkdir(parents=True, exist_ok=True)
-        self.generated: dict[str, str] = {}
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
         return f"{monitor.name}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
@@ -80,10 +79,9 @@ class RoundedImageManager:
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor."""
         key = self._build_key(monitor, src)
-        if key in self.generated:
-            return self.generated[key]
-
         dest = self.get_path(key)
+        if os.path.exists(dest):
+            return dest
         with Image.open(src) as img:
             is_rotated = monitor.transform % 2
             width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
@@ -104,12 +102,7 @@ class RoundedImageManager:
             result.paste(resized.convert("RGB"), mask=mask)
             result.convert("RGB").save(dest)
 
-        self.generated[key] = dest
         return dest
-
-    def cleanup(self) -> None:
-        """Clear temporary files."""
-        self.generated.clear()
 
 
 class Extension(CastBoolMixin, Plugin):
@@ -145,8 +138,6 @@ class Extension(CastBoolMixin, Plugin):
         if radius > 0 and can_edit_image:
             self.rounded_manager = RoundedImageManager(radius)
         else:
-            if self.rounded_manager:
-                self.rounded_manager.cleanup()
             self.rounded_manager = None
 
         # Start the main loop if it's the first load of the config
@@ -159,8 +150,6 @@ class Extension(CastBoolMixin, Plugin):
         if self.loop:
             self.loop.cancel()
         await self.terminate()
-        if self.rounded_manager:
-            self.rounded_manager.cleanup()
 
     async def event_monitoradded(self, _: str) -> None:
         """When a new monitor is added, set the background."""
