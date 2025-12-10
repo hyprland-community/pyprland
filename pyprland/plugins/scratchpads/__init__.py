@@ -453,6 +453,11 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 await self.update_scratch_info()
             if item and item.meta.should_hide:
                 await self.run_hide(item.uid, flavor=HideFlavors.FORCED)
+        else:
+            clients = await self.hyprctl_json("clients")
+            for item in self.scratches.values():
+                if await self._handle_multiwindow(item, clients):
+                    return
 
     # }}}
     def cancel_task(self, uid: str) -> bool:
@@ -634,12 +639,13 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._show_transition(scratch, monitor, was_alive)
         scratch.monitor = monitor["name"]
 
-    async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]) -> None:
+    async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]) -> bool:
         """Collect every matching client for the scratchpad and add them to extra_addr if needed."""
         if not self.cast_bool(scratch.conf.get("multi"), True):
-            return
+            return False
         match_by, match_value = scratch.get_match_props()
         match_fn = get_match_fn(match_by, match_value)
+        hit = False
         for client in clients:
             if client["address"] == scratch.full_address:
                 continue
@@ -647,6 +653,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 address = client["address"]
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
+                    hit = True
+        return hit
 
     async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool) -> None:
         """Performs the transition to visible state."""
