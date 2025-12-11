@@ -70,7 +70,7 @@ class RoundedImageManager:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
-        return f"{monitor.name}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
+        return f"{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def get_path(self, key: str) -> str:
         """Get the path for a given key."""
