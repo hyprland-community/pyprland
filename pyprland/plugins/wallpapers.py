@@ -186,14 +186,19 @@ class Extension(CastBoolMixin, Plugin):
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
     async def update_vars(
-        self, variables: dict[str, Any], unique: bool, filename: str | None, monitor: MonitorInfo, img_path: str
-    ) -> dict[str, Any]:
+        self,
+        variables: dict[str, Any],
+        unique: bool,
+        filename: str | None,
+        monitor: MonitorInfo,
+        img_path: str,
+    ) -> tuple[dict[str, Any], str]:
         """Get fresh variables for the given monitor."""
         if unique or filename is None:
             img_path = self.select_next_image()
         filename = await self._prepare_wallpaper(monitor, img_path)
         variables.update({"file": filename, "output": monitor.name})
-        return variables
+        return (variables, filename)
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
         cmd_template = self.config.get("command")
@@ -205,8 +210,7 @@ class Extension(CastBoolMixin, Plugin):
         if cmd_template:
             if "[output]" in cmd_template:
                 for monitor in monitors:
-                    variables = await self.update_vars(variables, unique, filename, monitor, img_path)
-                    filename = variables["file"]
+                    variables, fileanme = await self.update_vars(variables, unique, filename, monitor, img_path)
                     await self._run_one(cmd_template, variables)
             else:
                 variables.update({"file": prepare_for_quotes(img_path)})
@@ -217,8 +221,7 @@ class Extension(CastBoolMixin, Plugin):
             await self._init_hyprpaper()
             command_collector = []
             for monitor in monitors:
-                variables = await self.update_vars(variables, unique, filename, monitor, img_path)
-                filename = variables["file"]
+                variables, filename = await self.update_vars(variables, unique, filename, monitor, img_path)
                 command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
