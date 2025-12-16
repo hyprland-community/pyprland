@@ -185,7 +185,7 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    async def get_fresh_var(
+    async def update_vars(
         self, variables: dict[str, Any], unique: bool, filename: str | None, monitor: MonitorInfo, img_path: str
     ) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
@@ -205,9 +205,9 @@ class Extension(CastBoolMixin, Plugin):
 
         monitors = await fetch_monitors(self)
         if cmd_template:
-            if "[output]" in cmd_template or not cmd_template:
+            if "[output]" in cmd_template:
                 for monitor in monitors:
-                    variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                    variables = await self.update_vars(variables, unique, filename, monitor, img_path)
                     filename = variables["file"]
                     await self._run_one(cmd_template, variables)
             else:
@@ -219,7 +219,7 @@ class Extension(CastBoolMixin, Plugin):
             await self._init_hyprpaper()
             command_collector = []
             for monitor in monitors:
-                variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                variables = await self.update_vars(variables, unique, filename, monitor, img_path)
                 filename = variables["file"]
                 command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
