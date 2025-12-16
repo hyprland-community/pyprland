@@ -235,8 +235,8 @@ class Extension(CastBoolMixin, Plugin):
 
         while self.running:
             if not self._paused:
-                await self.terminate()
                 self.next_background_event.clear()
+                await self.terminate()
                 await self._iter_one(variables)
 
             interval = asyncio.sleep(60 * self.config.get("interval", 10))
