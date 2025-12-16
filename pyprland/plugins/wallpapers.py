@@ -120,9 +120,9 @@ class Extension(CastBoolMixin, Plugin):
 
     rounded_manager: RoundedImageManager | None
 
-    async def _init_hyprpaper(self) -> None:
+    async def send_hyprpaper(self, message: str) -> None:
         """Create hyprpaper sockets."""
-        self.hyprpaper_socket_reader, self.hyprpaper_socket_writer = await asyncio.open_unix_connection(
+        hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(
             os.path.join(
                 os.environ.get("XDG_RUNTIME_DIR", "/run/user/1000"),
                 "hypr",
@@ -130,6 +130,9 @@ class Extension(CastBoolMixin, Plugin):
                 ".hyprpaper.sock",
             )
         )
+        hyprpaper_socket_writer.write(f"{message}\n".encode())
+        await hyprpaper_socket_writer.drain()
+        hyprpaper_socket_writer.close()
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -185,32 +188,24 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    async def update_vars(
-        self,
-        variables: dict[str, Any],
-        unique: bool,
-        filename: str | None,
-        monitor: MonitorInfo,
-        img_path: str,
-    ) -> tuple[dict[str, Any], str]:
+    async def update_vars(self, variables: dict[str, Any], unique: bool, monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
-        if unique or filename is None:
+        if unique or variables.get("file") is None:
             img_path = self.select_next_image()
         filename = await self._prepare_wallpaper(monitor, img_path)
         variables.update({"file": filename, "output": monitor.name})
-        return (variables, filename)
+        return variables
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
         cmd_template = self.config.get("command")
         unique = self.config.get("unique", False)
-        filename = None
         img_path = self.select_next_image()
         monitors: list[MonitorInfo] = await fetch_monitors(self)
 
         if cmd_template:
             if "[output]" in cmd_template:
                 for monitor in monitors:
-                    variables, filename = await self.update_vars(variables, unique, filename, monitor, img_path)
+                    variables = await self.update_vars(variables, unique, monitor, img_path)
                     await self._run_one(cmd_template, variables)
             else:
                 variables.update({"file": prepare_for_quotes(img_path)})
@@ -218,17 +213,14 @@ class Extension(CastBoolMixin, Plugin):
 
         else:
             # use hyprpaper
-            await self._init_hyprpaper()
             command_collector = []
             for monitor in monitors:
-                variables, filename = await self.update_vars(variables, unique, filename, monitor, img_path)
+                variables = await self.update_vars(variables, unique, monitor, img_path)
                 command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
             for cmd in command_collector:
-                self.hyprpaper_socket_writer.write(cmd.encode("utf-8"))
-                await self.hyprpaper_socket_writer.drain()
-            self.hyprpaper_socket_writer.close()
+                await self.send_hyprpaper(cmd)
 
         # check if the command failed
         for proc in self.proc:
