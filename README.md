@@ -23,12 +23,12 @@ Contributions, suggestions, bug reports and comments are welcome.
   to tailor your Hyprland setup to your liking.
 - New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide.
 
+You may also want to visit [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
+
 <details>
 <summary>
 About Pyprland (latest stable is: <b>2.4.3</b>)
 </summary>
-
-You may also want to visit [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
 
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
 
