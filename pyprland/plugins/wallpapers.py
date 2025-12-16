@@ -88,7 +88,6 @@ class RoundedImageManager:
             width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
             width = int(width / monitor.scale)
             height = int(height / monitor.scale)
-            print(monitor.name, width, height)
             resample = Image.Resampling.LANCZOS
             resized = ImageOps.fit(img, (width, height), method=resample)
 
@@ -119,6 +118,8 @@ class Extension(CastBoolMixin, Plugin):
     cur_image = ""
     _paused = False
 
+    rounded_manager: RoundedImageManager | None
+
     async def _init_hyprpaper(self) -> None:
         """Create hyprpaper sockets."""
         self.hyprpaper_socket_reader, self.hyprpaper_socket_writer = await asyncio.open_unix_connection(
@@ -129,10 +130,6 @@ class Extension(CastBoolMixin, Plugin):
                 ".hyprpaper.sock",
             )
         )
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.rounded_manager: RoundedImageManager | None = None
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -189,7 +186,7 @@ class Extension(CastBoolMixin, Plugin):
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
     async def get_fresh_var(
-        self, variables: dict[str, Any], unique: bool, filename: str, monitor: MonitorInfo, img_path: str
+        self, variables: dict[str, Any], unique: bool, filename: str | None, monitor: MonitorInfo, img_path: str
     ) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
         if unique or filename is None:
@@ -211,6 +208,7 @@ class Extension(CastBoolMixin, Plugin):
             if "[output]" in cmd_template or not cmd_template:
                 for monitor in monitors:
                     variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                    filename = variables["file"]
                     await self._run_one(cmd_template, variables)
             else:
                 variables.update({"file": prepare_for_quotes(img_path)})
@@ -222,6 +220,7 @@ class Extension(CastBoolMixin, Plugin):
             command_collector = []
             for monitor in monitors:
                 variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                filename = variables["file"]
                 command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
