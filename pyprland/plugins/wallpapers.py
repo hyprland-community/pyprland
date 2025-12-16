@@ -21,6 +21,12 @@ from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 
 IMAGE_FORMAT = "jpg"
+HYPRPAPER_SOCKET = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", "/run/user/1000"),
+    "hypr",
+    os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "default"),
+    ".hyprpaper.sock",
+)
 
 
 def expand_path(path: str) -> str:
@@ -122,14 +128,7 @@ class Extension(CastBoolMixin, Plugin):
 
     async def send_hyprpaper(self, message: str) -> None:
         """Create hyprpaper sockets."""
-        hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(
-            os.path.join(
-                os.environ.get("XDG_RUNTIME_DIR", "/run/user/1000"),
-                "hypr",
-                os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "default"),
-                ".hyprpaper.sock",
-            )
-        )
+        hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
         hyprpaper_socket_writer.write(f"{message}\n".encode())
         await hyprpaper_socket_writer.drain()
         hyprpaper_socket_writer.close()
