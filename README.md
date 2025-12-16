@@ -23,7 +23,7 @@ Contributions, suggestions, bug reports and comments are welcome.
   to tailor your Hyprland setup to your liking.
 - New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide.
 
-You may also want to visit [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
+You may also want to browse or install [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
 
 <details>
 <summary>
