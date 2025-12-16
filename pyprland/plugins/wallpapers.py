@@ -201,7 +201,8 @@ class Extension(CastBoolMixin, Plugin):
         monitors: list[MonitorInfo] = await fetch_monitors(self)
 
         if cmd_template:
-            for monitor in monitors:
+            filtered_monitors = monitors if "[output]" in cmd_template else [monitors[0]]
+            for monitor in filtered_monitors:
                 variables = await self.update_vars(variables, unique, monitor, img_path)
                 await self._run_one(cmd_template, variables)
         else:
