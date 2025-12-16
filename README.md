@@ -78,6 +78,11 @@ Latest major changes
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
 
+### 2.5
+
+- wallpapers plugin refactored, supports rounded corners and pause
+- fcitx5 switcher plugin (appeared in late 2.4)
+
 ### 2.4
 
 - Scratchpads are now pinned by default (set `pinned = false` for the old behavior)
