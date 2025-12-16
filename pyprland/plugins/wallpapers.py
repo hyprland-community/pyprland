@@ -235,6 +235,7 @@ class Extension(CastBoolMixin, Plugin):
 
         while self.running:
             if not self._paused:
+                await self.terminate()
                 self.next_background_event.clear()
                 await self._iter_one(variables)
 
@@ -246,8 +247,6 @@ class Extension(CastBoolMixin, Plugin):
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
-
-            await self.terminate()
 
     async def terminate(self) -> None:
         """Exit existing process if any."""
