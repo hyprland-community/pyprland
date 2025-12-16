@@ -7,6 +7,7 @@ import random
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 try:
     from PIL import Image, ImageDraw, ImageOps
@@ -118,6 +119,17 @@ class Extension(CastBoolMixin, Plugin):
     cur_image = ""
     _paused = False
 
+    async def _init_hyprpaper(self) -> None:
+        """Create hyprpaper sockets."""
+        self.hyprpaper_socket_reader, self.hyprpaper_socket_writer = await asyncio.open_unix_connection(
+            os.path.join(
+                os.environ.get("XDG_RUNTIME_DIR", "/run/user/1000"),
+                "hypr",
+                os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "default"),
+                ".hyprpaper.sock",
+            )
+        )
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.rounded_manager: RoundedImageManager | None = None
@@ -176,49 +188,69 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
+    async def get_fresh_var(
+        self, variables: dict[str, Any], unique: bool, filename: str, monitor: MonitorInfo, img_path: str
+    ) -> dict[str, Any]:
+        """Get fresh variables for the given monitor."""
+        if unique or filename is None:
+            img_path = self.select_next_image()
+        filename = await self._prepare_wallpaper(monitor, img_path)
+        variables.update({"file": filename, "output": monitor.name})
+        return variables
+
+    async def _iter_one(self, variables: dict[str, Any]) -> None:
+        cmd_template = self.config.get("command")
+        filename = None
+        monitors: list[MonitorInfo] = []
+
+        unique = self.config.get("unique", False)
+        img_path = self.select_next_image()
+
+        monitors = await fetch_monitors(self)
+        if cmd_template:
+            if "[output]" in cmd_template or not cmd_template:
+                for monitor in monitors:
+                    variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                    await self._run_one(cmd_template, variables)
+            else:
+                variables.update({"file": prepare_for_quotes(img_path)})
+                await self._run_one(cmd_template, variables)
+
+        else:
+            # use hyprpaper
+            await self._init_hyprpaper()
+            command_collector = []
+            for monitor in monitors:
+                variables = await self.get_fresh_var(variables, unique, filename, monitor, img_path)
+                command_collector.append(apply_variables("preload [file]", variables))
+                command_collector.append(apply_variables("wallpaper [output], [file]", variables))
+
+            for cmd in command_collector:
+                self.hyprpaper_socket_writer.write(cmd.encode("utf-8"))
+                await self.hyprpaper_socket_writer.drain()
+            self.hyprpaper_socket_writer.close()
+
+        # check if the command failed
+        for proc in self.proc:
+            if proc.returncode:
+                await self.notify_error("wallpaper command failed")
+                break
+
+        if self.config.get("post_command"):
+            command = apply_variables(self.config["post_command"], variables)
+            proc = await asyncio.create_subprocess_shell(command)
+            if await proc.wait() != 0:
+                await self.notify_error("wallpaper post_command failed")
+
     async def main_loop(self) -> None:
         """Run the main plugin loop in the 'background'."""
         self.proc = []
-        unique = self.config.get("unique", False)
         variables = state.variables.copy()
 
-        monitors: list[MonitorInfo] = []
-
-        monitors = await fetch_monitors(self)
-
-        img_path = self.select_next_image()
         while self.running:
             if not self._paused:
                 self.next_background_event.clear()
-
-                # Define the command template based on the 'unique' flag
-                cmd_template = self.config.get("command", 'swww img -o "[output]" "[file]"')
-
-                filename = None
-                if "[output]" in cmd_template:
-                    for monitor in monitors:
-                        if unique or filename is None:
-                            img_path = self.select_next_image()
-                        filename = await self._prepare_wallpaper(monitor, img_path)
-                        variables.update({"file": filename, "output": monitor.name})
-                        await self._run_one(cmd_template, variables)
-                else:
-                    variables.update({"file": prepare_for_quotes(img_path)})
-                    await self._run_one(cmd_template, variables)
-
-                if self.config.get("post_command"):
-                    command = apply_variables(self.config["post_command"], variables)
-                    proc = await asyncio.create_subprocess_shell(command)
-                    if await proc.wait() != 0:
-                        await self.notify_error("wallpaper post_command failed")
-
-                await asyncio.sleep(1)  # wait for the command(s) to start
-
-                # check if the command failed
-                for proc in self.proc:
-                    if proc.returncode:
-                        await self.notify_error("wallpaper command failed")
-                        break
+                await self._iter_one(variables)
 
             interval = asyncio.sleep(60 * self.config.get("interval", 10))
             await asyncio.wait(
