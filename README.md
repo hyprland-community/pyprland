@@ -68,6 +68,7 @@ Dependencies
 - **Hyprland** >= 0.37
 - **Python** >= 3.11
     - **aiofiles** (optional but recommended)
+    - **pillow** (optional, required for rounded borders in `wallpapers`)
 </details>
 
 <details>
