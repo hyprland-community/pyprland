@@ -127,9 +127,9 @@ class Extension(CastBoolMixin, Plugin):
     rounded_manager: RoundedImageManager | None
 
     async def send_hyprpaper(self, message: str) -> None:
-        """Create hyprpaper sockets."""
+        """Create hyprpaper sockets, send a message and wait for full write."""
         hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
-        hyprpaper_socket_writer.write(f"{message}\n".encode())
+        hyprpaper_socket_writer.write(message.encode())
         await hyprpaper_socket_writer.drain()
         hyprpaper_socket_writer.close()
 
