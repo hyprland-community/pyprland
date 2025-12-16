@@ -87,26 +87,25 @@ class RoundedImageManager:
         """Scale and round the image for the given monitor."""
         key = self._build_key(monitor, src)
         dest = self.get_path(key)
-        if os.path.exists(dest):
-            return dest
-        with Image.open(src) as img:
-            is_rotated = monitor.transform % 2
-            width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
-            width = int(width / monitor.scale)
-            height = int(height / monitor.scale)
-            resample = Image.Resampling.LANCZOS
-            resized = ImageOps.fit(img, (width, height), method=resample)
+        if not os.path.exists(dest):
+            with Image.open(src) as img:
+                is_rotated = monitor.transform % 2
+                width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
+                width = int(width / monitor.scale)
+                height = int(height / monitor.scale)
+                resample = Image.Resampling.LANCZOS
+                resized = ImageOps.fit(img, (width, height), method=resample)
 
-            scale = 4
-            image_width, image_height = resized.width * scale, resized.height * scale
-            rounded_mask = Image.new("L", (image_width, image_height), 0)
-            corner_draw = ImageDraw.Draw(rounded_mask)
-            corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
-            mask = rounded_mask.resize(resized.size, resample=resample)
+                scale = 4
+                image_width, image_height = resized.width * scale, resized.height * scale
+                rounded_mask = Image.new("L", (image_width, image_height), 0)
+                corner_draw = ImageDraw.Draw(rounded_mask)
+                corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
+                mask = rounded_mask.resize(resized.size, resample=resample)
 
-            result = Image.new("RGB", resized.size, "black")
-            result.paste(resized.convert("RGB"), mask=mask)
-            result.convert("RGB").save(dest)
+                result = Image.new("RGB", resized.size, "black")
+                result.paste(resized.convert("RGB"), mask=mask)
+                result.convert("RGB").save(dest)
 
         return dest
 
@@ -126,10 +125,10 @@ class Extension(CastBoolMixin, Plugin):
 
     rounded_manager: RoundedImageManager | None
 
-    async def send_hyprpaper(self, message: str) -> None:
+    async def _send_hyprpaper(self, message: bytes) -> None:
         """Create hyprpaper sockets, send a message and wait for full write."""
         hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
-        hyprpaper_socket_writer.write(message.encode())
+        hyprpaper_socket_writer.write(message)
         await hyprpaper_socket_writer.drain()
         hyprpaper_socket_writer.close()
 
@@ -219,7 +218,7 @@ class Extension(CastBoolMixin, Plugin):
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
             for cmd in command_collector:
-                await self.send_hyprpaper(cmd)
+                await self._send_hyprpaper(cmd.encode())
 
         # check if the command failed
         for proc in self.proc:
