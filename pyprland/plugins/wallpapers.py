@@ -186,8 +186,9 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    async def update_vars(self, variables: dict[str, Any], unique: bool, monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
+    async def update_vars(self, variables: dict[str, Any], monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
+        unique = self.config.get("unique", False)
         if unique or variables.get("file") is None:
             img_path = self.select_next_image()
         filename = await self._prepare_wallpaper(monitor, img_path)
@@ -196,20 +197,19 @@ class Extension(CastBoolMixin, Plugin):
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
         cmd_template = self.config.get("command")
-        unique = self.config.get("unique", False)
         img_path = self.select_next_image()
         monitors: list[MonitorInfo] = await fetch_monitors(self)
 
         if cmd_template:
             filtered_monitors = monitors if "[output]" in cmd_template else [monitors[0]]
             for monitor in filtered_monitors:
-                variables = await self.update_vars(variables, unique, monitor, img_path)
+                variables = await self.update_vars(variables, monitor, img_path)
                 await self._run_one(cmd_template, variables)
         else:
             # use hyprpaper
             command_collector = []
             for monitor in monitors:
-                variables = await self.update_vars(variables, unique, monitor, img_path)
+                variables = await self.update_vars(variables, monitor, img_path)
                 command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
