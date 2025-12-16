@@ -210,7 +210,7 @@ class Extension(CastBoolMixin, Plugin):
         if cmd_template:
             if "[output]" in cmd_template:
                 for monitor in monitors:
-                    variables, fileanme = await self.update_vars(variables, unique, filename, monitor, img_path)
+                    variables, filename = await self.update_vars(variables, unique, filename, monitor, img_path)
                     await self._run_one(cmd_template, variables)
             else:
                 variables.update({"file": prepare_for_quotes(img_path)})
