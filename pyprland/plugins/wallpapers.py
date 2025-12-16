@@ -197,13 +197,11 @@ class Extension(CastBoolMixin, Plugin):
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
         cmd_template = self.config.get("command")
-        filename = None
-        monitors: list[MonitorInfo] = []
-
         unique = self.config.get("unique", False)
+        filename = None
         img_path = self.select_next_image()
+        monitors: list[MonitorInfo] = await fetch_monitors(self)
 
-        monitors = await fetch_monitors(self)
         if cmd_template:
             if "[output]" in cmd_template:
                 for monitor in monitors:
