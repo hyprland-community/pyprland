@@ -653,6 +653,8 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                 address = client["address"]
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
+                    if scratch.conf.get("pinned", True):
+                        await self.hyprctl(f"pin address:{address}")
                     hit = True
         return hit
 
