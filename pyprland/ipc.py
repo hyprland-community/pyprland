@@ -117,7 +117,11 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     Returns:
         True on success
     """
-    logger = cast(Logger, logger or log)
+    logger = cast("Logger", logger or log)
+
+    if not command:
+        logger.warning("%s triggered without a command!", base_command)
+        return None
     logger.debug("%s %s", base_command, command)
     try:
         ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
