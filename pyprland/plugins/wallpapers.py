@@ -189,7 +189,7 @@ class Extension(CastBoolMixin, Plugin):
     async def update_vars(self, variables: dict[str, Any], monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
         unique = self.config.get("unique", False)
-        if unique or variables.get("file") is None:
+        if unique:
             img_path = self.select_next_image()
         filename = await self._prepare_wallpaper(monitor, img_path)
         variables.update({"file": filename, "output": monitor.name})
@@ -231,12 +231,12 @@ class Extension(CastBoolMixin, Plugin):
     async def main_loop(self) -> None:
         """Run the main plugin loop in the 'background'."""
         self.proc = []
-        variables = state.variables.copy()
 
         while self.running:
             if not self._paused:
                 self.next_background_event.clear()
                 await self.terminate()
+                variables = state.variables.copy()
                 await self._iter_one(variables)
 
             interval = asyncio.sleep(60 * self.config.get("interval", 10))
