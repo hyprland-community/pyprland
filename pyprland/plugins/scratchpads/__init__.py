@@ -150,7 +150,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 # else register it
                 self.scratches.register(new_scratch, name)
-                is_lazy = self.cast_bool(new_scratch.conf.get("lazy"), False)
+                is_lazy = self.cast_bool(new_scratch.conf.get("lazy"), True)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
