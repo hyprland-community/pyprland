@@ -293,149 +293,125 @@ class Extension(CastBoolMixin, Plugin):
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
     def _get_dominant_colors(self, img_path: str) -> list[tuple[int, int, int]]:
-        """Pick representative pixels from the strongest LAB clusters."""
+        """Pick representative pixels using a weighted Hue Histogram approach."""
         try:
             with Image.open(img_path) as initial_img:  # type: ignore
                 img = initial_img.convert("RGB")
                 resample = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS  # type: ignore
+                # Resize to speed up processing but keep enough detail for histogram
                 img.thumbnail((200, 200), resample)
 
-                if not hasattr(self, "_rgb_to_lab_transform") or not hasattr(self, "_lab_to_rgb_transform"):
-                    srgb_profile = ImageCms.createProfile("sRGB")  # type: ignore
-                    lab_profile = ImageCms.createProfile("LAB")  # type: ignore
-                    self._rgb_to_lab_transform = ImageCms.buildTransformFromOpenProfiles(srgb_profile, lab_profile, "RGB", "LAB")  # type: ignore
-                    self._lab_to_rgb_transform = ImageCms.buildTransformFromOpenProfiles(lab_profile, srgb_profile, "LAB", "RGB")  # type: ignore
-
-                lab_img = ImageCms.applyTransform(img, self._rgb_to_lab_transform)  # type: ignore
-                # The type stubs for PIL.Image.getdata() return Sequence[Any] which is compatible with list()
-                # but pyright is strict about the exact return type for list().
-                # Using explicit type ignoring here as we know getdata() returns an iterable compatible with list()
-                lab_pixels: list[tuple[int, int, int]] = list(lab_img.getdata())  # type: ignore
+                # Convert to HSV for easy Hue/Saturation/Brightness access
+                # Hue is 0-255 in PIL
+                hsv_img = img.convert("HSV")
+                hsv_pixels: list[tuple[int, int, int]] = list(hsv_img.getdata())  # type: ignore
                 rgb_pixels: list[tuple[int, int, int]] = list(img.getdata())  # type: ignore
 
-                if not lab_pixels:
+                if not hsv_pixels:
                     return [(0, 0, 0)] * 3
 
-                lab_vectors = [tuple(float(c) for c in lab) for lab in lab_pixels]
-                k = min(12, len(lab_vectors))
-                centroids = random.sample(lab_vectors, k)
+                # 1. Build Hue Histogram (weighted by Saturation * Brightness)
+                # We want to favor vibrant colors over dull ones.
+                hue_weights = [0.0] * 256
+                # Store indices of pixels contributing to each bin so we can retrieve the "best" pixel later
+                hue_pixel_indices: list[list[int]] = [[] for _ in range(256)]
 
-                cluster_members = [[] for _ in range(k)]
-                cluster_indices = [[] for _ in range(k)]
+                for idx, (h, s, v) in enumerate(hsv_pixels):
+                    # Ignore very dark or very desaturated pixels (noise/background)
+                    # S and V are 0-255
+                    if s < 20 or v < 20:
+                        continue
 
-                for _ in range(6):
-                    for members, indices in zip(cluster_members, cluster_indices, strict=False):
-                        members.clear()
-                        indices.clear()
+                    # Weight = Saturation * Value
+                    weight = (s * v) / (255.0 * 255.0)
+                    hue_weights[h] += weight
+                    hue_pixel_indices[h].append(idx)
 
-                    for idx, vec in enumerate(lab_vectors):
-                        distances = [
-                            (vec[0] - centroid[0]) ** 2 + (vec[1] - centroid[1]) ** 2 + (vec[2] - centroid[2]) ** 2
-                            for centroid in centroids
-                        ]
-                        winner = min(range(k), key=distances.__getitem__)
-                        cluster_members[winner].append(vec)
-                        cluster_indices[winner].append(idx)
+                # 2. Smooth the histogram to find peaks
 
-                    for idx_cluster, members in enumerate(cluster_members):
-                        if members:
-                            centroids[idx_cluster] = tuple(sum(component[i] for component in members) / len(members) for i in range(3))
-                        else:
-                            centroids[idx_cluster] = random.choice(lab_vectors)
+                # Use a weighted window (Gaussian-like) to preserve peak centers better than simple moving average
+                # Kernel: [1, 4, 6, 4, 1] / 16 (Approximation of Gaussian)
+                smoothed_weights = [0.0] * 256
+                kernel = [1, 4, 6, 4, 1]
+                kernel_sum = 16.0
 
-                cluster_info = [(len(indices), cluster_idx) for cluster_idx, indices in enumerate(cluster_indices) if indices]
-                if not cluster_info:
-                    return [(0, 0, 0)] * 3
+                for i in range(256):
+                    w_sum = 0.0
+                    for k_idx, offset in enumerate(range(-2, 3)):
+                        # Handle wrap-around for hue
+                        idx = (i + offset) % 256
+                        w_sum += hue_weights[idx] * kernel[k_idx]
+                    smoothed_weights[i] = w_sum / kernel_sum
 
-                cluster_info.sort(reverse=True)
+                # 3. Find Peaks
+                # A peak is a value greater than or equal to its neighbors (to handle plateaus)
+                peaks: list[tuple[float, int]] = []
+                for i in range(256):
+                    left = smoothed_weights[(i - 1) % 256]
+                    right = smoothed_weights[(i + 1) % 256]
+                    val = smoothed_weights[i]
+                    if val >= left and val >= right and val > 0:
+                        peaks.append((val, i))
 
-                # Pick top clusters that are distinct enough
-                top_clusters: list[int] = []
-                # Keep track of picked LAB colors to compare distances
-                picked_lab: list[tuple[float, float, float]] = []
+                # Sort peaks by height (weight) descending
+                peaks.sort(reverse=True)
+                self.log.debug(f"Found {len(peaks)} peaks: {peaks[:10]}")
 
-                # Minimum distance threshold (in LAB space, mainly considering a/b channels)
-                # 20 ensures distinct hues/chroma.
-                MIN_DIST = 20.0
+                # 4. Filter Peaks to select distinct colors
+                final_colors: list[tuple[int, int, int]] = []
+                final_hues: list[int] = []
 
-                for _, cluster_idx in cluster_info:
-                    if len(top_clusters) >= 3:
+                # Minimum hue distance (0-255 scale). 255/12 ~ 21 (approx 30 degrees)
+                MIN_HUE_DIST = 21
+
+                for _, peak_hue in peaks:
+                    if len(final_colors) >= 3:
                         break
 
-                    # Calculate representative color for this cluster to check distance
-                    centroid = centroids[cluster_idx]
-                    candidate_indices = cluster_indices[cluster_idx]
-                    best_idx = min(
-                        candidate_indices,
-                        key=lambda idx: (
-                            (lab_vectors[idx][0] - centroid[0]) ** 2
-                            + (lab_vectors[idx][1] - centroid[1]) ** 2
-                            + (lab_vectors[idx][2] - centroid[2]) ** 2
-                        ),
-                    )
-                    candidate_lab = lab_vectors[best_idx]
-                    candidate_chroma = math.sqrt(candidate_lab[1] ** 2 + candidate_lab[2] ** 2)
-                    candidate_hue = math.atan2(candidate_lab[2], candidate_lab[1])
-
-                    # Check distance against already picked colors
+                        # Check distance to already picked hues
                     is_distinct = True
-                    for i, picked in enumerate(picked_lab):
-                        # Compare only a and b channels (indices 1 and 2)
-                        # This avoids treating light/dark versions of the same color as distinct
-                        # which is important because the palette generation normalizes lightness.
-                        dist = math.sqrt((candidate_lab[1] - picked[1]) ** 2 + (candidate_lab[2] - picked[2]) ** 2)
-                        # If comparing with the primary color (first picked), enforce stricter threshold
-                        # to ensure secondary/tertiary colors are distinct enough from the primary
-                        current_threshold = MIN_DIST * 1.5 if i == 0 else MIN_DIST
+                    for picked_hue in final_hues:
+                        diff = abs(peak_hue - picked_hue)
+                        if diff > 128:  # Wrap around distance
+                            diff = 256 - diff
 
-                        if dist < current_threshold:
+                        if diff < MIN_HUE_DIST:
                             is_distinct = False
                             break
 
-                        # Also enforce Hue distinction for chromatic colors
-                        picked_chroma = math.sqrt(picked[1] ** 2 + picked[2] ** 2)
-                        if candidate_chroma > 10 and picked_chroma > 10:
-                            picked_hue = math.atan2(picked[2], picked[1])
-                            hue_diff = abs(candidate_hue - picked_hue)
-                            # Handle wrap-around (e.g. difference between -pi and +pi should be small)
-                            if hue_diff > math.pi:
-                                hue_diff = 2 * math.pi - hue_diff
+                    if not is_distinct:
+                        continue
 
-                            # 0.4 rad (~23 degrees) separation
-                            if hue_diff < 0.4:
-                                is_distinct = False
-                                break
+                    # Find the "representative" pixel for this hue bin.
 
-                    if is_distinct:
-                        top_clusters.append(cluster_idx)
-                        picked_lab.append(candidate_lab)
+                    # Instead of just taking the center hue, we look at the original pixels
+                    # in this bin (and maybe neighbors) and pick the one with highest S*V.
 
-                # If we didn't find enough distinct clusters, fill with the most dominant ones again
-                # skipping the check, or just duplicate the last one if we run out of clusters completely
-                if len(top_clusters) < 3:
-                    remaining_needed = 3 - len(top_clusters)
-                    # Get clusters that weren't picked yet
-                    remaining_clusters = [idx for _, idx in cluster_info if idx not in top_clusters]
-                    top_clusters.extend(remaining_clusters[:remaining_needed])
+                    best_pixel_idx = -1
+                    max_sv = -1.0
 
-                results = []
-                for chosen_cluster in top_clusters:
-                    centroid = centroids[chosen_cluster]
-                    candidate_indices = cluster_indices[chosen_cluster]
-                    best_idx = min(
-                        candidate_indices,
-                        key=lambda idx: (
-                            (lab_vectors[idx][0] - centroid[0]) ** 2
-                            + (lab_vectors[idx][1] - centroid[1]) ** 2
-                            + (lab_vectors[idx][2] - centroid[2]) ** 2
-                        ),
-                    )
-                    results.append(rgb_pixels[best_idx])
+                    # Look at the peak bin and its immediate neighbors (smoothing window)
+                    for offset in range(-2, 3):
+                        check_h = (peak_hue + offset) % 256
+                        for px_idx in hue_pixel_indices[check_h]:
+                            _, s, v = hsv_pixels[px_idx]
+                            weight = s * v
+                            if weight > max_sv:
+                                max_sv = weight
+                                best_pixel_idx = px_idx
 
-                while len(results) < 3:
-                    results.append(results[0] if results else (0, 0, 0))
+                        if best_pixel_idx != -1:
+                            final_colors.append(rgb_pixels[best_pixel_idx])
+                            final_hues.append(peak_hue)
+                            self.log.debug(f"Picked Hue {peak_hue} -> RGB {rgb_pixels[best_pixel_idx]}")
 
-                return results
+                # Fallback: Fill with duplicates if we didn't find enough
+
+                while len(final_colors) < 3:
+                    final_colors.append(final_colors[0] if final_colors else (0, 0, 0))
+
+                return final_colors
+
         except Exception:
             self.log.exception("Error extracting dominant color")
             return [(0, 0, 0)] * 3
