@@ -3,30 +3,19 @@
 import asyncio
 import colorsys
 import contextlib
-import math
 import os
 import os.path
 import random
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-try:
-    from PIL import Image, ImageCms, ImageDraw, ImageOps
-
-    can_edit_image = True
-except ImportError:
-    can_edit_image = False
-    Image = None  # type: ignore
-    ImageDraw = None  # type: ignore
-    ImageOps = None  # type: ignore
-    ImageCms = None  # type: ignore
-
 from ..aioops import aiexists, ailistdir, aiopen
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
 from .interface import Plugin
+from .wallpapers_utils import Image, ImageDraw, ImageOps, can_edit_image, get_dominant_colors, nicify_oklab
 
 IMAGE_FORMAT = "jpg"
 HEX_LEN = 6
@@ -37,91 +26,6 @@ HYPRPAPER_SOCKET = os.path.join(
     os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "default"),
     ".hyprpaper.sock",
 )
-SRGB_LINEAR_CUTOFF = 0.04045
-SRGB_R_CUTOFF = 0.0031308
-
-
-def nicify_oklab(
-    rgb: tuple[int, int, int],
-    min_sat: float = 0.3,
-    max_sat: float = 0.7,
-    min_light: float = 0.2,
-    max_light: float = 0.8,
-) -> tuple[int, int, int]:
-    """Transform RGB color using perceptually-uniform OkLab color space.
-
-    Produces more consistent and natural-looking results across all hues.
-
-    Args:
-        rgb: Tuple of (R, G, B) with values 0-255
-        min_sat: Minimum saturation (0.0-1.0, default 0.3)
-        max_sat: Maximum saturation (0.0-1.0, default 0.7)
-        min_light: Minimum lightness (0.0-1.0, default 0.2)
-        max_light: Maximum lightness (0.0-1.0, default 0.8)
-
-    Returns:
-        Tuple of (R, G, B) with values 0-255
-    """
-
-    # Convert sRGB to linear RGB
-    def to_linear(c: float) -> float:
-        c = c / 255.0
-        return c / 12.92 if c <= SRGB_LINEAR_CUTOFF else pow((c + 0.055) / 1.055, 2.4)
-
-    r_lin = to_linear(rgb[0])
-    g_lin = to_linear(rgb[1])
-    b_lin = to_linear(rgb[2])
-
-    # Convert to OkLab
-    l_val = 0.4122214708 * r_lin + 0.5363325363 * g_lin + 0.0514459929 * b_lin
-    m_val = 0.2119034982 * r_lin + 0.6806995451 * g_lin + 0.1073969566 * b_lin
-    s_val = 0.0883024619 * r_lin + 0.0853627803 * g_lin + 0.8301696993 * b_lin
-
-    l_ = pow(l_val, 1 / 3)
-    m_ = pow(m_val, 1 / 3)
-    s_ = pow(s_val, 1 / 3)
-
-    l_cap = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_
-    a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_
-    b_val = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
-
-    # Extract chroma and hue
-    chroma = math.sqrt(a * a + b_val * b_val)
-    hue = math.atan2(b_val, a)
-
-    # Scale chroma based on saturation constraints
-    target_chroma = (chroma / 0.4) * (max_sat - min_sat) + min_sat
-    clamped_chroma = min(target_chroma, 0.3)
-
-    # Clamp lightness
-    clamped_l = max(min_light, min(max_light, l_cap))
-
-    # Reconstruct with new chroma
-    a_new = clamped_chroma * math.cos(hue)
-    b_new = clamped_chroma * math.sin(hue)
-
-    # Convert back from OkLab
-    l_new = clamped_l + 0.3963377774 * a_new + 0.2158037573 * b_new
-    m_new = clamped_l - 0.1055613458 * a_new - 0.0638541728 * b_new
-    s_new = clamped_l - 0.0894841775 * a_new - 1.2914855480 * b_new
-
-    l_lin = pow(l_new, 3)
-    m_lin = pow(m_new, 3)
-    s_lin = pow(s_new, 3)
-
-    r_out = 4.0767416621 * l_lin - 3.3077363322 * m_lin + 0.2309101289 * s_lin
-    g_out = -1.2684380046 * l_lin + 2.6097574011 * m_lin - 0.3413193761 * s_lin
-    b_out = -0.0041960771 * l_lin - 0.7034186147 * m_lin + 1.7076147010 * s_lin
-
-    # Convert back to sRGB
-    def to_srgb(c: float) -> float:
-        return 12.92 * c if c <= SRGB_R_CUTOFF else 1.055 * pow(c, 1 / 2.4) - 0.055
-
-    return (
-        int(round(max(0, min(255, to_srgb(r_out) * 255)))),
-        int(round(max(0, min(255, to_srgb(g_out) * 255)))),
-        int(round(max(0, min(255, to_srgb(b_out) * 255)))),
-    )
 
 
 def expand_path(path: str) -> str:
@@ -203,6 +107,26 @@ class RoundedImageManager:
                 result.convert("RGB").save(dest)
 
         return dest
+
+
+def to_hex(r: float, g: float, b: float) -> str:
+    """Convert float rgb to hex."""
+    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+
+
+def to_rgb(r: float, g: float, b: float) -> str:
+    """Convert float rgb to rgb string."""
+    return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"
+
+
+def to_rgba(r: float, g: float, b: float) -> str:
+    """Convert float rgb to rgba string."""
+    return f"rgba({int(r * 255)}, {int(g * 255)}, {int(b * 255)}, 1.0)"
+
+
+def get_variant_color(h: float, s: float, l: float) -> tuple[float, float, float]:
+    """Get variant color."""
+    return colorsys.hls_to_rgb(h, max(0.0, min(1.0, l)), s)
 
 
 class Extension(CastBoolMixin, Plugin):
@@ -292,130 +216,6 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    def _get_dominant_colors(self, img_path: str) -> list[tuple[int, int, int]]:
-        """Pick representative pixels using a weighted Hue Histogram approach."""
-        try:
-            with Image.open(img_path) as initial_img:  # type: ignore
-                img = initial_img.convert("RGB")
-                resample = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS  # type: ignore
-                # Resize to speed up processing but keep enough detail for histogram
-                img.thumbnail((200, 200), resample)
-
-                # Convert to HSV for easy Hue/Saturation/Brightness access
-                # Hue is 0-255 in PIL
-                hsv_img = img.convert("HSV")
-                hsv_pixels: list[tuple[int, int, int]] = list(hsv_img.getdata())  # type: ignore
-                rgb_pixels: list[tuple[int, int, int]] = list(img.getdata())  # type: ignore
-
-                if not hsv_pixels:
-                    return [(0, 0, 0)] * 3
-
-                # 1. Build Hue Histogram (weighted by Saturation * Brightness)
-                # We want to favor vibrant colors over dull ones.
-                hue_weights = [0.0] * 256
-                # Store indices of pixels contributing to each bin so we can retrieve the "best" pixel later
-                hue_pixel_indices: list[list[int]] = [[] for _ in range(256)]
-
-                for idx, (h, s, v) in enumerate(hsv_pixels):
-                    # Ignore very dark or very desaturated pixels (noise/background)
-                    # S and V are 0-255
-                    if s < 20 or v < 20:
-                        continue
-
-                    # Weight = Saturation * Value
-                    weight = (s * v) / (255.0 * 255.0)
-                    hue_weights[h] += weight
-                    hue_pixel_indices[h].append(idx)
-
-                # 2. Smooth the histogram to find peaks
-
-                # Use a weighted window (Gaussian-like) to preserve peak centers better than simple moving average
-                # Kernel: [1, 4, 6, 4, 1] / 16 (Approximation of Gaussian)
-                smoothed_weights = [0.0] * 256
-                kernel = [1, 4, 6, 4, 1]
-                kernel_sum = 16.0
-
-                for i in range(256):
-                    w_sum = 0.0
-                    for k_idx, offset in enumerate(range(-2, 3)):
-                        # Handle wrap-around for hue
-                        idx = (i + offset) % 256
-                        w_sum += hue_weights[idx] * kernel[k_idx]
-                    smoothed_weights[i] = w_sum / kernel_sum
-
-                # 3. Find Peaks
-                # A peak is a value greater than or equal to its neighbors (to handle plateaus)
-                peaks: list[tuple[float, int]] = []
-                for i in range(256):
-                    left = smoothed_weights[(i - 1) % 256]
-                    right = smoothed_weights[(i + 1) % 256]
-                    val = smoothed_weights[i]
-                    if val >= left and val >= right and val > 0:
-                        peaks.append((val, i))
-
-                # Sort peaks by height (weight) descending
-                peaks.sort(reverse=True)
-                self.log.debug(f"Found {len(peaks)} peaks: {peaks[:10]}")
-
-                # 4. Filter Peaks to select distinct colors
-                final_colors: list[tuple[int, int, int]] = []
-                final_hues: list[int] = []
-
-                # Minimum hue distance (0-255 scale). 255/12 ~ 21 (approx 30 degrees)
-                MIN_HUE_DIST = 21
-
-                for _, peak_hue in peaks:
-                    if len(final_colors) >= 3:
-                        break
-
-                        # Check distance to already picked hues
-                    is_distinct = True
-                    for picked_hue in final_hues:
-                        diff = abs(peak_hue - picked_hue)
-                        if diff > 128:  # Wrap around distance
-                            diff = 256 - diff
-
-                        if diff < MIN_HUE_DIST:
-                            is_distinct = False
-                            break
-
-                    if not is_distinct:
-                        continue
-
-                    # Find the "representative" pixel for this hue bin.
-
-                    # Instead of just taking the center hue, we look at the original pixels
-                    # in this bin (and maybe neighbors) and pick the one with highest S*V.
-
-                    best_pixel_idx = -1
-                    max_sv = -1.0
-
-                    # Look at the peak bin and its immediate neighbors (smoothing window)
-                    for offset in range(-2, 3):
-                        check_h = (peak_hue + offset) % 256
-                        for px_idx in hue_pixel_indices[check_h]:
-                            _, s, v = hsv_pixels[px_idx]
-                            weight = s * v
-                            if weight > max_sv:
-                                max_sv = weight
-                                best_pixel_idx = px_idx
-
-                        if best_pixel_idx != -1:
-                            final_colors.append(rgb_pixels[best_pixel_idx])
-                            final_hues.append(peak_hue)
-                            self.log.debug(f"Picked Hue {peak_hue} -> RGB {rgb_pixels[best_pixel_idx]}")
-
-                # Fallback: Fill with duplicates if we didn't find enough
-
-                while len(final_colors) < 3:
-                    final_colors.append(final_colors[0] if final_colors else (0, 0, 0))
-
-                return final_colors
-
-        except Exception:
-            self.log.exception("Error extracting dominant color")
-            return [(0, 0, 0)] * 3
-
     async def _detect_theme(self) -> str:
         """Detect the system theme (light/dark)."""
         # Try gsettings (GNOME/GTK)
@@ -485,17 +285,15 @@ class Extension(CastBoolMixin, Plugin):
             }
         return oklab_args
 
-    def _generate_palette(self, rgb_list: list[tuple[int, int, int]], theme: str = "dark") -> dict[str, str]:
+    def _generate_palette(
+        self,
+        rgb_list: list[tuple[int, int, int]],
+        theme: str = "dark",
+        process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]] | None = None,
+    ) -> dict[str, str]:
         """Generate a material-like palette from a single color."""
-        oklab_args = self._get_color_scheme_props()
-
-        def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
-            # reduce blue level for earth
-            if self.config.get("color_scheme") == "earth":
-                rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
-
-            r, g, b = nicify_oklab(rgb, **oklab_args)
-            return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+        if process_color is None:
+            process_color = lambda x: (0.0, 0.0, 0.0)
 
         hue, light, sat = process_color(rgb_list[0])
 
@@ -505,18 +303,6 @@ class Extension(CastBoolMixin, Plugin):
         else:
             h_sec, s_sec = hue, sat
             h_tert, s_tert = hue, sat
-
-        def to_hex(r: float, g: float, b: float) -> str:
-            return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
-
-        def to_rgb(r: float, g: float, b: float) -> str:
-            return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"
-
-        def to_rgba(r: float, g: float, b: float) -> str:
-            return f"rgba({int(r * 255)}, {int(g * 255)}, {int(b * 255)}, 1.0)"
-
-        def get_variant(h: float, s: float, l: float) -> tuple[float, float, float]:  # noqa: E741
-            return colorsys.hls_to_rgb(h, max(0.0, min(1.0, l)), s)
 
         colors = {"scheme": theme}
 
@@ -599,8 +385,8 @@ class Extension(CastBoolMixin, Plugin):
             cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
             cur_s = max(0.0, min(1.0, used_s * s_mult))
 
-            r_dark, g_dark, b_dark = get_variant(cur_h, cur_s, l_dark)
-            r_light, g_light, b_light = get_variant(cur_h, cur_s, l_light)
+            r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, l_dark)
+            r_light, g_light, b_light = get_variant_color(cur_h, cur_s, l_light)
 
             # Dark variants
             colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)
@@ -692,6 +478,42 @@ class Extension(CastBoolMixin, Plugin):
 
         return tag_pattern.sub(replace_tag, content)
 
+    async def _process_single_template(
+        self,
+        name: str,
+        template_config: dict[str, str],
+        replacements: dict[str, str],
+    ) -> None:
+        """Process a single template."""
+        if "input_path" not in template_config or "output_path" not in template_config:
+            self.log.error("Template %s missing input_path or output_path", name)
+            return
+
+        input_path = expand_path(template_config["input_path"])
+        output_path = expand_path(template_config["output_path"])
+
+        if not await aiexists(input_path):
+            self.log.error("Template input file %s not found", input_path)
+            return
+
+        try:
+            async with aiopen(input_path, "r") as f:
+                content = await f.read()
+
+            content = await self._apply_filters(content, replacements)
+
+            async with aiopen(output_path, "w") as f:
+                await f.write(content)
+            self.log.info("Generated %s from %s", output_path, input_path)
+
+            post_hook = template_config.get("post_hook")
+            if post_hook:
+                self.log.info("Running post_hook for %s: %s", name, post_hook)
+                await asyncio.create_subprocess_shell(post_hook)
+
+        except Exception:
+            self.log.exception("Error processing template %s", name)
+
     async def _generate_templates(self, img_path: str, color: str | None = None) -> None:
         """Generate templates from the image."""
         templates = self.config.get("templates")
@@ -709,41 +531,23 @@ class Extension(CastBoolMixin, Plugin):
                 c_rgb = (int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16))
             dominant_colors = [c_rgb] * 3
         else:
-            dominant_colors = await asyncio.to_thread(self._get_dominant_colors, img_path)
+            dominant_colors = await asyncio.to_thread(get_dominant_colors, img_path=img_path)
         theme = await self._detect_theme()
-        replacements = self._generate_palette(dominant_colors, theme)
+
+        def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
+            # reduce blue level for earth
+            if self.config.get("color_scheme") == "earth":
+                rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
+
+            r, g, b = nicify_oklab(rgb, **self._get_color_scheme_props())
+            return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+
+        replacements = self._generate_palette(dominant_colors, theme, process_color=process_color)
         replacements["image"] = img_path
 
         for name, template_config in templates.items():
             self.log.debug("processing %s", name)
-            if "input_path" not in template_config or "output_path" not in template_config:
-                self.log.error("Template %s missing input_path or output_path", name)
-                continue
-
-            input_path = expand_path(template_config["input_path"])
-            output_path = expand_path(template_config["output_path"])
-
-            if not await aiexists(input_path):
-                self.log.error("Template input file %s not found", input_path)
-                continue
-
-            try:
-                async with aiopen(input_path, "r") as f:
-                    content = await f.read()
-
-                content = await self._apply_filters(content, replacements)
-
-                async with aiopen(output_path, "w") as f:
-                    await f.write(content)
-                self.log.info("Generated %s from %s", output_path, input_path)
-
-                post_hook = template_config.get("post_hook")
-                if post_hook:
-                    self.log.info("Running post_hook for %s: %s", name, post_hook)
-                    await asyncio.create_subprocess_shell(post_hook)
-
-            except Exception:
-                self.log.exception("Error processing template %s", name)
+            await self._process_single_template(name, template_config, replacements)
 
     async def update_vars(self, variables: dict[str, Any], monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
