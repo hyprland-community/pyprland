@@ -292,8 +292,8 @@ class Extension(CastBoolMixin, Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    def _get_dominant_color(self, img_path: str) -> tuple[int, int, int]:
-        """Pick a representative pixel from the strongest LAB clusters."""
+    def _get_dominant_colors(self, img_path: str) -> list[tuple[int, int, int]]:
+        """Pick representative pixels from the strongest LAB clusters."""
         try:
             with Image.open(img_path) as initial_img:  # type: ignore
                 img = initial_img.convert("RGB")
@@ -303,8 +303,8 @@ class Extension(CastBoolMixin, Plugin):
                 if not hasattr(self, "_rgb_to_lab_transform") or not hasattr(self, "_lab_to_rgb_transform"):
                     srgb_profile = ImageCms.createProfile("sRGB")  # type: ignore
                     lab_profile = ImageCms.createProfile("LAB")  # type: ignore
-                    self._rgb_to_lab_transform = ImageCms.buildTransformFromOpenProfiles(srgb_profile, lab_profile, "RGB", "LAB")
-                    self._lab_to_rgb_transform = ImageCms.buildTransformFromOpenProfiles(lab_profile, srgb_profile, "LAB", "RGB")
+                    self._rgb_to_lab_transform = ImageCms.buildTransformFromOpenProfiles(srgb_profile, lab_profile, "RGB", "LAB")  # type: ignore
+                    self._lab_to_rgb_transform = ImageCms.buildTransformFromOpenProfiles(lab_profile, srgb_profile, "LAB", "RGB")  # type: ignore
 
                 lab_img = ImageCms.applyTransform(img, self._rgb_to_lab_transform)  # type: ignore
                 # The type stubs for PIL.Image.getdata() return Sequence[Any] which is compatible with list()
@@ -314,7 +314,7 @@ class Extension(CastBoolMixin, Plugin):
                 rgb_pixels: list[tuple[int, int, int]] = list(img.getdata())  # type: ignore
 
                 if not lab_pixels:
-                    return (0, 0, 0)
+                    return [(0, 0, 0)] * 3
 
                 lab_vectors = [tuple(float(c) for c in lab) for lab in lab_pixels]
                 k = min(5, len(lab_vectors))
@@ -345,29 +345,32 @@ class Extension(CastBoolMixin, Plugin):
 
                 cluster_info = [(len(indices), cluster_idx) for cluster_idx, indices in enumerate(cluster_indices) if indices]
                 if not cluster_info:
-                    return (0, 0, 0)
+                    return [(0, 0, 0)] * 3
 
                 cluster_info.sort(reverse=True)
                 top_clusters = [cluster_idx for _, cluster_idx in cluster_info[:3]]
-                weights = [len(cluster_indices[idx]) for idx in top_clusters]
-                # chosen_cluster = random.choices(top_clusters, weights=weights, k=1)[0]
-                idx = top_clusters.index(max(top_clusters, key=lambda c: weights[top_clusters.index(c)]))
-                chosen_cluster = top_clusters[idx]
 
-                centroid = centroids[chosen_cluster]
-                candidate_indices = cluster_indices[chosen_cluster]
-                best_idx = min(
-                    candidate_indices,
-                    key=lambda idx: (
-                        (lab_vectors[idx][0] - centroid[0]) ** 2
-                        + (lab_vectors[idx][1] - centroid[1]) ** 2
-                        + (lab_vectors[idx][2] - centroid[2]) ** 2
-                    ),
-                )
-                return rgb_pixels[best_idx]
+                results = []
+                for chosen_cluster in top_clusters:
+                    centroid = centroids[chosen_cluster]
+                    candidate_indices = cluster_indices[chosen_cluster]
+                    best_idx = min(
+                        candidate_indices,
+                        key=lambda idx: (
+                            (lab_vectors[idx][0] - centroid[0]) ** 2
+                            + (lab_vectors[idx][1] - centroid[1]) ** 2
+                            + (lab_vectors[idx][2] - centroid[2]) ** 2
+                        ),
+                    )
+                    results.append(rgb_pixels[best_idx])
+
+                while len(results) < 3:
+                    results.append(results[0] if results else (0, 0, 0))
+
+                return results
         except Exception:
             self.log.exception("Error extracting dominant color")
-            return (0, 0, 0)
+            return [(0, 0, 0)] * 3
 
     async def _detect_theme(self) -> str:
         """Detect the system theme (light/dark)."""
@@ -438,15 +441,26 @@ class Extension(CastBoolMixin, Plugin):
             }
         return oklab_args
 
-    def _generate_palette(self, rgb: tuple[int, int, int], theme: str = "dark") -> dict[str, str]:
+    def _generate_palette(self, rgb_list: list[tuple[int, int, int]], theme: str = "dark") -> dict[str, str]:
         """Generate a material-like palette from a single color."""
         oklab_args = self._get_color_scheme_props()
-        # reduce blue level for earth
-        if self.config.get("color_scheme") == "earth":
-            rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
 
-        r, g, b = nicify_oklab(rgb, **oklab_args)
-        hue, light, sat = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+        def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
+            # reduce blue level for earth
+            if self.config.get("color_scheme") == "earth":
+                rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
+
+            r, g, b = nicify_oklab(rgb, **oklab_args)
+            return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+
+        hue, light, sat = process_color(rgb_list[0])
+
+        if self.config.get("variant") == "islands":
+            h_sec, _, s_sec = process_color(rgb_list[1])
+            h_tert, _, s_tert = process_color(rgb_list[2])
+        else:
+            h_sec, s_sec = hue, sat
+            h_tert, s_tert = hue, sat
 
         def to_hex(r: float, g: float, b: float) -> str:
             return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
@@ -524,8 +538,22 @@ class Extension(CastBoolMixin, Plugin):
         }
 
         for name, (h_off, s_mult, l_dark, l_light) in variations.items():
-            cur_h = float(h_off[1:]) if isinstance(h_off, str) and h_off.startswith("=") else (hue + float(h_off)) % 1.0
-            cur_s = max(0.0, min(1.0, sat * s_mult))
+            used_h = hue
+            used_s = sat
+            used_off = h_off
+
+            if self.config.get("variant") == "islands":
+                if "secondary" in name and "fixed" not in name:
+                    used_h = h_sec
+                    used_s = s_sec
+                    used_off = 0.0
+                elif "tertiary" in name and "fixed" not in name:
+                    used_h = h_tert
+                    used_s = s_tert
+                    used_off = 0.0
+
+            cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
+            cur_s = max(0.0, min(1.0, used_s * s_mult))
 
             r_dark, g_dark, b_dark = get_variant(cur_h, cur_s, l_dark)
             r_light, g_light, b_light = get_variant(cur_h, cur_s, l_light)
@@ -631,15 +659,15 @@ class Extension(CastBoolMixin, Plugin):
             return
 
         if color:
-            dominant_rgb = (
-                tuple(int(color[i : i + 2], 16) for i in (1, 3, 5))
-                if color.startswith("#")
-                else tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
-            )
+            if color.startswith("#"):
+                c_rgb = (int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16))
+            else:
+                c_rgb = (int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16))
+            dominant_colors = [c_rgb] * 3
         else:
-            dominant_rgb = await asyncio.to_thread(self._get_dominant_color, img_path)
+            dominant_colors = await asyncio.to_thread(self._get_dominant_colors, img_path)
         theme = await self._detect_theme()
-        replacements = self._generate_palette(dominant_rgb, theme)
+        replacements = self._generate_palette(dominant_colors, theme)
         replacements["image"] = img_path
 
         for name, template_config in templates.items():
