@@ -25,10 +25,10 @@ It serves two purposes:
 It allows "zapping" current backgrounds, clearing it to go distraction free and optionally make them different for each screen.
 
 > [!tip]
-> Uses **swaybg** by default, but can be configured to use any other application.
+> Uses **hyprpaper** by default, but can be configured to use any other application.
 
 <details>
-    <summary>Minimal example using defaults(requires <b>swaybg</b>)</summary>
+    <summary>Minimal example using defaults(requires <b>hyprpaper</b>)</summary>
 
 ```toml
 [wallpapers]
