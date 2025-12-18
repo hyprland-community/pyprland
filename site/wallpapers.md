@@ -83,7 +83,7 @@ How long (in minutes) a background should stay in place
 Overrides the default command to set the background image.
 
 > [!note]
-> Will use an optimized **hyprpaper** usage if no command is provided on > 2.5.1
+> Uses an optimized **hyprpaper** usage if *no command* is provided on version > 2.5.1
 
 [variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path and `"[output]"` for the screen. eg:
 
