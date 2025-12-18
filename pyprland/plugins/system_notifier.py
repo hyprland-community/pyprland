@@ -145,6 +145,8 @@ class Extension(Plugin):
                             f"exec notify-send '{text}' --expire-time={rule["duration"] * 1000} --app-name=pyprland-system-notifier"
                         )
                     else:
-                        await self.notify(text, color=rule["color"])
+                        await self.notify(
+                            text, color=rule["color"], duration=rule["duration"]
+                        )
 
                     await asyncio.sleep(0.01)
