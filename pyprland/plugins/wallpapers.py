@@ -317,7 +317,7 @@ class Extension(CastBoolMixin, Plugin):
                     return [(0, 0, 0)] * 3
 
                 lab_vectors = [tuple(float(c) for c in lab) for lab in lab_pixels]
-                k = min(5, len(lab_vectors))
+                k = min(12, len(lab_vectors))
                 centroids = random.sample(lab_vectors, k)
 
                 cluster_members = [[] for _ in range(k)]
@@ -348,7 +348,75 @@ class Extension(CastBoolMixin, Plugin):
                     return [(0, 0, 0)] * 3
 
                 cluster_info.sort(reverse=True)
-                top_clusters = [cluster_idx for _, cluster_idx in cluster_info[:3]]
+
+                # Pick top clusters that are distinct enough
+                top_clusters: list[int] = []
+                # Keep track of picked LAB colors to compare distances
+                picked_lab: list[tuple[float, float, float]] = []
+
+                # Minimum distance threshold (in LAB space, mainly considering a/b channels)
+                # 20 ensures distinct hues/chroma.
+                MIN_DIST = 20.0
+
+                for _, cluster_idx in cluster_info:
+                    if len(top_clusters) >= 3:
+                        break
+
+                    # Calculate representative color for this cluster to check distance
+                    centroid = centroids[cluster_idx]
+                    candidate_indices = cluster_indices[cluster_idx]
+                    best_idx = min(
+                        candidate_indices,
+                        key=lambda idx: (
+                            (lab_vectors[idx][0] - centroid[0]) ** 2
+                            + (lab_vectors[idx][1] - centroid[1]) ** 2
+                            + (lab_vectors[idx][2] - centroid[2]) ** 2
+                        ),
+                    )
+                    candidate_lab = lab_vectors[best_idx]
+                    candidate_chroma = math.sqrt(candidate_lab[1] ** 2 + candidate_lab[2] ** 2)
+                    candidate_hue = math.atan2(candidate_lab[2], candidate_lab[1])
+
+                    # Check distance against already picked colors
+                    is_distinct = True
+                    for i, picked in enumerate(picked_lab):
+                        # Compare only a and b channels (indices 1 and 2)
+                        # This avoids treating light/dark versions of the same color as distinct
+                        # which is important because the palette generation normalizes lightness.
+                        dist = math.sqrt((candidate_lab[1] - picked[1]) ** 2 + (candidate_lab[2] - picked[2]) ** 2)
+                        # If comparing with the primary color (first picked), enforce stricter threshold
+                        # to ensure secondary/tertiary colors are distinct enough from the primary
+                        current_threshold = MIN_DIST * 1.5 if i == 0 else MIN_DIST
+
+                        if dist < current_threshold:
+                            is_distinct = False
+                            break
+
+                        # Also enforce Hue distinction for chromatic colors
+                        picked_chroma = math.sqrt(picked[1] ** 2 + picked[2] ** 2)
+                        if candidate_chroma > 10 and picked_chroma > 10:
+                            picked_hue = math.atan2(picked[2], picked[1])
+                            hue_diff = abs(candidate_hue - picked_hue)
+                            # Handle wrap-around (e.g. difference between -pi and +pi should be small)
+                            if hue_diff > math.pi:
+                                hue_diff = 2 * math.pi - hue_diff
+
+                            # 0.4 rad (~23 degrees) separation
+                            if hue_diff < 0.4:
+                                is_distinct = False
+                                break
+
+                    if is_distinct:
+                        top_clusters.append(cluster_idx)
+                        picked_lab.append(candidate_lab)
+
+                # If we didn't find enough distinct clusters, fill with the most dominant ones again
+                # skipping the check, or just duplicate the last one if we run out of clusters completely
+                if len(top_clusters) < 3:
+                    remaining_needed = 3 - len(top_clusters)
+                    # Get clusters that weren't picked yet
+                    remaining_clusters = [idx for _, idx in cluster_info if idx not in top_clusters]
+                    top_clusters.extend(remaining_clusters[:remaining_needed])
 
                 results = []
                 for chosen_cluster in top_clusters:
