@@ -240,9 +240,17 @@ hyprctl keyword decoration:shadow:color "rgb({{colors.primary.default.hex_stripp
 
 ### `color_scheme`
 
-Modification of the base color used in the [templates](#templates). One of:
+Optional modification of the base color used in the [templates](#templates). One of:
 
 - "pastel" a bit more washed colors
 - "fluo" or "fluorescent" for high color saturation
 - "neutral" for low color saturation
 - "earth" a bit more dark, a bit less blue
+
+### `variant`
+
+Changes the algorithm in use to pick the primary, secondary and tertiary colors.
+
+- "islands" will use the 3 most popular colors of the wallpaper image
+
+otherwise it will only pick the "main" color and shift the hue to get the secondary and tertiary colors.
