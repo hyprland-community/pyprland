@@ -6,6 +6,10 @@ commands:
       description: Removes the current background image and pause cycling
     - name: wall pause
       description: Stop cycling the wallpaper after a delay
+    - name: wall color #ff0000
+      description: Re-generate the templates with the given color
+    - name: wall color #ff0000 neutral
+      description: Re-generate the templates with the given color and [color_scheme](#color_scheme)
 ---
 
 # wallpapers
@@ -231,3 +235,12 @@ hyprctl keyword decoration:shadow:color "rgb({{colors.primary.default.hex_stripp
 - blue
 - magenta
 - cyan
+
+### `color_scheme`
+
+Modification of the base color used in the `templates`. One of:
+
+- "pastel" a bit more washed colors
+- "fluo" or "fluorescent" for high color saturation
+- "neutral" for low color saturation
+- "earth" a bit more dark, a bit less blue
