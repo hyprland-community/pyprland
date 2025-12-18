@@ -1,7 +1,13 @@
 pyprland.plugins = ["system_notifier"]
 
+[system_notifier]
+use_notify_send = true
+
 [[system_notifier.sources]]
 command = "sudo journalctl -fx"
 parser = "journal"
 
-
+[[system_notifier.parsers.journal]]
+pattern = "([a-z0-9]+): Link UP$"
+filter = "s/.*\\[\\d+\\]: ([a-z0-9]+): Link.*/\\1 is active/"
+color= "#00aa00"
