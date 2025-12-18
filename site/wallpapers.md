@@ -87,11 +87,11 @@ Overrides the default command to set the background image.
 
 [variables](./Variables) are replaced with the appropriate values, you must use a `"[file]"` placeholder for the image path and `"[output]"` for the screen. eg:
 
-```
+```sh
 swaybg -i '[file]' -o '[output]'
 ```
 or
-```
+```sh
 swww img --outputs [output]  [file]
 ```
 
@@ -101,7 +101,7 @@ By default `clear` command kills the `command` program.
 
 Instead of that, you can provide a command to clear the background. eg:
 
-```
+```toml
 clear_command = "swaybg clear"
 ```
 
@@ -109,7 +109,7 @@ clear_command = "swaybg clear"
 
 Executes a command after a wallpaper change. Can use `[file]`, eg:
 
-```
+```toml
 post_command = "matugen image '[file]'"
 ```
 
@@ -120,7 +120,7 @@ When set, adds rounded borders to the wallpapers. Expressed in pixels. Disabled 
 For this feature to work, you must use '[output]' in your `command` to specify the screen port name to use in the command.
 
 eg:
-```
+```toml
 radius = 16
 ```
 
@@ -140,7 +140,7 @@ When enabled, will also search sub-directories recursively.
 
 defaults to `false`
 
-When enabled, will set a different wallpaper for each screen.
+When enabled, will set a different wallpaper for each screen (Usage with [templates](#templates) is not recommended).
 
 If you are not using the default application, ensure you are using `"[output]"` in the [command](#command) template.
 
@@ -148,7 +148,7 @@ Example for swaybg: `swaybg -o "[output]" -m fill -i "[file]"`
 
 ### `templates`
 
-Minimal "matugen" or "pywal" feature, mostly compatible with matugen syntax.
+Minimal *matugen* or *pywal* feature, mostly compatible with *matugen* syntax.
 
 Open a ticket if misses a feature you are used to.
 
@@ -240,7 +240,7 @@ hyprctl keyword decoration:shadow:color "rgb({{colors.primary.default.hex_stripp
 
 ### `color_scheme`
 
-Modification of the base color used in the `templates`. One of:
+Modification of the base color used in the [templates](#templates). One of:
 
 - "pastel" a bit more washed colors
 - "fluo" or "fluorescent" for high color saturation
