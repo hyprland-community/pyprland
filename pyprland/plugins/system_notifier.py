@@ -127,6 +127,7 @@ class Extension(Plugin):
                 "pattern": re.compile(prop["pattern"]),
                 "filter": prop.get("filter"),
                 "color": convert_color(prop.get("color", default_color)),
+                "duration": prop.get("duration", 3),
             }
             for prop in props
         ]
@@ -139,5 +140,11 @@ class Extension(Plugin):
                         if rule["filter"]
                         else content
                     )
-                    await self.notify(text, color=rule["color"])
+                    if self.config.get("use_notify_send", False):
+                        await self.hyprctl(
+                            f"exec notify-send '{text}' --expire-time={rule["duration"] * 1000} --app-name=pyprland-system-notifier"
+                        )
+                    else:
+                        await self.notify(text, color=rule["color"])
+
                     await asyncio.sleep(0.01)
