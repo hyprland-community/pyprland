@@ -139,3 +139,95 @@ When enabled, will set a different wallpaper for each screen.
 If you are not using the default application, ensure you are using `"[output]"` in the [command](#command) template.
 
 Example for swaybg: `swaybg -o "[output]" -m fill -i "[file]"`
+
+### `templates`
+
+Minimal "matugen" or "pywal" feature, mostly compatible with matugen syntax.
+
+Open a ticket if misses a feature you are used to.
+
+Example:
+``` toml
+[wallpapers.templates.hyprland]
+input_path = "~/color_configs/hyprlandcolors.sh"
+output_path = "/tmp/hyprlandcolors.sh"
+post_hook = "sh /tmp/hyprlandcolors.sh"
+```
+
+Where the input_path would contain
+```sh
+hyprctl keyword general:col.active_border "rgb({{colors.primary.default.hex_stripped}}) rgb({{colors.tertiary.default.hex_stripped}}) 30deg"
+hyprctl keyword decoration:shadow:color "rgb({{colors.primary.default.hex_stripped}})"
+```
+
+#### Supported transformations:
+
+- set_lightness
+- set_alpha
+
+#### Supported color formats:
+
+- hex
+- hex_stripped
+- rgb
+- rgba
+
+#### Supported colors:
+
+- source
+- primary
+- on_primary
+- primary_container
+- on_primary_container
+- secondary
+- on_secondary
+- secondary_container
+- on_secondary_container
+- tertiary
+- on_tertiary
+- tertiary_container
+- on_tertiary_container
+- error
+- on_error
+- error_container
+- on_error_container
+- surface
+- surface_bright
+- surface_dim
+- surface_container_lowest
+- surface_container_low
+- surface_container
+- surface_container_high
+- surface_container_highest
+- on_surface
+- surface_variant
+- on_surface_variant
+- background
+- on_background
+- outline
+- outline_variant
+- inverse_primary
+- inverse_surface
+- inverse_on_surface
+- surface_tint
+- scrim
+- shadow
+- white
+- primary_fixed
+- primary_fixed_dim
+- on_primary_fixed
+- on_primary_fixed_variant
+- secondary_fixed
+- secondary_fixed_dim
+- on_secondary_fixed
+- on_secondary_fixed_variant
+- tertiary_fixed
+- tertiary_fixed_dim
+- on_tertiary_fixed
+- on_tertiary_fixed_variant
+- red
+- green
+- yellow
+- blue
+- magenta
+- cyan
