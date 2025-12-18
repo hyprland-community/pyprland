@@ -6,11 +6,14 @@ commands:
       description: Removes the current background image and pause cycling
     - name: wall pause
       description: Stop cycling the wallpaper after a delay
-    - name: wall color #ff0000
+    - name: wall color "#ff0000"
       description: Re-generate the templates with the given color
-    - name: wall color #ff0000 neutral
-      description: Re-generate the templates with the given color and [color_scheme](#color_scheme)
+    - name: wall color "#ff0000" neutral
+      description: Re-generate the templates with the given color and color_scheme (color filter)
+
+
 ---
+
 
 # wallpapers
 
@@ -59,7 +62,6 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 <CommandList :commands="$frontmatter.commands" />
 
 ## Configuration
-
 
 ### `path` (REQUIRED)
 
