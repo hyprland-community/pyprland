@@ -87,13 +87,13 @@ class RoundedImageManager:
         key = self._build_key(monitor, src)
         dest = self.get_path(key)
         if not os.path.exists(dest):
-            with Image.open(src) as img:  # type: ignore
+            with Image.open(src) as img:
                 is_rotated = monitor.transform % 2
                 width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
                 width = int(width / monitor.scale)
                 height = int(height / monitor.scale)
-                resample = Image.Resampling.LANCZOS  # type: ignore
-                resized = ImageOps.fit(img, (width, height), method=resample)  # type: ignore
+                resample = Image.Resampling.LANCZOS
+                resized = ImageOps.fit(img, (width, height), method=resample)
 
                 scale = 4
                 image_width, image_height = resized.width * scale, resized.height * scale
@@ -124,7 +124,7 @@ def to_rgba(r: float, g: float, b: float) -> str:
     return f"rgba({int(r * 255)}, {int(g * 255)}, {int(b * 255)}, 1.0)"
 
 
-def get_variant_color(h: float, s: float, l: float) -> tuple[float, float, float]:
+def get_variant_color(h: float, s: float, l: float) -> tuple[float, float, float]:  # noqa: E741
     """Get variant color."""
     return colorsys.hls_to_rgb(h, max(0.0, min(1.0, l)), s)
 
@@ -288,13 +288,10 @@ class Extension(CastBoolMixin, Plugin):
     def _generate_palette(
         self,
         rgb_list: list[tuple[int, int, int]],
+        process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]],
         theme: str = "dark",
-        process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]] | None = None,
     ) -> dict[str, str]:
         """Generate a material-like palette from a single color."""
-        if process_color is None:
-            process_color = lambda x: (0.0, 0.0, 0.0)
-
         hue, light, sat = process_color(rgb_list[0])
 
         if self.config.get("variant") == "islands":
@@ -313,14 +310,26 @@ class Extension(CastBoolMixin, Plugin):
             "on_primary": (0.0, 0.2, 0.20, 1.00),
             "primary_container": (0.0, 1.0, 0.30, 0.90),
             "on_primary_container": (0.0, 1.0, 0.90, 0.10),
+            "primary_fixed": (0.0, 1.0, 0.90, 0.90),
+            "primary_fixed_dim": (0.0, 1.0, 0.80, 0.80),
+            "on_primary_fixed": (0.0, 1.0, 0.10, 0.10),
+            "on_primary_fixed_variant": (0.0, 1.0, 0.30, 0.30),
             "secondary": (-0.15, 0.8, 0.80, 0.40),
             "on_secondary": (-0.15, 0.2, 0.20, 1.00),
             "secondary_container": (-0.15, 0.8, 0.30, 0.90),
             "on_secondary_container": (-0.15, 0.8, 0.90, 0.10),
+            "secondary_fixed": (0.5, 0.8, 0.90, 0.90),
+            "secondary_fixed_dim": (0.5, 0.8, 0.80, 0.80),
+            "on_secondary_fixed": (0.5, 0.8, 0.10, 0.10),
+            "on_secondary_fixed_variant": (0.5, 0.8, 0.30, 0.30),
             "tertiary": (0.15, 0.8, 0.80, 0.40),
             "on_tertiary": (0.15, 0.2, 0.20, 1.00),
             "tertiary_container": (0.15, 0.8, 0.30, 0.90),
             "on_tertiary_container": (0.15, 0.8, 0.90, 0.10),
+            "tertiary_fixed": (0.25, 0.8, 0.90, 0.90),
+            "tertiary_fixed_dim": (0.25, 0.8, 0.80, 0.80),
+            "on_tertiary_fixed": (0.25, 0.8, 0.10, 0.10),
+            "on_tertiary_fixed_variant": (0.25, 0.8, 0.30, 0.30),
             "error": ("=0.0", 1.0, 0.80, 0.40),
             "on_error": ("=0.0", 1.0, 0.20, 1.00),
             "error_container": ("=0.0", 1.0, 0.30, 0.90),
@@ -347,18 +356,6 @@ class Extension(CastBoolMixin, Plugin):
             "scrim": (0.0, 0.0, 0.0, 0.0),
             "shadow": (0.0, 0.0, 0.0, 0.0),
             "white": (0.0, 0.0, 0.99, 0.99),
-            "primary_fixed": (0.0, 1.0, 0.90, 0.90),
-            "primary_fixed_dim": (0.0, 1.0, 0.80, 0.80),
-            "on_primary_fixed": (0.0, 1.0, 0.10, 0.10),
-            "on_primary_fixed_variant": (0.0, 1.0, 0.30, 0.30),
-            "secondary_fixed": (0.5, 0.8, 0.90, 0.90),
-            "secondary_fixed_dim": (0.5, 0.8, 0.80, 0.80),
-            "on_secondary_fixed": (0.5, 0.8, 0.10, 0.10),
-            "on_secondary_fixed_variant": (0.5, 0.8, 0.30, 0.30),
-            "tertiary_fixed": (0.25, 0.8, 0.90, 0.90),
-            "tertiary_fixed_dim": (0.25, 0.8, 0.80, 0.80),
-            "on_tertiary_fixed": (0.25, 0.8, 0.10, 0.10),
-            "on_tertiary_fixed_variant": (0.25, 0.8, 0.30, 0.30),
             "red": ("=0.0", 1.0, 0.80, 0.40),
             "green": ("=0.333", 1.0, 0.80, 0.40),
             "yellow": ("=0.166", 1.0, 0.80, 0.40),
@@ -542,7 +539,7 @@ class Extension(CastBoolMixin, Plugin):
             r, g, b = nicify_oklab(rgb, **self._get_color_scheme_props())
             return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
 
-        replacements = self._generate_palette(dominant_colors, theme, process_color=process_color)
+        replacements = self._generate_palette(dominant_colors, theme=theme, process_color=process_color)
         replacements["image"] = img_path
 
         for name, template_config in templates.items():
