@@ -450,7 +450,7 @@ class Extension(CastBoolMixin, Plugin):
         # We find all tags first, then replace them.
         # This regex matches {{ variable | filter: arg }} or just {{ variable }}
         # It handles spaces around variable and filter parts.
-        tag_pattern = re.compile(r"\{\{\s*([\w\.]+)(?:\s*\|\s*([\w_]+)\s*:\s*([^}]+))?\s*\}\}")
+        tag_pattern = re.compile(r"\{\{\s*([\w\.]+)(?:\s*\|\s*([\w_]+)\s*(?:[:\s])\s*([^}]+))?\s*\}\}")
 
         def replace_tag(match: re.Match) -> str:
             key = match.group(1)
