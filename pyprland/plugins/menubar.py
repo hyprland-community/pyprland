@@ -88,6 +88,8 @@ class Extension(Plugin):
         if args.startswith("re"):
             self.kill()
             await self.on_reload()
+        if args.startswith("stop"):
+            self.kill()
 
     async def set_best_monitor(self) -> None:
         """Set the best monitor to use in `cur_monitor`."""
