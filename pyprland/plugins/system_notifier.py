@@ -63,9 +63,7 @@ class Extension(Plugin):
             self.log.debug("Loaded parser %s", name)
 
         for props in self.config.get("sources", []):
-            assert (
-                props["parser"] in self.parsers
-            ), f"{props['parser']} was not found in {self.parsers}"
+            assert props["parser"] in self.parsers, f"{props['parser']} was not found in {self.parsers}"
             self.log.debug("Loaded source %s => %s", props["command"], props["parser"])
             self.tasks.append(asyncio.create_task(self.start_source(props)))
 
@@ -92,13 +90,9 @@ class Extension(Plugin):
                 - command: The command to execute.
                 - parser: The name of the parser to use.
         """
-        parsers = (
-            [props["parser"]] if isinstance(props["parser"], str) else props["parser"]
-        )
+        parsers = [props["parser"]] if isinstance(props["parser"], str) else props["parser"]
         queues = [self.parsers[p] for p in parsers]
-        proc = await asyncio.create_subprocess_shell(
-            props["command"], stdout=asyncio.subprocess.PIPE
-        )
+        proc = await asyncio.create_subprocess_shell(props["command"], stdout=asyncio.subprocess.PIPE)
 
         self.sources[props["command"]] = proc
         assert proc.stdout
@@ -135,18 +129,12 @@ class Extension(Plugin):
             content = await q.get()
             for rule in rules:
                 if rule["pattern"].search(content):
-                    text = (
-                        apply_filter(content, cast(str, rule["filter"]))
-                        if rule["filter"]
-                        else content
-                    )
+                    text = apply_filter(content, cast("str", rule["filter"])) if rule["filter"] else content
                     if self.config.get("use_notify_send", False):
                         await self.hyprctl(
-                            f"exec notify-send '{text}' --expire-time={rule["duration"] * 1000} --app-name=pyprland-system-notifier"
+                            f"exec notify-send '{text}' --expire-time={rule['duration'] * 1000} --app-name=pyprland-system-notifier"
                         )
                     else:
-                        await self.notify(
-                            text, color=rule["color"], duration=rule["duration"]
-                        )
+                        await self.notify(text, color=rule["color"], duration=rule["duration"])
 
                     await asyncio.sleep(0.01)

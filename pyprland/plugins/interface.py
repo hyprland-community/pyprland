@@ -82,13 +82,8 @@ class Plugin:
         """Return the client list, optionally returns only mapped clients or from a given workspace."""
         return [
             client
-            for client in cast(list[ClientInfo], await self.hyprctl_json("clients"))
+            for client in cast("list[ClientInfo]", await self.hyprctl_json("clients"))
             if (not mapped or client["mapped"])
-            and (
-                workspace is None or cast(str, client["workspace"]["name"]) == workspace
-            )
-            and (
-                workspace_bl is None
-                or cast(str, client["workspace"]["name"]) != workspace_bl
-            )
+            and (workspace is None or cast("str", client["workspace"]["name"]) == workspace)
+            and (workspace_bl is None or cast("str", client["workspace"]["name"]) != workspace_bl)
         ]

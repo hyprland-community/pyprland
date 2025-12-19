@@ -79,7 +79,7 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 @retry_on_reset
 async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
     """Run an IPC command and return the JSON output."""
-    logger = cast(Logger, logger or log)
+    logger = cast("Logger", logger or log)
     ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
     return ret
@@ -170,11 +170,11 @@ async def get_monitor_props(logger: Logger | None = None, name: str | None = Non
     else:
 
         def _match_fn(mon: MonitorInfo) -> bool:
-            return cast(bool, mon.get("focused"))
+            return cast("bool", mon.get("focused"))
 
     for monitor in await hyprctl_json("monitors", logger=logger):
-        if _match_fn(cast(MonitorInfo, monitor)):
-            return cast(MonitorInfo, monitor)
+        if _match_fn(cast("MonitorInfo", monitor)):
+            return cast("MonitorInfo", monitor)
     msg = "no focused monitor"
     raise RuntimeError(msg)
 
