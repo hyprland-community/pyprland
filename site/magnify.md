@@ -68,6 +68,15 @@ Scaling factor to be used when no value is provided.
 
 ### `duration`
 
-Default value is `15`
+Default value is `0`
 
-Duration in tenths of a second for the zoom animation to last, set to `0` to disable animations.
+Duration in tenths of a second for the zoom animation to last, set to `15` for the former behavior.
+It is not needed anymore with recent Hyprland versions, you can even customize the animation in use:
+
+in *Hyprland* config:
+```
+animations {
+    bezier = easeInOut,0.65, 0, 0.35, 1
+    animation = zoomFactor, 1, 4, easeInOut
+}
+```
