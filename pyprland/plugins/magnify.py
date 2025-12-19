@@ -47,7 +47,7 @@ class Extension(Plugin):
 
         If factor is omitted, it toggles between the configured zoom level and no zoom.
         """
-        duration = self.config.get("duration", 15)
+        duration = self.config.get("duration", 0)
         animated = bool(duration)
         prev_factor = self.cur_factor
         expo = False
