@@ -35,7 +35,7 @@ const plugin_list = {
   items: [
     { text: "Expose", link: "./expose" },
     { text: "Fetch client menu", link: "./fetch_client_menu" },
-    { text: "Menubar", link: "./bar" },
+    { text: "Menubar", link: "./menubar" },
     { text: "Layout center", link: "./layout_center" },
     { text: "Lost windows", link: "./lost_windows" },
     { text: "Magnify", link: "./magnify" },

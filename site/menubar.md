@@ -2,6 +2,8 @@
 commands:
   - name: bar restart
     description: Restart/refresh Menu Bar on the "best" monitor.
+  - name: bar stop
+    description: Stop the Menu Bar process
 ---
 
 # menubar
@@ -15,7 +17,6 @@ Runs your favorite bar app (gbar, ags / hyprpanel, waybar, ...) with option to p
 ## Command
 
 <CommandList :commands="$frontmatter.commands" />
-
 
 ## Configuration
 
