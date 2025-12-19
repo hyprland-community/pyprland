@@ -15,7 +15,7 @@ from collections.abc import Callable
 from typing import Any
 
 from ...common import is_rotated, state
-from ...types import MonitorInfo
+from ...models import MonitorInfo
 
 
 def mk_scratch_name(uid: str) -> str:

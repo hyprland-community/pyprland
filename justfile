@@ -35,3 +35,6 @@ htmlcov:
 
 types:
     {{pyenv}}/bin/mypy --check-untyped-defs pyprland
+
+stubs:
+    stubgen -m PIL -p PIL.Image -p PIL.ImageDraw -p PIL.ImageOps -o type_stubs

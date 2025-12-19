@@ -4,6 +4,7 @@ __all__ = ["aiopen", "aiexists", "ailistdir"]
 
 import contextlib
 import io
+from collections.abc import AsyncIterator
 
 try:
     import aiofiles.os
@@ -15,10 +16,13 @@ except ImportError:
     import os
 
     class AsyncFile:
+        """Async file wrapper."""
+
         def __init__(self, file: io.TextIOWrapper):
             self.file = file
 
         async def readlines(self) -> list[str]:
+            """Async > sync wrapper."""
             return self.file.readlines()
 
         async def __aenter__(self):
@@ -27,14 +31,17 @@ except ImportError:
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             self.file.close()
 
-    @contextlib.asynccontextmanager
-    async def aiopen(*args, **kwargs) -> AsyncFile:
-        yield AsyncFile(open(*args, **kwargs))
+    @contextlib.asynccontextmanager  # type: ignore[no-redef]
+    async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
+        """Async-compatible open function."""
+        # use context handler
+        with open(*args, **kwargs) as fd:  # noqa: ASYNC101,ASYNC230
+            yield AsyncFile(fd)
 
     async def aiexists(*args, **kwargs) -> bool:
         """Async > sync wrapper."""
         return os.path.exists(*args, **kwargs)
 
-    async def ailistdir(*args, **kwargs) -> list[str]:
+    async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef]
         """Async > sync wrapper."""
         return os.listdir(*args, **kwargs)

@@ -8,7 +8,7 @@ import os.path
 import random
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from ..aioops import aiexists, aiopen
 from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
@@ -23,7 +23,7 @@ from .wallpapers_imageutils import (
     to_rgb,
     to_rgba,
 )
-from .wallpapers_utils import can_edit_image, get_dominant_colors, nicify_oklab
+from .wallpapers_utils import CAN_EDIT_IMAGE, get_dominant_colors, nicify_oklab
 
 HEX_LEN = 6
 HEX_LEN_HASH = 7
@@ -63,10 +63,10 @@ class Extension(CastBoolMixin, Plugin):
         """Create hyprpaper sockets, send a message and wait for full write."""
         for _ in range(3):
             try:
-                hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
-                hyprpaper_socket_writer.write(message)
-                await hyprpaper_socket_writer.drain()
-                hyprpaper_socket_writer.close()
+                _reader, writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
+                writer.write(message)
+                await writer.drain()
+                writer.close()
             except ConnectionRefusedError:
                 # Crash? start hyprpaper
                 asyncio.create_task(asyncio.create_subprocess_exec("hyprpaper"))
@@ -90,7 +90,7 @@ class Extension(CastBoolMixin, Plugin):
             async for fname in get_files_with_ext(path, extensions, recurse=self.cast_bool(self.config.get("recurse")))
         ]
 
-        if radius > 0 and can_edit_image:
+        if radius > 0 and CAN_EDIT_IMAGE:
             self.rounded_manager = RoundedImageManager(radius)
         else:
             self.rounded_manager = None
@@ -219,7 +219,7 @@ class Extension(CastBoolMixin, Plugin):
         colors = {"scheme": theme}
 
         # (hue_offset, saturation_mult, light_dark_mode, light_light_mode)
-        variations = {
+        variations: dict[str, tuple[float | str, float, float, float]] = {
             "source": (0.0, 1.0, light, light),
             "primary": (0.0, 1.0, 0.80, 0.40),
             "on_primary": (0.0, 0.2, 0.20, 1.00),
@@ -294,7 +294,11 @@ class Extension(CastBoolMixin, Plugin):
                     used_s = s_tert
                     used_off = 0.0
 
-            cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
+            cur_h = (
+                float(cast("Any", used_off)[1:])
+                if isinstance(used_off, str) and used_off.startswith("=")
+                else (used_h + float(cast("Any", used_off))) % 1.0
+            )
             cur_s = max(0.0, min(1.0, used_s * s_mult))
 
             r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, l_dark)
@@ -374,7 +378,7 @@ class Extension(CastBoolMixin, Plugin):
 
             value = replacements.get(key)
             if value is None:
-                return match.group(0)
+                return str(match.group(0))
 
             if filter_name and filter_arg:
                 filter_arg = filter_arg.strip()
@@ -432,7 +436,7 @@ class Extension(CastBoolMixin, Plugin):
         if not templates:
             return
 
-        if not can_edit_image:
+        if not CAN_EDIT_IMAGE:
             self.log.warning("PIL not installed, cannot generate color palette")
             return
 

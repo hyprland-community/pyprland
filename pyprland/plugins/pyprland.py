@@ -3,7 +3,7 @@
 import json
 
 from ..common import state
-from ..types import VersionInfo
+from ..models import VersionInfo
 from .interface import Plugin
 
 DEFAULT_VERSION = VersionInfo(9, 9, 9)
@@ -34,7 +34,7 @@ class Extension(Plugin):
                 if len(version_str) < len(_tag):
                     auto_increment = True
             else:
-                version_str = version_info.get("version")
+                version_str = str(version_info.get("version"))
 
         if version_str:
             try:

@@ -15,8 +15,8 @@ from typing import Any, Self, cast
 from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
+from pyprland.models import PyprError
 from pyprland.plugins.interface import Plugin
-from pyprland.types import PyprError
 from pyprland.version import VERSION
 
 CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
@@ -38,7 +38,7 @@ def remove_duplicate(names: list[str]) -> Callable:
     Will check arguments as well
     """
 
-    def _remove_duplicates(fn: Callable) -> Callable:
+    def _remove_duplicates(fn: Callable) -> Callable:  # pylint: disable=invalid-name
         """Wrapper for the decorator."""
 
         async def _wrapper(self: "Pyprland", full_name: str, *args, **kwargs) -> bool:
@@ -266,6 +266,7 @@ class Pyprland:
         await asyncio.wait_for(asyncio.gather(*active_plugins), timeout=TASK_TIMEOUT / 2)
 
     async def _abort_plugins(self, writer: asyncio.StreamWriter) -> None:
+        """Abort all plugins and exit."""
         await self.exit_plugins()
         # cancel the task group
         for task in self.tasks:
@@ -315,7 +316,7 @@ class Pyprland:
             full_name = f"run_{cmd}"
 
             if PYPR_DEMO:
-                os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221
+                os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221, ASYNC102
 
             if not await self._call_handler(full_name, *args, notify=cmd):
                 self.log.warning("No such command: %s", cmd)
@@ -420,6 +421,7 @@ async def run_daemon() -> None:
 
 
 def get_commands_help(manager: Pyprland) -> dict:
+    """Get the commands help entries."""
     docs = {
         "edit": "Edit the configuration file. (not in pypr-client)",
         "dumpjson": "Dump the configuration in JSON format.",

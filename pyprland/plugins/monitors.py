@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Any, cast
 
 from ..common import CastBoolMixin, is_rotated, state
-from ..types import MonitorInfo
+from ..models import MonitorInfo
 from .interface import Plugin
 
 MONITOR_PROPS = {"scale", "transform", "rate", "resolution"}
@@ -94,6 +94,7 @@ class Extension(CastBoolMixin, Plugin):
     def _build_graph(
         self, config: dict[str, Any], monitors_by_name: dict[str, MonitorInfo]
     ) -> tuple[dict[str, list[tuple[str, str]]], dict[str, int]]:
+        """Build the dependency graph for monitor layout."""
         tree: dict[str, list[tuple[str, str]]] = defaultdict(list)
         in_degree: dict[str, int] = defaultdict(int)
 
@@ -113,6 +114,7 @@ class Extension(CastBoolMixin, Plugin):
     def _compute_positions(
         self, monitors_by_name: dict[str, MonitorInfo], tree: dict[str, list[tuple[str, str]]], in_degree: dict[str, int]
     ) -> dict[str, tuple[int, int]]:
+        """Compute the positions of monitors based on the dependency graph."""
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
         positions: dict[str, tuple[int, int]] = {}
         for name in queue:
@@ -130,7 +132,7 @@ class Extension(CastBoolMixin, Plugin):
 
             for child_name, rule in tree[ref_name]:
                 child_mon = monitors_by_name[child_name]
-                x, y = self._compute_xy(ref_mon, child_mon, ref_x, ref_y, rule)
+                x, y = self._compute_xy(ref_mon, child_mon, (ref_x, ref_y), rule)
                 positions[child_name] = (x, y)
 
                 in_degree[child_name] -= 1
@@ -141,6 +143,7 @@ class Extension(CastBoolMixin, Plugin):
     async def _apply_layout(
         self, positions: dict[str, tuple[int, int]], monitors_by_name: dict[str, MonitorInfo], config: dict[str, Any]
     ) -> bool:
+        """Apply the computed layout to Hyprland."""
         if not positions:
             return False
 
@@ -161,8 +164,9 @@ class Extension(CastBoolMixin, Plugin):
             await self.hyprctl(cmd, "keyword")
         return True
 
-    def _compute_xy(self, ref_mon: MonitorInfo, mon: MonitorInfo, ref_x: int, ref_y: int, rule: str) -> tuple[int, int]:
+    def _compute_xy(self, ref_mon: MonitorInfo, mon: MonitorInfo, coord: tuple[int, int], rule: str) -> tuple[int, int]:
         """Compute position of `mon` relative to `ref_mon` based on `rule`."""
+        ref_x, ref_y = coord
         ref_w, ref_h = get_dims(ref_mon)
         mon_w, mon_h = get_dims(mon)
         rule = rule.lower().replace("_", "").replace("-", "")
@@ -182,6 +186,7 @@ class Extension(CastBoolMixin, Plugin):
         return ref_x, ref_y
 
     def _place_left(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Calculate position for placement to the left."""
         ref_x, ref_y, _ref_w, ref_h = ref_rect
         mon_w, mon_h = mon_dim
         x = ref_x - mon_w
@@ -193,6 +198,7 @@ class Extension(CastBoolMixin, Plugin):
         return int(x), int(y)
 
     def _place_right(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Calculate position for placement to the right."""
         ref_x, ref_y, ref_w, ref_h = ref_rect
         _mon_w, mon_h = mon_dim
         x = ref_x + ref_w
@@ -204,6 +210,7 @@ class Extension(CastBoolMixin, Plugin):
         return int(x), int(y)
 
     def _place_top(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Calculate position for placement to the top."""
         ref_x, ref_y, ref_w, _ref_h = ref_rect
         mon_w, mon_h = mon_dim
         y = ref_y - mon_h
@@ -215,8 +222,9 @@ class Extension(CastBoolMixin, Plugin):
         return int(x), int(y)
 
     def _place_bottom(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Calculate position for placement to the bottom."""
         ref_x, ref_y, ref_w, ref_h = ref_rect
-        mon_w, mon_h = mon_dim
+        mon_w, _mon_h = mon_dim
         y = ref_y + ref_h
         x = ref_x
         if "right" in rule:

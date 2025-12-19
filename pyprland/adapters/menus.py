@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from logging import Logger
 
 from ..common import apply_variables, get_logger
-from ..types import PyprError
+from ..models import PyprError
 
 __all__ = ["MenuEngine", "MenuMixin"]
 

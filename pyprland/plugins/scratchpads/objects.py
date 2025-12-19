@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
 from ...common import CastBoolMixin, state
-from ...types import ClientInfo, MonitorInfo, VersionInfo
+from ...models import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
 
 if TYPE_CHECKING:
@@ -132,7 +132,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Is the process running ?."""
         if not self.have_command:
             return True
-        if self.cast_bool(self.conf.get("process_tracking"), True):
+        if self.cast_bool(cast("str | bool | None", self.conf.get("process_tracking")), True):
             path = f"/proc/{self.pid}"
             if await aiexists(path):
                 async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
@@ -158,8 +158,8 @@ class Scratch(CastBoolMixin):  # {{{
 
     def get_match_props(self) -> tuple[str, str | float]:
         """Return the match properties for the scratchpad."""
-        match_by = self.conf.get("match_by", "pid")
-        return match_by, self.pid if match_by == "pid" else self.conf[match_by]
+        match_by = cast("str", self.conf.get("match_by", "pid"))
+        return match_by, self.pid if match_by == "pid" else cast("str | float", self.conf[match_by])
 
     def reset(self, pid: int) -> None:
         """Clear the object."""

@@ -8,7 +8,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..aioops import ailistdir
-from .wallpapers_utils import Image, ImageDraw, ImageOps
+
+try:
+    from PIL import ImageDraw, ImageOps
+except ImportError:
+    ImageDraw = None  # type: ignore[assignment]
+    ImageOps = None  # type: ignore[assignment]
+from .wallpapers_utils import Image
 
 IMAGE_FORMAT = "jpg"
 
@@ -52,6 +58,7 @@ class RoundedImageManager:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
+        """Build the cache key for the given monitor and image path."""
         return f"{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def get_path(self, key: str) -> str:
@@ -73,33 +80,33 @@ class RoundedImageManager:
 
                 scale = 4
                 image_width, image_height = resized.width * scale, resized.height * scale
-                rounded_mask = Image.new("L", (image_width, image_height), 0)  # type: ignore
-                corner_draw = ImageDraw.Draw(rounded_mask)  # type: ignore
+                rounded_mask = Image.new("L", (image_width, image_height), 0)
+                corner_draw = ImageDraw.Draw(rounded_mask)
                 corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
                 mask = rounded_mask.resize(resized.size, resample=resample)
 
-                result = Image.new("RGB", resized.size, "black")  # type: ignore
+                result = Image.new("RGB", resized.size, "black")
                 result.paste(resized.convert("RGB"), mask=mask)
                 result.convert("RGB").save(dest)
 
         return dest
 
 
-def to_hex(r: float, g: float, b: float) -> str:
+def to_hex(red: float, green: float, blue: float) -> str:
     """Convert float rgb to hex."""
-    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+    return f"#{int(red * 255):02x}{int(green * 255):02x}{int(blue * 255):02x}"
 
 
-def to_rgb(r: float, g: float, b: float) -> str:
+def to_rgb(red: float, green: float, blue: float) -> str:
     """Convert float rgb to rgb string."""
-    return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"
+    return f"rgb({int(red * 255)}, {int(green * 255)}, {int(blue * 255)})"
 
 
-def to_rgba(r: float, g: float, b: float) -> str:
+def to_rgba(red: float, green: float, blue: float) -> str:
     """Convert float rgb to rgba string."""
-    return f"rgba({int(r * 255)}, {int(g * 255)}, {int(b * 255)}, 1.0)"
+    return f"rgba({int(red * 255)}, {int(green * 255)}, {int(blue * 255)}, 1.0)"
 
 
-def get_variant_color(h: float, s: float, l: float) -> tuple[float, float, float]:  # noqa: E741
+def get_variant_color(hue: float, sat: float, light: float) -> tuple[float, float, float]:
     """Get variant color."""
-    return colorsys.hls_to_rgb(h, max(0.0, min(1.0, l)), s)
+    return colorsys.hls_to_rgb(hue, max(0.0, min(1.0, light)), sat)

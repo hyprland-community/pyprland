@@ -3,14 +3,12 @@
 import math
 
 try:
-    from PIL import Image, ImageDraw, ImageOps
+    from PIL import Image
 
-    can_edit_image = True
+    CAN_EDIT_IMAGE = True
 except ImportError:
-    can_edit_image = False
-    Image = None  # type: ignore
-    ImageDraw = None  # type: ignore
-    ImageOps = None  # type: ignore
+    CAN_EDIT_IMAGE = False
+    Image = None  # type: ignore[assignment]
 
 SRGB_LINEAR_CUTOFF = 0.04045
 SRGB_R_CUTOFF = 0.0031308
@@ -162,12 +160,12 @@ def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
     try:
         with Image.open(img_path) as initial_img:
             img = initial_img.convert("RGB")
-            resample = getattr(Image, "Resampling", Image).LANCZOS  # type: ignore
+            resample = getattr(Image, "Resampling", Image).LANCZOS
             img.thumbnail((200, 200), resample)
 
             hsv_img = img.convert("HSV")
-            hsv_pixels: list[tuple[int, int, int]] = list(hsv_img.getdata())  # type: ignore
-            rgb_pixels: list[tuple[int, int, int]] = list(img.getdata())  # type: ignore
+            hsv_pixels: list[tuple[int, int, int]] = list(hsv_img.getdata())
+            rgb_pixels: list[tuple[int, int, int]] = list(img.getdata())
 
             if not hsv_pixels:
                 return [(0, 0, 0)] * 3

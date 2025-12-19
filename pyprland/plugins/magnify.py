@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable
 
 from ..common import state
-from ..types import VersionInfo
+from ..models import VersionInfo
 from .interface import Plugin
 
 
@@ -74,7 +74,7 @@ class Extension(Plugin):
         if animated:
             start = (2.0 ** (prev_factor - 1) if expo else prev_factor) * 10
             end = (2.0 ** (self.cur_factor - 1) if expo else self.cur_factor) * 10
-            for i in self.animated_eased_zoom(start, end, duration):
+            for i in self.animated_eased_zoom(int(start), int(end), duration):
                 await self.hyprctl(f"{self.keyword} {i / 10:.4f}", "keyword")
                 await asyncio.sleep(1.0 / 60)
         self.zoomed = self.cur_factor != 1

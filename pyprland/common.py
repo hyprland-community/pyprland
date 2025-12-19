@@ -13,7 +13,7 @@ import termios
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from .types import MonitorInfo, VersionInfo
+from .models import MonitorInfo, VersionInfo
 
 __all__ = [
     "DEBUG",
@@ -42,19 +42,19 @@ MAX_SOCKET_PATH_LEN = 107
 
 try:
     # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
-    original_ipc_folder = (
+    ORIGINAL_IPC_FOLDER = (
         f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
         if os.path.exists(f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}")
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    if len(original_ipc_folder) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
+    if len(ORIGINAL_IPC_FOLDER) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
         IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
         # make a link from short path to original path
         if not os.path.exists(IPC_FOLDER):
-            os.symlink(original_ipc_folder, IPC_FOLDER)
+            os.symlink(ORIGINAL_IPC_FOLDER, IPC_FOLDER)
     else:
-        IPC_FOLDER = original_ipc_folder
+        IPC_FOLDER = ORIGINAL_IPC_FOLDER
 
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
@@ -272,7 +272,7 @@ class CastBoolMixin:
             lv = value.lower().strip()
             r = lv not in {"false", "no", "off"}
             self.log.warning("Invalid value for boolean option: %s, considering it %s", value, r)
-        return default_value if value is None else cast(bool, value)
+        return default_value if value is None else cast("bool", value)
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:

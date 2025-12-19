@@ -6,7 +6,7 @@ import enum
 from typing import cast
 
 from ...adapters.units import convert_monitor_dimension
-from ...types import ClientInfo, MonitorInfo
+from ...models import ClientInfo, MonitorInfo
 from .helpers import get_size
 
 
@@ -25,7 +25,7 @@ class Placement:  # {{{
     @staticmethod
     def get(animation_type: str, monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Get destination coordinate for the provided animation type."""
-        return cast(tuple[int, int], getattr(Placement, animation_type)(monitor, client, margin))
+        return cast("tuple[int, int]", getattr(Placement, animation_type)(monitor, client, margin))
 
     # animation types
     @staticmethod

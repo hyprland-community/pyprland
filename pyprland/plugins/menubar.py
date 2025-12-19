@@ -3,7 +3,9 @@
 import asyncio
 import contextlib
 import os
+from collections.abc import Callable
 from time import time
+from typing import cast
 
 from ..common import apply_variables, state
 from .interface import Plugin
@@ -18,11 +20,12 @@ def get_pid_from_layers(layers: dict) -> bool | int:
         for layer in layers[screen]["levels"].values():
             for instance in layer:
                 if instance["namespace"].startswith("bar-"):
-                    return instance["pid"] > 0 and instance["pid"]
+                    pid = int(instance["pid"])
+                    return pid if pid > 0 else False
     return False
 
 
-async def is_bar_alive(pid: int, hyprctl_json: dict) -> int | bool:
+async def is_bar_alive(pid: int, hyprctl_json: Callable) -> int | bool:
     """Check if the bar is running."""
     is_running = os.path.exists(f"/proc/{pid}")
     if is_running:
@@ -59,13 +62,16 @@ class Extension(Plugin):
             pid = 0
             while True:
                 if pid:
-                    pid = await is_bar_alive(pid, self.hyprctl_json)
+                    pid = await is_bar_alive(pid, cast("Callable", self.hyprctl_json))
                     if pid:
                         await asyncio.sleep(IDLE_LOOP_INTERVAL)
                         continue
 
                 await self.set_best_monitor()
-                cmd = apply_variables(self.config.get("command", "gBar bar [monitor]"), {"monitor": self.cur_monitor})
+                cmd = apply_variables(
+                    self.config.get("command", "gBar bar [monitor]"),
+                    {"monitor": self.cur_monitor or ""},
+                )
                 start_time = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 pid = self.proc.pid
@@ -78,7 +84,7 @@ class Extension(Plugin):
                 text = f"Menu Bar crashed, restarting in {delay}s." if delay > 0 else "Menu Bar crashed, restarting immediately."
                 self.log.warning(text)
                 if delay:
-                    await self.notify_warn(text)
+                    await self.notify_info(text)
                 await asyncio.sleep(delay or 0.1)
 
         self.ongoing_task = asyncio.create_task(_run_loop())
