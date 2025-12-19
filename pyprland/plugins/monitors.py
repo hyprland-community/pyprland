@@ -44,9 +44,11 @@ class Extension(CastBoolMixin, Plugin):
 
     async def event_configreloaded(self, _: str = "") -> None:
         """Relayout screens after settings has been lost."""
-        if self.config.get("relayout_on_config_change", True):
-            await asyncio.sleep(1.0)
-            await self.run_relayout()
+        if not self.config.get("relayout_on_config_change", True):
+            return
+        for _i in range(2):
+            await asyncio.sleep(1)
+            await self._run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
         """Triggers when a monitor is plugged."""
@@ -78,15 +80,23 @@ class Extension(CastBoolMixin, Plugin):
 
         self.log.debug("Using %s", config)
 
-        # 2. Build dependency graph (Parent -> Children)
         monitors_by_name = {m["name"]: m for m in monitors}
 
-        # Adjacency list: parent_name -> list[(child_name, rule)]
+        # 2. Build dependency graph
+        tree, in_degree = self._build_graph(config, monitors_by_name)
+
+        # 3. Compute Layout
+        positions = self._compute_positions(monitors_by_name, tree, in_degree)
+
+        # 4 & 5. Normalize and Apply
+        return await self._apply_layout(positions, monitors_by_name, config)
+
+    def _build_graph(
+        self, config: dict[str, Any], monitors_by_name: dict[str, MonitorInfo]
+    ) -> tuple[dict[str, list[tuple[str, str]]], dict[str, int]]:
         tree: dict[str, list[tuple[str, str]]] = defaultdict(list)
-        # Track in-degree to find roots
         in_degree: dict[str, int] = defaultdict(int)
 
-        # Ensure all monitors are in in_degree map
         for name in monitors_by_name:
             in_degree[name] = 0
 
@@ -94,25 +104,21 @@ class Extension(CastBoolMixin, Plugin):
             for rule_name, target_names in rules.items():
                 if rule_name in MONITOR_PROPS:
                     continue
-
-                # We only support one relative placement per monitor for simplicity
                 target_name = target_names[0] if target_names else None
                 if target_name and target_name in monitors_by_name:
                     tree[target_name].append((name, rule_name))
                     in_degree[name] += 1
+        return tree, in_degree
 
-        # 3. Compute Layout (BFS/Topological Sort)
-        # Start with monitors that have no dependencies (roots)
+    def _compute_positions(
+        self, monitors_by_name: dict[str, MonitorInfo], tree: dict[str, list[tuple[str, str]]], in_degree: dict[str, int]
+    ) -> dict[str, tuple[int, int]]:
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
-
-        # Positions: name -> (x, y)
-        # Initialize roots with their current position
         positions: dict[str, tuple[int, int]] = {}
         for name in queue:
             positions[name] = (monitors_by_name[name]["x"], monitors_by_name[name]["y"])
 
         processed = set()
-
         while queue:
             ref_name = queue.pop(0)
             if ref_name in processed:
@@ -130,22 +136,22 @@ class Extension(CastBoolMixin, Plugin):
                 in_degree[child_name] -= 1
                 if in_degree[child_name] == 0:
                     queue.append(child_name)
+        return positions
 
-        # 4. Normalize coordinates
+    async def _apply_layout(
+        self, positions: dict[str, tuple[int, int]], monitors_by_name: dict[str, MonitorInfo], config: dict[str, Any]
+    ) -> bool:
         if not positions:
             return False
 
         min_x = min(x for x, y in positions.values())
         min_y = min(y for x, y in positions.values())
 
-        # 5. Apply configuration
         cmds = []
         for name, (x, y) in positions.items():
             mon = monitors_by_name[name]
             mon["x"] = x - min_x
             mon["y"] = y - min_y
-
-            # Get specific config for this monitor
             mon_config = config.get(name, {})
             cmd = self._build_monitor_command(mon, mon_config)
             cmds.append(cmd)
@@ -153,52 +159,70 @@ class Extension(CastBoolMixin, Plugin):
         for cmd in cmds:
             self.log.debug(cmd)
             await self.hyprctl(cmd, "keyword")
-
         return True
 
     def _compute_xy(self, ref_mon: MonitorInfo, mon: MonitorInfo, ref_x: int, ref_y: int, rule: str) -> tuple[int, int]:
         """Compute position of `mon` relative to `ref_mon` based on `rule`."""
         ref_w, ref_h = get_dims(ref_mon)
         mon_w, mon_h = get_dims(mon)
-
         rule = rule.lower().replace("_", "").replace("-", "")
 
-        x, y = ref_x, ref_y
+        ref_rect = (ref_x, ref_y, ref_w, ref_h)
+        mon_dim = (mon_w, mon_h)
 
-        # Direction
         if "left" in rule:
-            x = ref_x - mon_w
-            # Alignment Y
-            if "bottom" in rule:
-                y = ref_y + ref_h - mon_h
-            elif "center" in rule or "middle" in rule:
-                y = ref_y + (ref_h - mon_h) // 2
-            # else: align top (default) -> y = ref_y
+            return self._place_left(ref_rect, mon_dim, rule)
+        if "right" in rule:
+            return self._place_right(ref_rect, mon_dim, rule)
+        if "top" in rule:
+            return self._place_top(ref_rect, mon_dim, rule)
+        if "bottom" in rule:
+            return self._place_bottom(ref_rect, mon_dim, rule)
 
-        elif "right" in rule:
-            x = ref_x + ref_w
-            # Alignment Y
-            if "bottom" in rule:
-                y = ref_y + ref_h - mon_h
-            elif "center" in rule or "middle" in rule:
-                y = ref_y + (ref_h - mon_h) // 2
+        return ref_x, ref_y
 
-        elif "top" in rule:
-            y = ref_y - mon_h
-            # Alignment X
-            if "right" in rule:
-                x = ref_x + ref_w - mon_w
-            elif "center" in rule or "middle" in rule:
-                x = ref_x + (ref_w - mon_w) // 2
+    def _place_left(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        ref_x, ref_y, _ref_w, ref_h = ref_rect
+        mon_w, mon_h = mon_dim
+        x = ref_x - mon_w
+        y = ref_y
+        if "bottom" in rule:
+            y = ref_y + ref_h - mon_h
+        elif "center" in rule or "middle" in rule:
+            y = ref_y + (ref_h - mon_h) // 2
+        return int(x), int(y)
 
-        elif "bottom" in rule:
-            y = ref_y + ref_h
-            # Alignment X
-            if "right" in rule:
-                x = ref_x + ref_w - mon_w
-            elif "center" in rule or "middle" in rule:
-                x = ref_x + (ref_w - mon_w) // 2
+    def _place_right(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        ref_x, ref_y, ref_w, ref_h = ref_rect
+        _mon_w, mon_h = mon_dim
+        x = ref_x + ref_w
+        y = ref_y
+        if "bottom" in rule:
+            y = ref_y + ref_h - mon_h
+        elif "center" in rule or "middle" in rule:
+            y = ref_y + (ref_h - mon_h) // 2
+        return int(x), int(y)
 
+    def _place_top(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        ref_x, ref_y, ref_w, _ref_h = ref_rect
+        mon_w, mon_h = mon_dim
+        y = ref_y - mon_h
+        x = ref_x
+        if "right" in rule:
+            x = ref_x + ref_w - mon_w
+        elif "center" in rule or "middle" in rule:
+            x = ref_x + (ref_w - mon_w) // 2
+        return int(x), int(y)
+
+    def _place_bottom(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        ref_x, ref_y, ref_w, ref_h = ref_rect
+        mon_w, mon_h = mon_dim
+        y = ref_y + ref_h
+        x = ref_x
+        if "right" in rule:
+            x = ref_x + ref_w - mon_w
+        elif "center" in rule or "middle" in rule:
+            x = ref_x + (ref_w - mon_w) // 2
         return int(x), int(y)
 
     def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, Any]) -> str:
