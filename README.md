@@ -27,7 +27,7 @@ You may also want to browse or install [my dotfiles](https://github.com/fdev31/d
 
 <details>
 <summary>
-About Pyprland (latest stable is: <b>2.4.3</b>)
+About Pyprland (latest stable is: <b>2.5.1</b>)
 </summary>
 
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)
