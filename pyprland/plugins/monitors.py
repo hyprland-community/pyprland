@@ -115,6 +115,7 @@ class Extension(CastBoolMixin, Plugin):
         self, monitors_by_name: dict[str, MonitorInfo], tree: dict[str, list[tuple[str, str]]], in_degree: dict[str, int]
     ) -> dict[str, tuple[int, int]]:
         """Compute the positions of monitors based on the dependency graph."""
+        # pylint: disable=too-many-locals
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
         positions: dict[str, tuple[int, int]] = {}
         for name in queue:
@@ -247,6 +248,7 @@ class Extension(CastBoolMixin, Plugin):
 
     def _resolve_names(self, monitors: list[MonitorInfo]) -> dict[str, Any]:
         """Resolve configuration patterns to actual monitor names."""
+        # pylint: disable=too-many-locals
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
 

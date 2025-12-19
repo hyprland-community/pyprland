@@ -120,6 +120,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         await asyncio.gather(*(die_in_piece(scratch) for scratch in self.scratches.values()))
 
+    # pylint: disable=too-many-branches
     async def on_reload(self) -> None:
         """Config loader."""
         self._classify = class_decorator_new if state.hyprland_version > VersionInfo(0, 47, 2) else class_decorator_old
@@ -150,7 +151,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             else:
                 # else register it
                 self.scratches.register(new_scratch, name)
-                is_lazy = self.cast_bool(cast("Any", new_scratch.conf.get("lazy")), True)
+                is_lazy = self.cast_bool(cast("str | bool | None", new_scratch.conf.get("lazy")), True)
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
@@ -513,7 +514,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             first_scratch.meta.space_identifier,
             get_active_space_identifier(),
         )
-        if self.cast_bool(cast("Any", first_scratch.conf.get("alt_toggle"))):
+        if self.cast_bool(cast("str | bool | None", first_scratch.conf.get("alt_toggle"))):
             # Needs to be on any monitor (if workspace matches)
             extra_visibility_check = first_scratch.meta.space_identifier in await get_all_space_identifiers(
                 await self.hyprctl_json("monitors")
@@ -616,7 +617,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             return
 
         excluded_ids = cast("list[str] | str", scratch.conf.get("excludes", []))
-        restore_excluded = self.cast_bool(cast("Any", scratch.conf.get("restore_excluded", False)))
+        restore_excluded = self.cast_bool(cast("str | bool | None", scratch.conf.get("restore_excluded", False)))
         if excluded_ids == "*":
             excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
         for e_uid in excluded_ids:
@@ -641,7 +642,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]) -> bool:
         """Collect every matching client for the scratchpad and add them to extra_addr if needed."""
-        if not self.cast_bool(cast("Any", scratch.conf.get("multi")), True):
+        if not self.cast_bool(cast("str | bool | None", scratch.conf.get("multi")), True):
             return False
         match_by, match_value = scratch.get_match_props()
         match_fn = get_match_fn(match_by, match_value)
@@ -660,7 +661,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool) -> None:
         """Performs the transition to visible state."""
-        forbid_special = not self.cast_bool(cast("Any", scratch.conf.get("allow_special_workspace")), True)
+        forbid_special = not self.cast_bool(cast("str | bool | None", scratch.conf.get("allow_special_workspace")), True)
         wrkspc = (
             monitor["activeWorkspace"]["name"]
             if forbid_special
@@ -673,7 +674,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
         scratch.meta.last_shown = time.time()
         # Start the transition
-        preserve_aspect = self.cast_bool(cast("Any", scratch.conf.get("preserve_aspect")))
+        preserve_aspect = self.cast_bool(cast("str | bool | None", scratch.conf.get("preserve_aspect")))
         should_set_aspect = (
             not (preserve_aspect and was_alive) or scratch.monitor != state.active_monitor
         )  # Not aspect preserving or it's newly spawned
@@ -745,7 +746,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     async def _animate_show(self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool) -> None:
         """Animate the show transition."""
         animation_type = get_animation_type(scratch)
-        multiwin_enabled = self.cast_bool(cast("Any", scratch.conf.get("multi")), True)
+        multiwin_enabled = self.cast_bool(cast("str | bool | None", scratch.conf.get("multi")), True)
         if animation_type:
             animation_commands = []
 
@@ -827,7 +828,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         monitor_info = scratch.meta.monitor_info
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # collects window which have been created by the app
-        if self.cast_bool(cast("Any", scratch.conf.get("multi")), True):
+        if self.cast_bool(cast("str | bool | None", scratch.conf.get("multi")), True):
             await self._handle_multiwindow(scratch, clients)
             positions = {}
             for sub_client in clients:
@@ -840,7 +841,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         await self._pin_scratch(scratch)
         await self._hide_transition(scratch, monitor_info)
 
-        if not self.cast_bool(cast("Any", scratch.conf.get("close_on_hide")), False):
+        if not self.cast_bool(cast("str | bool | None", scratch.conf.get("close_on_hide")), False):
             await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(uid)},address:{scratch.full_address}")
 
             for addr in scratch.extra_addr:
@@ -860,7 +861,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str, clients: ClientInfo | dict) -> None:
         """Handle focus tracking."""
-        if not self.cast_bool(cast("Any", scratch.conf.get("smart_focus")), True):
+        if not self.cast_bool(cast("str | bool | None", scratch.conf.get("smart_focus")), True):
             return
         for track in self.focused_window_tracking.values():
             if scratch.have_address(track.prev_focused_window):

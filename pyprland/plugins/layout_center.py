@@ -3,6 +3,7 @@
 - windows are normally tiled but one
 - the active window is floating and centered
 - you can cycle the active window, keeping the same layout type
+from __future__ import annotations
 - layout can be toggled any time
 """
 
@@ -12,7 +13,7 @@ from functools import partial
 from typing import Any, cast
 
 from ..common import CastBoolMixin, is_rotated, state
-from ..models import ClientInfo, MonitorInfo
+from ..models import ClientInfo, MonitorInfo  # pylint: disable=unused-import
 from .interface import Plugin
 
 

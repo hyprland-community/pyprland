@@ -59,6 +59,7 @@ class Extension(CastBoolMixin, Plugin):
 
     rounded_manager: RoundedImageManager | None
 
+    # pylint: disable=broad-exception-caught
     async def _send_hyprpaper(self, message: bytes) -> None:
         """Create hyprpaper sockets, send a message and wait for full write."""
         for _ in range(3):
@@ -119,6 +120,7 @@ class Extension(CastBoolMixin, Plugin):
         return choice
 
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
+        """Prepare the wallpaper for the given monitor."""
         if not self.rounded_manager:
             return prepare_for_quotes(img_path)
 
@@ -147,7 +149,7 @@ class Extension(CastBoolMixin, Plugin):
                     return "light"
                 if "prefer-dark" in output or "'dark'" in output:
                     return "dark"
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.debug("gsettings not available for theme detection")
 
         # Try darkman
@@ -160,7 +162,7 @@ class Extension(CastBoolMixin, Plugin):
             stdout, _ = await proc.communicate()
             if proc.returncode == 0:
                 return stdout.decode().strip()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.debug("darkman not available for theme detection")
 
         return "dark"
@@ -200,6 +202,7 @@ class Extension(CastBoolMixin, Plugin):
             }
         return oklab_args
 
+    # pylint: disable=too-many-locals
     def _generate_palette(
         self,
         rgb_list: list[tuple[int, int, int]],
@@ -295,9 +298,9 @@ class Extension(CastBoolMixin, Plugin):
                     used_off = 0.0
 
             cur_h = (
-                float(cast("Any", used_off)[1:])
+                float(cast("str", used_off)[1:])
                 if isinstance(used_off, str) and used_off.startswith("=")
-                else (used_h + float(cast("Any", used_off))) % 1.0
+                else (used_h + float(cast("float", used_off))) % 1.0
             )
             cur_s = max(0.0, min(1.0, used_s * s_mult))
 
@@ -394,6 +397,7 @@ class Extension(CastBoolMixin, Plugin):
 
         return tag_pattern.sub(replace_tag, content)
 
+    # pylint: disable=broad-exception-caught
     async def _process_single_template(
         self,
         name: str,
@@ -475,6 +479,7 @@ class Extension(CastBoolMixin, Plugin):
         return variables
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
+        """Run one iteration of the wallpaper change."""
         cmd_template = self.config.get("command")
         img_path = self.select_next_image()
         monitors: list[MonitorInfo] = await fetch_monitors(self)
@@ -541,6 +546,7 @@ class Extension(CastBoolMixin, Plugin):
                 await proc.wait()
         self.proc[:] = []
 
+    # pylint: disable=too-many-locals,broad-exception-caught
     async def run_wall(self, arg: str) -> None:
         """<next|clear> skip the current background image or stop displaying it."""
         if arg.startswith("n"):  # next

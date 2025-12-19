@@ -151,6 +151,8 @@ def _select_colors_from_peaks(
 
     return final_colors
 
+    # pylint: disable=broad-exception-caught
+
 
 def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
     """Pick representative pixels using a weighted Hue Histogram approach."""
@@ -185,6 +187,7 @@ def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
         return [(0, 0, 0)] * 3
 
 
+# pylint: disable=too-many-locals
 def nicify_oklab(
     rgb: tuple[int, int, int],
     min_sat: float = 0.3,
@@ -208,9 +211,9 @@ def nicify_oklab(
     """
 
     # Convert sRGB to linear RGB
-    def to_linear(c: float) -> float:
-        c = c / 255.0
-        return c / 12.92 if c <= SRGB_LINEAR_CUTOFF else pow((c + 0.055) / 1.055, 2.4)
+    def to_linear(component: float) -> float:
+        component = component / 255.0
+        return component / 12.92 if component <= SRGB_LINEAR_CUTOFF else pow((component + 0.055) / 1.055, 2.4)
 
     r_lin = to_linear(rgb[0])
     g_lin = to_linear(rgb[1])
@@ -258,8 +261,8 @@ def nicify_oklab(
     b_out = -0.0041960771 * l_lin - 0.7034186147 * m_lin + 1.7076147010 * s_lin
 
     # Convert back to sRGB
-    def to_srgb(c: float) -> float:
-        return 12.92 * c if c <= SRGB_R_CUTOFF else 1.055 * pow(c, 1 / 2.4) - 0.055
+    def to_srgb(component: float) -> float:
+        return 12.92 * component if component <= SRGB_R_CUTOFF else 1.055 * pow(component, 1 / 2.4) - 0.055
 
     return (
         int(round(max(0, min(255, to_srgb(r_out) * 255)))),

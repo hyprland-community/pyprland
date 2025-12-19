@@ -35,7 +35,7 @@ except ImportError:
     async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
         """Async-compatible open function."""
         # use context handler
-        with open(*args, **kwargs) as fd:  # noqa: ASYNC101,ASYNC230
+        with open(*args, **kwargs) as fd:  # noqa: ASYNC101,ASYNC230 # pylint: disable=unspecified-encoding
             yield AsyncFile(fd)
 
     async def aiexists(*args, **kwargs) -> bool:

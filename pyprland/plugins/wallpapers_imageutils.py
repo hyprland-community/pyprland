@@ -65,6 +65,7 @@ class RoundedImageManager:
         """Get the path for a given key."""
         return os.path.join(self.tmpdir, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
 
+    # pylint: disable=too-many-locals
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor."""
         key = self._build_key(monitor, src)
