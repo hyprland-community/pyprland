@@ -184,6 +184,20 @@ class Extension(CastBoolMixin, Plugin):
                 "min_light": 0.4,
                 "max_light": 0.85,
             }
+        elif color_scheme == "vibrant":
+            oklab_args = {
+                "min_sat": 0.5,
+                "max_sat": 0.8,
+                "min_light": 0.4,
+                "max_light": 0.85,
+            }
+        elif color_scheme == "mellow":
+            oklab_args = {
+                "min_sat": 0.3,
+                "max_sat": 0.5,
+                "min_light": 0.4,
+                "max_light": 0.85,
+            }
         elif color_scheme == "neutral":
             oklab_args = {
                 "min_sat": 0.05,

@@ -246,6 +246,8 @@ Optional modification of the base color used in the [templates](#templates). One
 - "fluo" or "fluorescent" for high color saturation
 - "neutral" for low color saturation
 - "earth" a bit more dark, a bit less blue
+- "vibrant" for moderate to high saturation
+- "mellow" for lower saturation
 
 ### `variant`
 
