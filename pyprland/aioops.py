@@ -28,7 +28,7 @@ except ImportError:
         async def __aenter__(self):
             return self
 
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
+        async def __aexit__(self, *_a):
             self.file.close()
 
     @contextlib.asynccontextmanager  # type: ignore[no-redef]

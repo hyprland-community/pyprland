@@ -20,10 +20,6 @@ class ScratchDB:  # {{{
         """Get a set of `Scratch` being in `status`."""
         return self._states[status]
 
-    def has_state(self, scratch: Scratch, status: str) -> bool:
-        """Return true if `scratch` has state `status`."""
-        return scratch in self._states[status]
-
     def set_state(self, scratch: Scratch, status: str) -> None:
         """Set `scratch` in the provided status."""
         self._states[status].add(scratch)
@@ -79,7 +75,7 @@ class ScratchDB:  # {{{
             self._by_addr[scratch.address] = scratch
         else:
             if name is not None:
-                d: dict[Any, Scratch] = cast(dict[str, Scratch], self._by_name)
+                d: dict[Any, Scratch] = cast("dict[str, Scratch]", self._by_name)
                 v = name
             elif pid is not None:
                 d = self._by_pid

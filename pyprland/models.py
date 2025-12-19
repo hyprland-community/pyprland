@@ -1,18 +1,10 @@
 """Common types from Hyprland API."""
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import TypedDict
 
 PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
 JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]]
-
-
-class RetensionTimes(float, Enum):
-    """Cache retension times."""
-
-    SHORT = 0.005
-    LONG = 0.05
 
 
 class WorkspaceDf(TypedDict):
