@@ -14,7 +14,7 @@ website:
 compgen:
     tox run -e shellgen
 
-lint:
+lint: stubs
     tox run -e linting,deadcode
 
 vreg:
@@ -33,8 +33,8 @@ htmlcov:
     {{pyenv}}/bin/coverage html
     xdg-open ./htmlcov/index.html
 
-types:
+types: stubs
     {{pyenv}}/bin/mypy --check-untyped-defs pyprland
 
 stubs:
-    stubgen -m PIL -p PIL.Image -p PIL.ImageDraw -p PIL.ImageOps -o type_stubs
+    stubgen --include-private -m PIL -p PIL.Image -p PIL.ImageDraw -p PIL.ImageOps -o type_stubs
