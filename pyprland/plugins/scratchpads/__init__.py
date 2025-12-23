@@ -643,7 +643,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Collect every matching client for the scratchpad and add them to extra_addr if needed."""
         if not self.cast_bool(scratch.conf.get("multi"), True):
             return False
-        match_by, match_value = scratch.get_match_props()
+        try:
+            match_by, match_value = scratch.get_match_props()
+        except KeyError:
+            return False
         match_fn = get_match_fn(match_by, match_value)
         hit = False
         for client in clients:
