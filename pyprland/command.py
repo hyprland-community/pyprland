@@ -1,6 +1,7 @@
 """Pyprland - an Hyprland companion app (cli client & daemon)."""
 
 import asyncio
+import contextlib
 import importlib
 import itertools
 import json
@@ -321,7 +322,8 @@ class Pyprland:
                 self.log.warning("No such command: %s", cmd)
 
         writer.write(b"\n")
-        await writer.drain()
+        with contextlib.suppress(BrokenPipeError, ConnectionResetError):
+            await writer.drain()
         writer.close()
 
     async def serve(self) -> None:
