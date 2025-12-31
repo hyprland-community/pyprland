@@ -62,14 +62,13 @@ def get_animation_type(scratch: Scratch) -> str:
     return scratch.conf.get("animation", "").lower()
 
 
-def class_decorator_old(name: str) -> str:
-    """Return the class rule for old hyprland versions."""
-    return f"^({name})$"
-
-
-def class_decorator_new(name: str) -> str:
-    """Return the class rule for new hyprland versions."""
-    return f"class:{name}"
+def class_decorator(name: str) -> str:
+    """Return the class rule for current hyprland versions."""
+    if state.hyprland_version > VersionInfo(0, 47, 2):
+        if state.hyprland_version < VersionInfo(0, 53, 0):
+            return f"class: {name}"  # old
+        return f"match:class {name}"  # current
+    return f"^({name})$"  # very old
 
 
 # }}}
@@ -122,7 +121,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def on_reload(self) -> None:
         """Config loader."""
-        self._classify = class_decorator_new if state.hyprland_version > VersionInfo(0, 47, 2) else class_decorator_old
+        self._classify = class_decorator
         # Sanity checks
         _scratch_classes: dict[str, str] = {}
         for uid, scratch in self.config.items():
@@ -170,7 +169,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Unset the windowrules."""
         defined_class = scratch.conf.get("class", "")
         if defined_class:
-            await self.hyprctl(f"windowrule unset,match:class {self._classify(defined_class)}", "keyword")
+            await self.hyprctl(f"windowrule unset,{self._classify(defined_class)}", "keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
@@ -190,11 +189,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             ipc_commands = []
 
             if "float" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule float on, match:class {self._classify(defined_class)}")
+                ipc_commands.append(f"windowrule float on, {self._classify(defined_class)}")
             if "workspace" not in skipped_windowrules:
-                ipc_commands.append(
-                    f"windowrule workspace {mk_scratch_name(scratch.uid)} silent,match:class {self._classify(defined_class)}"
-                )
+                ipc_commands.append(f"windowrule workspace {mk_scratch_name(scratch.uid)} silent, {self._classify(defined_class)}")
             set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
@@ -211,10 +208,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     "fromleft": f"-200% {margin_y}",
                 }[animation_type]
                 if set_aspect:
-                    ipc_commands.append(f"windowrule move {t_pos},match:class {self._classify(defined_class)}")
+                    ipc_commands.append(f"windowrule move {t_pos}, {self._classify(defined_class)}")
 
             if set_aspect:
-                ipc_commands.append(f"windowrule size {width} {height},match:class {self._classify(defined_class)}")
+                ipc_commands.append(f"windowrule size {width} {height}, {self._classify(defined_class)}")
 
             await self.hyprctl(ipc_commands, "keyword")
 
