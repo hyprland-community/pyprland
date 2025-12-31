@@ -27,12 +27,6 @@ from .wallpapers_utils import can_edit_image, get_dominant_colors, nicify_oklab
 
 HEX_LEN = 6
 HEX_LEN_HASH = 7
-HYPRPAPER_SOCKET = os.path.join(
-    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.environ.get('UID')}"),
-    "hypr",
-    os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "default"),
-    ".hyprpaper.sock",
-)
 
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
@@ -58,24 +52,6 @@ class Extension(CastBoolMixin, Plugin):
     _paused = False
 
     rounded_manager: RoundedImageManager | None
-
-    async def _send_hyprpaper(self, message: bytes) -> None:
-        """Create hyprpaper sockets, send a message and wait for full write."""
-        for _ in range(3):
-            try:
-                hyprpaper_socket_reader, hyprpaper_socket_writer = await asyncio.open_unix_connection(HYPRPAPER_SOCKET)
-                hyprpaper_socket_writer.write(message)
-                await hyprpaper_socket_writer.drain()
-                hyprpaper_socket_writer.close()
-            except ConnectionRefusedError:
-                # Crash? start hyprpaper
-                asyncio.create_task(asyncio.create_subprocess_exec("hyprpaper"))
-                asyncio.create_task(asyncio.create_subprocess_exec("hyprctl reload"))
-                await asyncio.sleep(1)
-            except Exception:
-                self.log.exception("Failed to connect to hyprpaper socket at %s", HYPRPAPER_SOCKET)
-            else:
-                break
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -500,12 +476,10 @@ class Extension(CastBoolMixin, Plugin):
             for monitor in monitors:
                 variables = await self.update_vars(variables, monitor, img_path)
                 self.log.debug("Setting wallpaper %s for monitor %s", variables["file"], variables.get("output"))
-                command_collector.append(apply_variables("preload [file]", variables))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
             for cmd in command_collector:
-                self.log.info("Running hyprpaper command: %s", cmd)
-                await self._send_hyprpaper(cmd.encode())
+                await self.hyprctl(["execr hyprctl hyprpaper " + cmd])
 
         # Generate templates after wallpaper is selected
         await self._generate_templates(img_path)

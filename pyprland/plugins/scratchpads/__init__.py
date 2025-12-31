@@ -169,7 +169,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Unset the windowrules."""
         defined_class = scratch.conf.get("class", "")
         if defined_class:
-            await self.hyprctl(f"windowrule unset,{self._classify(defined_class)}", "keyword")
+            await self.hyprctl(f"windowrule workspace unset,{self._classify(defined_class)}", "keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
