@@ -3,10 +3,11 @@
 import asyncio
 import contextlib
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Flag, auto
 from functools import partial
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, CastBoolMixin, apply_variables, is_rotated, state
@@ -25,9 +26,6 @@ from .helpers import (
 from .lookup import ScratchDB
 from .objects import Scratch
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
 DEFAULT_HIDE_DELAY = 0  # in seconds
@@ -42,6 +40,48 @@ class HideFlavors(Flag):
     FORCED = auto()
     TRIGGERED_BY_AUTOHIDE = auto()
     IGNORE_TILED = auto()
+
+
+class WindowRuleSet:
+    """Windowrule set builder."""
+
+    def __init__(self) -> None:
+        self._params = []
+        self._class = ""
+        self._name = "PyprScratchR"
+
+    def set_class(self, value: str) -> None:
+        """Set the windowrule matching class."""
+        self._class = value
+
+    def set_name(self, value: str) -> None:
+        """Set the windowrule name."""
+        self._name = value
+
+    def set(self, param: str, value: str) -> None:
+        """Set a windowrule property."""
+        self._params.append((param, value))
+
+    def _get_content(self) -> Iterable[str]:
+        if state.hyprland_version > VersionInfo(0, 47, 2):
+            if state.hyprland_version < VersionInfo(0, 53, 0):
+                for p in self._params:
+                    yield f"windowrule {p[0]} {p[1]}, class: {self._class}"
+            elif self._name:
+                yield f"windowrule[{self._name}]:enable true"
+                yield f"windowrule[{self._name}]:match:class {self._class}"
+                for p in self._params:
+                    yield f"windowrule[{self._name}]:{p[0]} {p[1]}"
+            else:
+                for p in self._params:
+                    yield f"windowrule {p[0]} {p[1]}, match:class {self._class}"
+        else:
+            for p in self._params:
+                yield f"windowrule {p[0]} {p[1]}, ^({self._class})$"
+
+    def get_content(self) -> list[str]:
+        """Get the windowrule content."""
+        return list(self._get_content())
 
 
 @dataclass
@@ -60,15 +100,6 @@ class FocusTracker:
 def get_animation_type(scratch: Scratch) -> str:
     """Get the animation type or an empty string if not set."""
     return scratch.conf.get("animation", "").lower()
-
-
-def class_decorator(name: str) -> str:
-    """Return the class rule for current hyprland versions."""
-    if state.hyprland_version > VersionInfo(0, 47, 2):
-        if state.hyprland_version < VersionInfo(0, 53, 0):
-            return f"class: {name}"  # old
-        return f"match:class {name}"  # current
-    return f"^({name})$"  # very old
 
 
 # }}}
@@ -91,7 +122,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
-        self._classify: Callable
         self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
         Scratch.get_client_props = self.get_client_props
         self.get_monitor_props = staticmethod(partial(get_monitor_props, logger=self.log))
@@ -121,7 +151,6 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
 
     async def on_reload(self) -> None:
         """Config loader."""
-        self._classify = class_decorator
         # Sanity checks
         _scratch_classes: dict[str, str] = {}
         for uid, scratch in self.config.items():
@@ -169,7 +198,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         """Unset the windowrules."""
         defined_class = scratch.conf.get("class", "")
         if defined_class:
-            await self.hyprctl(f"windowrule workspace unset,{self._classify(defined_class)}", "keyword")
+            await self.hyprctl(f"windowrule[{scratch.uid}]:enable false", "keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules)."""
@@ -177,6 +206,9 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
         animation_type: str = cast("str", scratch.conf.get("animation", "fromTop")).lower()
         defined_class: str = cast("str", scratch.conf.get("class", ""))
         skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules", []))
+        wr = WindowRuleSet()
+        wr.set_class(defined_class)
+        wr.set_name(scratch.uid)
         if defined_class:
             forced_monitor = scratch.conf.get("force_monitor")
             if forced_monitor and forced_monitor not in state.monitors:
@@ -186,12 +218,10 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
             monitor = await self.get_monitor_props(name=forced_monitor)
             width, height = convert_coords(cast("str", scratch.conf.get("size", "80% 80%")), monitor)
 
-            ipc_commands = []
-
             if "float" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule float on, {self._classify(defined_class)}")
+                wr.set("float", "on")
             if "workspace" not in skipped_windowrules:
-                ipc_commands.append(f"windowrule workspace {mk_scratch_name(scratch.uid)} silent, {self._classify(defined_class)}")
+                wr.set("workspace", f"{mk_scratch_name(scratch.uid)} silent")
             set_aspect = "aspect" not in skipped_windowrules
 
             if animation_type:
@@ -208,12 +238,12 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
                     "fromleft": f"-200% {margin_y}",
                 }[animation_type]
                 if set_aspect:
-                    ipc_commands.append(f"windowrule move {t_pos}, {self._classify(defined_class)}")
+                    wr.set("move", t_pos)
 
             if set_aspect:
-                ipc_commands.append(f"windowrule size {width} {height}, {self._classify(defined_class)}")
+                wr.set("size", f"{width} {height}")
 
-            await self.hyprctl(ipc_commands, "keyword")
+            await self.hyprctl(wr.get_content(), "keyword")
 
     async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
         """Wait for a client to be up and running.
