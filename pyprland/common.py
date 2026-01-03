@@ -11,7 +11,7 @@ import subprocess
 import sys
 import termios
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any
 
 from .types import MonitorInfo, VersionInfo
 
@@ -26,7 +26,6 @@ __all__ = [
     "SharedState",
     "prepare_for_quotes",
     "apply_filter",
-    "CastBoolMixin",
     "is_rotated",
 ]
 
@@ -261,18 +260,59 @@ def apply_filter(text: str, filt_cmd: str) -> str:
     return text
 
 
-class CastBoolMixin:
-    """Adds `cast_bool` method."""
+class Configuration(dict):
+    """Configuration wrapper providing typed access and section filtering."""
 
-    log: logging.Logger
+    def __init__(self, *args, logger=None, **kwargs):
+        """Initialize the configuration object."""
+        super().__init__(*args, **kwargs)
+        self.log = logger or get_logger("config")
 
-    def cast_bool(self, value: str | bool | None, default_value: bool = False) -> bool:
-        """Recovers wrong typing on boolean values."""
+    def get_bool(self, name: str, default: bool = False) -> bool:
+        """Get a boolean value, handling loose typing."""
+        value = self.get(name)
         if isinstance(value, str):
             lv = value.lower().strip()
-            r = lv not in {"false", "no", "off"}
-            self.log.warning("Invalid value for boolean option: %s, considering it %s", value, r)
-        return default_value if value is None else cast(bool, value)
+            r = lv not in {"false", "no", "off", "0"}
+            return r
+        if value is None:
+            return default
+        return bool(value)
+
+    def get_int(self, name: str, default: int = 0) -> int:
+        """Get an integer value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            self.log.warning("Invalid integer value for %s: %s", name, value)
+            return default
+
+    def get_float(self, name: str, default: float = 0.0) -> float:
+        """Get a float value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            self.log.warning("Invalid float value for %s: %s", name, value)
+            return default
+
+    def get_str(self, name: str, default: str = "") -> str:
+        """Get a string value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        return str(value)
+
+    def iter_subsections(self):
+        """Yield only keys that have dictionary values (e.g., defined scratchpads)."""
+        for k, v in self.items():
+            if isinstance(v, dict):
+                yield k, v
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:

@@ -4,23 +4,19 @@ import asyncio
 from collections import defaultdict
 from typing import Any, cast
 
-from ..common import CastBoolMixin, is_rotated, state
+from ..common import state
 from ..types import MonitorInfo
 from .interface import Plugin
 
-MONITOR_PROPS = {"scale", "transform", "rate", "resolution"}
+MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 
 
-def get_dims(monitor: MonitorInfo) -> tuple[int, int]:
-    """Get the effective width and height of a monitor."""
-    width = int(monitor["width"] / monitor["scale"])
-    height = int(monitor["height"] / monitor["scale"])
-    if is_rotated(monitor):
-        return height, width
-    return width, height
+def get_dims(mon: MonitorInfo) -> tuple[int, int]:
+    """Return the dimensions of the monitor."""
+    return mon["width"], mon["height"]
 
 
-class Extension(CastBoolMixin, Plugin):
+class Extension(Plugin):
     """Control monitors layout."""
 
     _mon_by_pat_cache: dict[str, MonitorInfo] = {}
@@ -33,7 +29,7 @@ class Extension(CastBoolMixin, Plugin):
         for mon in state.monitors:
             await self._hotplug_command(monitors, name=mon)
 
-        if self.cast_bool(self.config.get("startup_relayout"), True):
+        if self.config.get_bool("startup_relayout", True):
 
             async def _delayed_relayout() -> None:
                 await self._run_relayout(monitors)

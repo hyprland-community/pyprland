@@ -4,7 +4,7 @@ import contextlib
 from collections.abc import Callable
 from typing import Any, cast
 
-from ..common import get_logger
+from ..common import Configuration, get_logger
 from ..ipc import get_controls
 from ..types import ClientInfo
 
@@ -29,7 +29,7 @@ class Plugin:
     notify_error: Callable
     " `pyprland.ipc.notify_error` using the plugin's logger "
 
-    config: dict[str, Any]
+    config: Configuration
     " This plugin configuration section as a `dict` object "
 
     def __init__(self, name: str) -> None:
@@ -46,7 +46,7 @@ class Plugin:
             self.notify_info,
             self.notify_error,
         ) = ctrl
-        self.config = {}
+        self.config = Configuration({}, logger=self.log)
 
     # Functions to override
 

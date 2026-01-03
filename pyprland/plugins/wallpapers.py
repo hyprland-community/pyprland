@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from ..aioops import aiexists, aiopen
-from ..common import CastBoolMixin, apply_variables, prepare_for_quotes, state
+from ..common import apply_variables, prepare_for_quotes, state
 from .interface import Plugin
 from .wallpapers_imageutils import (
     MonitorInfo,
@@ -38,7 +38,7 @@ async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
     ]
 
 
-class Extension(CastBoolMixin, Plugin):
+class Extension(Plugin):
     """Manages the background image."""
 
     default_image_ext: set[str] | list[str] = {"png", "jpg", "jpeg"}
@@ -63,7 +63,7 @@ class Extension(CastBoolMixin, Plugin):
         self.image_list = [
             os.path.join(path, fname)
             for path in paths
-            async for fname in get_files_with_ext(path, extensions, recurse=self.cast_bool(self.config.get("recurse")))
+            async for fname in get_files_with_ext(path, extensions, recurse=self.config.get_bool("recurse"))
         ]
 
         if radius > 0 and can_edit_image:

@@ -14,7 +14,7 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from ...common import is_rotated, state
+from ...common import get_logger, is_rotated, state
 from ...types import MonitorInfo
 
 
@@ -80,6 +80,7 @@ class DynMonitorConfig:
     ) -> None:
         self.ref = ref
         self.mon_override = monitor_override
+        self.log = get_logger("dynconf")
 
     def __setitem__(self, name: str, value: float | bool | str | list) -> None:
         self.ref[name] = value
@@ -108,6 +109,46 @@ class DynMonitorConfig:
             return self[name]
         except KeyError:
             return default
+
+    def get_bool(self, name: str, default: bool = False) -> bool:
+        """Get a boolean value, handling loose typing."""
+        value = self.get(name)
+        if isinstance(value, str):
+            lv = value.lower().strip()
+            r = lv not in {"false", "no", "off", "0"}
+            return r
+        if value is None:
+            return default
+        return bool(value)
+
+    def get_int(self, name: str, default: int = 0) -> int:
+        """Get an integer value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        try:
+            return int(value)  # type: ignore
+        except (ValueError, TypeError):
+            self.log.warning("Invalid integer value for %s: %s", name, value)
+            return default
+
+    def get_float(self, name: str, default: float = 0.0) -> float:
+        """Get a float value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        try:
+            return float(value)  # type: ignore
+        except (ValueError, TypeError):
+            self.log.warning("Invalid float value for %s: %s", name, value)
+            return default
+
+    def get_str(self, name: str, default: str = "") -> str:
+        """Get a string value."""
+        value = self.get(name)
+        if value is None:
+            return default
+        return str(value)
 
     def __str__(self) -> str:
         return f"{self.ref} {self.mon_override}"

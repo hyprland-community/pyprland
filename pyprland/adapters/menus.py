@@ -4,9 +4,13 @@ import asyncio
 import subprocess
 from collections.abc import Iterable
 from logging import Logger
+from typing import TYPE_CHECKING
 
 from ..common import apply_variables, get_logger
 from ..types import PyprError
+
+if TYPE_CHECKING:
+    from ..common import Configuration
 
 __all__ = ["MenuEngine", "MenuMixin"]
 
@@ -167,9 +171,10 @@ class MenuMixin:
     _menu_configured = False
     menu: MenuEngine
     """ provided `MenuEngine` """
-    config: dict
+    config: "Configuration"
     " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
     log: Logger
+
     " used by the mixin but provided by `pyprland.plugins.interface.Plugin` "
 
     async def ensure_menu_configured(self) -> None:

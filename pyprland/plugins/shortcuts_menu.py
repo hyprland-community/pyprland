@@ -4,11 +4,11 @@ import asyncio
 from typing import cast
 
 from ..adapters.menus import MenuMixin
-from ..common import CastBoolMixin, apply_filter, apply_variables, state
+from ..common import apply_filter, apply_variables, state
 from .interface import Plugin
 
 
-class Extension(CastBoolMixin, MenuMixin, Plugin):
+class Extension(MenuMixin, Plugin):
     """Shows a menu with shortcuts."""
 
     # Commands
@@ -43,7 +43,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                 break
             try:
                 formatted_options = {_format_title(k, v): v for k, v in options.items()}
-                if self.cast_bool(self.config.get("skip_single"), True) and len(formatted_options) == 1:
+                if self.config.get_bool("skip_single", True) and len(formatted_options) == 1:
                     selection = next(iter(formatted_options.keys()))
                 else:
                     selection = await self.menu.run(formatted_options, selection)
@@ -57,7 +57,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
     async def _handle_chain(self, options: list[str | dict]) -> None:
         """Handle a chain of special objects + final command string."""
         variables: dict[str, str] = state.variables.copy()
-        autovalidate = self.cast_bool(self.config.get("skip_single"), True)
+        autovalidate = self.config.get_bool("skip_single", True)
         for option in options:
             if isinstance(option, str):
                 await self._run_command(option, variables)
@@ -80,7 +80,7 @@ class Extension(CastBoolMixin, MenuMixin, Plugin):
                     variables[var_name] = choices[0]
                 else:
                     selection = await self.menu.run(choices, var_name)
-                    variables[var_name] = apply_filter(selection, cast(str, option.get("filter", "")))
+                    variables[var_name] = apply_filter(selection, cast("str", option.get("filter", "")))
                     self.log.debug("set %s = %s", var_name, variables[var_name])
 
     async def _run_command(self, command: str, variables: dict[str, str]) -> None:

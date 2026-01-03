@@ -1,11 +1,11 @@
 """expose Brings every client window to screen for selection."""
 
-from ..common import CastBoolMixin, state
+from ..common import state
 from ..types import ClientInfo
 from .interface import Plugin
 
 
-class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstring
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Expose all clients on the active workspace."""
 
     exposed: list[ClientInfo] = []
@@ -13,7 +13,7 @@ class Extension(CastBoolMixin, Plugin):  # pylint: disable=missing-class-docstri
     @property
     def exposed_clients(self) -> list[ClientInfo]:
         """Returns the list of clients currently using exposed mode."""
-        if self.cast_bool(self.config.get("include_special"), False):
+        if self.config.get_bool("include_special", False):
             return self.exposed
         return [c for c in self.exposed if c["workspace"]["id"] > 0]
 

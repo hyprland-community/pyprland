@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
-from ...common import CastBoolMixin, state
+from ...common import state
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
 
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     class ClientPropGetter(Protocol):
         """type for the get_client_props function."""
 
-        async def __call__(self, match_fn: Callable | None = None, clients: list[ClientInfo] | None = None, **kw) -> ClientInfo | None:
+        async def __call__(self, match_fn: Callable = ..., clients: list[ClientInfo] | None = None, **kw: Any) -> ClientInfo | None:
             pass
 
 
@@ -38,7 +38,7 @@ class MetaInfo:
     extra_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 
-class Scratch(CastBoolMixin):  # {{{
+class Scratch:  # {{{
     """A scratchpad state including configuration & client state."""
 
     log = logging.getLogger("scratch")
@@ -91,7 +91,7 @@ class Scratch(CastBoolMixin):  # {{{
         self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
 
         # apply constraints
-        if self.cast_bool(opts.get("preserve_aspect")):
+        if self.conf.get_bool("preserve_aspect"):
             opts["lazy"] = True
         if not self.have_command:
             opts["match_by"] = "class"
@@ -132,7 +132,7 @@ class Scratch(CastBoolMixin):  # {{{
         """Is the process running ?."""
         if not self.have_command:
             return True
-        if self.cast_bool(self.conf.get("process_tracking"), True):
+        if self.conf.get_bool("process_tracking", True):
             path = f"/proc/{self.pid}"
             if await aiexists(path):
                 async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
@@ -158,8 +158,10 @@ class Scratch(CastBoolMixin):  # {{{
 
     def get_match_props(self) -> tuple[str, str | float]:
         """Return the match properties for the scratchpad."""
-        match_by = self.conf.get("match_by", "pid")
-        return match_by, self.pid if match_by == "pid" else self.conf[match_by]
+        match_by = cast("str", self.conf.get("match_by", "pid"))
+        if match_by == "pid":
+            return match_by, self.pid
+        return match_by, cast("str | float", self.conf[match_by])
 
     def reset(self, pid: int) -> None:
         """Clear the object."""

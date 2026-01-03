@@ -11,12 +11,12 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, cast
 
-from ..common import CastBoolMixin, is_rotated, state
+from ..common import is_rotated, state
 from ..types import ClientInfo, MonitorInfo
 from .interface import Plugin
 
 
-class Extension(CastBoolMixin, Plugin):
+class Extension(Plugin):
     """Manages a layout with one centered window on top of others."""
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
@@ -69,7 +69,7 @@ class Extension(CastBoolMixin, Plugin):
 
     async def event_activewindowv2(self, _: str) -> None:
         """Keep track of focused client."""
-        captive = self.cast_bool(self.config.get("captive_focus"))
+        captive = self.config.get_bool("captive_focus")
         is_not_active = state.active_window != self.main_window_addr
         if captive and self.enabled and is_not_active:
             try:
@@ -145,12 +145,12 @@ class Extension(CastBoolMixin, Plugin):
         m = self.margin
         margin: tuple[int, int] = (m, m) if isinstance(m, int) else m
         scale = 1
-        for monitor in cast(list[dict[str, Any]], await self.hyprctl_json("monitors")):
+        for monitor in cast("list[dict[str, Any]]", await self.hyprctl_json("monitors")):
             scale = monitor["scale"]
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin[0])
                 height = monitor["height"] - (2 * margin[1])
-                if is_rotated(cast(MonitorInfo, monitor)):
+                if is_rotated(cast("MonitorInfo", monitor)):
                     width, height = height, width
                 x += monitor["x"] + (margin[0] / scale)
                 y += monitor["y"] + (margin[1] / scale)
@@ -216,18 +216,18 @@ class Extension(CastBoolMixin, Plugin):
         if isinstance(offset, str):
             x, y = (int(i) for i in self.config["offset"].split() if i.strip())
             return (x, y)
-        return cast(tuple[int, int], offset)
+        return cast("tuple[int, int]", offset)
 
     @property
     def margin(self) -> int:
         """Returns the margin of the centered window."""
-        return cast(int, self.config.get("margin", 60))
+        return cast("int", self.config.get("margin", 60))
 
     # enabled
     @property
     def enabled(self) -> bool:
         """Is center layout enabled on the active workspace ?."""
-        return cast(bool, self.workspace_info[state.active_workspace]["enabled"])
+        return cast("bool", self.workspace_info[state.active_workspace]["enabled"])
 
     @enabled.setter
     def enabled(self, value: bool) -> None:
@@ -239,7 +239,7 @@ class Extension(CastBoolMixin, Plugin):
     @property
     def main_window_addr(self) -> str:
         """Get active workspace's centered window address."""
-        return cast(str, self.workspace_info[state.active_workspace]["addr"])
+        return cast("str", self.workspace_info[state.active_workspace]["addr"])
 
     @main_window_addr.setter
     def main_window_addr(self, value: str) -> None:
