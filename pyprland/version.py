@@ -1,3 +1,3 @@
 """Package version."""
 
-VERSION = "2.6.0-3"
+VERSION = "2.6.0-4"

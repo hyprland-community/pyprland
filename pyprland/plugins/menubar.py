@@ -89,12 +89,10 @@ class Extension(Plugin):
         self.ongoing_task = asyncio.create_task(_run_loop())
 
     async def run_bar(self, args: str) -> None:
-        """<|restart|stop> Start (default), restart or stop gBar."""
-        if args.startswith("re"):
-            self.kill()
+        """<restart|stop> Start (default), restart or stop gBar."""
+        self.kill()
+        if not args.startswith("stop"):
             await self.on_reload()
-        if args.startswith("stop"):
-            self.kill()
 
     async def set_best_monitor(self) -> None:
         """Set the best monitor to use in `cur_monitor`."""
