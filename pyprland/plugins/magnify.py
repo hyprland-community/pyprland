@@ -53,7 +53,7 @@ class Extension(Plugin):
         expo = False
         if args:  # set or update the factor
             relative = args[0][0] in "+-"
-            expo = args[0][1] in "+-"
+            expo = len(args[0]) > 1 and args[0][1] in "+-"
             value = float(args[0][1:]) if expo else float(args[0])
 
             # compute the factor
