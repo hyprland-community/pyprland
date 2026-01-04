@@ -1,6 +1,6 @@
 [project]
 name = "pyprland"
-version = "2.5.1"
+version = "2.6.0"
 description = "Hyperland plugin system - batteries included"
 authors = [
     { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
