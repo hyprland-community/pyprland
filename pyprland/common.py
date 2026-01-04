@@ -13,7 +13,7 @@ import sys
 import termios
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from .types import MonitorInfo, VersionInfo
 
@@ -305,11 +305,11 @@ class Configuration(dict):
 
     def get_int(self, name: str, default: int = 0) -> int:
         """Get an integer value."""
-        return self._get_converted(name, default, int)
+        return cast("int", self._get_converted(name, default, int))
 
     def get_float(self, name: str, default: float = 0.0) -> float:
         """Get a float value."""
-        return self._get_converted(name, default, float)
+        return cast("float", self._get_converted(name, default, float))
 
     def get_str(self, name: str, default: str = "") -> str:
         """Get a string value."""

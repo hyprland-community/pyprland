@@ -1,6 +1,7 @@
 """Not a real Plugin - provides some core features and some caching of commonly requested structures."""
 
 import json
+from typing import cast
 
 from ..common import state
 from ..types import VersionInfo
@@ -20,8 +21,9 @@ class Extension(Plugin):
         # "tag": "v0.40.0", (stable)
         version_str = ""
         auto_increment = False
+        version_info = {}
         try:
-            version_info: None | dict[str, str | bool | list] = await self.hyprctl_json("version")
+            version_info = await self.hyprctl_json("version")
             assert isinstance(version_info, dict)
         except json.JSONDecodeError:
             self.log.exception("Fail to parse hyprctl version")
@@ -34,7 +36,7 @@ class Extension(Plugin):
                 if len(version_str) < len(_tag):
                     auto_increment = True
             else:
-                version_str = version_info.get("version")
+                version_str = cast("str", version_info.get("version"))
 
         if version_str:
             try:

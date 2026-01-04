@@ -110,9 +110,15 @@ class Extension(Plugin):
 
     # Utils
 
-    async def get_clients(self, **_kwargs) -> list[ClientInfo]:  # pylint: disable=arguments-differ
+    async def get_clients(
+        self,
+        mapped: bool = True,
+        workspace: str | None = None,
+        workspace_bl: str | None = None,
+    ) -> list[ClientInfo]:
         """Return the client list in the currently active workspace."""
-        clients = await super().get_clients(mapped=True, workspace=state.active_workspace)
+        _ = workspace
+        clients = await super().get_clients(mapped=mapped, workspace=state.active_workspace, workspace_bl=workspace_bl)
         clients.sort(key=lambda c: c["address"])
         return clients
 

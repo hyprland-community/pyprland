@@ -34,7 +34,7 @@ except ImportError:
         ) -> None:
             self.file.close()
 
-    @contextlib.asynccontextmanager
+    @contextlib.asynccontextmanager  # type: ignore[no-redef]
     async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
         """Async > sync wrapper."""
         with open(*args, **kwargs) as f:  # noqa: ASYNC230
@@ -44,6 +44,6 @@ except ImportError:
         """Async > sync wrapper."""
         return os.path.exists(*args, **kwargs)
 
-    async def ailistdir(*args, **kwargs) -> list[str]:
+    async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef]
         """Async > sync wrapper."""
         return os.listdir(*args, **kwargs)

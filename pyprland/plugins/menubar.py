@@ -67,7 +67,10 @@ class Extension(Plugin):
                         continue
 
                 await self.set_best_monitor()
-                cmd = apply_variables(self.config.get("command", "gBar bar [monitor]"), {"monitor": self.cur_monitor})
+                cmd = apply_variables(
+                    self.config.get("command", "gBar bar [monitor]"),
+                    {"monitor": self.cur_monitor if self.cur_monitor else ""},
+                )
                 start_time = time()
                 self.proc = await asyncio.create_subprocess_shell(cmd)
                 pid = self.proc.pid

@@ -284,7 +284,11 @@ class Extension(Plugin):
                     used_s = s_tert
                     used_off = 0.0
 
-            cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
+            cur_h = (
+                float(used_off[1:])
+                if isinstance(used_off, str) and used_off.startswith("=")
+                else (used_h + float(cast("float", used_off))) % 1.0
+            )
             cur_s = max(0.0, min(1.0, used_s * s_mult))
 
             # Handle source special case
@@ -292,13 +296,13 @@ class Extension(Plugin):
                 r_dark, g_dark, b_dark = colorsys.hls_to_rgb(hue, light, sat)
                 r_dark, g_dark, b_dark = int(r_dark * 255), int(g_dark * 255), int(b_dark * 255)
             else:
-                r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, float(l_dark))
+                r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, float(cast("str", l_dark)))
 
             if l_light == "source":
                 r_light, g_light, b_light = colorsys.hls_to_rgb(hue, light, sat)
                 r_light, g_light, b_light = int(r_light * 255), int(g_light * 255), int(b_light * 255)
             else:
-                r_light, g_light, b_light = get_variant_color(cur_h, cur_s, float(l_light))
+                r_light, g_light, b_light = get_variant_color(cur_h, cur_s, float(cast("str", l_light)))
 
             # Dark variants
             colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)

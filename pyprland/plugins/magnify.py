@@ -72,8 +72,8 @@ class Extension(Plugin):
         self.cur_factor = max(self.cur_factor, 1)
 
         if animated:
-            start = (2.0 ** (prev_factor - 1) if expo else prev_factor) * 10
-            end = (2.0 ** (self.cur_factor - 1) if expo else self.cur_factor) * 10
+            start = int((2.0 ** (prev_factor - 1) if expo else prev_factor) * 10)
+            end = int((2.0 ** (self.cur_factor - 1) if expo else self.cur_factor) * 10)
             for i in self.animated_eased_zoom(start, end, duration):
                 await self.hyprctl(f"{self.keyword} {i / 10:.4f}", "keyword")
                 await asyncio.sleep(1.0 / 60)
