@@ -6,7 +6,7 @@ import re
 def replace_links(match):
     """Substitution handler for regex, replaces backquote items with links when relevant."""
     text = match.group(1)
-    if os.path.exists(f"wiki/{text}.md"):
+    if os.path.exists(f"site/{text}.md"):
         return f"[{text}](https://hyprland-community.github.io/pyprland/{text})"
     return f"`{text}`"
 
