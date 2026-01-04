@@ -54,18 +54,18 @@ def get_parser():
     # Scratchpads
     subparsers.add_parser("attach", help="Attach the focused window to the last focused scratchpad")
     show = subparsers.add_parser("show", help="Show the given scratchpad")
-    show.add_argument("Scratchpad", help="scratchpad name")
+    show.add_argument("Scratchpad", help="scratchpad name", nargs="?")
     hide = subparsers.add_parser("hide", help="Hide the given scratchpad")
-    hide.add_argument("Scratchpad", help="scratchpad name")
+    hide.add_argument("Scratchpad", help="scratchpad name", nargs="?")
     toggle = subparsers.add_parser("toggle", help="Toggle the given scratchpad")
-    toggle.add_argument("Scratchpad", help="scratchpad name")
-    # gbar
-    gbar = subparsers.add_parser("gbar", help="Starts gBar on the first available monitor")
-    gbar.add_argument(
+    toggle.add_argument("Scratchpad", help="scratchpad name", nargs="?")
+    # bar
+    bar = subparsers.add_parser("bar", help="Starts gBar on the first available monitor")
+    bar.add_argument(
         "command",
         help="Starts gBar on the first available monitor",
         nargs="?",
-        choices=["restart"],
+        choices=["restart", "stop"],
     )
     # shortcuts_menu
     menu = subparsers.add_parser("menu", help="Shows the menu")
@@ -75,28 +75,29 @@ def get_parser():
         "toggle_special",
         help="Toggle switching the focused window to the special workspace",
     )
-    toggle_special.add_argument("name", help="special workspace name")
+    toggle_special.add_argument("name", help="special workspace name", nargs="?")
     # layout_center
     layout_center = subparsers.add_parser("layout_center", help="Change the active window")
-    layout_center.add_argument("command", help="Change the active window", choices=["toggle", "next", "prev"])
+    layout_center.add_argument("command", help="Change the active window", choices=["toggle", "next", "prev", "next2", "prev2"])
     # lost_windows
     subparsers.add_parser("attract_lost", help="Brings lost floating windows to the current workspace")
     # shift_monitors
     shift_monitors = subparsers.add_parser("shift_monitors", help="Swaps monitors' workspaces in the given direction")
-    shift_monitors.add_argument("direction", help="Swaps monitors' workspaces in the given direction")
+    shift_monitors.add_argument("direction", help="Swaps monitors' workspaces in the given direction", choices=["+1", "-1"])
     # toggle_dpms
     subparsers.add_parser("toggle_dpms", help="Toggles dpms on/off for every monitor")
     # magnify
     zoom = subparsers.add_parser("zoom", help="Zoom to the given factor")
-    zoom.add_argument("factor", help="Zoom to the given factor", nargs="?")
+    zoom.add_argument("factor", help="Zoom to the given factor", nargs="?", choices=["+1", "-1", "++0.5", "--0.5", "1"])
     # Expose
     subparsers.add_parser("expose", help="Expose every client on the active workspace")
     # workspaces_follow_focus
     change_workspace = subparsers.add_parser("change_workspace", help="Switch workspaces of current monitor")
-    change_workspace.add_argument("direction", help="direction to switch workspaces", choices=["-1", "+1"])
+    change_workspace.add_argument("direction", help="direction to switch workspaces", choices=["-1", "+1"], nargs="?")
     # wallpapers
     wall = subparsers.add_parser("wall", help="Skip the current background image")
-    wall.add_argument("action", help="Skip the current background image", choices=["next", "clear"])
+    wall.add_argument("action", help="Skip the current background image", choices=["next", "clear", "pause", "color"])
+    wall.add_argument("param", help="Optional parameter (e.g. color hex)", nargs="?")
     # fetch_client_menu
     subparsers.add_parser(
         "fetch_client_menu",

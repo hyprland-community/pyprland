@@ -2,19 +2,94 @@
 
 _shtab_pypr_subparsers=('dumpjson' 'edit' 'exit' 'help' 'version' 'reload' 'attach' 'show' 'hide' 'toggle' 'bar' 'menu' 'toggle_special' 'layout_center' 'attract_lost' 'shift_monitors' 'toggle_dpms' 'zoom' 'expose' 'change_workspace' 'wall' 'fetch_client_menu' 'unfetch_client' 'relayout')
 
-_shtab_pypr_option_strings=('--debug' '--config')
+_shtab_pypr_option_strings=('--debug' '--config' '--print-completion')
+_shtab_pypr_dumpjson_option_strings=('-h' '--help')
+_shtab_pypr_edit_option_strings=('-h' '--help')
+_shtab_pypr_exit_option_strings=('-h' '--help')
+_shtab_pypr_help_option_strings=('-h' '--help')
+_shtab_pypr_version_option_strings=('-h' '--help')
+_shtab_pypr_reload_option_strings=('-h' '--help')
+_shtab_pypr_attach_option_strings=('-h' '--help')
+_shtab_pypr_show_option_strings=('-h' '--help')
+_shtab_pypr_hide_option_strings=('-h' '--help')
+_shtab_pypr_toggle_option_strings=('-h' '--help')
+_shtab_pypr_bar_option_strings=('-h' '--help')
+_shtab_pypr_menu_option_strings=('-h' '--help')
+_shtab_pypr_toggle_special_option_strings=('-h' '--help')
+_shtab_pypr_layout_center_option_strings=('-h' '--help')
+_shtab_pypr_attract_lost_option_strings=('-h' '--help')
+_shtab_pypr_shift_monitors_option_strings=('-h' '--help')
+_shtab_pypr_toggle_dpms_option_strings=('-h' '--help')
+_shtab_pypr_zoom_option_strings=('-h' '--help')
+_shtab_pypr_expose_option_strings=('-h' '--help')
+_shtab_pypr_change_workspace_option_strings=('-h' '--help')
+_shtab_pypr_wall_option_strings=('-h' '--help')
+_shtab_pypr_fetch_client_menu_option_strings=('-h' '--help')
+_shtab_pypr_unfetch_client_option_strings=('-h' '--help')
+_shtab_pypr_relayout_option_strings=('-h' '--help')
 
 _shtab_pypr___debug_COMPGEN=_shtab_compgen_files
 _shtab_pypr___config_COMPGEN=_shtab_greeter_compgen_TOMLFiles
 
 _shtab_pypr_pos_0_choices=('dumpjson' 'edit' 'exit' 'help' 'version' 'reload' 'attach' 'show' 'hide' 'toggle' 'bar' 'menu' 'toggle_special' 'layout_center' 'attract_lost' 'shift_monitors' 'toggle_dpms' 'zoom' 'expose' 'change_workspace' 'wall' 'fetch_client_menu' 'unfetch_client' 'relayout')
 _shtab_pypr___print_completion_choices=('bash' 'zsh' 'tcsh')
-_shtab_pypr_bar_pos_0_choices=('restart')
-_shtab_pypr_layout_center_pos_0_choices=('toggle' 'next' 'prev')
+_shtab_pypr_bar_pos_0_choices=('restart' 'stop')
+_shtab_pypr_layout_center_pos_0_choices=('toggle' 'next' 'prev' 'next2' 'prev2')
+_shtab_pypr_shift_monitors_pos_0_choices=('+1' '-1')
+_shtab_pypr_zoom_pos_0_choices=('+1' '-1' '++0.5' '--0.5' '1')
 _shtab_pypr_change_workspace_pos_0_choices=('-1' '+1')
-_shtab_pypr_wall_pos_0_choices=('next' 'clear' 'pause')
+_shtab_pypr_wall_pos_0_choices=('next' 'clear' 'pause' 'color')
 
 _shtab_pypr_pos_0_nargs=A...
+_shtab_pypr_dumpjson__h_nargs=0
+_shtab_pypr_dumpjson___help_nargs=0
+_shtab_pypr_edit__h_nargs=0
+_shtab_pypr_edit___help_nargs=0
+_shtab_pypr_exit__h_nargs=0
+_shtab_pypr_exit___help_nargs=0
+_shtab_pypr_help__h_nargs=0
+_shtab_pypr_help___help_nargs=0
+_shtab_pypr_version__h_nargs=0
+_shtab_pypr_version___help_nargs=0
+_shtab_pypr_reload__h_nargs=0
+_shtab_pypr_reload___help_nargs=0
+_shtab_pypr_attach__h_nargs=0
+_shtab_pypr_attach___help_nargs=0
+_shtab_pypr_show__h_nargs=0
+_shtab_pypr_show___help_nargs=0
+_shtab_pypr_hide__h_nargs=0
+_shtab_pypr_hide___help_nargs=0
+_shtab_pypr_toggle__h_nargs=0
+_shtab_pypr_toggle___help_nargs=0
+_shtab_pypr_bar__h_nargs=0
+_shtab_pypr_bar___help_nargs=0
+_shtab_pypr_menu__h_nargs=0
+_shtab_pypr_menu___help_nargs=0
+_shtab_pypr_toggle_special__h_nargs=0
+_shtab_pypr_toggle_special___help_nargs=0
+_shtab_pypr_layout_center__h_nargs=0
+_shtab_pypr_layout_center___help_nargs=0
+_shtab_pypr_attract_lost__h_nargs=0
+_shtab_pypr_attract_lost___help_nargs=0
+_shtab_pypr_shift_monitors__h_nargs=0
+_shtab_pypr_shift_monitors___help_nargs=0
+_shtab_pypr_toggle_dpms__h_nargs=0
+_shtab_pypr_toggle_dpms___help_nargs=0
+_shtab_pypr_zoom__h_nargs=0
+_shtab_pypr_zoom___help_nargs=0
+_shtab_pypr_expose__h_nargs=0
+_shtab_pypr_expose___help_nargs=0
+_shtab_pypr_change_workspace__h_nargs=0
+_shtab_pypr_change_workspace___help_nargs=0
+_shtab_pypr_wall__h_nargs=0
+_shtab_pypr_wall___help_nargs=0
+_shtab_pypr_fetch_client_menu__h_nargs=0
+_shtab_pypr_fetch_client_menu___help_nargs=0
+_shtab_pypr_unfetch_client__h_nargs=0
+_shtab_pypr_unfetch_client___help_nargs=0
+_shtab_pypr_relayout__h_nargs=0
+_shtab_pypr_relayout___help_nargs=0
+
 
 # $1=COMP_WORDS[1]
 _shtab_compgen_files() {
@@ -77,6 +152,7 @@ _set_new_action() {
 #     ${!x} -> ${hello} -> "world"
 _shtab_pypr() {
     local completing_word="${COMP_WORDS[COMP_CWORD]}"
+    local previous_word="${COMP_WORDS[COMP_CWORD-1]}"
     local completed_positional_actions
     local current_action
     local current_action_args_start_index
@@ -115,6 +191,7 @@ _shtab_pypr() {
 
             if [[ "$current_action_nargs" != "*" ]] && \
                 [[ "$current_action_nargs" != "+" ]] && \
+                [[ "$current_action_nargs" != "?" ]] && \
                 [[ "$current_action_nargs" != *"..." ]] && \
                 (( $word_index + 1 - $current_action_args_start_index - $pos_only >= \
                     $current_action_nargs )); then
@@ -133,16 +210,20 @@ _shtab_pypr() {
     if [[ $pos_only = 0 && "${completing_word}" == -* ]]; then
         # optional argument started: use option strings
         COMPREPLY=( $(compgen -W "${current_option_strings[*]}" -- "${completing_word}") )
-    else
-        # use choices & compgen
-        local IFS=$'\n' # items may contain spaces, so delimit using newline
-        COMPREPLY=( $([ -n "${current_action_compgen}" ] \
-            && "${current_action_compgen}" "${completing_word}") )
-        unset IFS
-        COMPREPLY+=( $(compgen -W "${current_action_choices[*]}" -- "${completing_word}") )
-    fi
+        elif [[ "${previous_word}" == ">" || "${previous_word}" == ">>" ||
+          "${previous_word}" =~ ^[12]">" || "${previous_word}" =~ ^[12]">>" ]]; then
+    # handle redirection operators
+    COMPREPLY=( $(compgen -f -- "${completing_word}") )
+  else
+    # use choices & compgen
+    local IFS=$'\n' # items may contain spaces, so delimit using newline
+    COMPREPLY=( $([ -n "${current_action_compgen}" ] \
+                  && "${current_action_compgen}" "${completing_word}") )
+    unset IFS
+    COMPREPLY+=( $(compgen -W "${current_action_choices[*]}" -- "${completing_word}") )
+  fi
 
-    return 0
+  return 0
 }
 
 complete -o filenames -F _shtab_pypr pypr
