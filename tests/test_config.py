@@ -39,6 +39,9 @@ def test_get_bool():
     assert conf.get_bool("f4") is False
     assert conf.get_bool("f5") is False
 
+    # The new implementation defaults to False for unrecognized strings
+    assert conf.get_bool("invalid") is False
+
     assert conf.get_bool("missing", default=True) is True
     assert conf.get_bool("missing", default=False) is False
 
@@ -49,6 +52,14 @@ def test_get_int():
     assert conf.get_int("b") == 2
     assert conf.get_int("c", default=10) == 10
     assert conf.get_int("missing", default=5) == 5
+
+
+def test_get_float():
+    conf = Configuration({"a": 1.5, "b": "2.5", "c": "invalid"})
+    assert conf.get_float("a") == 1.5
+    assert conf.get_float("b") == 2.5
+    assert conf.get_float("c", default=10.0) == 10.0
+    assert conf.get_float("missing", default=5.5) == 5.5
 
 
 def test_get_str():

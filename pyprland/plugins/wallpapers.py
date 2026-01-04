@@ -28,6 +28,67 @@ from .wallpapers_utils import can_edit_image, get_dominant_colors, nicify_oklab
 HEX_LEN = 6
 HEX_LEN_HASH = 7
 
+# (hue_offset, saturation_mult, light_dark_mode, light_light_mode)
+MATERIAL_VARIATIONS = {
+    "source": (0.0, 1.0, "source", "source"),
+    "primary": (0.0, 1.0, 0.80, 0.40),
+    "on_primary": (0.0, 0.2, 0.20, 1.00),
+    "primary_container": (0.0, 1.0, 0.30, 0.90),
+    "on_primary_container": (0.0, 1.0, 0.90, 0.10),
+    "primary_fixed": (0.0, 1.0, 0.90, 0.90),
+    "primary_fixed_dim": (0.0, 1.0, 0.80, 0.80),
+    "on_primary_fixed": (0.0, 1.0, 0.10, 0.10),
+    "on_primary_fixed_variant": (0.0, 1.0, 0.30, 0.30),
+    "secondary": (-0.15, 0.8, 0.80, 0.40),
+    "on_secondary": (-0.15, 0.2, 0.20, 1.00),
+    "secondary_container": (-0.15, 0.8, 0.30, 0.90),
+    "on_secondary_container": (-0.15, 0.8, 0.90, 0.10),
+    "secondary_fixed": (0.5, 0.8, 0.90, 0.90),
+    "secondary_fixed_dim": (0.5, 0.8, 0.80, 0.80),
+    "on_secondary_fixed": (0.5, 0.8, 0.10, 0.10),
+    "on_secondary_fixed_variant": (0.5, 0.8, 0.30, 0.30),
+    "tertiary": (0.15, 0.8, 0.80, 0.40),
+    "on_tertiary": (0.15, 0.2, 0.20, 1.00),
+    "tertiary_container": (0.15, 0.8, 0.30, 0.90),
+    "on_tertiary_container": (0.15, 0.8, 0.90, 0.10),
+    "tertiary_fixed": (0.25, 0.8, 0.90, 0.90),
+    "tertiary_fixed_dim": (0.25, 0.8, 0.80, 0.80),
+    "on_tertiary_fixed": (0.25, 0.8, 0.10, 0.10),
+    "on_tertiary_fixed_variant": (0.25, 0.8, 0.30, 0.30),
+    "error": ("=0.0", 1.0, 0.80, 0.40),
+    "on_error": ("=0.0", 1.0, 0.20, 1.00),
+    "error_container": ("=0.0", 1.0, 0.30, 0.90),
+    "on_error_container": ("=0.0", 1.0, 0.90, 0.10),
+    "surface": (0.0, 0.1, 0.10, 0.98),
+    "surface_bright": (0.0, 0.1, 0.12, 0.96),
+    "surface_dim": (0.0, 0.1, 0.06, 0.87),
+    "surface_container_lowest": (0.0, 0.1, 0.04, 1.00),
+    "surface_container_low": (0.0, 0.1, 0.10, 0.96),
+    "surface_container": (0.0, 0.1, 0.12, 0.94),
+    "surface_container_high": (0.0, 0.1, 0.17, 0.92),
+    "surface_container_highest": (0.0, 0.1, 0.22, 0.90),
+    "on_surface": (0.0, 0.1, 0.90, 0.10),
+    "surface_variant": (0.0, 0.1, 0.30, 0.90),
+    "on_surface_variant": (0.0, 0.1, 0.80, 0.30),
+    "background": (0.0, 0.1, 0.05, 0.99),
+    "on_background": (0.0, 0.1, 0.90, 0.10),
+    "outline": (0.0, 0.1, 0.60, 0.50),
+    "outline_variant": (0.0, 0.1, 0.30, 0.80),
+    "inverse_primary": (0.0, 1.0, 0.40, 0.80),
+    "inverse_surface": (0.0, 0.1, 0.90, 0.20),
+    "inverse_on_surface": (0.0, 0.1, 0.20, 0.95),
+    "surface_tint": (0.0, 1.0, 0.80, 0.40),
+    "scrim": (0.0, 0.0, 0.0, 0.0),
+    "shadow": (0.0, 0.0, 0.0, 0.0),
+    "white": (0.0, 0.0, 0.99, 0.99),
+    "red": ("=0.0", 1.0, 0.80, 0.40),
+    "green": ("=0.333", 1.0, 0.80, 0.40),
+    "yellow": ("=0.166", 1.0, 0.80, 0.40),
+    "blue": ("=0.666", 1.0, 0.80, 0.40),
+    "magenta": ("=0.833", 1.0, 0.80, 0.40),
+    "cyan": ("=0.5", 1.0, 0.80, 0.40),
+}
+
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
     """Fetch monitor information from hyprctl."""
@@ -190,7 +251,7 @@ class Extension(Plugin):
             }
         return oklab_args
 
-    def _generate_palette(
+    def _generate_palette(  # noqa: PLR0915
         self,
         rgb_list: list[tuple[int, int, int]],
         process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]],
@@ -208,68 +269,7 @@ class Extension(Plugin):
 
         colors = {"scheme": theme}
 
-        # (hue_offset, saturation_mult, light_dark_mode, light_light_mode)
-        variations = {
-            "source": (0.0, 1.0, light, light),
-            "primary": (0.0, 1.0, 0.80, 0.40),
-            "on_primary": (0.0, 0.2, 0.20, 1.00),
-            "primary_container": (0.0, 1.0, 0.30, 0.90),
-            "on_primary_container": (0.0, 1.0, 0.90, 0.10),
-            "primary_fixed": (0.0, 1.0, 0.90, 0.90),
-            "primary_fixed_dim": (0.0, 1.0, 0.80, 0.80),
-            "on_primary_fixed": (0.0, 1.0, 0.10, 0.10),
-            "on_primary_fixed_variant": (0.0, 1.0, 0.30, 0.30),
-            "secondary": (-0.15, 0.8, 0.80, 0.40),
-            "on_secondary": (-0.15, 0.2, 0.20, 1.00),
-            "secondary_container": (-0.15, 0.8, 0.30, 0.90),
-            "on_secondary_container": (-0.15, 0.8, 0.90, 0.10),
-            "secondary_fixed": (0.5, 0.8, 0.90, 0.90),
-            "secondary_fixed_dim": (0.5, 0.8, 0.80, 0.80),
-            "on_secondary_fixed": (0.5, 0.8, 0.10, 0.10),
-            "on_secondary_fixed_variant": (0.5, 0.8, 0.30, 0.30),
-            "tertiary": (0.15, 0.8, 0.80, 0.40),
-            "on_tertiary": (0.15, 0.2, 0.20, 1.00),
-            "tertiary_container": (0.15, 0.8, 0.30, 0.90),
-            "on_tertiary_container": (0.15, 0.8, 0.90, 0.10),
-            "tertiary_fixed": (0.25, 0.8, 0.90, 0.90),
-            "tertiary_fixed_dim": (0.25, 0.8, 0.80, 0.80),
-            "on_tertiary_fixed": (0.25, 0.8, 0.10, 0.10),
-            "on_tertiary_fixed_variant": (0.25, 0.8, 0.30, 0.30),
-            "error": ("=0.0", 1.0, 0.80, 0.40),
-            "on_error": ("=0.0", 1.0, 0.20, 1.00),
-            "error_container": ("=0.0", 1.0, 0.30, 0.90),
-            "on_error_container": ("=0.0", 1.0, 0.90, 0.10),
-            "surface": (0.0, 0.1, 0.10, 0.98),
-            "surface_bright": (0.0, 0.1, 0.12, 0.96),
-            "surface_dim": (0.0, 0.1, 0.06, 0.87),
-            "surface_container_lowest": (0.0, 0.1, 0.04, 1.00),
-            "surface_container_low": (0.0, 0.1, 0.10, 0.96),
-            "surface_container": (0.0, 0.1, 0.12, 0.94),
-            "surface_container_high": (0.0, 0.1, 0.17, 0.92),
-            "surface_container_highest": (0.0, 0.1, 0.22, 0.90),
-            "on_surface": (0.0, 0.1, 0.90, 0.10),
-            "surface_variant": (0.0, 0.1, 0.30, 0.90),
-            "on_surface_variant": (0.0, 0.1, 0.80, 0.30),
-            "background": (0.0, 0.1, 0.05, 0.99),
-            "on_background": (0.0, 0.1, 0.90, 0.10),
-            "outline": (0.0, 0.1, 0.60, 0.50),
-            "outline_variant": (0.0, 0.1, 0.30, 0.80),
-            "inverse_primary": (0.0, 1.0, 0.40, 0.80),
-            "inverse_surface": (0.0, 0.1, 0.90, 0.20),
-            "inverse_on_surface": (0.0, 0.1, 0.20, 0.95),
-            "surface_tint": (0.0, 1.0, 0.80, 0.40),
-            "scrim": (0.0, 0.0, 0.0, 0.0),
-            "shadow": (0.0, 0.0, 0.0, 0.0),
-            "white": (0.0, 0.0, 0.99, 0.99),
-            "red": ("=0.0", 1.0, 0.80, 0.40),
-            "green": ("=0.333", 1.0, 0.80, 0.40),
-            "yellow": ("=0.166", 1.0, 0.80, 0.40),
-            "blue": ("=0.666", 1.0, 0.80, 0.40),
-            "magenta": ("=0.833", 1.0, 0.80, 0.40),
-            "cyan": ("=0.5", 1.0, 0.80, 0.40),
-        }
-
-        for name, (h_off, s_mult, l_dark, l_light) in variations.items():
+        for name, (h_off, s_mult, l_dark, l_light) in MATERIAL_VARIATIONS.items():
             used_h = hue
             used_s = sat
             used_off = h_off
@@ -287,8 +287,18 @@ class Extension(Plugin):
             cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
             cur_s = max(0.0, min(1.0, used_s * s_mult))
 
-            r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, l_dark)
-            r_light, g_light, b_light = get_variant_color(cur_h, cur_s, l_light)
+            # Handle source special case
+            if l_dark == "source":
+                r_dark, g_dark, b_dark = colorsys.hls_to_rgb(hue, light, sat)
+                r_dark, g_dark, b_dark = int(r_dark * 255), int(g_dark * 255), int(b_dark * 255)
+            else:
+                r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, float(l_dark))
+
+            if l_light == "source":
+                r_light, g_light, b_light = colorsys.hls_to_rgb(hue, light, sat)
+                r_light, g_light, b_light = int(r_light * 255), int(g_light * 255), int(b_light * 255)
+            else:
+                r_light, g_light, b_light = get_variant_color(cur_h, cur_s, float(l_light))
 
             # Dark variants
             colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)

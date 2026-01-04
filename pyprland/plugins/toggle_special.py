@@ -11,7 +11,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_toggle_special(self, special_workspace: str = "minimized") -> None:
         """[name] Toggles switching the focused window to the special workspace "name" (default: minimized)."""
-        aw = cast(dict, await self.hyprctl_json("activewindow"))
+        aw = cast("dict", await self.hyprctl_json("activewindow"))
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)
         if wid < 1:  # special workspace

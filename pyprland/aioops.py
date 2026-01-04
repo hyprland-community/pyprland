@@ -4,6 +4,8 @@ __all__ = ["aiopen", "aiexists", "ailistdir"]
 
 import contextlib
 import io
+from collections.abc import AsyncIterator
+from types import TracebackType
 
 try:
     import aiofiles.os
@@ -24,12 +26,19 @@ except ImportError:
         async def __aenter__(self):
             return self
 
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ) -> None:
             self.file.close()
 
     @contextlib.asynccontextmanager
-    async def aiopen(*args, **kwargs) -> AsyncFile:
-        yield AsyncFile(open(*args, **kwargs))
+    async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
+        """Async > sync wrapper."""
+        with open(*args, **kwargs) as f:  # noqa: ASYNC230
+            yield AsyncFile(f)
 
     async def aiexists(*args, **kwargs) -> bool:
         """Async > sync wrapper."""

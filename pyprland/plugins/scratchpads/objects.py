@@ -21,7 +21,12 @@ if TYPE_CHECKING:
     class ClientPropGetter(Protocol):
         """type for the get_client_props function."""
 
-        async def __call__(self, match_fn: Callable = ..., clients: list[ClientInfo] | None = None, **kw: Any) -> ClientInfo | None:
+        async def __call__(
+            self,
+            match_fn: Callable = ...,
+            clients: list[ClientInfo] | None = None,
+            **kw: Any,  # noqa: ANN401
+        ) -> ClientInfo | None:
             pass
 
 

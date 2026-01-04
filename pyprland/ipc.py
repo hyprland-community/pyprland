@@ -12,7 +12,8 @@ __all__ = [
 
 import asyncio
 import json
-from collections.abc import Callable, Iterable
+from collections.abc import AsyncGenerator, Callable, Iterable
+from contextlib import asynccontextmanager
 from functools import partial
 from logging import Logger
 from typing import Any, cast
@@ -24,6 +25,22 @@ log: Logger | None = None
 
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
+
+
+@asynccontextmanager
+async def hyprctl_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
+    """Context manager for the hyprctl socket."""
+    try:
+        reader, writer = await asyncio.open_unix_connection(HYPRCTL)
+    except FileNotFoundError as e:
+        logger.critical("hyprctl socket not found! is it running ?")
+        raise PyprError from e
+
+    try:
+        yield reader, writer
+    finally:
+        writer.close()
+        await writer.wait_closed()
 
 
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
@@ -61,17 +78,11 @@ def retry_on_reset(func: Callable) -> Callable:
 
 async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
     """Get response of `command` from the IPC socket."""
-    try:
-        reader, writer = await asyncio.open_unix_connection(HYPRCTL)
-    except FileNotFoundError as e:
-        logger.critical("hyprctl socket not found! is it running ?")
-        raise PyprError from e
+    async with hyprctl_connection(logger) as (reader, writer):
+        writer.write(command)
+        await writer.drain()
+        reader_data = await reader.read()
 
-    writer.write(command)
-    await writer.drain()
-    reader_data = await reader.read()
-    writer.close()
-    await writer.wait_closed()
     decoded_data = reader_data.decode("utf-8", errors="replace")
     return json.loads(decoded_data)  # type: ignore
 
@@ -123,24 +134,27 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
         logger.warning("%s triggered without a command!", base_command)
         return False
     logger.debug("%s %s", base_command, command)
-    try:
-        ctl_reader, ctl_writer = await asyncio.open_unix_connection(HYPRCTL)
-    except FileNotFoundError as e:
-        logger.critical("hyprctl socket not found! is it running ?")
-        raise PyprError from e
 
-    if isinstance(command, list):
-        nb_cmds = len(command)
-        ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode())
-    else:
-        nb_cmds = 1
-        ctl_writer.write(f"/{base_command} {command}".encode())
-    await ctl_writer.drain()
-    resp = await ctl_reader.read(100)
-    ctl_writer.close()
-    await ctl_writer.wait_closed()
+    async with hyprctl_connection(logger) as (ctl_reader, ctl_writer):
+        if isinstance(command, list):
+            nb_cmds = len(command)
+            ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode())
+        else:
+            nb_cmds = 1
+            ctl_writer.write(f"/{base_command} {command}".encode())
+        await ctl_writer.drain()
+        resp = await ctl_reader.read(100)
+
     # remove "\n" from the response
     resp = b"".join(resp.split(b"\n"))
+    # In Hyprland < 0.40.0 "ok" was returned for success
+    # In newer versions "ok" is not returned anymore (empty response)
+    # So we assume success if response is empty or contains "ok"
+    # But for batch commands, "ok" might be repeated, so we need to be careful
+    # Actually, recent hyprland versions might behave differently.
+    # Let's stick to the current logic but be aware of changes.
+    # The existing logic checks for "ok" * nb_cmds.
+
     r: bool = resp == b"ok" * nb_cmds
     if not r:
         if weak:

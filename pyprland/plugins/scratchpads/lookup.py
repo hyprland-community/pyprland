@@ -79,7 +79,7 @@ class ScratchDB:  # {{{
             self._by_addr[scratch.address] = scratch
         else:
             if name is not None:
-                d: dict[Any, Scratch] = cast(dict[str, Scratch], self._by_name)
+                d: dict[Any, Scratch] = cast("dict[str, Scratch]", self._by_name)
                 v = name
             elif pid is not None:
                 d = self._by_pid

@@ -1,19 +1,37 @@
 import pytest
 from pytest_asyncio import fixture
+from unittest.mock import AsyncMock
 
-from .conftest import mocks
-from .testtools import wait_called
+from pyprland.plugins.toggle_dpms import Extension
 
 
-@fixture
-async def dpms_config(monkeypatch):
-    d = {"pyprland": {"plugins": ["toggle_dpms"]}}
-    monkeypatch.setattr("tomllib.load", lambda x: d)
-    yield
+@pytest.fixture
+def extension():
+    ext = Extension("toggle_dpms")
+    ext.hyprctl = AsyncMock()
+    # Mocking monitor list
+    ext.hyprctl_json = AsyncMock(return_value=[{"name": "DP-1", "dpmsStatus": True}, {"name": "DP-2", "dpmsStatus": True}])
+    return ext
 
 
 @pytest.mark.asyncio
-async def test_dpms(dpms_config, server_fixture):
-    await mocks.pypr("toggle_dpms")
-    await wait_called(mocks.hyprctl)
-    assert mocks.hyprctl.call_args[0][0] == "dpms off"
+async def test_run_toggle_dpms_off(extension):
+    # Initial state: monitors are on (dpmsStatus: True)
+    await extension.run_toggle_dpms()
+    extension.hyprctl.assert_called_with("dpms off")
+
+
+@pytest.mark.asyncio
+async def test_run_toggle_dpms_on(extension):
+    # First call: monitors are ON, should turn OFF
+    await extension.run_toggle_dpms()
+    extension.hyprctl.assert_called_with("dpms off")
+
+    extension.hyprctl.reset_mock()
+
+    # Change state to OFF for the second call
+    extension.hyprctl_json.return_value = [{"name": "DP-1", "dpmsStatus": False}, {"name": "DP-2", "dpmsStatus": False}]
+
+    # Second toggle should turn it on
+    await extension.run_toggle_dpms()
+    extension.hyprctl.assert_called_with("dpms on")

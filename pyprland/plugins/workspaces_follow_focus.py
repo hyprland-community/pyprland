@@ -19,9 +19,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = {
-            mon["activeWorkspace"]["name"] for mon in cast(list[dict], await self.hyprctl_json("monitors")) if mon["name"] != monitor_id
+            mon["activeWorkspace"]["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors")) if mon["name"] != monitor_id
         }
-        workspaces = [w["name"] for w in cast(list[dict], await self.hyprctl_json("workspaces")) if w["id"] > 0]
+        workspaces = [w["name"] for w in cast("list[dict]", await self.hyprctl_json("workspaces")) if w["id"] > 0]
 
         batch: list[str] = []
         for n in workspaces:

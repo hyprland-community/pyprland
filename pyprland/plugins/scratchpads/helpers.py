@@ -115,8 +115,7 @@ class DynMonitorConfig:
         value = self.get(name)
         if isinstance(value, str):
             lv = value.lower().strip()
-            r = lv not in {"false", "no", "off", "0"}
-            return r
+            return lv not in {"false", "no", "off", "0"}
         if value is None:
             return default
         return bool(value)

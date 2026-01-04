@@ -110,7 +110,7 @@ class Extension(Plugin):
 
     # Utils
 
-    async def get_clients(self, *_) -> list[ClientInfo]:  # pylint: disable=arguments-differ
+    async def get_clients(self, **_kwargs) -> list[ClientInfo]:  # pylint: disable=arguments-differ
         """Return the client list in the currently active workspace."""
         clients = await super().get_clients(mapped=True, workspace=state.active_workspace)
         clients.sort(key=lambda c: c["address"])
@@ -139,12 +139,23 @@ class Extension(Plugin):
                 if self.config.get("style"):
                     await self.hyprctl(f"tagwindow +layout_center address:{addr}")
                 break
+
+        x, y, width, height = await self._calculate_centered_geometry(self.margin, self.offset)
+
+        await self.hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
+        await self.hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
+
+    async def _calculate_centered_geometry(
+        self, margin_conf: int | tuple[int, int], offset_conf: tuple[int, int]
+    ) -> tuple[int, int, int, int]:
+        """Calculate the geometry (x, y, width, height) for the centered window."""
         width = 100
         height = 100
-        x, y = self.offset
-        m = self.margin
-        margin: tuple[int, int] = (m, m) if isinstance(m, int) else m
-        scale = 1
+        x, y = offset_conf
+
+        margin: tuple[int, int] = (margin_conf, margin_conf) if isinstance(margin_conf, int) else margin_conf
+        scale = 1.0
+
         for monitor in cast("list[dict[str, Any]]", await self.hyprctl_json("monitors")):
             scale = monitor["scale"]
             if monitor["focused"]:
@@ -155,8 +166,8 @@ class Extension(Plugin):
                 x += monitor["x"] + (margin[0] / scale)
                 y += monitor["y"] + (margin[1] / scale)
                 break
-        await self.hyprctl(f"resizewindowpixel exact {int(width / scale)} {int(height / scale)},address:{addr}")
-        await self.hyprctl(f"movewindowpixel exact {int(x)} {int(y)},address:{addr}")
+
+        return int(x), int(y), int(width / scale), int(height / scale)
 
     # Subcommands
 
@@ -180,11 +191,10 @@ class Extension(Plugin):
                     idx = addresses.index(self.main_window_addr)
                 except ValueError:
                     idx = self.last_index
-                index = idx + direction
-                if index < 0:
-                    index = len(clients) - 1
-                elif index >= len(clients):
-                    index = 0
+
+                # Use modulo arithmetic for cyclic focus
+                index = (idx + direction) % len(clients)
+
                 new_client = clients[index]
                 await self.unprepare_window(clients)
                 self.main_window_addr = new_client["address"]

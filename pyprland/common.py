@@ -1,5 +1,6 @@
 """Shared utilities: logging."""
 
+import contextlib
 import fcntl
 import logging
 import os
@@ -10,6 +11,7 @@ import struct
 import subprocess
 import sys
 import termios
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -43,21 +45,27 @@ try:
     # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
     original_ipc_folder = (
         f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
-        if os.path.exists(f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}")
+        if os.path.exists(f"{os.environ.get('XDG_RUNTIME_DIR', '')}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}")
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
     if len(original_ipc_folder) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
         IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
-        # make a link from short path to original path
-        if not os.path.exists(IPC_FOLDER):
-            os.symlink(original_ipc_folder, IPC_FOLDER)
     else:
         IPC_FOLDER = original_ipc_folder
+
+    def init_ipc_folder() -> None:
+        """Initialize the IPC folder."""
+        if original_ipc_folder != IPC_FOLDER and not os.path.exists(IPC_FOLDER):
+            with contextlib.suppress(OSError):
+                os.symlink(original_ipc_folder, IPC_FOLDER)
 
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
     IPC_FOLDER = "/"
+
+    def init_ipc_folder() -> None:
+        pass
 
 
 def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:
@@ -255,51 +263,53 @@ def apply_filter(text: str, filt_cmd: str) -> str:
     if not filt_cmd:
         return text
     if filt_cmd[0] == "s":  # vi-like substitute
-        (_, base, replacement, opts) = filt_cmd.split(filt_cmd[1])
-        return re.sub(base, replacement, text, count=0 if "g" in opts else 1)
+        try:
+            sep = filt_cmd[1]
+            parts = filt_cmd.split(sep)
+            if len(parts) < 3:
+                return text
+            (_, base, replacement, opts) = parts[:4]
+            return re.sub(base, replacement, text, count=0 if "g" in opts else 1)
+        except (IndexError, ValueError):
+            return text
     return text
 
 
 class Configuration(dict):
     """Configuration wrapper providing typed access and section filtering."""
 
-    def __init__(self, *args, logger=None, **kwargs):
+    def __init__(self, *args, logger: logging.Logger | None = None, **kwargs):
         """Initialize the configuration object."""
         super().__init__(*args, **kwargs)
         self.log = logger or get_logger("config")
+
+    def _get_converted(self, name: str, default: Any, converter: type) -> Any:  # noqa: ANN401
+        """Get a value and convert it safely, using a shared helper."""
+        value = self.get(name)
+        if value is None:
+            return default
+        try:
+            return converter(value)
+        except (ValueError, TypeError):
+            self.log.warning("Invalid %s value for %s: %s", converter.__name__, name, value)
+            return default
 
     def get_bool(self, name: str, default: bool = False) -> bool:
         """Get a boolean value, handling loose typing."""
         value = self.get(name)
         if isinstance(value, str):
-            lv = value.lower().strip()
-            r = lv not in {"false", "no", "off", "0"}
-            return r
+            return value.lower().strip() in {"true", "yes", "on", "1"}
         if value is None:
             return default
         return bool(value)
 
     def get_int(self, name: str, default: int = 0) -> int:
         """Get an integer value."""
-        value = self.get(name)
-        if value is None:
-            return default
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            self.log.warning("Invalid integer value for %s: %s", name, value)
-            return default
+        return self._get_converted(name, default, int)
 
     def get_float(self, name: str, default: float = 0.0) -> float:
         """Get a float value."""
-        value = self.get(name)
-        if value is None:
-            return default
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            self.log.warning("Invalid float value for %s: %s", name, value)
-            return default
+        return self._get_converted(name, default, float)
 
     def get_str(self, name: str, default: str = "") -> str:
         """Get a string value."""
@@ -308,7 +318,7 @@ class Configuration(dict):
             return default
         return str(value)
 
-    def iter_subsections(self):
+    def iter_subsections(self) -> Iterator[tuple[str, dict[str, Any]]]:
         """Yield only keys that have dictionary values (e.g., defined scratchpads)."""
         for k, v in self.items():
             if isinstance(v, dict):

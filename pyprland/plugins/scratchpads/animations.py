@@ -25,7 +25,7 @@ class Placement:  # {{{
     @staticmethod
     def get(animation_type: str, monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
         """Get destination coordinate for the provided animation type."""
-        return cast(tuple[int, int], getattr(Placement, animation_type)(monitor, client, margin))
+        return cast("tuple[int, int]", getattr(Placement, animation_type)(monitor, client, margin))
 
     # animation types
     @staticmethod
