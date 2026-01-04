@@ -8,7 +8,7 @@ import os.path
 import random
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from ..aioops import aiexists, aiopen
 from ..common import apply_variables, prepare_for_quotes, state
@@ -364,7 +364,7 @@ class Extension(Plugin):
 
             value = replacements.get(key)
             if value is None:
-                return match.group(0)
+                return cast("str", match.group(0))
 
             if filter_name and filter_arg:
                 filter_arg = filter_arg.strip()

@@ -58,6 +58,7 @@ fixable = [
     "ALL",
 ]
 ignore = [
+    "A005",
     "ANN002",
     "ANN003",
     "ANN204",

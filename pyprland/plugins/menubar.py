@@ -3,7 +3,9 @@
 import asyncio
 import contextlib
 import os
+from collections.abc import Callable
 from time import time
+from typing import Any, cast
 
 from ..common import apply_variables, state
 from .interface import Plugin
@@ -18,11 +20,11 @@ def get_pid_from_layers(layers: dict) -> bool | int:
         for layer in layers[screen]["levels"].values():
             for instance in layer:
                 if instance["namespace"].startswith("bar-"):
-                    return instance["pid"] > 0 and instance["pid"]
+                    return instance["pid"] > 0 and cast("int", instance["pid"])
     return False
 
 
-async def is_bar_alive(pid: int, hyprctl_json: dict) -> int | bool:
+async def is_bar_alive(pid: int, hyprctl_json: Callable[..., Any]) -> int | bool:
     """Check if the bar is running."""
     is_running = os.path.exists(f"/proc/{pid}")
     if is_running:
@@ -78,7 +80,7 @@ class Extension(Plugin):
                 text = f"Menu Bar crashed, restarting in {delay}s." if delay > 0 else "Menu Bar crashed, restarting immediately."
                 self.log.warning(text)
                 if delay:
-                    await self.notify_warn(text)
+                    await self.notify_info(text)
                 await asyncio.sleep(delay or 0.1)
 
         self.ongoing_task = asyncio.create_task(_run_loop())

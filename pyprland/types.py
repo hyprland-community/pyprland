@@ -11,8 +11,8 @@ JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]]
 class RetensionTimes(float, Enum):
     """Cache retension times."""
 
-    SHORT: float = 0.005
-    LONG: float = 0.05
+    SHORT = 0.005
+    LONG = 0.05
 
 
 class WorkspaceDf(TypedDict):
