@@ -15,7 +15,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors"))]
 
     async def run_shift_monitors(self, arg: str) -> None:
-        """<+1/-1> Swaps monitors' workspaces in the given direction."""
+        """<direction> Swaps monitors' workspaces in the given direction."""
         if not self.monitors:
             return
 

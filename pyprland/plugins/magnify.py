@@ -46,6 +46,7 @@ class Extension(Plugin):
         """[factor] zooms to "factor" or toggles zoom level if factor is omitted.
 
         If factor is omitted, it toggles between the configured zoom level and no zoom.
+        Factor can be relative (e.g. +0.5 or -0.5).
         """
         duration = self.config.get("duration", 0)
         animated = bool(duration)

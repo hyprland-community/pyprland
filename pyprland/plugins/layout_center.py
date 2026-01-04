@@ -92,7 +92,7 @@ class Extension(Plugin):
     # Command
 
     async def run_layout_center(self, what: str) -> None:
-        """<toggle|next|prev> turn on/off or change the active window."""
+        """<toggle|next|prev|next2|prev2> turn on/off or change the active window."""
         fn = self.command_handlers.get(what)
         if fn:
             await fn()

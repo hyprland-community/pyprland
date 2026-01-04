@@ -174,6 +174,15 @@ class Pyprland:
 
         init_pyprland = "pyprland" not in self.plugins
 
+        current_plugins = set(self.plugins.keys())
+        new_plugins = set(["pyprland"] + self.config["pyprland"]["plugins"])
+        for name in current_plugins - new_plugins:
+            self.log.info("Unloading plugin %s", name)
+            plugin = self.plugins.pop(name)
+            await plugin.exit()
+            if name in self.queues:
+                await self.queues.pop(name).put(None)
+
         for name in ["pyprland"] + self.config["pyprland"]["plugins"]:
             if name not in self.plugins and not await self._load_single_plugin(name, init):
                 continue

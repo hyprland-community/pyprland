@@ -530,7 +530,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             await self.hyprctl(f"pin address:{focused}")
 
     async def run_toggle(self, uid_or_uids: str) -> None:
-        """<name> toggles visibility of scratchpad "name"."""
+        """<name> toggles visibility of scratchpad "name" (supports multiple names)."""
         uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
 
         for uid in uids:
@@ -631,7 +631,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         )
 
     async def run_show(self, uid: str) -> None:
-        """<name> shows scratchpad "name"."""
+        """<name> shows scratchpad "name" (accepts "*")."""
         if uid == "*":
             await asyncio.gather(*(self.run_show(s.uid) for s in self.scratches.values() if not s.visible))
             return
@@ -836,7 +836,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         return False
 
     async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: PLR0912, C901
-        """<name> hides scratchpad "name"."""
+        """<name> hides scratchpad "name" (accepts "*")."""
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))
             return

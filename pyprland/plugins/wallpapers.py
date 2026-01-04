@@ -540,7 +540,7 @@ class Extension(Plugin):
         self.proc[:] = []
 
     async def run_wall(self, arg: str) -> None:
-        """<next|clear> skip the current background image or stop displaying it."""
+        """<next|clear|pause|color> skip, stop, pause or change color of background."""
         if arg.startswith("n"):  # next
             self._paused = False
             self.next_background_event.set()

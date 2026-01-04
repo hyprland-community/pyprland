@@ -89,7 +89,7 @@ class Extension(Plugin):
         self.ongoing_task = asyncio.create_task(_run_loop())
 
     async def run_bar(self, args: str) -> None:
-        """Start gBar on the first available monitor."""
+        """<|restart|stop> Start (default), restart or stop gBar."""
         if args.startswith("re"):
             self.kill()
             await self.on_reload()

@@ -31,7 +31,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await self.hyprctl(batch)
 
     async def run_change_workspace(self, direction: str) -> None:
-        """<+1/-1> Switch workspaces of current monitor, avoiding displayed workspaces."""
+        """<direction> Switch workspaces of current monitor, avoiding displayed workspaces."""
         increment = int(direction)
         # get focused screen info
         monitors = await self.hyprctl_json("monitors")
