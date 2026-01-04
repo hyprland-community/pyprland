@@ -40,7 +40,7 @@ class MenuEngine:
     def is_available(cls) -> bool:
         """Check engine availability."""
         try:
-            subprocess.call([cls.proc_name, *cls.proc_detect_parameters])
+            subprocess.call([cls.proc_name, *cls.proc_detect_parameters], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except FileNotFoundError:
             return False
         return True
