@@ -30,6 +30,7 @@ release:
     ./scripts/make_release
 
 htmlcov:
+    tox run -e coverage
     {{pyenv}}/bin/coverage html
     xdg-open ./htmlcov/index.html
 
