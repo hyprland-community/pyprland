@@ -8,7 +8,15 @@ MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 
 
 def get_dims(mon: MonitorInfo, config: dict[str, Any] | None = None) -> tuple[int, int]:
-    """Return the dimensions of the monitor."""
+    """Return the dimensions of the monitor.
+
+    Args:
+        mon: The monitor information.
+        config: The monitor configuration.
+
+    Returns:
+        tuple[int, int]: The (width, height) of the monitor.
+    """
     if config is None:
         config = {}
     scale = config.get("scale", mon["scale"])
@@ -35,7 +43,16 @@ def get_dims(mon: MonitorInfo, config: dict[str, Any] | None = None) -> tuple[in
 
 
 def _place_left(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
-    """Place the monitor to the left of the reference."""
+    """Place the monitor to the left of the reference.
+
+    Args:
+        ref_rect: The (x, y, width, height) of the reference monitor.
+        mon_dim: The (width, height) of the monitor to place.
+        rule: The placement rule (e.g. "left", "left-center", "left-bottom").
+
+    Returns:
+        tuple[int, int]: The (x, y) coordinates for the new monitor.
+    """
     ref_x, ref_y, _ref_w, ref_h = ref_rect
     mon_w, mon_h = mon_dim
     x = ref_x - mon_w
@@ -48,7 +65,16 @@ def _place_left(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], r
 
 
 def _place_right(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
-    """Place the monitor to the right of the reference."""
+    """Place the monitor to the right of the reference.
+
+    Args:
+        ref_rect: The (x, y, width, height) of the reference monitor.
+        mon_dim: The (width, height) of the monitor to place.
+        rule: The placement rule (e.g. "right", "right-center", "right-bottom").
+
+    Returns:
+        tuple[int, int]: The (x, y) coordinates for the new monitor.
+    """
     ref_x, ref_y, ref_w, ref_h = ref_rect
     _mon_w, mon_h = mon_dim
     x = ref_x + ref_w
@@ -61,7 +87,16 @@ def _place_right(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], 
 
 
 def _place_top(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
-    """Place the monitor to the top of the reference."""
+    """Place the monitor to the top of the reference.
+
+    Args:
+        ref_rect: The (x, y, width, height) of the reference monitor.
+        mon_dim: The (width, height) of the monitor to place.
+        rule: The placement rule (e.g. "top", "top-center", "top-right").
+
+    Returns:
+        tuple[int, int]: The (x, y) coordinates for the new monitor.
+    """
     ref_x, ref_y, ref_w, _ref_h = ref_rect
     mon_w, mon_h = mon_dim
     y = ref_y - mon_h
@@ -74,7 +109,16 @@ def _place_top(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], ru
 
 
 def _place_bottom(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
-    """Place the monitor to the bottom of the reference."""
+    """Place the monitor to the bottom of the reference.
+
+    Args:
+        ref_rect: The (x, y, width, height) of the reference monitor.
+        mon_dim: The (width, height) of the monitor to place.
+        rule: The placement rule (e.g. "bottom", "bottom-center", "bottom-right").
+
+    Returns:
+        tuple[int, int]: The (x, y) coordinates for the new monitor.
+    """
     ref_x, ref_y, ref_w, ref_h = ref_rect
     mon_w, _mon_h = mon_dim
     y = ref_y + ref_h
