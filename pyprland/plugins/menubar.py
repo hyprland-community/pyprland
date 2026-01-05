@@ -133,6 +133,8 @@ class Extension(Plugin):
         if self.cur_monitor:
             preferred = self.config.get("monitors", [])
             cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999
+            if monitor not in preferred:
+                return
             new_idx = preferred.index(monitor)
             if 0 <= new_idx < cur_idx:
                 self.kill()
