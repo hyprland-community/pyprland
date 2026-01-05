@@ -14,7 +14,7 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from ...common import get_logger, is_rotated, state
+from ...common import SharedState, get_logger, is_rotated
 from ...types import MonitorInfo
 
 
@@ -43,7 +43,7 @@ def get_size(monitor: MonitorInfo) -> tuple[int, int]:
     return (w, h)
 
 
-def get_active_space_identifier() -> tuple[str, str]:
+def get_active_space_identifier(state: SharedState) -> tuple[str, str]:
     """Return a unique object for the workspace + monitor combination."""
     return (state.active_workspace, state.active_monitor)
 
@@ -76,10 +76,14 @@ class DynMonitorConfig:
     """A `dict`-like object allowing per-monitor overrides."""
 
     def __init__(
-        self, ref: dict[str, float | bool | list | str], monitor_override: dict[str, dict[str, float | bool | list | str]]
+        self,
+        ref: dict[str, float | bool | list | str],
+        monitor_override: dict[str, dict[str, float | bool | list | str]],
+        state: SharedState,
     ) -> None:
         self.ref = ref
         self.mon_override = monitor_override
+        self.state = state
         self.log = get_logger("dynconf")
 
     def __setitem__(self, name: str, value: float | bool | str | list) -> None:
@@ -90,7 +94,7 @@ class DynMonitorConfig:
         self.ref.update(other)
 
     def __getitem__(self, name: str) -> float | bool | str | list:
-        override = self.mon_override.get(state.active_monitor, {})
+        override = self.mon_override.get(self.state.active_monitor, {})
         if name in override:
             return override[name]
         return self.ref[name]

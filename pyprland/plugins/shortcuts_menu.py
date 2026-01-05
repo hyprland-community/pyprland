@@ -4,7 +4,7 @@ import asyncio
 from typing import cast
 
 from ..adapters.menus import MenuMixin
-from ..common import apply_filter, apply_variables, state
+from ..common import apply_filter, apply_variables
 from .interface import Plugin
 
 
@@ -35,7 +35,7 @@ class Extension(MenuMixin, Plugin):
             selection = name
             if isinstance(options, str):
                 self.log.info("running %s", options)
-                await self._run_command(options.strip(), state.variables)
+                await self._run_command(options.strip(), self.state.variables)
                 break
             if isinstance(options, list):
                 self.log.info("interpreting %s", options)
@@ -56,7 +56,7 @@ class Extension(MenuMixin, Plugin):
 
     async def _handle_chain(self, options: list[str | dict]) -> None:
         """Handle a chain of special objects + final command string."""
-        variables: dict[str, str] = state.variables.copy()
+        variables: dict[str, str] = self.state.variables.copy()
         autovalidate = self.config.get_bool("skip_single", True)
         for option in options:
             if isinstance(option, str):

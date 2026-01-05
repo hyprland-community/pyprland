@@ -7,7 +7,7 @@ from collections.abc import Callable
 from time import time
 from typing import Any, cast
 
-from ..common import apply_variables, state
+from ..common import apply_variables
 from .interface import Plugin
 
 COOLDOWN_TIME = 60
@@ -98,7 +98,7 @@ class Extension(Plugin):
         """Set the best monitor to use in `cur_monitor`."""
         self.cur_monitor = await self.get_best_monitor()
         if not self.cur_monitor:
-            self.cur_monitor = next(iter(state.monitors))
+            self.cur_monitor = next(iter(self.state.monitors))
             await self.notify_info(f"gBar: No preferred monitor found, using {self.cur_monitor}")
 
     async def get_best_monitor(self) -> str:

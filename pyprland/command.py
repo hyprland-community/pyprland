@@ -13,7 +13,7 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Self, cast
 
-from pyprland.common import IPC_FOLDER, get_logger, init_logger, merge, run_interactive_program
+from pyprland.common import IPC_FOLDER, SharedState, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
 from pyprland.plugins.interface import Plugin
@@ -28,9 +28,7 @@ TASK_TIMEOUT = 35.0
 
 PYPR_DEMO = os.environ.get("PYPR_DEMO")
 
-__all__: list[str] = []
-
-_dedup_last_call: dict[str, tuple[str, tuple[str, ...]]] = {}
+__all__: list[str] = ["Pyprland", "main", "run_client", "run_daemon"]
 
 
 def remove_duplicate(names: list[str]) -> Callable:
@@ -46,9 +44,9 @@ def remove_duplicate(names: list[str]) -> Callable:
             """Wrapper for the function."""
             if full_name in names:
                 key = (full_name, args)
-                if key == _dedup_last_call.get(full_name):
+                if key == self._dedup_last_call.get(full_name):  # pylint: disable=protected-access
                     return True
-                _dedup_last_call[full_name] = key
+                self._dedup_last_call[full_name] = key  # pylint: disable=protected-access
             return cast("bool", await func(self, full_name, *args, **kwargs))
 
         return _wrapper
@@ -56,7 +54,7 @@ def remove_duplicate(names: list[str]) -> Callable:
     return _remove_duplicates
 
 
-class Pyprland:
+class Pyprland:  # pylint: disable=too-many-instance-attributes
     """Main app object."""
 
     server: asyncio.Server
@@ -67,6 +65,8 @@ class Pyprland:
     tasks_group: None | asyncio.TaskGroup = None
     instance: Self | None = None
     log_handler: Callable[[Plugin, str, tuple], None]
+    _dedup_last_call: dict[str, tuple[str, tuple[str, ...]]]
+    state: SharedState
 
     @classmethod
     def _set_instance(cls, instance: Self) -> None:
@@ -80,6 +80,8 @@ class Pyprland:
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
         self.queues: dict[str, asyncio.Queue] = {}
+        self._dedup_last_call = {}
+        self.state = SharedState()
         self._set_instance(self)
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
@@ -149,6 +151,7 @@ class Pyprland:
             modname = f"pyprland.plugins.{name}"
         try:
             plug = importlib.import_module(modname).Extension(name)
+            plug.state = self.state
             if init:
                 await plug.init()
                 self.queues[name] = asyncio.Queue()

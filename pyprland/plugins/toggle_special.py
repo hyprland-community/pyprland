@@ -2,7 +2,6 @@
 
 from typing import cast
 
-from ..common import state
 from .interface import Plugin
 
 
@@ -18,7 +17,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             await self.hyprctl(
                 [
                     f"togglespecialworkspace {special_workspace}",
-                    f"movetoworkspacesilent {state.active_workspace},address:{aw['address']}",
+                    f"movetoworkspacesilent {self.state.active_workspace},address:{aw['address']}",
                     f"focuswindow address:{aw['address']}",
                 ]
             )

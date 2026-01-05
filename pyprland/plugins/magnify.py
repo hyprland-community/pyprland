@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Iterable
 
-from ..common import state
 from ..types import VersionInfo
 from .interface import Plugin
 
@@ -19,7 +18,7 @@ class Extension(Plugin):
 
     async def on_reload(self) -> None:
         """Initialization code."""
-        if state.hyprland_version < VersionInfo(0, 40, 1):
+        if self.state.hyprland_version < VersionInfo(0, 40, 1):
             self.keyword = "misc:cursor_zoom_factor"
         else:
             self.keyword = "cursor:zoom_factor"

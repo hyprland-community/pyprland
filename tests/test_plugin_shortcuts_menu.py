@@ -1,12 +1,13 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock
 from pyprland.plugins.shortcuts_menu import Extension
-from pyprland.common import Configuration
+from pyprland.common import Configuration, SharedState
 
 
 @pytest.fixture
 def extension():
     ext = Extension("shortcuts_menu")
+    ext.state = SharedState()
     ext.config = Configuration(
         {
             "entries": {

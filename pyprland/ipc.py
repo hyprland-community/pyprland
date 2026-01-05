@@ -116,11 +116,11 @@ def _format_command(command_list: list[str] | list[list[str]], default_base_comm
 
 
 @retry_on_reset
-async def hyprctl(command: str | list[str], base_command: str = "dispatch", logger: Logger | None = None, weak: bool = False) -> bool:
+async def hyprctl(args: str | list[str], base_command: str = "dispatch", logger: Logger | None = None, weak: bool = False) -> bool:
     """Run an IPC command. Returns success value.
 
     Args:
-        command: single command (str) or list of commands to send to Hyprland
+        args: single command (str) or list of commands to send to Hyprland
         base_command: type of command to send
         logger: logger to use in case of error
         weak: if True, only log a warning on failure
@@ -130,18 +130,18 @@ async def hyprctl(command: str | list[str], base_command: str = "dispatch", logg
     """
     logger = cast("Logger", logger or log)
 
-    if not command:
+    if not args:
         logger.warning("%s triggered without a command!", base_command)
         return False
-    logger.debug("%s %s", base_command, command)
+    logger.debug("%s %s", base_command, args)
 
     async with hyprctl_connection(logger) as (ctl_reader, ctl_writer):
-        if isinstance(command, list):
-            nb_cmds = len(command)
-            ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(command, base_command))}".encode())
+        if isinstance(args, list):
+            nb_cmds = len(args)
+            ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(args, base_command))}".encode())
         else:
             nb_cmds = 1
-            ctl_writer.write(f"/{base_command} {command}".encode())
+            ctl_writer.write(f"/{base_command} {args}".encode())
         await ctl_writer.drain()
         resp = await ctl_reader.read(100)
 

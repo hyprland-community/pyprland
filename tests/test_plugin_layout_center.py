@@ -1,20 +1,20 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, call, MagicMock
 from pyprland.plugins.layout_center import Extension
-from pyprland.common import state
+from pyprland.common import SharedState
 
 
 @pytest.fixture
 def extension():
-    state.active_workspace = "1"
-    state.active_window = "0x1"
-
     ext = Extension("layout_center")
+    ext.state = SharedState()
+    ext.state.active_workspace = "1"
+    ext.state.active_window = "0x1"
     ext.hyprctl = AsyncMock()
     ext.hyprctl_json = AsyncMock()
     ext.notify_error = AsyncMock()
     ext.workspace_info = {"1": {"enabled": True, "addr": "0x1"}}
-    ext.config = {"margin": 50, "offset": "10 20"}
+    ext.config.update({"margin": 50, "offset": "10 20"})
 
     # Mock get_clients via super() is tricky without inheritance setup,
     # but we can mock the method directly for tests that call it

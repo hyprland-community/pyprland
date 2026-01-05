@@ -1,14 +1,15 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 from pyprland.plugins.toggle_special import Extension
-from pyprland.common import state
+from pyprland.common import SharedState
 
 
 @pytest.fixture
 def extension():
-    state.active_workspace = "1"
-
     ext = Extension("toggle_special")
+    ext.state = SharedState()
+    ext.state.active_workspace = "1"
+
     ext.hyprctl = AsyncMock()
     ext.hyprctl_json = AsyncMock()
     return ext
@@ -35,7 +36,7 @@ async def test_run_toggle_special_restore(extension):
 
     expected_calls = [
         "togglespecialworkspace minimized",
-        f"movetoworkspacesilent {state.active_workspace},address:0x123",
+        f"movetoworkspacesilent {extension.state.active_workspace},address:0x123",
         "focuswindow address:0x123",
     ]
 

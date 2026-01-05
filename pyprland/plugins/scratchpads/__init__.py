@@ -8,7 +8,7 @@ from functools import partial
 from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
-from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated, state
+from ...common import MINIMUM_ADDR_LEN, SharedState, apply_variables, is_rotated
 from ...ipc import get_client_props, get_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
@@ -35,7 +35,8 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 class WindowRuleSet:
     """Windowrule set builder."""
 
-    def __init__(self) -> None:
+    def __init__(self, state: SharedState) -> None:
+        self.state = state
         self._params: list[tuple[str, str]] = []
         self._class = ""
         self._name = "PyprScratchR"
@@ -54,8 +55,8 @@ class WindowRuleSet:
 
     def _get_content(self) -> Iterable[str]:
         """Get the windowrule content."""
-        if state.hyprland_version > VersionInfo(0, 47, 2):
-            if state.hyprland_version < VersionInfo(0, 53, 0):
+        if self.state.hyprland_version > VersionInfo(0, 47, 2):
+            if self.state.hyprland_version < VersionInfo(0, 53, 0):
                 for p in self._params:
                     yield f"windowrule {p[0]} {p[1]}, class: {self._class}"
             elif self._name:
@@ -146,7 +147,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
-        scratches = {name: Scratch(name, self.config) for name, options in self.config.iter_subsections()}
+        scratches = {name: Scratch(name, self.config, self.state) for name, options in self.config.iter_subsections()}
 
         scratches_to_spawn = set()
         for name, new_scratch in scratches.items():
@@ -176,8 +177,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         """Unset the windowrules."""
         defined_class = scratch.conf.get("class", "")
         if defined_class:
-            if state.hyprland_version < VersionInfo(0, 53, 0):
-                if state.hyprland_version > VersionInfo(0, 47, 2):
+            if self.state.hyprland_version < VersionInfo(0, 53, 0):
+                if self.state.hyprland_version > VersionInfo(0, 47, 2):
                     await self.hyprctl(f"windowrule unset, class: {defined_class}", "keyword")
                 else:
                     await self.hyprctl(f"windowrule unset, ^({defined_class})$", "keyword")
@@ -190,12 +191,12 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         animation_type: str = scratch.conf.get_str("animation", "fromTop").lower()
         defined_class: str = scratch.conf.get_str("class", "")
         skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules", []))
-        wr = WindowRuleSet()
+        wr = WindowRuleSet(self.state)
         wr.set_class(defined_class)
         wr.set_name(scratch.uid)
         if defined_class:
             forced_monitor = scratch.conf.get("force_monitor")
-            if forced_monitor and forced_monitor not in state.monitors:
+            if forced_monitor and forced_monitor not in self.state.monitors:
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
                 await self.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
@@ -203,7 +204,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             width, height = convert_coords(scratch.conf.get_str("size", "80% 80%"), monitor)
 
             if "float" not in skipped_windowrules:
-                if state.hyprland_version < VersionInfo(0, 53, 0):
+                if self.state.hyprland_version < VersionInfo(0, 53, 0):
                     wr.set("float", "")
                 else:
                     wr.set("float", "on")
@@ -326,7 +327,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         assert scratch
         self.scratches.set_state(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
-        command = apply_variables(cast("str", scratch.conf["command"]), state.variables)
+        command = apply_variables(cast("str", scratch.conf["command"]), self.state.variables)
         proc = await asyncio.create_subprocess_shell(command)
         self.procs[name] = proc
         pid = proc.pid
@@ -494,7 +495,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if not self.last_focused:
             await self.notify_error("No scratchpad was focused")
             return
-        focused = state.active_window
+        focused = self.state.active_window
         scratch = self.last_focused
         if focused == scratch.full_address:
             await self.notify_info("Scratch can't attach to itself")
@@ -502,7 +503,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if not scratch.visible:
             await self.run_show(scratch.uid)
 
-        if state.active_window in scratch.extra_addr:
+        if self.state.active_window in scratch.extra_addr:
             scratch.extra_addr.remove(focused)
         else:
             scratch.extra_addr.add(focused)
@@ -527,7 +528,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         self.log.debug(
             "visibility_check: %s == %s",
             first_scratch.meta.space_identifier,
-            get_active_space_identifier(),
+            get_active_space_identifier(self.state),
         )
         if first_scratch.conf.get_bool("alt_toggle"):
             # Needs to be on any monitor (if workspace matches)
@@ -536,8 +537,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             )
         else:
             # Needs to be on the active monitor+workspace
-            extra_visibility_check = (
-                first_scratch.meta.space_identifier == get_active_space_identifier()
+            extra_visibility_check = first_scratch.meta.space_identifier == get_active_space_identifier(
+                self.state
             )  # Visible on the currently focused monitor
 
         is_visible = first_scratch.visible and (
@@ -649,7 +650,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         await scratch.initialize(self)
 
         scratch.visible = True
-        scratch.meta.space_identifier = get_active_space_identifier()
+        scratch.meta.space_identifier = get_active_space_identifier(self.state)
         monitor = await self.get_monitor_props(name=scratch.forced_monitor)
 
         assert monitor
@@ -697,7 +698,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         # Start the transition
         preserve_aspect = scratch.conf.get_bool("preserve_aspect")
         should_set_aspect = (
-            not (preserve_aspect and was_alive) or scratch.monitor != state.active_monitor
+            not (preserve_aspect and was_alive) or scratch.monitor != self.state.active_monitor
         )  # Not aspect preserving or it's newly spawned
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
@@ -835,8 +836,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
             return
 
-        active_window = state.active_window
-        active_workspace = state.active_workspace
+        active_window = self.state.active_window
+        active_workspace = self.state.active_workspace
 
         if not scratch.visible and not flavor & HideFlavors.FORCED and not flavor & HideFlavors.TRIGGERED_BY_AUTOHIDE:
             await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")

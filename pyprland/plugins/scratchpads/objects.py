@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
-from ...common import state
+from ...common import SharedState
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
 
@@ -54,9 +54,11 @@ class Scratch:  # {{{
     monitor = ""
     pid = -1
     excluded_scratches: list[str] = []
+    state: SharedState
 
-    def __init__(self, uid: str, opts: dict[str, Any]) -> None:
+    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState) -> None:
         self.uid = uid
+        self.state = state
         self.set_config(opts)
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
@@ -66,7 +68,7 @@ class Scratch:  # {{{
     def forced_monitor(self) -> str | None:
         """Returns forced monitor if available, else None."""
         forced_monitor = self.conf.get("force_monitor")
-        if forced_monitor in state.monitors:
+        if forced_monitor in self.state.monitors:
             return cast("str", forced_monitor)
         return None
 
@@ -93,7 +95,7 @@ class Scratch:  # {{{
         opts = self._make_initial_config(full_config)
 
         # apply the config
-        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}))
+        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}), self.state)
 
         # apply constraints
         if self.conf.get_bool("preserve_aspect"):
@@ -106,7 +108,7 @@ class Scratch:  # {{{
                 opts["match_by"] = "class"
         if opts.get("close_on_hide", False):
             opts["lazy"] = True
-        if state.hyprland_version < VersionInfo(0, 39, 0):
+        if self.state.hyprland_version < VersionInfo(0, 39, 0):
             opts["allow_special_workspace"] = False
 
     def have_address(self, addr: str) -> bool:

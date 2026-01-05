@@ -4,7 +4,7 @@ import contextlib
 from collections.abc import Callable
 from typing import Any, cast
 
-from ..common import Configuration, get_logger
+from ..common import Configuration, SharedState, get_logger
 from ..ipc import get_controls
 from ..types import ClientInfo
 
@@ -31,6 +31,9 @@ class Plugin:
 
     config: Configuration
     " This plugin configuration section as a `dict` object "
+
+    state: SharedState
+    " The shared state object "
 
     def __init__(self, name: str) -> None:
         """Create a new plugin `name` and the matching logger."""

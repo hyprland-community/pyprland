@@ -4,7 +4,6 @@ import asyncio
 from collections import defaultdict
 from typing import Any, cast
 
-from ..common import state
 from ..types import MonitorInfo
 from .interface import Plugin
 
@@ -48,7 +47,7 @@ class Extension(Plugin):
         self._clear_mon_by_pat_cache()
         monitors = await self.hyprctl_json("monitors")
 
-        for mon in state.monitors:
+        for mon in self.state.monitors:
             await self._hotplug_command(monitors, name=mon)
 
         if self.config.get_bool("startup_relayout", True):

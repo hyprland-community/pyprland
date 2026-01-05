@@ -11,7 +11,7 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, cast
 
-from ..common import is_rotated, state
+from ..common import is_rotated
 from ..types import ClientInfo, MonitorInfo  # pylint: disable=unused-import
 from .interface import Plugin
 
@@ -70,10 +70,10 @@ class Extension(Plugin):
     async def event_activewindowv2(self, _: str) -> None:
         """Keep track of focused client."""
         captive = self.config.get_bool("captive_focus")
-        is_not_active = state.active_window != self.main_window_addr
+        is_not_active = self.state.active_window != self.main_window_addr
         if captive and self.enabled and is_not_active:
             try:
-                next(c for c in await self.get_clients() if c["address"] == state.active_window)
+                next(c for c in await self.get_clients() if c["address"] == self.state.active_window)
             except StopIteration:
                 pass
             else:
@@ -118,7 +118,7 @@ class Extension(Plugin):
     ) -> list[ClientInfo]:
         """Return the client list in the currently active workspace."""
         _ = workspace
-        clients = await super().get_clients(mapped=mapped, workspace=state.active_workspace, workspace_bl=workspace_bl)
+        clients = await super().get_clients(mapped=mapped, workspace=self.state.active_workspace, workspace_bl=workspace_bl)
         clients.sort(key=lambda c: c["address"])
         return clients
 
@@ -216,7 +216,7 @@ class Extension(Plugin):
         """Toggle the center layout."""
         disabled = not self.enabled
         if disabled:
-            self.main_window_addr = state.active_window
+            self.main_window_addr = self.state.active_window
             await self.prepare_window()
         else:
             await self.unprepare_window()
@@ -243,21 +243,21 @@ class Extension(Plugin):
     @property
     def enabled(self) -> bool:
         """Is center layout enabled on the active workspace ?."""
-        return cast("bool", self.workspace_info[state.active_workspace]["enabled"])
+        return cast("bool", self.workspace_info[self.state.active_workspace]["enabled"])
 
     @enabled.setter
     def enabled(self, value: bool) -> None:
         """Set if center layout enabled on the active workspace."""
-        self.workspace_info[state.active_workspace]["enabled"] = value
+        self.workspace_info[self.state.active_workspace]["enabled"] = value
 
     # main_window_addr
 
     @property
     def main_window_addr(self) -> str:
         """Get active workspace's centered window address."""
-        return cast("str", self.workspace_info[state.active_workspace]["addr"])
+        return cast("str", self.workspace_info[self.state.active_workspace]["addr"])
 
     @main_window_addr.setter
     def main_window_addr(self, value: str) -> None:
         """Set active workspace's centered window address."""
-        self.workspace_info[state.active_workspace]["addr"] = value
+        self.workspace_info[self.state.active_workspace]["addr"] = value

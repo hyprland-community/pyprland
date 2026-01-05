@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from ..aioops import aiexists, aiopen
-from ..common import apply_variables, prepare_for_quotes, state
+from ..common import apply_variables, prepare_for_quotes
 from .interface import Plugin
 from .wallpapers_imageutils import (
     MonitorInfo,
@@ -595,7 +595,7 @@ class Extension(Plugin):
             if not self._paused:
                 self.next_background_event.clear()
                 await self.terminate()
-                variables = state.variables.copy()
+                variables = self.state.variables.copy()
                 await self._iter_one(variables)
 
             interval = asyncio.sleep(60 * self.config.get("interval", 10))

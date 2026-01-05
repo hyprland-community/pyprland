@@ -23,7 +23,6 @@ __all__ = [
     "get_logger",
     "merge",
     "run_interactive_program",
-    "state",
     "init_logger",
     "SharedState",
     "prepare_for_quotes",
@@ -223,15 +222,6 @@ class SharedState:
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)
-
-
-state: SharedState = SharedState()
-"""
-Exposes most-commonly accessed attributes to avoid specific IPC requests
-- `active_monitor` monitor's name
-- `active_workspace` workspace's name
-- `active_window` window's address
-"""
 
 
 def prepare_for_quotes(text: str) -> str:

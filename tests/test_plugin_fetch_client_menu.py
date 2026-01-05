@@ -1,20 +1,20 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.fetch_client_menu import Extension
-from pyprland.common import state
+from pyprland.common import SharedState
 
 
 @pytest.fixture
 def extension():
-    state.active_workspace = "1"
-    state.active_window = "0x123"
-
     ext = Extension("fetch_client_menu")
+    ext.state = SharedState()
+    ext.state.active_workspace = "1"
+    ext.state.active_window = "0x123"
     ext.hyprctl = AsyncMock()
     ext.notify_error = AsyncMock()
     ext.get_clients = AsyncMock()
     ext.menu = AsyncMock()
-    ext.config = {"separator": "|"}
+    ext.config.update({"separator": "|"})
     ext._windows_origins = {}
 
     # Mock ensure_menu_configured to prevent it from overwriting our mock menu
@@ -63,7 +63,7 @@ async def test_run_fetch_client_menu(extension):
     # Should save origin
     assert extension._windows_origins["0xDEF"] == "3"
     # Should move window
-    extension.hyprctl.assert_called_with(f"movetoworkspace {state.active_workspace},address:0xDEF")
+    extension.hyprctl.assert_called_with(f"movetoworkspace {extension.state.active_workspace},address:0xDEF")
 
 
 @pytest.mark.asyncio
