@@ -68,12 +68,22 @@ except KeyError:
 
 
 def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:
-    """Set the terminal size."""
+    """Set the terminal size.
+
+    Args:
+        descriptor: File descriptor of the terminal
+        rows: Number of rows
+        cols: Number of columns
+    """
     fcntl.ioctl(descriptor, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
 
 
 def set_raw_mode(descriptor: int) -> None:
-    """Set a file descriptor in raw mode."""
+    """Set a file descriptor in raw mode.
+
+    Args:
+        descriptor: File descriptor to set to raw mode
+    """
     # Get the current terminal attributes
     attrs = termios.tcgetattr(descriptor)
     # Set the terminal to raw mode
@@ -83,7 +93,11 @@ def set_raw_mode(descriptor: int) -> None:
 
 
 def run_interactive_program(command: str) -> None:
-    """Run an interactive program in a blocking way."""
+    """Run an interactive program in a blocking way.
+
+    Args:
+        command: The command to run
+    """
     # Create a pseudo-terminal
     master, slave = pty.openpty()
 
@@ -135,7 +149,7 @@ def merge(merged: dict[str, Any], obj2: dict[str, Any]) -> dict[str, Any]:
         obj2 (dict): Dictionary to merge from
 
     Returns:
-        `merged` dictionary with the merged content
+         dictionary with the merged content
 
     Eg:
         merge({"a": {"b": 1}}, {"a": {"c": 2}}) == {"a": {"b": 1, "c": 2}}
@@ -161,7 +175,12 @@ class LogObjects:
 
 
 def init_logger(filename: str | None = None, force_debug: bool = False) -> None:
-    """Initialize the logging system."""
+    """Initialize the logging system.
+
+    Args:
+        filename: Optional filename to log to
+        force_debug: If True, force debug level
+    """
     global DEBUG
     if force_debug:
         DEBUG = True
@@ -199,6 +218,9 @@ def get_logger(name: str = "pypr", level: int | None = None) -> logging.Logger:
     Args:
         name (str): logger's name
         level (int): logger's level (auto if not set)
+
+    Returns:
+        The logger instance
     """
     logger = logging.getLogger(name)
     if level is None:
@@ -225,8 +247,15 @@ class SharedState:
 
 
 def prepare_for_quotes(text: str) -> str:
-    """Escapes double quotes in text."""
-    return text.replace('"', '\\"')
+    """Escapes double quotes in text.
+
+    Args:
+        text: The text to escape
+
+    Returns:
+        The text with escaped double quotes
+    """
+    return text.replace('"', '"')
 
 
 def apply_variables(template: str, variables: dict[str, str]) -> str:
@@ -235,6 +264,9 @@ def apply_variables(template: str, variables: dict[str, str]) -> str:
     Args:
         template: the string template
         variables: a dict containing the variables to replace
+
+    Returns:
+        The template with variables replaced
     """
     pattern = r"\[([^\[\]]+)\]"
 
@@ -249,6 +281,13 @@ def apply_filter(text: str, filt_cmd: str) -> str:
     """Apply filters to text.
 
     Currently supports only "s" command fom vim/ed
+
+    Args:
+        text: The text to filter
+        filt_cmd: The filter command (e.g. "s/foo/bar/g")
+
+    Returns:
+        The filtered text
     """
     if not filt_cmd:
         return text
@@ -269,7 +308,13 @@ class Configuration(dict):
     """Configuration wrapper providing typed access and section filtering."""
 
     def __init__(self, *args, logger: logging.Logger | None = None, **kwargs):
-        """Initialize the configuration object."""
+        """Initialize the configuration object.
+
+        Args:
+            *args: Arguments for dict
+            logger: Optional logger to use
+            **kwargs: Keyword arguments for dict
+        """
         super().__init__(*args, **kwargs)
         self.log = logger or get_logger("config")
 
@@ -285,7 +330,15 @@ class Configuration(dict):
             return default
 
     def get_bool(self, name: str, default: bool = False) -> bool:
-        """Get a boolean value, handling loose typing."""
+        """Get a boolean value, handling loose typing.
+
+        Args:
+            name: The key name
+            default: Default value if key is missing
+
+        Returns:
+            The boolean value
+        """
         value = self.get(name)
         if isinstance(value, str):
             return value.lower().strip() in {"true", "yes", "on", "1"}
@@ -294,27 +347,62 @@ class Configuration(dict):
         return bool(value)
 
     def get_int(self, name: str, default: int = 0) -> int:
-        """Get an integer value."""
+        """Get an integer value.
+
+        Args:
+            name: The key name
+            default: Default value if key is missing
+
+        Returns:
+            The integer value
+        """
         return cast("int", self._get_converted(name, default, int))
 
     def get_float(self, name: str, default: float = 0.0) -> float:
-        """Get a float value."""
+        """Get a float value.
+
+        Args:
+            name: The key name
+            default: Default value if key is missing
+
+        Returns:
+            The float value
+        """
         return cast("float", self._get_converted(name, default, float))
 
     def get_str(self, name: str, default: str = "") -> str:
-        """Get a string value."""
+        """Get a string value.
+
+        Args:
+            name: The key name
+            default: Default value if key is missing
+
+        Returns:
+            The string value
+        """
         value = self.get(name)
         if value is None:
             return default
         return str(value)
 
     def iter_subsections(self) -> Iterator[tuple[str, dict[str, Any]]]:
-        """Yield only keys that have dictionary values (e.g., defined scratchpads)."""
+        """Yield only keys that have dictionary values (e.g., defined scratchpads).
+
+        Returns:
+            Iterator of (key, value) pairs where value is a dictionary
+        """
         for k, v in self.items():
             if isinstance(v, dict):
                 yield k, v
 
 
 def is_rotated(monitor: MonitorInfo) -> bool:
-    """Return True if the monitor is rotated."""
+    """Return True if the monitor is rotated.
+
+    Args:
+        monitor: The monitor info dictionary
+
+    Returns:
+        True if the monitor is rotated (transform is 1, 3, 5, or 7)
+    """
     return monitor["transform"] in {1, 3, 5, 7}
