@@ -104,7 +104,6 @@ class MetaInfo:
 class Scratch:  # {{{
     """A scratchpad state including configuration & client state."""
 
-    log = logging.getLogger("scratch")
     get_client_props: "ClientPropGetter"
     client_info: ClientInfo
     visible = False
@@ -114,7 +113,8 @@ class Scratch:  # {{{
     excluded_scratches: list[str] = []
     state: SharedState
 
-    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState) -> None:
+    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState, log: logging.Logger) -> None:
+        self.log = log
         self.uid = uid
         self.state = state
         self.set_config(opts)

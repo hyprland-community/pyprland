@@ -1,5 +1,5 @@
 import pytest
-from pyprland.common import merge, apply_filter, is_rotated, prepare_for_quotes
+from pyprland.common import merge, apply_filter, is_rotated
 
 
 def test_merge_dicts():
@@ -54,6 +54,3 @@ def test_is_rotated():
     assert is_rotated({"transform": 4}) is False
     assert is_rotated({"transform": 6}) is False
 
-
-def test_prepare_for_quotes():
-    assert prepare_for_quotes('hello "world"') == 'hello \\"world\\"'

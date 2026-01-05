@@ -25,7 +25,6 @@ __all__ = [
     "run_interactive_program",
     "init_logger",
     "SharedState",
-    "prepare_for_quotes",
     "apply_filter",
     "is_rotated",
 ]
@@ -244,18 +243,6 @@ class SharedState:
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)
-
-
-def prepare_for_quotes(text: str) -> str:
-    """Escapes double quotes in text.
-
-    Args:
-        text: The text to escape
-
-    Returns:
-        The text with escaped double quotes
-    """
-    return text.replace('"', '"')
 
 
 def apply_variables(template: str, variables: dict[str, str]) -> str:

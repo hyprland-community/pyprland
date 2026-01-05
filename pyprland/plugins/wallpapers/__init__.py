@@ -8,7 +8,7 @@ import os.path
 import random
 from typing import Any
 
-from ...common import apply_variables, prepare_for_quotes
+from ...common import apply_variables
 from ..interface import Plugin
 from .colorutils import can_edit_image, get_dominant_colors, nicify_oklab
 from .imageutils import (
@@ -92,10 +92,8 @@ class Extension(Plugin):
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
         """Prepare the wallpaper image for the given monitor."""
         if not self.rounded_manager:
-            return prepare_for_quotes(img_path)
-
-        processed = self.rounded_manager.scale_and_round(img_path, monitor)
-        return prepare_for_quotes(processed)
+            return img_path
+        return self.rounded_manager.scale_and_round(img_path, monitor)
 
     async def _run_one(self, template: str, values: dict[str, str]) -> None:
         """Run one command."""
