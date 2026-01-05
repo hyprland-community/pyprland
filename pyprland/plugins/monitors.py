@@ -11,9 +11,31 @@ from .interface import Plugin
 MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 
 
-def get_dims(mon: MonitorInfo) -> tuple[int, int]:
+def get_dims(mon: MonitorInfo, config: dict[str, Any] | None = None) -> tuple[int, int]:
     """Return the dimensions of the monitor."""
-    return mon["width"], mon["height"]
+    if config is None:
+        config = {}
+    scale = config.get("scale", mon["scale"])
+    transform = config.get("transform", mon["transform"])
+    width = mon["width"]
+    height = mon["height"]
+
+    res = config.get("resolution")
+    if res:
+        try:
+            if isinstance(res, str) and "x" in res:
+                width, height = map(int, res.split("x"))
+            elif isinstance(res, (list, tuple)):
+                width, height = int(res[0]), int(res[1])
+        except (ValueError, IndexError):
+            pass
+
+    width = int(width / scale)
+    height = int(height / scale)
+
+    if transform in [1, 3, 5, 7]:
+        return height, width
+    return width, height
 
 
 class Extension(Plugin):
@@ -82,7 +104,7 @@ class Extension(Plugin):
         tree, in_degree = self._build_graph(config, monitors_by_name)
 
         # 3. Compute Layout
-        positions = self._compute_positions(monitors_by_name, tree, in_degree)
+        positions = self._compute_positions(monitors_by_name, tree, in_degree, config)
 
         # 4 & 5. Normalize and Apply
         return await self._apply_layout(positions, monitors_by_name, config)
@@ -107,7 +129,11 @@ class Extension(Plugin):
         return tree, in_degree
 
     def _compute_positions(
-        self, monitors_by_name: dict[str, MonitorInfo], tree: dict[str, list[tuple[str, str]]], in_degree: dict[str, int]
+        self,
+        monitors_by_name: dict[str, MonitorInfo],
+        tree: dict[str, list[tuple[str, str]]],
+        in_degree: dict[str, int],
+        config: dict[str, Any],
     ) -> dict[str, tuple[int, int]]:
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
         positions: dict[str, tuple[int, int]] = {}
@@ -126,7 +152,9 @@ class Extension(Plugin):
 
             for child_name, rule in tree[ref_name]:
                 child_mon = monitors_by_name[child_name]
-                x, y = self._compute_xy(ref_mon, child_mon, ref_x, ref_y, rule)
+                child_config = config.get(child_name, {})
+                ref_config = config.get(ref_name, {})
+                x, y = self._compute_xy(ref_mon, child_mon, ref_x, ref_y, rule, ref_config, child_config)
                 positions[child_name] = (x, y)
 
                 in_degree[child_name] -= 1
@@ -157,10 +185,19 @@ class Extension(Plugin):
             await self.hyprctl(cmd, "keyword")
         return True
 
-    def _compute_xy(self, ref_mon: MonitorInfo, mon: MonitorInfo, ref_x: int, ref_y: int, rule: str) -> tuple[int, int]:
+    def _compute_xy(  # noqa: PLR0913
+        self,
+        ref_mon: MonitorInfo,
+        mon: MonitorInfo,
+        ref_x: int,
+        ref_y: int,
+        rule: str,
+        ref_config: dict[str, Any] | None = None,
+        mon_config: dict[str, Any] | None = None,
+    ) -> tuple[int, int]:
         """Compute position of `mon` relative to `ref_mon` based on `rule`."""
-        ref_w, ref_h = get_dims(ref_mon)
-        mon_w, mon_h = get_dims(mon)
+        ref_w, ref_h = get_dims(ref_mon, ref_config)
+        mon_w, mon_h = get_dims(mon, mon_config)
         rule = rule.lower().replace("_", "").replace("-", "")
 
         ref_rect = (ref_x, ref_y, ref_w, ref_h)
