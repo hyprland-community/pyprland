@@ -79,11 +79,22 @@ class Extension(Plugin):
 
         monitors_by_name = {m["name"]: m for m in monitors}
 
+        monitors_to_disable = set()
+        for cfg in config.values():
+            if "disables" in cfg:
+                monitors_to_disable.update(cfg["disables"])
+
+        for name in monitors_to_disable:
+            if name in monitors_by_name:
+                monitors_by_name[name]["to_disable"] = True
+
+        enabled_monitors_by_name = {k: v for k, v in monitors_by_name.items() if not v.get("to_disable")}
+
         # 2. Build dependency graph
-        tree, in_degree = self._build_graph(config, monitors_by_name)
+        tree, in_degree = self._build_graph(config, enabled_monitors_by_name)
 
         # 3. Compute Layout
-        positions = self._compute_positions(monitors_by_name, tree, in_degree, config)
+        positions = self._compute_positions(enabled_monitors_by_name, tree, in_degree, config)
 
         # 4 & 5. Normalize and Apply
         return await self._apply_layout(positions, monitors_by_name, config)
@@ -105,7 +116,7 @@ class Extension(Plugin):
 
         for name, rules in config.items():
             for rule_name, target_names in rules.items():
-                if rule_name in MONITOR_PROPS:
+                if rule_name in MONITOR_PROPS or rule_name == "disables":
                     continue
                 target_name = target_names[0] if target_names else None
                 if target_name and target_name in monitors_by_name:
@@ -145,6 +156,7 @@ class Extension(Plugin):
                     *positions[ref_name],
                     *get_dims(monitors_by_name[ref_name], config.get(ref_name, {})),
                 )
+
                 mon_dim = get_dims(monitors_by_name[child_name], config.get(child_name, {}))
 
                 positions[child_name] = compute_xy(
@@ -159,7 +171,10 @@ class Extension(Plugin):
         return positions
 
     async def _apply_layout(
-        self, positions: dict[str, tuple[int, int]], monitors_by_name: dict[str, MonitorInfo], config: dict[str, Any]
+        self,
+        positions: dict[str, tuple[int, int]],
+        monitors_by_name: dict[str, MonitorInfo],
+        config: dict[str, Any],
     ) -> bool:
         """Apply the computed layout.
 
@@ -168,11 +183,16 @@ class Extension(Plugin):
             monitors_by_name: Mapping of monitor names to info
             config: Configuration dictionary
         """
-        if not positions:
+        has_disabled = any(m.get("to_disable") for m in monitors_by_name.values())
+        if not positions and not has_disabled:
             return False
 
-        min_x = min(x for x, y in positions.values())
-        min_y = min(y for x, y in positions.values())
+        if positions:
+            min_x = min(x for x, y in positions.values())
+            min_y = min(y for x, y in positions.values())
+        else:
+            min_x = 0
+            min_y = 0
 
         cmds = []
         for name, (x, y) in positions.items():
@@ -182,6 +202,10 @@ class Extension(Plugin):
             mon_config = config.get(name, {})
             cmd = self._build_monitor_command(mon, mon_config)
             cmds.append(cmd)
+
+        for name, mon in monitors_by_name.items():
+            if mon.get("to_disable"):
+                cmds.append(f"monitor {name},disable")
 
         for cmd in cmds:
             self.log.debug(cmd)

@@ -75,6 +75,8 @@ class MonitorInfo(TypedDict):
     currentFormat: str
     availableModes: list[str]
 
+    to_disable: bool
+
 
 @dataclass(order=True)
 class VersionInfo:

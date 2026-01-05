@@ -323,3 +323,88 @@ async def test_nothing():
     await tst.pypr("inexistent")
     assert tst.hyprctl.call_args_list[0][0][1] == "notify"
     assert tst.hyprctl.call_count == 1
+import pytest
+import tomllib
+from pytest_asyncio import fixture
+
+from .conftest import mocks as tst
+from .testtools import wait_called
+
+
+@fixture
+async def disables_config(monkeypatch):
+    """Test disables config."""
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+new_monitor_delay = 0
+
+[monitors.placement]
+"Microstep".topOf = "BenQ"
+"Microstep".disables = "eDP-1"
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+@fixture
+async def disables_list_config(monkeypatch):
+    """Test disables config with list."""
+    config = """
+[pyprland]
+plugins = ["monitors"]
+
+[monitors]
+startup_relayout = false
+new_monitor_delay = 0
+
+[monitors.placement]
+"Microstep".topOf = "BenQ"
+"Microstep".disables = ["eDP-1", "HDMI-A-1"]
+    """
+    monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
+    yield
+
+
+def assert_modes(call_list, expected=None, allow_empty=False):
+    if expected is None:
+        expected = []
+    ref_str = {x[0][0] for x in call_list}
+    for e in expected:
+        ref_str.remove(e)
+
+    if not allow_empty:
+        assert len(list(ref_str)) == 0
+
+
+@pytest.mark.usefixtures("third_monitor", "disables_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_disables_monitor():
+    await tst.pypr("relayout")
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor HDMI-A-1,1920x1080@60.0,0x1440,1.0,transform,0",
+            "monitor DP-1,3440x1440@59.999,0x0,1.0,transform,0",
+            "monitor eDP-1,disable",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("third_monitor", "disables_list_config", "server_fixture")
+@pytest.mark.asyncio
+async def test_disables_monitor_list():
+    await tst.pypr("relayout")
+    await wait_called(tst.hyprctl)
+    assert_modes(
+        tst.hyprctl.call_args_list,
+        [
+            "monitor DP-1,3440x1440@59.999,0x0,1.0,transform,0",
+            "monitor eDP-1,disable",
+            "monitor HDMI-A-1,disable",
+        ],
+    )
