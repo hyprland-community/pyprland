@@ -55,11 +55,19 @@ class Extension(Plugin):
         self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
 
     async def event_monitoradded(self, name: str) -> None:
-        """Track monitor."""
+        """Track monitor.
+
+        Args:
+            name: The monitor name
+        """
         self.state.monitors.append(name)
 
     async def event_monitorremoved(self, name: str) -> None:
-        """Track monitor."""
+        """Track monitor.
+
+        Args:
+            name: The monitor name
+        """
         try:
             self.state.monitors.remove(name)
         except ValueError:
@@ -73,7 +81,11 @@ class Extension(Plugin):
             self.__set_hyprland_version(version_override)
 
     async def event_activewindowv2(self, addr: str) -> None:
-        """Keep track of the focused client."""
+        """Keep track of the focused client.
+
+        Args:
+            addr: The window address
+        """
         if not addr:
             self.log.debug("no active window")
             self.state.active_window = ""
@@ -82,22 +94,39 @@ class Extension(Plugin):
             self.log.debug("active_window = %s", self.state.active_window)
 
     async def event_workspace(self, workspace: str) -> None:
-        """Track the active workspace."""
+        """Track the active workspace.
+
+        Args:
+            workspace: The workspace name
+        """
         self.state.active_workspace = workspace
         self.log.debug("active_workspace = %s", self.state.active_workspace)
 
     async def event_focusedmon(self, mon: str) -> None:
-        """Track the active workspace."""
+        """Track the active workspace.
+
+        Args:
+            mon: The monitor description (name,workspace)
+        """
         self.state.active_monitor, self.state.active_workspace = mon.rsplit(",", 1)
         self.log.debug("active_monitor = %s", self.state.active_monitor)
 
     def set_commands(self, **cmd_map) -> None:
-        """Set some commands, made available as run_`name` methods."""
+        """Set some commands, made available as run_`name` methods.
+
+        Args:
+            cmd_map: The map of commands
+        """
         for name, fn in cmd_map.items():
             setattr(self, f"run_{name}", fn)
 
     def __set_hyprland_version(self, version_str: str, auto_increment: bool = False) -> None:
-        """Set the hyprland version."""
+        """Set the hyprland version.
+
+        Args:
+            version_str: The version string
+            auto_increment: Whether to auto-increment the version
+        """
         split_version = [int(i) for i in version_str.split(".")[:3]]
         if auto_increment:
             split_version[-1] += 1

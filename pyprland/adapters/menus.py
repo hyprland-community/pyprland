@@ -140,7 +140,12 @@ every_menu_engine = [FuzzelMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, Dmenu
 
 
 async def init(force_engine: str | None = None, extra_parameters: str = "") -> MenuEngine:
-    """Initialize the module."""
+    """Initialize the module.
+
+    Args:
+        force_engine: Name of the engine to force use of
+        extra_parameters: Extra parameters to pass to the engine
+    """
     try:
         engines = [next(e for e in every_menu_engine if e.proc_name == force_engine)] if force_engine else every_menu_engine
     except StopIteration:

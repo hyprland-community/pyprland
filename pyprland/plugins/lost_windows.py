@@ -7,7 +7,12 @@ from .interface import Plugin
 
 
 def contains(monitor: MonitorInfo, window: ClientInfo) -> bool:
-    """Tell if a window is visible in a monitor."""
+    """Tell if a window is visible in a monitor.
+
+    Args:
+        monitor: The monitor info
+        window: The window info
+    """
     if not (window["at"][0] >= monitor["x"] and window["at"][0] < monitor["x"] + monitor["width"]):
         return False
     return bool(window["at"][1] >= monitor["y"] and window["at"][1] < monitor["y"] + monitor["height"])

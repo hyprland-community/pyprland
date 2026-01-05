@@ -51,7 +51,11 @@ async def detect_theme() -> str:
 
 
 def get_color_scheme_props(color_scheme: str) -> dict[str, float]:
-    """Return color scheme properties suitable for nicify_oklab."""
+    """Return color scheme properties suitable for nicify_oklab.
+
+    Args:
+        color_scheme: The name of the color scheme (e.g. "pastel", "vibrant")
+    """
     oklab_args: dict[str, float] = {}
     scheme = color_scheme.lower()
 
@@ -106,7 +110,14 @@ def _get_rgb_for_variant(
     cur_s: float,
     source_hls: tuple[float, float, float],
 ) -> tuple[int, int, int]:
-    """Get RGB color for a specific variant (lightness)."""
+    """Get RGB color for a specific variant (lightness).
+
+    Args:
+        l_val: Lightness value or "source" to use source color
+        cur_h: Current hue
+        cur_s: Current saturation
+        source_hls: Source color in HLS format
+    """
     if l_val == "source":
         r, g, b = colorsys.hls_to_rgb(*source_hls)
         return int(r * 255), int(g * 255), int(b * 255)
@@ -119,7 +130,14 @@ def _get_base_hs(
     h_off: float | str,
     variant_type: str | None = None,
 ) -> tuple[float, float, float | str]:
-    """Determine base hue, saturation and offset for a color rule."""
+    """Determine base hue, saturation and offset for a color rule.
+
+    Args:
+        name: Name of the color rule
+        mat_colors: Material colors configuration
+        h_off: Hue offset
+        variant_type: Type of variant (e.g. "islands")
+    """
     used_h, used_s = mat_colors.primary
     used_off = h_off
 
@@ -139,7 +157,14 @@ def _populate_colors(
     theme: str,
     variant: ColorVariant,
 ) -> None:
-    """Populate the colors dict with dark, light and default variants."""
+    """Populate the colors dict with dark, light and default variants.
+
+    Args:
+        colors: Dictionary to populate with color values
+        name: Name of the color variant
+        theme: Current theme ("dark" or "light")
+        variant: ColorVariant object containing dark and light RGB values
+    """
     r_dark, g_dark, b_dark = variant.dark
     r_light, g_light, b_light = variant.light
 
@@ -175,7 +200,12 @@ def _process_material_variant(
     config: VariantConfig,
     variant_type: str | None = None,
 ) -> None:
-    """Process a single material variant and populate colors."""
+    """Process a single material variant and populate colors.
+
+    Args:
+        config: Configuration for the variant
+        variant_type: Type of variant (optional)
+    """
     h_off, s_mult, l_dark, l_light = config.props
     used_h, used_s, used_off = _get_base_hs(config.name, config.mat_colors, cast("float | str", h_off), variant_type)
 
@@ -202,7 +232,14 @@ def generate_palette(
     theme: str = "dark",
     variant_type: str | None = None,
 ) -> dict[str, str]:
-    """Generate a material-like palette from a single color."""
+    """Generate a material-like palette from a single color.
+
+    Args:
+        rgb_list: List of RGB colors to use as base
+        process_color: Function to process/nicify colors
+        theme: Target theme ("dark" or "light")
+        variant_type: Variant type (optional)
+    """
     hue, light, sat = process_color(rgb_list[0])
 
     if variant_type == "islands":

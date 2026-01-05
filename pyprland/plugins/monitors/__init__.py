@@ -40,7 +40,11 @@ class Extension(Plugin):
             await self._run_relayout()
 
     async def event_monitoradded(self, name: str) -> None:
-        """Triggers when a monitor is plugged."""
+        """Triggers when a monitor is plugged.
+
+        Args:
+            name: The name of the added monitor
+        """
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
         monitors = await self.hyprctl_json("monitors")
         await self._hotplug_command(monitors, name)
@@ -55,7 +59,11 @@ class Extension(Plugin):
         return await self._run_relayout()
 
     async def _run_relayout(self, monitors: list[MonitorInfo] | None = None) -> bool:
-        """Recompute & apply every monitors's layout."""
+        """Recompute & apply every monitors's layout.
+
+        Args:
+            monitors: Optional list of monitors to use. If not provided, fetches current state.
+        """
         if monitors is None:
             monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors"))
 
@@ -83,7 +91,12 @@ class Extension(Plugin):
     def _build_graph(
         self, config: dict[str, Any], monitors_by_name: dict[str, MonitorInfo]
     ) -> tuple[dict[str, list[tuple[str, str]]], dict[str, int]]:
-        """Build the dependency graph for monitor layout."""
+        """Build the dependency graph for monitor layout.
+
+        Args:
+            config: Configuration dictionary
+            monitors_by_name: Mapping of monitor names to info
+        """
         tree: dict[str, list[tuple[str, str]]] = defaultdict(list)
         in_degree: dict[str, int] = defaultdict(int)
 
@@ -107,7 +120,14 @@ class Extension(Plugin):
         in_degree: dict[str, int],
         config: dict[str, Any],
     ) -> dict[str, tuple[int, int]]:
-        """Compute the positions of all monitors."""
+        """Compute the positions of all monitors.
+
+        Args:
+            monitors_by_name: Mapping of monitor names to info
+            tree: Dependency graph
+            in_degree: In-degree of each node in the graph
+            config: Configuration dictionary
+        """
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
         positions: dict[str, tuple[int, int]] = {}
         for name in queue:
@@ -141,7 +161,13 @@ class Extension(Plugin):
     async def _apply_layout(
         self, positions: dict[str, tuple[int, int]], monitors_by_name: dict[str, MonitorInfo], config: dict[str, Any]
     ) -> bool:
-        """Apply the computed layout."""
+        """Apply the computed layout.
+
+        Args:
+            positions: Computed (x, y) positions for each monitor
+            monitors_by_name: Mapping of monitor names to info
+            config: Configuration dictionary
+        """
         if not positions:
             return False
 
@@ -163,7 +189,12 @@ class Extension(Plugin):
         return True
 
     def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, Any]) -> str:
-        """Build the monitor command."""
+        """Build the monitor command.
+
+        Args:
+            monitor: Monitor information
+            config: Configuration for the monitor
+        """
         name = monitor["name"]
         rate = config.get("rate", monitor["refreshRate"])
         res = config.get("resolution", f"{monitor['width']}x{monitor['height']}")
@@ -175,7 +206,11 @@ class Extension(Plugin):
         return f"monitor {name},{res}@{rate},{position},{scale},transform,{transform}"
 
     def _resolve_names(self, monitors: list[MonitorInfo]) -> dict[str, Any]:
-        """Resolve configuration patterns to actual monitor names."""
+        """Resolve configuration patterns to actual monitor names.
+
+        Args:
+            monitors: List of available monitors
+        """
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
 
@@ -209,7 +244,12 @@ class Extension(Plugin):
         return cleaned_config
 
     async def _hotplug_command(self, monitors: list[MonitorInfo], name: str) -> None:
-        """Run the hotplug command for the monitor."""
+        """Run the hotplug command for the monitor.
+
+        Args:
+            monitors: List of available monitors
+            name: Name of the hotplugged monitor
+        """
         monitors_by_descr = {m["description"]: m for m in monitors}
         monitors_by_name = {m["name"]: m for m in monitors}
         for descr, command in self.config.get("hotplug_commands", {}).items():
@@ -226,7 +266,13 @@ class Extension(Plugin):
         self._mon_by_pat_cache = {}
 
     def _get_mon_by_pat(self, pat: str, description_db: dict[str, MonitorInfo], name_db: dict[str, MonitorInfo]) -> MonitorInfo | None:
-        """Return a (plugged) monitor object given its pattern or none if not found."""
+        """Return a (plugged) monitor object given its pattern or none if not found.
+
+        Args:
+            pat: Pattern to search for
+            description_db: Database of monitors by description
+            name_db: Database of monitors by name
+        """
         cached = self._mon_by_pat_cache.get(pat)
         if cached:
             return cached

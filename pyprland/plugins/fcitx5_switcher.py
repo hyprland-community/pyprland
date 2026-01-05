@@ -7,7 +7,11 @@ class Extension(Plugin):
     """A plugin to auto-switch Fcitx5 input method status by window class/title."""
 
     async def event_activewindowv2(self, _addr: str) -> None:
-        """A plugin to auto-switch Fcitx5 input method status by window class/title."""
+        """A plugin to auto-switch Fcitx5 input method status by window class/title.
+
+        Args:
+            _addr: The address of the active window
+        """
         _addr = "0x" + _addr
 
         active_classes = self.config.get("active_classes", [])

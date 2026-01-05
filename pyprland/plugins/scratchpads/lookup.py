@@ -17,19 +17,38 @@ class ScratchDB:  # {{{
 
     # State management {{{
     def get_by_state(self, status: str) -> set[Scratch]:
-        """Get a set of `Scratch` being in `status`."""
+        """Get a set of `Scratch` being in `status`.
+
+        Args:
+            status: The state to query
+        """
         return self._states[status]
 
     def has_state(self, scratch: Scratch, status: str) -> bool:
-        """Return true if `scratch` has state `status`."""
+        """Return true if `scratch` has state `status`.
+
+        Args:
+            scratch: The scratch object
+            status: The state to query
+        """
         return scratch in self._states[status]
 
     def set_state(self, scratch: Scratch, status: str) -> None:
-        """Set `scratch` in the provided status."""
+        """Set `scratch` in the provided status.
+
+        Args:
+            scratch: The scratch object
+            status: The state to set
+        """
         self._states[status].add(scratch)
 
     def clear_state(self, scratch: Scratch, status: str) -> None:
-        """Unset the the provided status from the scratch."""
+        """Unset the the provided status from the scratch.
+
+        Args:
+            scratch: The scratch object
+            status: The state to clear
+        """
         self._states[status].remove(scratch)
 
     # }}}
@@ -50,14 +69,24 @@ class ScratchDB:  # {{{
     # }}}
 
     def reset(self, scratch: Scratch) -> None:
-        """Clear registered address & pid."""
+        """Clear registered address & pid.
+
+        Args:
+            scratch: The scratch object
+        """
         if scratch.address in self._by_addr:
             del self._by_addr[scratch.address]
         if scratch.pid in self._by_pid:
             del self._by_pid[scratch.pid]
 
     def clear(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
-        """Clear the index by name, pid or address."""
+        """Clear the index by name, pid or address.
+
+        Args:
+            name: The scratchpad name
+            pid: The process ID
+            addr: The window address
+        """
         # {{{
 
         assert any((name, pid, addr))
@@ -70,7 +99,14 @@ class ScratchDB:  # {{{
         # }}}
 
     def register(self, scratch: Scratch, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
-        """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided."""
+        """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided.
+
+        Args:
+            scratch: The scratch object
+            name: The scratchpad name
+            pid: The process ID
+            addr: The window address
+        """
         # {{{
         v: str | int
         if not any((name, pid, addr)):
@@ -94,7 +130,13 @@ class ScratchDB:  # {{{
         # }}}
 
     def get(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> Scratch | None:
-        """Return the Scratch matching given name, pid or address."""
+        """Return the Scratch matching given name, pid or address.
+
+        Args:
+            name: The scratchpad name
+            pid: The process ID
+            addr: The window address
+        """
         # {{{
         v: str | int
         assert len(list(filter(bool, (name, pid, addr)))) == 1, (

@@ -41,15 +41,28 @@ class WindowRuleSet:
         self._name = "PyprScratchR"
 
     def set_class(self, value: str) -> None:
-        """Set the windowrule matching class."""
+        """Set the windowrule matching class.
+
+        Args:
+            value: The class name
+        """
         self._class = value
 
     def set_name(self, value: str) -> None:
-        """Set the windowrule name."""
+        """Set the windowrule name.
+
+        Args:
+            value: The name
+        """
         self._name = value
 
     def set(self, param: str, value: str) -> None:
-        """Set a windowrule property."""
+        """Set a windowrule property.
+
+        Args:
+            param: The property name
+            value: The property value
+        """
         self._params.append((param, value))
 
     def _get_content(self) -> Iterable[str]:
@@ -117,8 +130,17 @@ class Scratch:  # {{{
             return cast("str", forced_monitor)
         return None
 
+    @property
+    def animation_type(self) -> str:
+        """Returns the configured animation (forced lowercase)."""
+        return self.conf.get_str("animation", "").lower()
+
     def _make_initial_config(self, config: dict) -> dict:
-        """Return configuration for the scratchpad."""
+        """Return configuration for the scratchpad.
+
+        Args:
+            config: The full configuration dictionary
+        """
         opts = {}
         scratch_config = config[self.uid]
         if "use" in scratch_config:
@@ -136,7 +158,11 @@ class Scratch:  # {{{
         return opts
 
     def set_config(self, full_config: dict[str, Any]) -> None:
-        """Apply constraints to the configuration."""
+        """Apply constraints to the configuration.
+
+        Args:
+            full_config: The full configuration dictionary
+        """
         opts = self._make_initial_config(full_config)
 
         # apply the config
@@ -157,7 +183,11 @@ class Scratch:  # {{{
             opts["allow_special_workspace"] = False
 
     def have_address(self, addr: str) -> bool:
-        """Check if the address is the same as the client."""
+        """Check if the address is the same as the client.
+
+        Args:
+            addr: The address to check
+        """
         return addr == self.full_address or addr in self.extra_addr
 
     @property
@@ -166,7 +196,11 @@ class Scratch:  # {{{
         return bool(self.conf.get("command"))
 
     async def initialize(self, ex: "_scratchpads_extension_m.Extension") -> None:
-        """Initialize the scratchpad."""
+        """Initialize the scratchpad.
+
+        Args:
+            ex: The scratchpad extension instance
+        """
         if self.meta.initialized:
             return
         if self.have_command:
@@ -200,7 +234,11 @@ class Scratch:  # {{{
         return False
 
     async def fetch_matching_client(self, clients: list[ClientInfo] | None = None) -> ClientInfo | None:
-        """Fetch the first matching client properties."""
+        """Fetch the first matching client properties.
+
+        Args:
+            clients: The list of clients
+        """
         match_by, match_val = self.get_match_props()
         return await self.get_client_props(
             match_fn=get_match_fn(match_by, match_val),
@@ -216,7 +254,11 @@ class Scratch:  # {{{
         return match_by, cast("str | float", self.conf[match_by])
 
     def reset(self, pid: int) -> None:
-        """Clear the object."""
+        """Clear the object.
+
+        Args:
+            pid: The process ID
+        """
         self.pid = pid
         self.visible = False
         self.client_info = {}  # type: ignore
@@ -237,7 +279,12 @@ class Scratch:  # {{{
         client_info: ClientInfo | None = None,
         clients: list[ClientInfo] | None = None,
     ) -> None:
-        """Update the internal client info property, if not provided, refresh based on the current address."""
+        """Update the internal client info property, if not provided, refresh based on the current address.
+
+        Args:
+            client_info: The client info
+            clients: The list of clients
+        """
         if client_info is None:
             if self.have_command:
                 client_info = await self.get_client_props(addr=self.full_address, clients=clients)
@@ -252,7 +299,11 @@ class Scratch:  # {{{
         self.client_info.update(client_info)
 
     def event_workspace(self, name: str) -> None:
-        """Check if the workspace changed."""
+        """Check if the workspace changed.
+
+        Args:
+            name: The workspace name
+        """
         if self.conf.get("pinned", True):
             self.meta.space_identifier = name, self.meta.space_identifier[1]
 

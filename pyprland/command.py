@@ -34,7 +34,10 @@ __all__: list[str] = ["Pyprland", "main", "run_client", "run_daemon"]
 def remove_duplicate(names: list[str]) -> Callable:
     """Decorator that removes duplicated calls to handlers in `names`.
 
-    Will check arguments as well
+    Will check arguments as well.
+
+    Args:
+        names: List of handler names to check for duplicates
     """
 
     def _remove_duplicates(func: Callable) -> Callable:
@@ -70,7 +73,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def _set_instance(cls, instance: Self) -> None:
-        """Set instance reference into class (for testing/debugging only)."""
+        """Set instance reference into class (for testing/debugging only).
+
+        Args:
+            instance: The Pyprland instance
+        """
         cls.instance = instance
 
     def __init__(self) -> None:
@@ -97,7 +104,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             raise PyprError from e
 
     async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
-        """Load config file as self.config."""
+        """Load config file as self.config.
+
+        Args:
+            config_filename: Optional configuration file path
+        """
         if config_filename:
             fname = os.path.expanduser(os.path.expandvars(config_filename))
             if os.path.isdir(fname):
@@ -122,7 +133,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         return config
 
     def __load_config_file(self, fname: str) -> dict[str, Any]:
-        """Load a configuration file and returns it as a dictionary."""
+        """Load a configuration file and returns it as a dictionary.
+
+        Args:
+            fname: Path to the configuration file
+        """
         config = {}
         if os.path.exists(fname):
             self.log.info("Loading %s", fname)
@@ -142,7 +157,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         return config
 
     async def _load_single_plugin(self, name: str, init: bool) -> bool:
-        """Load a single plugin, optionally calling `init`."""
+        """Load a single plugin, optionally calling `init`.
+
+        Args:
+            name: Plugin name
+            init: Whether to initialize the plugin
+        """
         if "." in name:
             modname = name
         elif "external:" in name:
@@ -172,6 +192,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         """Load the plugins mentioned in the config.
 
         If init is `True`, call the `init()` method on each plugin.
+
+        Args:
+            init: Whether to initialize the plugins
         """
         sys.path.extend(self.config["pyprland"].get("plugins_paths", []))
 
@@ -209,6 +232,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         """Load the configuration (new plugins will be added & config updated).
 
         if `init` is true, also initializes the plugins
+
+        Args:
+            init: Whether to initialize the plugins
         """
         await self.__open_config()
         assert self.config
@@ -217,16 +243,34 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler
 
     def plain_log_handler(self, plugin: Plugin, name: str, params: tuple[str]) -> None:
-        """Log a handler method without color."""
+        """Log a handler method without color.
+
+        Args:
+            plugin: The plugin instance
+            name: The handler name
+            params: Parameters passed to the handler
+        """
         plugin.log.debug("%s%s", name, params)
 
     def colored_log_handler(self, plugin: Plugin, name: str, params: tuple[str]) -> None:
-        """Log a handler method with color."""
+        """Log a handler method with color.
+
+        Args:
+            plugin: The plugin instance
+            name: The handler name
+            params: Parameters passed to the handler
+        """
         color = 33 if name.startswith("run_") else 30
         plugin.log.debug("\033[%s;1m%s%s\033[0m", color, name, params)
 
     async def _run_plugin_handler(self, plugin: Plugin, full_name: str, params: tuple[str, ...]) -> None:
-        """Run a single handler on a plugin."""
+        """Run a single handler on a plugin.
+
+        Args:
+            plugin: The plugin instance
+            full_name: The full name of the handler
+            params: Parameters to pass to the handler
+        """
         self.log_handler(plugin, full_name, params)
         try:
             await getattr(plugin, full_name)(*params)
@@ -239,7 +283,13 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
     @remove_duplicate(names=["event_activewindow", "event_activewindowv2"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
-        """Call an event handler with params."""
+        """Call an event handler with params.
+
+        Args:
+            full_name: The full name of the handler
+            *params: Parameters to pass to the handler
+            notify: Notification message if handler not found
+        """
         handled = False
         for plugin in self.plugins.values():
             if hasattr(plugin, full_name):
@@ -279,7 +329,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         await asyncio.wait_for(asyncio.gather(*active_plugins), timeout=TASK_TIMEOUT / 2)
 
     async def _abort_plugins(self, writer: asyncio.StreamWriter) -> None:
-        """Abort all plugins and stop the server."""
+        """Abort all plugins and stop the server.
+
+        Args:
+            writer: The stream writer to close
+        """
         await self.exit_plugins()
         # cancel the task group
         for task in self.tasks:
@@ -296,7 +350,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         os._exit(0)
 
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        """Receive a socket command."""
+        """Receive a socket command.
+
+        Args:
+            reader: The stream reader
+            writer: The stream writer
+        """
         data = (await reader.readline()).decode()
         processed = False
 
@@ -345,7 +404,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             await self.server.wait_closed()
 
     async def _plugin_runner_loop(self, name: str) -> None:
-        """Run tasks for a given plugin indefinitely."""
+        """Run tasks for a given plugin indefinitely.
+
+        Args:
+            name: Plugin name
+        """
         q = self.queues[name]
         is_pyprland = name == "pyprland"
 
@@ -390,6 +453,9 @@ async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.Stre
     """Obtain the event stream, retrying if it fails.
 
     If retry count is exhausted, returns (None, exception).
+
+    Args:
+        max_retry: Maximum number of retries
     """
     err_count = itertools.count()
     while True:
@@ -435,7 +501,11 @@ async def run_daemon() -> None:
 
 
 def get_commands_help(manager: Pyprland) -> dict:
-    """Get the available commands and their documentation."""
+    """Get the available commands and their documentation.
+
+    Args:
+        manager: The Pyprland manager instance
+    """
     docs = {
         "edit": "Edit the configuration file. (not in pypr-client)",
         "dumpjson": "Dump the configuration in JSON format.",
@@ -455,7 +525,11 @@ def get_commands_help(manager: Pyprland) -> dict:
 
 
 def get_help(manager: Pyprland) -> str:
-    """Get the documentation."""
+    """Get the documentation.
+
+    Args:
+        manager: The Pyprland manager instance
+    """
     intro = """Syntax: pypr [command]
 
 If the command is omitted, runs the daemon which will start every configured plugin.
@@ -504,6 +578,9 @@ def use_param(txt: str) -> str:
     """Check if parameter `txt` is in sys.argv.
 
     if found, removes it from sys.argv & returns the argument value
+
+    Args:
+        txt: Parameter name to look for
     """
     v = ""
     if txt in sys.argv:

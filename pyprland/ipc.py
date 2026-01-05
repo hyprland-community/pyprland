@@ -29,7 +29,11 @@ EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 
 @asynccontextmanager
 async def hyprctl_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
-    """Context manager for the hyprctl socket."""
+    """Context manager for the hyprctl socket.
+
+    Args:
+        logger: Logger to use for error reporting
+    """
     try:
         reader, writer = await asyncio.open_unix_connection(HYPRCTL)
     except FileNotFoundError as e:
@@ -44,7 +48,15 @@ async def hyprctl_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Str
 
 
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
-    """Hyprland notification system."""
+    """Hyprland notification system.
+
+    Args:
+        text: Notification message
+        duration: Notification duration in seconds
+        color: RGB color code (hex)
+        icon: Icon ID to display
+        logger: Logger instance
+    """
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
 
@@ -59,7 +71,11 @@ async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter
 
 
 def retry_on_reset(func: Callable) -> Callable:
-    """Retry on reset wrapper."""
+    """Retry on reset wrapper.
+
+    Args:
+        func: The function to wrap
+    """
 
     async def wrapper(*args, logger: Logger, **kwargs) -> Any:  # noqa: ANN401
         exc = None
@@ -77,7 +93,12 @@ def retry_on_reset(func: Callable) -> Callable:
 
 
 async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
-    """Get response of `command` from the IPC socket."""
+    """Get response of `command` from the IPC socket.
+
+    Args:
+        command: The command to send as bytes
+        logger: Logger to use for the connection
+    """
     async with hyprctl_connection(logger) as (reader, writer):
         writer.write(command)
         await writer.drain()
@@ -89,7 +110,12 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 @retry_on_reset
 async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
-    """Run an IPC command and return the JSON output."""
+    """Run an IPC command and return the JSON output.
+
+    Args:
+        command: The command to execute
+        logger: Logger to use (defaults to global log)
+    """
     logger = cast("Logger", logger or log)
     ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
@@ -194,7 +220,12 @@ async def get_monitor_props(logger: Logger | None = None, name: str | None = Non
 
 
 def default_match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
-    """Default match function."""
+    """Default match function.
+
+    Args:
+        value1: First value to compare
+        value2: Second value to compare
+    """
     return bool(value1 == value2)
 
 
@@ -250,7 +281,11 @@ def init() -> None:
 
 
 def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable]:
-    """Return (hyprctl, hyprctl_json, notify) configured for the given logger."""
+    """Return (hyprctl, hyprctl_json, notify) configured for the given logger.
+
+    Args:
+        logger: Logger to configure the controls with
+    """
     return (
         partial(hyprctl, logger=logger),
         partial(hyprctl_json, logger=logger),

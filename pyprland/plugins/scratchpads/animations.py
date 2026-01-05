@@ -24,13 +24,26 @@ class Placement:  # {{{
     # main function
     @staticmethod
     def get(animation_type: str, monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
-        """Get destination coordinate for the provided animation type."""
+        """Get destination coordinate for the provided animation type.
+
+        Args:
+            animation_type: Type of animation (fromtop, frombottom, etc.)
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
         return cast("tuple[int, int]", getattr(Placement, animation_type)(monitor, client, margin))
 
     # animation types
     @staticmethod
     def fromtop(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
-        """Slide from/to top."""
+        """Slide from/to top.
+
+        Args:
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -44,7 +57,13 @@ class Placement:  # {{{
 
     @staticmethod
     def frombottom(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
-        """Slide from/to bottom."""
+        """Slide from/to bottom.
+
+        Args:
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -59,7 +78,13 @@ class Placement:  # {{{
 
     @staticmethod
     def fromleft(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
-        """Slide from/to left."""
+        """Slide from/to left.
+
+        Args:
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)
@@ -73,7 +98,13 @@ class Placement:  # {{{
 
     @staticmethod
     def fromright(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
-        """Slide from/to right."""
+        """Slide from/to right.
+
+        Args:
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
         mon_x = monitor["x"]
         mon_y = monitor["y"]
         mon_width, mon_height = get_size(monitor)

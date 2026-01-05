@@ -14,7 +14,11 @@ class Extension(MenuMixin, Plugin):
     # Commands
 
     async def run_menu(self, name: str = "") -> None:
-        """[name] Shows the menu, if "name" is provided, will only show this sub-menu."""
+        """[name] Shows the menu, if "name" is provided, will only show this sub-menu.
+
+        Args:
+            name: The menu name
+        """
         await self.ensure_menu_configured()
         options = self.config["entries"]
         if name:
@@ -55,7 +59,11 @@ class Extension(MenuMixin, Plugin):
     # Utils
 
     async def _handle_chain(self, options: list[str | dict]) -> None:
-        """Handle a chain of special objects + final command string."""
+        """Handle a chain of special objects + final command string.
+
+        Args:
+            options: The chain of options
+        """
         variables: dict[str, str] = self.state.variables.copy()
         autovalidate = self.config.get_bool("skip_single", True)
         for option in options:

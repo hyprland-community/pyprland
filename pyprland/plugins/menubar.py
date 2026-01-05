@@ -15,7 +15,11 @@ IDLE_LOOP_INTERVAL = 10
 
 
 def get_pid_from_layers(layers: dict) -> bool | int:
-    """Get the PID of the bar from the layers."""
+    """Get the PID of the bar from the layers.
+
+    Args:
+        layers: The layers dictionary
+    """
     for screen in layers:
         for layer in layers[screen]["levels"].values():
             for instance in layer:
@@ -25,7 +29,12 @@ def get_pid_from_layers(layers: dict) -> bool | int:
 
 
 async def is_bar_alive(pid: int, hyprctl_json: Callable[..., Any]) -> int | bool:
-    """Check if the bar is running."""
+    """Check if the bar is running.
+
+    Args:
+        pid: The process ID
+        hyprctl_json: The hyprctl JSON function
+    """
     is_running = os.path.exists(f"/proc/{pid}")
     if is_running:
         print("found running", pid)
@@ -89,7 +98,11 @@ class Extension(Plugin):
         self.ongoing_task = asyncio.create_task(_run_loop())
 
     async def run_bar(self, args: str) -> None:
-        """<restart|stop> Start (default), restart or stop gBar."""
+        """<restart|stop> Start (default), restart or stop gBar.
+
+        Args:
+            args: The command arguments
+        """
         self.kill()
         if not args.startswith("stop"):
             await self.on_reload()
@@ -112,7 +125,11 @@ class Extension(Plugin):
         return ""
 
     async def event_monitoradded(self, monitor: str) -> None:
-        """Switch bar in case the monitor is preferred."""
+        """Switch bar in case the monitor is preferred.
+
+        Args:
+            monitor: The monitor name
+        """
         if self.cur_monitor:
             preferred = self.config.get("monitors", [])
             cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999

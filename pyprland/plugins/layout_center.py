@@ -36,7 +36,11 @@ class Extension(Plugin):
     # Events
 
     async def event_openwindow(self, windescr: str) -> None:
-        """Re-set focus to main if a window is opened."""
+        """Re-set focus to main if a window is opened.
+
+        Args:
+            windescr: The window description
+        """
         if not self.enabled:
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
@@ -68,7 +72,11 @@ class Extension(Plugin):
                 await self.prepare_window(clients)
 
     async def event_activewindowv2(self, _: str) -> None:
-        """Keep track of focused client."""
+        """Keep track of focused client.
+
+        Args:
+            _: The window address (unused)
+        """
         captive = self.config.get_bool("captive_focus")
         is_not_active = self.state.active_window != self.main_window_addr
         if captive and self.enabled and is_not_active:
@@ -80,7 +88,11 @@ class Extension(Plugin):
                 await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr: str) -> None:
-        """Disable when the main window is closed."""
+        """Disable when the main window is closed.
+
+        Args:
+            addr: The window address
+        """
         addr = "0x" + addr
         clients = [c for c in await self.get_clients() if c["address"] != addr]
         if self.enabled and await self._sanity_check(clients):
@@ -92,7 +104,11 @@ class Extension(Plugin):
     # Command
 
     async def run_layout_center(self, what: str) -> None:
-        """<toggle|next|prev|next2|prev2> turn on/off or change the active window."""
+        """<toggle|next|prev|next2|prev2> turn on/off or change the active window.
+
+        Args:
+            what: The command to run
+        """
         fn = self.command_handlers.get(what)
         if fn:
             await fn()
@@ -123,7 +139,11 @@ class Extension(Plugin):
         return clients
 
     async def unprepare_window(self, clients: list[ClientInfo] | None = None) -> None:
-        """Set the window as normal."""
+        """Set the window as normal.
+
+        Args:
+            clients: The list of clients
+        """
         if not clients:
             clients = await self.get_clients()
         addr = self.main_window_addr
@@ -135,7 +155,11 @@ class Extension(Plugin):
                 break
 
     async def prepare_window(self, clients: list[ClientInfo] | None = None) -> None:
-        """Set the window as centered."""
+        """Set the window as centered.
+
+        Args:
+            clients: The list of clients
+        """
         if not clients:
             clients = await self.get_clients()
         addr = self.main_window_addr
@@ -154,7 +178,12 @@ class Extension(Plugin):
     async def _calculate_centered_geometry(
         self, margin_conf: int | tuple[int, int], offset_conf: tuple[int, int]
     ) -> tuple[int, int, int, int]:
-        """Calculate the geometry (x, y, width, height) for the centered window."""
+        """Calculate the geometry (x, y, width, height) for the centered window.
+
+        Args:
+            margin_conf: The margin configuration
+            offset_conf: The offset configuration
+        """
         width = 100
         height = 100
         x, y = offset_conf
@@ -178,7 +207,11 @@ class Extension(Plugin):
     # Subcommands
 
     async def _sanity_check(self, clients: list[ClientInfo] | None = None) -> bool:
-        """Auto-disable if needed & return enabled status."""
+        """Auto-disable if needed & return enabled status.
+
+        Args:
+            clients: The list of clients
+        """
         clients = clients or await self.get_clients()
         if len(clients) < 2:  # noqa: PLR2004
             # If < 2 clients, disable the layout & stop
@@ -188,7 +221,12 @@ class Extension(Plugin):
         return self.enabled
 
     async def _run_changefocus(self, direction: int, default_override: str | None = None) -> None:
-        """Change the focus in the given direction (-1 or 1)."""
+        """Change the focus in the given direction (-1 or 1).
+
+        Args:
+            direction: The direction to change focus
+            default_override: The default override command
+        """
         if self.enabled:
             clients = [cli for cli in await self.get_clients() if not cli.get("floating") or cli["address"] == self.main_window_addr]
             if await self._sanity_check(clients):

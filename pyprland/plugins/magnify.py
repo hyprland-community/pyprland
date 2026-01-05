@@ -24,7 +24,14 @@ class Extension(Plugin):
             self.keyword = "cursor:zoom_factor"
 
     def ease_out_quad(self, step: float, start: int, end: int, duration: int) -> float:
-        """Easing function for animations."""
+        """Easing function for animations.
+
+        Args:
+            step: The current step
+            start: The start value
+            end: The end value
+            duration: The duration
+        """
         step /= duration
         return -end * step * (step - 2) + start
 

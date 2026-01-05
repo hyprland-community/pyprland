@@ -82,7 +82,13 @@ class Plugin:
         workspace: None | str = None,
         workspace_bl: str | None = None,
     ) -> list[ClientInfo]:
-        """Return the client list, optionally returns only mapped clients or from a given workspace."""
+        """Return the client list, optionally returns only mapped clients or from a given workspace.
+
+        Args:
+            mapped: Filter for mapped clients
+            workspace: Filter for specific workspace name
+            workspace_bl: Filter to blacklist a specific workspace name
+        """
         return [
             client
             for client in cast("list[ClientInfo]", await self.hyprctl_json("clients"))

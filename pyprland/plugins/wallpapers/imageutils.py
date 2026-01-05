@@ -14,12 +14,22 @@ IMAGE_FORMAT = "jpg"
 
 
 def expand_path(path: str) -> str:
-    """Expand the path."""
+    """Expand the path.
+
+    Args:
+        path: The path to expand (handles ~ and environment variables)
+    """
     return os.path.expanduser(os.path.expandvars(path))
 
 
 async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = True) -> AsyncIterator[str]:
-    """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders.."""
+    """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders..
+
+    Args:
+        path: Directory to search in
+        extensions: List of file extensions to include
+        recurse: Whether to search recursively in subdirectories
+    """
     for fname in await ailistdir(path):
         ext = fname.rsplit(".", 1)[-1]
         full_path = os.path.join(path, fname)
@@ -45,22 +55,40 @@ class RoundedImageManager:
     """Manages rounded and scaled images for monitors."""
 
     def __init__(self, radius: int) -> None:
-        """Initialize the manager."""
+        """Initialize the manager.
+
+        Args:
+            radius: Corner radius for rounding
+        """
         self.radius = radius
 
         self.tmpdir = Path("~").expanduser() / ".cache" / "pyprland" / "wallpapers"
         self.tmpdir.mkdir(parents=True, exist_ok=True)
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
-        """Build the cache key for the image."""
+        """Build the cache key for the image.
+
+        Args:
+            monitor: Monitor information
+            image_path: Path to the source image
+        """
         return f"{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def get_path(self, key: str) -> str:
-        """Get the path for a given key."""
+        """Get the path for a given key.
+
+        Args:
+            key: Cache key
+        """
         return os.path.join(self.tmpdir, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
-        """Scale and round the image for the given monitor."""
+        """Scale and round the image for the given monitor.
+
+        Args:
+            src: Source image path
+            monitor: Monitor information
+        """
         key = self._build_key(monitor, src)
         dest = self.get_path(key)
         if not os.path.exists(dest):
@@ -82,7 +110,14 @@ class RoundedImageManager:
         return dest
 
     def _create_rounded_mask(self, width: int, height: int, scale: int, resample: Image.Resampling) -> Image.Image:
-        """Create a rounded mask."""
+        """Create a rounded mask.
+
+        Args:
+            width: Target width
+            height: Target height
+            scale: Scaling factor for quality
+            resample: Resampling method
+        """
         image_width, image_height = width * scale, height * scale
         rounded_mask = Image.new("L", (image_width, image_height), 0)
         corner_draw = ImageDraw.Draw(rounded_mask)
@@ -91,21 +126,45 @@ class RoundedImageManager:
 
 
 def to_hex(red: int, green: int, blue: int) -> str:
-    """Convert integer rgb to hex."""
+    """Convert integer rgb to hex.
+
+    Args:
+        red: Red component (0-255)
+        green: Green component (0-255)
+        blue: Blue component (0-255)
+    """
     return f"#{red:02x}{green:02x}{blue:02x}"
 
 
 def to_rgb(red: int, green: int, blue: int) -> str:
-    """Convert integer rgb to rgb string."""
+    """Convert integer rgb to rgb string.
+
+    Args:
+        red: Red component (0-255)
+        green: Green component (0-255)
+        blue: Blue component (0-255)
+    """
     return f"rgb({red}, {green}, {blue})"
 
 
 def to_rgba(red: int, green: int, blue: int) -> str:
-    """Convert integer rgb to rgba string."""
+    """Convert integer rgb to rgba string.
+
+    Args:
+        red: Red component (0-255)
+        green: Green component (0-255)
+        blue: Blue component (0-255)
+    """
     return f"rgba({red}, {green}, {blue}, 1.0)"
 
 
 def get_variant_color(hue: float, saturation: float, lightness: float) -> tuple[int, int, int]:
-    """Get variant color."""
+    """Get variant color.
+
+    Args:
+        hue: Hue value (0.0-1.0)
+        saturation: Saturation value (0.0-1.0)
+        lightness: Lightness value (0.0-1.0)
+    """
     r, g, b = colorsys.hls_to_rgb(hue, max(0.0, min(1.0, lightness)), saturation)
     return int(r * 255), int(g * 255), int(b * 255)

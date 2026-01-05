@@ -25,7 +25,11 @@ KERNEL_SUM = 16.0
 
 
 def _build_hue_histogram(hsv_pixels: list[tuple[int, int, int]]) -> tuple[list[float], list[list[int]]]:
-    """Build a weighted hue histogram from HSV pixels."""
+    """Build a weighted hue histogram from HSV pixels.
+
+    Args:
+        hsv_pixels: List of (Hue, Saturation, Value) tuples
+    """
     hue_weights = [0.0] * HUE_MAX
     hue_pixel_indices: list[list[int]] = [[] for _ in range(HUE_MAX)]
 
@@ -41,7 +45,11 @@ def _build_hue_histogram(hsv_pixels: list[tuple[int, int, int]]) -> tuple[list[f
 
 
 def _smooth_histogram(hue_weights: list[float]) -> list[float]:
-    """Smooth the histogram using a Gaussian-like kernel."""
+    """Smooth the histogram using a Gaussian-like kernel.
+
+    Args:
+        hue_weights: List of weights for each hue
+    """
     smoothed_weights = [0.0] * HUE_MAX
     kernel = [1, 4, 6, 4, 1]
 
@@ -56,7 +64,11 @@ def _smooth_histogram(hue_weights: list[float]) -> list[float]:
 
 
 def _find_peaks(smoothed_weights: list[float]) -> list[tuple[float, int]]:
-    """Find peaks in the smoothed histogram."""
+    """Find peaks in the smoothed histogram.
+
+    Args:
+        smoothed_weights: List of smoothed weights
+    """
     peaks: list[tuple[float, int]] = []
     for i in range(HUE_MAX):
         left = smoothed_weights[(i - 1) % HUE_MAX]
@@ -75,7 +87,14 @@ def _get_best_pixel_for_hue(
     hsv_pixels: list[tuple[int, int, int]],
     rgb_pixels: list[tuple[int, int, int]],
 ) -> tuple[int, int, int]:
-    """Find the most representative pixel for a given hue bin."""
+    """Find the most representative pixel for a given hue bin.
+
+    Args:
+        target_hue: The target hue value
+        hue_pixel_indices: Mapping of hue to pixel indices
+        hsv_pixels: List of HSV pixels
+        rgb_pixels: List of RGB pixels
+    """
     best_pixel_idx = -1
     max_sv = -1.0
     for offset in range(-2, 3):
@@ -97,7 +116,12 @@ def _get_best_pixel_for_hue(
 
 
 def _calculate_hue_diff(hue1: int, hue2: int) -> int:
-    """Calculate the shortest distance between two hues on the circle."""
+    """Calculate the shortest distance between two hues on the circle.
+
+    Args:
+        hue1: First hue value
+        hue2: Second hue value
+    """
     diff = abs(hue1 - hue2)
     if diff > HUE_DIFF_THRESHOLD:
         diff = HUE_MAX - diff
@@ -110,7 +134,14 @@ def _select_colors_from_peaks(
     hsv_pixels: list[tuple[int, int, int]],
     rgb_pixels: list[tuple[int, int, int]],
 ) -> list[tuple[int, int, int]]:
-    """Select distinct colors from the identified peaks."""
+    """Select distinct colors from the identified peaks.
+
+    Args:
+        peaks: List of (weight, hue) tuples
+        hue_pixel_indices: Mapping of hue to pixel indices
+        hsv_pixels: List of HSV pixels
+        rgb_pixels: List of RGB pixels
+    """
     final_colors: list[tuple[int, int, int]] = []
     final_hues: list[int] = []
 
@@ -156,7 +187,11 @@ def _select_colors_from_peaks(
 
 
 def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
-    """Pick representative pixels using a weighted Hue Histogram approach."""
+    """Pick representative pixels using a weighted Hue Histogram approach.
+
+    Args:
+        img_path: Path to the image file
+    """
     if not Image:
         return [(0, 0, 0)] * 3
 

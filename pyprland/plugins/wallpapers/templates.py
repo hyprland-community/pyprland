@@ -13,7 +13,12 @@ from .models import HEX_LEN, HEX_LEN_HASH
 
 
 def _set_alpha(color: str, alpha: str) -> str:
-    """Set alpha channel for a color."""
+    """Set alpha channel for a color.
+
+    Args:
+        color: Input color string
+        alpha: Alpha value to apply
+    """
     if color.startswith("rgba("):
         return f"{color.rsplit(',', 1)[0]}, {alpha})"
     if len(color) == HEX_LEN:
@@ -26,7 +31,12 @@ def _set_alpha(color: str, alpha: str) -> str:
 
 
 def _set_lightness(hex_color: str, amount: str) -> str:
-    """Adjust lightness of a color."""
+    """Adjust lightness of a color.
+
+    Args:
+        hex_color: Input color in hex format
+        amount: Lightness adjustment amount
+    """
     # hex_color can be RRGGBB or #RRGGBB
     color = hex_color.lstrip("#")
     if len(color) != HEX_LEN:
@@ -45,7 +55,12 @@ def _set_lightness(hex_color: str, amount: str) -> str:
 
 
 async def _apply_filters(content: str, replacements: dict[str, str]) -> str:
-    """Apply filters to the content."""
+    """Apply filters to the content.
+
+    Args:
+        content: The text content to process
+        replacements: Dictionary of variable replacements
+    """
     # Process all template tags {{ ... }}
     # We find all tags first, then replace them.
     # This regex matches {{ variable | filter: arg }} or just {{ variable }}
@@ -80,6 +95,11 @@ class TemplateEngine:
     """Handle template generation."""
 
     def __init__(self, log: logging.Logger):
+        """Initialize the template engine.
+
+        Args:
+            log: Logger instance
+        """
         self.log = log
 
     async def process_single_template(
@@ -88,7 +108,13 @@ class TemplateEngine:
         template_config: dict[str, str],
         replacements: dict[str, str],
     ) -> None:
-        """Process a single template."""
+        """Process a single template.
+
+        Args:
+            name: Template name
+            template_config: Template configuration dictionary
+            replacements: Variable replacements dictionary
+        """
         if "input_path" not in template_config or "output_path" not in template_config:
             self.log.error("Template %s missing input_path or output_path", name)
             return

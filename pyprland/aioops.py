@@ -17,7 +17,11 @@ except ImportError:
     import os
 
     class AsyncFile:
-        """Async file wrapper."""
+        """Async file wrapper.
+
+        Args:
+            file: The file object to wrap
+        """
 
         def __init__(self, file: io.TextIOWrapper):
             self.file = file

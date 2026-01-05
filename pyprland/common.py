@@ -319,7 +319,13 @@ class Configuration(dict):
         self.log = logger or get_logger("config")
 
     def _get_converted(self, name: str, default: Any, converter: type) -> Any:  # noqa: ANN401
-        """Get a value and convert it safely, using a shared helper."""
+        """Get a value and convert it safely, using a shared helper.
+
+        Args:
+            name: The key name
+            default: Default value if conversion fails or key is missing
+            converter: The type/function to use for conversion
+        """
         value = self.get(name)
         if value is None:
             return default

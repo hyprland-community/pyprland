@@ -15,7 +15,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors"))]
 
     async def run_shift_monitors(self, arg: str) -> None:
-        """<direction> Swaps monitors' workspaces in the given direction."""
+        """<direction> Swaps monitors' workspaces in the given direction.
+
+        Args:
+            arg: The direction to shift
+        """
         if not self.monitors:
             return
 
@@ -87,11 +91,19 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 await self.hyprctl(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i + 1]}")
 
     async def event_monitoradded(self, monitor: str) -> None:
-        """Keep track of monitors."""
+        """Keep track of monitors.
+
+        Args:
+            monitor: The monitor name
+        """
         self.monitors.append(monitor)
 
     async def event_monitorremoved(self, monitor: str) -> None:
-        """Keep track of monitors."""
+        """Keep track of monitors.
+
+        Args:
+            monitor: The monitor name
+        """
         try:
             self.monitors.remove(monitor)
         except ValueError:

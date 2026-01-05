@@ -1,5 +1,5 @@
 # pylint: disable=duplicate-code
-"The monitors plugin"
+"""The monitors plugin."""
 
 import asyncio
 import subprocess
@@ -8,8 +8,15 @@ from typing import Any, cast
 from .interface import Plugin
 
 
-def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
-    "Apply the configuration change"
+def configure_monitors(monitors: list[dict[str, Any]], screenid: str, pos_x: int, pos_y: int) -> None:
+    """Apply the configuration change.
+
+    Args:
+        monitors: The list of monitors
+        screenid: The screen ID to configure
+        pos_x: The x position
+        pos_y: The y position
+    """
     x_offset = -pos_x if pos_x < 0 else 0
     y_offset = -pos_y if pos_y < 0 else 0
 
@@ -24,33 +31,47 @@ def configure_monitors(monitors, screenid: str, pos_x: int, pos_y: int) -> None:
     x_offset = -min_x
     y_offset = -min_y
     for mon in other_monitors:
-        command.extend([
-            "--output",
-            mon["name"],
-            "--pos",
-            f"{mon['x'] + x_offset},{mon['y'] + y_offset}",
-        ])
+        command.extend(
+            [
+                "--output",
+                mon["name"],
+                "--pos",
+                f"{mon['x'] + x_offset},{mon['y'] + y_offset}",
+            ]
+        )
 
     command.extend(["--output", screenid, "--pos", f"{pos_x + x_offset},{pos_y + y_offset}"])
     subprocess.call(command)
 
 
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
-    async def load_config(self, config) -> None:
+    """The monitors plugin."""
+
+    async def load_config(self, config: dict[str, Any]) -> None:
+        """Load the configuration.
+
+        Args:
+            config: The configuration dictionary
+        """
         await super().load_config(config)
         await self.run_relayout()
 
-    async def run_relayout(self):
-        "Recompute & apply every monitors's layout"
-        monitors = cast(list[dict], await self.hyprctl_json("monitors"))
+    async def run_relayout(self) -> None:
+        """Recompute & apply every monitors's layout."""
+        monitors = cast("list[dict]", await self.hyprctl_json("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(monitor["name"], no_default=True, monitors=monitors)
 
-    async def event_monitoradded(self, monitor_name, no_default=False, monitors: list | None = None) -> None:
-        "Triggers when a monitor is plugged"
+    async def event_monitoradded(self, monitor_name: str, no_default: bool = False, monitors: list | None = None) -> None:
+        """Triggers when a monitor is plugged.
 
+        Args:
+            monitor_name: The monitor name
+            no_default: Whether to run default command
+            monitors: The list of monitors
+        """
         if not monitors:
-            monitors = cast(list, await self.hyprctl_json("monitors"))
+            monitors = cast("list", await self.hyprctl_json("monitors"))
 
         assert monitors
 
@@ -70,8 +91,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
 
-    def _place_monitors(self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]):
-        "place a given monitor according to config"
+    def _place_monitors(self, monitor_name: str, mon_description: str, monitors: list[dict[str, Any]]) -> bool:
+        """Place a given monitor according to config.
+
+        Args:
+            monitor_name: The monitor name
+            mon_description: The monitor description
+            monitors: The list of monitors
+        """
         mon_by_name = {m["name"]: m for m in monitors}
         newmon = mon_by_name[monitor_name]
         for mon_pattern, conf in self.config["placement"].items():
