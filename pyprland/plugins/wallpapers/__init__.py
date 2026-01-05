@@ -6,11 +6,8 @@ import contextlib
 import os
 import os.path
 import random
-import re
-from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
-from ...aioops import aiexists, aiopen
 from ...common import apply_variables, prepare_for_quotes
 from ..interface import Plugin
 from .colorutils import can_edit_image, get_dominant_colors, nicify_oklab
@@ -19,12 +16,9 @@ from .imageutils import (
     RoundedImageManager,
     expand_path,
     get_files_with_ext,
-    get_variant_color,
-    to_hex,
-    to_rgb,
-    to_rgba,
 )
-from .models import HEX_LEN, HEX_LEN_HASH, MATERIAL_VARIATIONS, ColorVariant, MaterialColors, VariantConfig
+from .templates import TemplateEngine
+from .theme import detect_theme, generate_palette, get_color_scheme_props
 
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
@@ -50,6 +44,7 @@ class Extension(Plugin):
     _paused = False
 
     rounded_manager: RoundedImageManager | None
+    template_engine: TemplateEngine
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -68,6 +63,8 @@ class Extension(Plugin):
             self.rounded_manager = RoundedImageManager(radius)
         else:
             self.rounded_manager = None
+
+        self.template_engine = TemplateEngine(self.log)
 
         # Start the main loop if it's the first load of the config
         if self.loop is None:
@@ -106,313 +103,6 @@ class Extension(Plugin):
         self.log.info("Running %s", cmd)
         self.proc.append(await asyncio.create_subprocess_shell(cmd))
 
-    async def _detect_theme(self) -> str:
-        """Detect the system theme (light/dark)."""
-        # Try gsettings (GNOME/GTK)
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                "gsettings get org.gnome.desktop.interface color-scheme",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, _ = await proc.communicate()
-            if proc.returncode == 0:
-                output = stdout.decode().strip().lower()
-                if "prefer-light" in output or "'light'" in output:
-                    return "light"
-                if "prefer-dark" in output or "'dark'" in output:
-                    return "dark"
-        except Exception:  # pylint: disable=broad-exception-caught
-            self.log.debug("gsettings not available for theme detection")
-
-        # Try darkman
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                "darkman get",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, _ = await proc.communicate()
-            if proc.returncode == 0:
-                return stdout.decode().strip()
-        except Exception:  # pylint: disable=broad-exception-caught
-            self.log.debug("darkman not available for theme detection")
-
-        return "dark"
-
-    def _get_color_scheme_props(self) -> dict[str, float]:
-        """Return color scheme properties suitable for nicify_oklab."""
-        oklab_args: dict[str, float] = {}
-        color_scheme = self.config.get("color_scheme", "").lower()
-
-        if color_scheme == "pastel":
-            oklab_args = {
-                "min_sat": 0.2,
-                "max_sat": 0.5,
-                "min_light": 0.6,
-                "max_light": 0.9,
-            }
-        elif color_scheme.startswith("fluo"):
-            oklab_args = {
-                "min_sat": 0.7,
-                "max_sat": 1.0,
-                "min_light": 0.4,
-                "max_light": 0.85,
-            }
-        elif color_scheme == "vibrant":
-            oklab_args = {
-                "min_sat": 0.5,
-                "max_sat": 0.8,
-                "min_light": 0.4,
-                "max_light": 0.85,
-            }
-        elif color_scheme == "mellow":
-            oklab_args = {
-                "min_sat": 0.3,
-                "max_sat": 0.5,
-                "min_light": 0.4,
-                "max_light": 0.85,
-            }
-        elif color_scheme == "neutral":
-            oklab_args = {
-                "min_sat": 0.05,
-                "max_sat": 0.1,
-                "min_light": 0.4,
-                "max_light": 0.65,
-            }
-        elif color_scheme == "earth":
-            oklab_args = {
-                "min_sat": 0.2,
-                "max_sat": 0.6,
-                "min_light": 0.2,
-                "max_light": 0.6,
-            }
-        return oklab_args
-
-    def _get_rgb_for_variant(
-        self,
-        l_val: str | float,
-        cur_h: float,
-        cur_s: float,
-        source_hls: tuple[float, float, float],
-    ) -> tuple[int, int, int]:
-        """Get RGB color for a specific variant (lightness)."""
-        if l_val == "source":
-            r, g, b = colorsys.hls_to_rgb(*source_hls)
-            return int(r * 255), int(g * 255), int(b * 255)
-        return get_variant_color(cur_h, cur_s, float(l_val))
-
-    def _generate_palette(
-        self,
-        rgb_list: list[tuple[int, int, int]],
-        process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]],
-        theme: str = "dark",
-    ) -> dict[str, str]:
-        """Generate a material-like palette from a single color."""
-        hue, light, sat = process_color(rgb_list[0])
-
-        if self.config.get("variant") == "islands":
-            h_sec, _, s_sec = process_color(rgb_list[1])
-            h_tert, _, s_tert = process_color(rgb_list[2])
-        else:
-            h_sec, s_sec = hue, sat
-            h_tert, s_tert = hue, sat
-
-        colors = {"scheme": theme}
-        mat_colors = MaterialColors(primary=(hue, sat), secondary=(h_sec, s_sec), tertiary=(h_tert, s_tert))
-
-        for name, props in MATERIAL_VARIATIONS.items():
-            self._process_material_variant(
-                VariantConfig(
-                    name=name,
-                    props=cast("tuple[float | str, float, float | str, float | str]", props),
-                    mat_colors=mat_colors,
-                    source_hls=(hue, light, sat),
-                    theme=theme,
-                    colors=colors,
-                )
-            )
-
-        return colors
-
-    def _process_material_variant(
-        self,
-        config: VariantConfig,
-    ) -> None:
-        """Process a single material variant and populate colors."""
-        h_off, s_mult, l_dark, l_light = config.props
-        used_h, used_s, used_off = self._get_base_hs(config.name, config.mat_colors, cast("float | str", h_off))
-
-        cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
-        cur_s = max(0.0, min(1.0, used_s * s_mult))
-
-        rgb_dark = self._get_rgb_for_variant(cast("float | str", l_dark), cur_h, cur_s, config.source_hls)
-        rgb_light = self._get_rgb_for_variant(cast("float | str", l_light), cur_h, cur_s, config.source_hls)
-
-        self._populate_colors(
-            config.colors,
-            config.name,
-            config.theme,
-            ColorVariant(
-                dark=rgb_dark,
-                light=rgb_light,
-            ),
-        )
-
-    def _get_base_hs(
-        self,
-        name: str,
-        mat_colors: MaterialColors,
-        h_off: float | str,
-    ) -> tuple[float, float, float | str]:
-        """Determine base hue, saturation and offset for a color rule."""
-        used_h, used_s = mat_colors.primary
-        used_off = h_off
-
-        if self.config.get("variant") == "islands":
-            if "secondary" in name and "fixed" not in name:
-                used_h, used_s = mat_colors.secondary
-                used_off = 0.0
-            elif "tertiary" in name and "fixed" not in name:
-                used_h, used_s = mat_colors.tertiary
-                used_off = 0.0
-        return used_h, used_s, used_off
-
-    def _populate_colors(
-        self,
-        colors: dict[str, str],
-        name: str,
-        theme: str,
-        variant: ColorVariant,
-    ) -> None:
-        """Populate the colors dict with dark, light and default variants."""
-        r_dark, g_dark, b_dark = variant.dark
-        r_light, g_light, b_light = variant.light
-
-        # Dark variants
-        colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)
-        colors[f"colors.{name}.dark.hex"] = to_hex(r_dark, g_dark, b_dark)
-        colors[f"colors.{name}.dark.hex_stripped"] = to_hex(r_dark, g_dark, b_dark)[1:]
-        colors[f"colors.{name}.dark.rgb"] = to_rgb(r_dark, g_dark, b_dark)
-        colors[f"colors.{name}.dark.rgba"] = to_rgba(r_dark, g_dark, b_dark)
-
-        # Light variants
-        colors[f"colors.{name}.light"] = to_hex(r_light, g_light, b_light)
-        colors[f"colors.{name}.light.hex"] = to_hex(r_light, g_light, b_light)
-        colors[f"colors.{name}.light.hex_stripped"] = to_hex(r_light, g_light, b_light)[1:]
-        colors[f"colors.{name}.light.rgb"] = to_rgb(r_light, g_light, b_light)
-        colors[f"colors.{name}.light.rgba"] = to_rgba(r_light, g_light, b_light)
-
-        # Default (chosen)
-        if theme == "dark":
-            r_chosen, g_chosen, b_chosen = r_dark, g_dark, b_dark
-        else:
-            r_chosen, g_chosen, b_chosen = r_light, g_light, b_light
-
-        chosen_hex = to_hex(r_chosen, g_chosen, b_chosen)
-        colors[f"colors.{name}"] = chosen_hex
-        colors[f"colors.{name}.default.hex"] = chosen_hex
-        colors[f"colors.{name}.default.hex_stripped"] = chosen_hex[1:]
-        colors[f"colors.{name}.default.rgb"] = to_rgb(r_chosen, g_chosen, b_chosen)
-        colors[f"colors.{name}.default.rgba"] = to_rgba(r_chosen, g_chosen, b_chosen)
-
-    def _set_alpha(self, color: str, alpha: str) -> str:
-        """Set alpha channel for a color."""
-        if color.startswith("rgba("):
-            return f"{color.rsplit(',', 1)[0]}, {alpha})"
-        if len(color) == HEX_LEN:
-            r, g, b = int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-            return f"rgba({r}, {g}, {b}, {alpha})"
-        if len(color) == HEX_LEN_HASH and color.startswith("#"):
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            return f"rgba({r}, {g}, {b}, {alpha})"
-        return color
-
-    def _set_lightness(self, hex_color: str, amount: str) -> str:
-        """Adjust lightness of a color."""
-        # hex_color can be RRGGBB or #RRGGBB
-        color = hex_color.lstrip("#")
-        if len(color) != HEX_LEN:
-            return hex_color
-
-        r, g, b = int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
-        h, l_val, s = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
-
-        # amount is percentage change, e.g. 20.0 or -10.0
-        with contextlib.suppress(ValueError):
-            l_val = max(0.0, min(1.0, l_val + (float(amount) / 100.0)))
-
-        nr, ng, nb = colorsys.hls_to_rgb(h, l_val, s)
-        new_hex = f"{int(nr * 255):02x}{int(ng * 255):02x}{int(nb * 255):02x}"
-        return f"#{new_hex}" if hex_color.startswith("#") else new_hex
-
-    async def _apply_filters(self, content: str, replacements: dict[str, str]) -> str:
-        """Apply filters to the content."""
-        # Process all template tags {{ ... }}
-        # We find all tags first, then replace them.
-        # This regex matches {{ variable | filter: arg }} or just {{ variable }}
-        # It handles spaces around variable and filter parts.
-        tag_pattern = re.compile(r"\{\{\s*([\w\.]+)(?:\s*\|\s*([\w_]+)\s*(?:[:\s])\s*([^}]+))?\s*\}\}")
-
-        def replace_tag(match: re.Match) -> str:
-            key = match.group(1)
-            filter_name = match.group(2)
-            filter_arg = match.group(3)
-
-            value = replacements.get(key)
-            if value is None:
-                return cast("str", match.group(0))
-
-            if filter_name and filter_arg:
-                filter_arg = filter_arg.strip()
-                with contextlib.suppress(Exception):
-                    if filter_name == "set_alpha":
-                        return self._set_alpha(value, filter_arg)
-                    if filter_name == "set_lightness":
-                        return self._set_lightness(value, filter_arg)
-                # Fallback if filter fails or unknown
-                return str(value)
-
-            return str(value)
-
-        return tag_pattern.sub(replace_tag, content)
-
-    async def _process_single_template(
-        self,
-        name: str,
-        template_config: dict[str, str],
-        replacements: dict[str, str],
-    ) -> None:
-        """Process a single template."""
-        if "input_path" not in template_config or "output_path" not in template_config:
-            self.log.error("Template %s missing input_path or output_path", name)
-            return
-
-        input_path = expand_path(template_config["input_path"])
-        output_path = expand_path(template_config["output_path"])
-
-        if not await aiexists(input_path):
-            self.log.error("Template input file %s not found", input_path)
-            return
-
-        try:
-            async with aiopen(input_path, "r") as f:
-                content = await f.read()
-
-            content = await self._apply_filters(content, replacements)
-
-            async with aiopen(output_path, "w") as f:
-                await f.write(content)
-            self.log.info("Generated %s from %s", output_path, input_path)
-
-            post_hook = template_config.get("post_hook")
-            if post_hook:
-                self.log.info("Running post_hook for %s: %s", name, post_hook)
-                await asyncio.create_subprocess_shell(post_hook)
-
-        except Exception:  # pylint: disable=broad-exception-caught
-            self.log.exception("Error processing template %s", name)
-
     async def _generate_templates(self, img_path: str, color: str | None = None) -> None:
         """Generate templates from the image."""
         templates = self.config.get("templates")
@@ -431,22 +121,28 @@ class Extension(Plugin):
             dominant_colors = [c_rgb] * 3
         else:
             dominant_colors = await asyncio.to_thread(get_dominant_colors, img_path=img_path)
-        theme = await self._detect_theme()
+        theme = await detect_theme()
 
         def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
             # reduce blue level for earth
             if self.config.get("color_scheme") == "earth":
                 rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
 
-            r, g, b = nicify_oklab(rgb, **self._get_color_scheme_props())
+            color_scheme = self.config.get("color_scheme", "")
+            r, g, b = nicify_oklab(rgb, **get_color_scheme_props(color_scheme))
             return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
 
-        replacements = self._generate_palette(dominant_colors, theme=theme, process_color=process_color)
+        replacements = generate_palette(
+            dominant_colors,
+            theme=theme,
+            process_color=process_color,
+            variant_type=self.config.get("variant"),
+        )
         replacements["image"] = img_path
 
         for name, template_config in templates.items():
             self.log.debug("processing %s", name)
-            await self._process_single_template(name, template_config, replacements)
+            await self.template_engine.process_single_template(name, template_config, replacements)
 
     async def update_vars(self, variables: dict[str, Any], monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""

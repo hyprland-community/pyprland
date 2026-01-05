@@ -4,6 +4,17 @@ from pyprland.plugins.wallpapers import Extension
 from pyprland.plugins.wallpapers.colorutils import nicify_oklab
 
 
+from pyprland.plugins.wallpapers.theme import (
+    get_color_scheme_props,
+    generate_palette,
+)
+from pyprland.plugins.wallpapers.templates import (
+    _set_alpha,
+    _set_lightness,
+    _apply_filters,
+)
+
+
 @pytest.fixture
 def wallpaper_plugin():
     return Extension("wallpapers")
@@ -56,14 +67,12 @@ def test_color_scheme_props(wallpaper_plugin):
     }
 
     for scheme, expected in schemes.items():
-        wallpaper_plugin.config = {"color_scheme": scheme}
-        props = wallpaper_plugin._get_color_scheme_props()
+        props = get_color_scheme_props(scheme)
         assert props == expected, f"Failed for scheme: {scheme}"
 
 
 def test_color_scheme_props_default(wallpaper_plugin):
-    wallpaper_plugin.config = {"color_scheme": "default"}
-    props = wallpaper_plugin._get_color_scheme_props()
+    props = get_color_scheme_props("default")
     assert props == {}
 
 
@@ -74,7 +83,7 @@ def test_generate_palette_basic(wallpaper_plugin):
     rgb_list = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
     wallpaper_plugin.config = {}
 
-    palette = wallpaper_plugin._generate_palette(rgb_list, mock_process_color, theme="dark")
+    palette = generate_palette(rgb_list, mock_process_color, theme="dark")
 
     assert palette["scheme"] == "dark"
     # Basic check for existence
@@ -94,9 +103,9 @@ def test_generate_palette_islands(wallpaper_plugin):
         return (0.0, 0.0, 0.0)
 
     rgb_list = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
-    wallpaper_plugin.config = {"variant": "islands"}
+    # variant="islands" passed as argument now
 
-    palette = wallpaper_plugin._generate_palette(rgb_list, mock_process_color)
+    palette = generate_palette(rgb_list, mock_process_color, variant_type="islands")
 
     # In islands mode:
     # Primary uses 1st color (Red hue 0.0)
@@ -115,23 +124,23 @@ def test_generate_palette_islands(wallpaper_plugin):
 
 def test_set_alpha(wallpaper_plugin):
     # Hex 6
-    assert wallpaper_plugin._set_alpha("FFFFFF", "0.5") == "rgba(255, 255, 255, 0.5)"
+    assert _set_alpha("FFFFFF", "0.5") == "rgba(255, 255, 255, 0.5)"
     # Hex 7 (#)
-    assert wallpaper_plugin._set_alpha("#FFFFFF", "0.5") == "rgba(255, 255, 255, 0.5)"
+    assert _set_alpha("#FFFFFF", "0.5") == "rgba(255, 255, 255, 0.5)"
     # RGBA already
-    assert wallpaper_plugin._set_alpha("rgba(0, 0, 0, 1.0)", "0.5") == "rgba(0, 0, 0, 0.5)"
+    assert _set_alpha("rgba(0, 0, 0, 1.0)", "0.5") == "rgba(0, 0, 0, 0.5)"
 
 
 def test_set_lightness(wallpaper_plugin):
     # Black -> lighter
     # #000000 is H=0, L=0, S=0. +20% lightness = L=0.2
     # Expect non-black
-    res = wallpaper_plugin._set_lightness("#000000", "20")
+    res = _set_lightness("#000000", "20")
     assert res != "#000000"
 
     # White -> darker
     # #FFFFFF is L=1.0. -20% = L=0.8
-    res = wallpaper_plugin._set_lightness("#FFFFFF", "-20")
+    res = _set_lightness("#FFFFFF", "-20")
     assert res != "#ffffff"
     assert res != "#FFFFFF"
 
@@ -142,27 +151,27 @@ async def test_apply_filters(wallpaper_plugin):
 
     # Simple replacement
     content = "Color is {{ color }}"
-    res = await wallpaper_plugin._apply_filters(content, replacements)
+    res = await _apply_filters(content, replacements)
     assert res == "Color is #FF0000"
 
     # Filter set_alpha
     content = "Alpha: {{ color | set_alpha: 0.5 }}"
-    res = await wallpaper_plugin._apply_filters(content, replacements)
+    res = await _apply_filters(content, replacements)
     assert "rgba(255, 0, 0, 0.5)" in res
 
     # Filter set_lightness
     content = "Light: {{ color | set_lightness: -50 }}"
-    res = await wallpaper_plugin._apply_filters(content, replacements)
+    res = await _apply_filters(content, replacements)
     assert res != "Light: #FF0000"
 
     # Unknown filter (should return value as is)
     content = "Unknown: {{ color | invalid_filter: 123 }}"
-    res = await wallpaper_plugin._apply_filters(content, replacements)
+    res = await _apply_filters(content, replacements)
     assert res == "Unknown: #FF0000"
 
     # Missing variable
     content = "Missing: {{ missing_var }}"
-    res = await wallpaper_plugin._apply_filters(content, replacements)
+    res = await _apply_filters(content, replacements)
     assert res == "Missing: {{ missing_var }}"
 
 
@@ -172,8 +181,7 @@ def test_color_scheme_effect_on_saturation(wallpaper_plugin):
     base_rgb = (255, 0, 0)
 
     # 1. Neutral (Low Saturation)
-    wallpaper_plugin.config = {"color_scheme": "neutral"}
-    props_neutral = wallpaper_plugin._get_color_scheme_props()
+    props_neutral = get_color_scheme_props("neutral")
     res_neutral = nicify_oklab(base_rgb, **props_neutral)
 
     # Convert back to HLS to check saturation (0.0 - 1.0)
@@ -181,8 +189,7 @@ def test_color_scheme_effect_on_saturation(wallpaper_plugin):
     _, l_neutral, s_neutral = colorsys.rgb_to_hls(res_neutral[0] / 255.0, res_neutral[1] / 255.0, res_neutral[2] / 255.0)
 
     # 2. Fluo (High Saturation)
-    wallpaper_plugin.config = {"color_scheme": "fluo"}
-    props_fluo = wallpaper_plugin._get_color_scheme_props()
+    props_fluo = get_color_scheme_props("fluo")
     res_fluo = nicify_oklab(base_rgb, **props_fluo)
 
     _, l_fluo, s_fluo = colorsys.rgb_to_hls(res_fluo[0] / 255.0, res_fluo[1] / 255.0, res_fluo[2] / 255.0)

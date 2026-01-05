@@ -68,7 +68,7 @@ async def test_run_wall_next(extension):
 
 
 @pytest.mark.asyncio
-async def test_detect_theme(extension, mocker):
+async def test_detect_theme(mocker):
     # Mock subprocess for gsettings
     proc_mock = AsyncMock()
     proc_mock.communicate.return_value = (b"'prefer-dark'\n", b"")
@@ -76,12 +76,14 @@ async def test_detect_theme(extension, mocker):
 
     mocker.patch("asyncio.create_subprocess_shell", return_value=proc_mock)
 
-    theme = await extension._detect_theme()
+    from pyprland.plugins.wallpapers.theme import detect_theme
+
+    theme = await detect_theme()
     assert theme == "dark"
 
 
 @pytest.mark.asyncio
-async def test_material_palette_generation(extension):
+async def test_material_palette_generation():
     # Just verify that it generates keys correctly based on the constant dictionary
     rgb_list = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]  # Red, Green, Blue
 
@@ -91,13 +93,15 @@ async def test_material_palette_generation(extension):
 
     with (
         patch("pyprland.plugins.wallpapers.colorutils.nicify_oklab", side_effect=lambda rgb, **kwargs: rgb),
-        patch("pyprland.plugins.wallpapers.imageutils.get_variant_color", return_value=(100, 100, 100)),
+        patch("pyprland.plugins.wallpapers.theme.get_variant_color", return_value=(100, 100, 100)),
     ):
         # Simple process_color mock
         def process_color(rgb):
             return (0.0, 0.5, 0.5)  # hue, light, sat
 
-        palette = extension._generate_palette(rgb_list, process_color)
+        from pyprland.plugins.wallpapers.theme import generate_palette
+
+        palette = generate_palette(rgb_list, process_color)
 
         assert "colors.primary.dark" in palette
         assert "colors.secondary.light" in palette
