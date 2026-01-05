@@ -86,30 +86,30 @@ def _place_bottom(ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int],
     return int(x), int(y)
 
 
-def compute_xy(  # noqa: PLR0913
-    ref_mon: MonitorInfo,
-    mon: MonitorInfo,
-    ref_rect: tuple[int, int],
+def compute_xy(
+    ref_rect: tuple[int, int, int, int],
+    mon_dim: tuple[int, int],
     rule: str,
-    ref_config: dict[str, Any] | None = None,
-    mon_config: dict[str, Any] | None = None,
 ) -> tuple[int, int]:
-    """Compute position of `mon` relative to `ref_mon` based on `rule`."""
-    ref_x, ref_y = ref_rect
-    ref_w, ref_h = get_dims(ref_mon, ref_config)
-    mon_w, mon_h = get_dims(mon, mon_config)
+    """Compute position of a monitor relative to a reference monitor.
+
+    Args:
+        ref_rect: The (x, y, width, height) of the reference monitor.
+        mon_dim: The (width, height) of the monitor to place.
+        rule: The placement rule (e.g. "left", "right", "top-center").
+
+    Returns:
+        tuple[int, int]: The (x, y) coordinates for the new monitor.
+    """
     rule = rule.lower().replace("_", "").replace("-", "")
 
-    rect = (ref_x, ref_y, ref_w, ref_h)
-    mon_dim = (mon_w, mon_h)
-
     if "left" in rule:
-        return _place_left(rect, mon_dim, rule)
+        return _place_left(ref_rect, mon_dim, rule)
     if "right" in rule:
-        return _place_right(rect, mon_dim, rule)
+        return _place_right(ref_rect, mon_dim, rule)
     if "top" in rule:
-        return _place_top(rect, mon_dim, rule)
+        return _place_top(ref_rect, mon_dim, rule)
     if "bottom" in rule:
-        return _place_bottom(rect, mon_dim, rule)
+        return _place_bottom(ref_rect, mon_dim, rule)
 
-    return ref_x, ref_y
+    return ref_rect[0], ref_rect[1]

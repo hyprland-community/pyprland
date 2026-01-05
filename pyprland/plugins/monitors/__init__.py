@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from ...types import MonitorInfo
 from ..interface import Plugin
-from .layout import MONITOR_PROPS, compute_xy
+from .layout import MONITOR_PROPS, compute_xy, get_dims
 
 
 class Extension(Plugin):
@@ -121,15 +121,17 @@ class Extension(Plugin):
             processed.add(ref_name)
 
             for child_name, rule in tree[ref_name]:
-                x, y = compute_xy(
-                    monitors_by_name[ref_name],
-                    monitors_by_name[child_name],
-                    positions[ref_name],
-                    rule,
-                    config.get(ref_name, {}),
-                    config.get(child_name, {}),
+                ref_rect = (
+                    *positions[ref_name],
+                    *get_dims(monitors_by_name[ref_name], config.get(ref_name, {})),
                 )
-                positions[child_name] = (x, y)
+                mon_dim = get_dims(monitors_by_name[child_name], config.get(child_name, {}))
+
+                positions[child_name] = compute_xy(
+                    ref_rect,
+                    mon_dim,
+                    rule,
+                )
 
                 in_degree[child_name] -= 1
                 if in_degree[child_name] == 0:
