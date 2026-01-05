@@ -200,9 +200,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if defined_class:
             if state.hyprland_version < VersionInfo(0, 53, 0):
                 if state.hyprland_version > VersionInfo(0, 47, 2):
-                    await self.hyprctl(f"windowrule unset, class:{defined_class}", "keyword")
+                    await self.hyprctl(f"windowrule unset, class: {defined_class}", "keyword")
                 else:
-                    await self.hyprctl(f"windowrule unset, ^{defined_class}$", "keyword")
+                    await self.hyprctl(f"windowrule unset, ^({defined_class})$", "keyword")
             else:
                 await self.hyprctl(f"windowrule[{scratch.uid}]:enable false", "keyword")
 
@@ -225,7 +225,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             width, height = convert_coords(scratch.conf.get_str("size", "80% 80%"), monitor)
 
             if "float" not in skipped_windowrules:
-                wr.set("float", "on")
+                if state.hyprland_version < VersionInfo(0, 53, 0):
+                    wr.set("float", "")
+                else:
+                    wr.set("float", "on")
             if "workspace" not in skipped_windowrules:
                 wr.set("workspace", f"{mk_scratch_name(scratch.uid)} silent")
             set_aspect = "aspect" not in skipped_windowrules
