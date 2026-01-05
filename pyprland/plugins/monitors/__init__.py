@@ -17,7 +17,7 @@ class Extension(Plugin):
     async def on_reload(self) -> None:
         """Reload the plugin."""
         self._clear_mon_by_pat_cache()
-        monitors = await self.hyprctl_json("monitors")
+        monitors = await self.hyprctl_json("monitors all")
 
         for mon in self.state.monitors:
             await self._hotplug_command(monitors, name=mon)
@@ -46,7 +46,7 @@ class Extension(Plugin):
             name: The name of the added monitor
         """
         await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
-        monitors = await self.hyprctl_json("monitors")
+        monitors = await self.hyprctl_json("monitors all")
         await self._hotplug_command(monitors, name)
 
         if not await self._run_relayout(monitors):
@@ -65,7 +65,7 @@ class Extension(Plugin):
             monitors: Optional list of monitors to use. If not provided, fetches current state.
         """
         if monitors is None:
-            monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors"))
+            monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors all"))
 
         self._clear_mon_by_pat_cache()
 
