@@ -90,8 +90,8 @@ async def test_material_palette_generation(extension):
     # For now, let's test if the structure is correct
 
     with (
-        patch("pyprland.plugins.wallpapers.nicify_oklab", side_effect=lambda rgb, **kwargs: rgb),
-        patch("pyprland.plugins.wallpapers.get_variant_color", return_value=(100, 100, 100)),
+        patch("pyprland.plugins.wallpapers.colorutils.nicify_oklab", side_effect=lambda rgb, **kwargs: rgb),
+        patch("pyprland.plugins.wallpapers.imageutils.get_variant_color", return_value=(100, 100, 100)),
     ):
         # Simple process_color mock
         def process_color(rgb):

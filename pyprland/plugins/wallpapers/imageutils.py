@@ -7,8 +7,8 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..aioops import ailistdir
-from .wallpapers_utils import Image, ImageDraw, ImageOps
+from ...aioops import ailistdir
+from .colorutils import Image, ImageDraw, ImageOps
 
 IMAGE_FORMAT = "jpg"
 

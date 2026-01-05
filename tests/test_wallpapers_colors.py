@@ -1,7 +1,7 @@
 import pytest
 import colorsys
 from pyprland.plugins.wallpapers import Extension
-from pyprland.plugins.wallpapers_utils import nicify_oklab
+from pyprland.plugins.wallpapers.colorutils import nicify_oklab
 
 
 @pytest.fixture

@@ -3,12 +3,11 @@
 import asyncio
 import contextlib
 import time
-from collections.abc import Iterable
 from functools import partial
 from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
-from ...common import MINIMUM_ADDR_LEN, SharedState, apply_variables, is_rotated
+from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated
 from ...ipc import get_client_props, get_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
@@ -23,7 +22,7 @@ from .helpers import (
     mk_scratch_name,
 )
 from .lookup import ScratchDB
-from .objects import Scratch
+from .objects import Scratch, WindowRuleSet
 
 AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 DEFAULT_MARGIN = 60  # in pixels
@@ -32,48 +31,6 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
 # Ad-hoc classes & functions {{{
-class WindowRuleSet:
-    """Windowrule set builder."""
-
-    def __init__(self, state: SharedState) -> None:
-        self.state = state
-        self._params: list[tuple[str, str]] = []
-        self._class = ""
-        self._name = "PyprScratchR"
-
-    def set_class(self, value: str) -> None:
-        """Set the windowrule matching class."""
-        self._class = value
-
-    def set_name(self, value: str) -> None:
-        """Set the windowrule name."""
-        self._name = value
-
-    def set(self, param: str, value: str) -> None:
-        """Set a windowrule property."""
-        self._params.append((param, value))
-
-    def _get_content(self) -> Iterable[str]:
-        """Get the windowrule content."""
-        if self.state.hyprland_version > VersionInfo(0, 47, 2):
-            if self.state.hyprland_version < VersionInfo(0, 53, 0):
-                for p in self._params:
-                    yield f"windowrule {p[0]} {p[1]}, class: {self._class}"
-            elif self._name:
-                yield f"windowrule[{self._name}]:enable true"
-                yield f"windowrule[{self._name}]:match:class {self._class}"
-                for p in self._params:
-                    yield f"windowrule[{self._name}]:{p[0]} {p[1]}"
-            else:
-                for p in self._params:
-                    yield f"windowrule {p[0]} {p[1]}, match:class {self._class}"
-        else:
-            for p in self._params:
-                yield f"windowrule {p[0]} {p[1]}, ^({self._class})$"
-
-    def get_content(self) -> list[str]:
-        """Get the windowrule content."""
-        return list(self._get_content())
 
 
 def get_animation_type(scratch: Scratch) -> str:
