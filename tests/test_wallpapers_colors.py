@@ -1,9 +1,21 @@
 import pytest
+import math
+from unittest.mock import Mock, patch, MagicMock
+from pyprland.plugins.wallpapers.colorutils import (
+    _build_hue_histogram,
+    _smooth_histogram,
+    _find_peaks,
+    _get_best_pixel_for_hue,
+    _calculate_hue_diff,
+    _select_colors_from_peaks,
+    get_dominant_colors,
+    nicify_oklab,
+    HUE_MAX,
+    MIN_SATURATION,
+    MIN_BRIGHTNESS,
+)
 import colorsys
 from pyprland.plugins.wallpapers import Extension
-from pyprland.plugins.wallpapers.colorutils import nicify_oklab
-
-
 from pyprland.plugins.wallpapers.theme import (
     get_color_scheme_props,
     generate_palette,
@@ -13,6 +25,192 @@ from pyprland.plugins.wallpapers.templates import (
     _set_lightness,
     _apply_filters,
 )
+
+# --- Histogram Tests ---
+
+
+def test_build_hue_histogram():
+    # Setup simple pixels:
+    # 1. Valid: H=10, S=100, V=100
+    # 2. Invalid: Low saturation
+    # 3. Invalid: Low brightness
+    pixels = [(10, 100, 100), (20, MIN_SATURATION - 1, 100), (30, 100, MIN_BRIGHTNESS - 1)]
+
+    weights, indices = _build_hue_histogram(pixels)
+
+    assert len(weights) == HUE_MAX
+    assert len(indices) == HUE_MAX
+
+    # Check valid pixel
+    expected_weight = (100 * 100) / (255.0 * 255.0)
+    assert math.isclose(weights[10], expected_weight, rel_tol=1e-5)
+    assert indices[10] == [0]
+
+    # Check invalid pixels
+    assert weights[20] == 0.0
+    assert indices[20] == []
+    assert weights[30] == 0.0
+    assert indices[30] == []
+
+
+def test_smooth_histogram():
+    weights = [0.0] * HUE_MAX
+    # Single spike
+    weights[10] = 16.0
+
+    smoothed = _smooth_histogram(weights)
+
+    # Kernel: [1, 4, 6, 4, 1] / 16
+    # So index 10 (center) should receive 16 * 6/16 = 6
+    assert smoothed[10] == 6.0
+    # Index 9: 16 * 4/16 = 4
+    assert smoothed[9] == 4.0
+    # Index 11: 16 * 4/16 = 4
+    assert smoothed[11] == 4.0
+
+    # Check wrap around
+    weights_wrap = [0.0] * HUE_MAX
+    weights_wrap[0] = 16.0
+    smoothed_wrap = _smooth_histogram(weights_wrap)
+    assert smoothed_wrap[0] == 6.0
+    assert smoothed_wrap[HUE_MAX - 1] == 4.0
+
+
+def test_find_peaks():
+    weights = [0.0] * HUE_MAX
+    weights[10] = 5.0  # Peak
+    weights[9] = 2.0
+    weights[11] = 2.0
+
+    weights[50] = 10.0  # Higher Peak
+    weights[49] = 8.0
+    weights[51] = 8.0
+
+    peaks = _find_peaks(weights)
+
+    # Should be sorted by value descending
+    assert len(peaks) == 2
+    assert peaks[0] == (10.0, 50)
+    assert peaks[1] == (5.0, 10)
+
+
+def test_calculate_hue_diff():
+    # Direct distance
+    assert _calculate_hue_diff(10, 20) == 10
+    # Wrap around distance
+    assert _calculate_hue_diff(10, 250) == 16  # 256 - 250 + 10 = 6 + 10 = 16 (assuming HUE_MAX 256)
+
+    # Test specific threshold logic
+    # HUE_DIFF_THRESHOLD is 128
+    assert _calculate_hue_diff(0, 128) == 128
+    assert _calculate_hue_diff(0, 129) == 127  # 256 - 129 = 127
+
+
+# --- Color Selection Tests ---
+
+
+def test_get_best_pixel_for_hue():
+    target_hue = 10
+    indices = [[] for _ in range(HUE_MAX)]
+    indices[10] = [0, 1]
+
+    # px0: S=50, V=50 -> w=2500
+    # px1: S=100, V=100 -> w=10000 (Best)
+    hsv_pixels = [(10, 50, 50), (10, 100, 100)]
+    rgb_pixels = [(50, 50, 50), (100, 100, 100)]
+
+    result = _get_best_pixel_for_hue(target_hue, indices, hsv_pixels, rgb_pixels)
+    assert result == (100, 100, 100)
+
+    # Test neighbor lookup
+    indices[10] = []
+    indices[11] = [0]  # Neighbor
+    hsv_pixels = [(11, 50, 50)]
+    rgb_pixels = [(50, 50, 50)]
+
+    result = _get_best_pixel_for_hue(target_hue, indices, hsv_pixels, rgb_pixels)
+    assert result == (50, 50, 50)
+
+
+def test_select_colors_from_peaks():
+    # Prepare dummy data
+    peaks = [(1.0, 10), (0.8, 40), (0.5, 70)]  # All far enough apart (>21)
+    indices = [[] for _ in range(HUE_MAX)]
+    # Populate indices for the peak hues
+    indices[10] = [0]
+    indices[40] = [1]
+    indices[70] = [2]
+
+    hsv_pixels = [(10, 100, 100), (40, 100, 100), (70, 100, 100)]
+    rgb_pixels = [(10, 10, 10), (40, 40, 40), (70, 70, 70)]
+
+    colors = _select_colors_from_peaks(peaks, indices, hsv_pixels, rgb_pixels)
+
+    assert len(colors) == 3
+    assert colors[0] == (10, 10, 10)
+    assert colors[1] == (40, 40, 40)
+    assert colors[2] == (70, 70, 70)
+
+
+def test_get_dominant_colors_integration():
+    with patch("pyprland.plugins.wallpapers.colorutils.Image") as MockImage:
+        # Mock Image.open context manager
+        mock_img = Mock()
+        MockImage.open.return_value.__enter__.return_value = mock_img
+
+        # Mock conversions
+        mock_rgb = Mock()
+        mock_rgb.getdata.return_value = [(255, 0, 0)] * 10
+
+        mock_hsv = Mock()
+        mock_hsv.getdata.return_value = [(0, 100, 100)] * 10  # Red pixels
+
+        # Need to handle chaining: img.convert("RGB") -> mock_rgb, mock_rgb.convert("HSV") -> mock_hsv
+        # And img.thumbnail
+
+        def convert_side_effect(mode):
+            if mode == "RGB":
+                return mock_rgb
+            if mode == "HSV":
+                return mock_hsv
+            return Mock()
+
+        mock_img.convert.side_effect = convert_side_effect
+        mock_rgb.convert.side_effect = convert_side_effect
+
+        colors = get_dominant_colors("dummy.jpg")
+
+        assert len(colors) == 3
+        # Should be mostly red
+        assert colors[0] == (255, 0, 0)
+        # Should be padded
+        assert colors[1] == (255, 0, 0)
+
+
+# --- OkLab Tests ---
+
+
+def test_nicify_oklab():
+    # Black
+    res = nicify_oklab((0, 0, 0))
+    # It will brighten it due to min_light constraint
+    assert res != (0, 0, 0)
+    assert res[0] > 0
+
+    # White
+    res = nicify_oklab((255, 255, 255))
+    # It might darken it due to max_light
+    assert res != (255, 255, 255)
+
+    # Simple roundtrip stability check (values shouldn't explode)
+    test_color = (100, 150, 200)
+    res = nicify_oklab(test_color)
+    assert 0 <= res[0] <= 255
+    assert 0 <= res[1] <= 255
+    assert 0 <= res[2] <= 255
+
+
+# --- Theme / Existing Tests Preserved Below ---
 
 
 @pytest.fixture
