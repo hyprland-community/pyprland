@@ -166,7 +166,7 @@ class Scratch:  # {{{
         opts = self._make_initial_config(full_config)
 
         # apply the config
-        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}), self.state)
+        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}), self.state, self.log)
 
         # apply constraints
         if self.conf.get_bool("preserve_aspect"):

@@ -10,11 +10,12 @@ __all__ = [
     "apply_offset",
 ]
 
+import logging
 import re
 from collections.abc import Callable
 from typing import Any
 
-from ...common import SharedState, get_logger, is_rotated
+from ...common import SharedState, is_rotated
 from ...types import MonitorInfo
 
 
@@ -111,6 +112,7 @@ class DynMonitorConfig:
         ref: dict[str, float | bool | list | str],
         monitor_override: dict[str, dict[str, float | bool | list | str]],
         state: SharedState,
+        log: logging.Logger,
     ) -> None:
         """Initialize dynamic configuration.
 
@@ -118,11 +120,12 @@ class DynMonitorConfig:
             ref: Reference configuration
             monitor_override: Monitor-specific overrides
             state: Shared state
+            log: Logger instance
         """
         self.ref = ref
         self.mon_override = monitor_override
         self.state = state
-        self.log = get_logger("dynconf")
+        self.log = log
 
     def __setitem__(self, name: str, value: float | bool | str | list) -> None:
         self.ref[name] = value
