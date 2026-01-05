@@ -8,6 +8,7 @@ import os.path
 import random
 import re
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, cast
 
 from ..aioops import aiexists, aiopen
@@ -99,6 +100,35 @@ async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
     ]
 
 
+@dataclass
+class MaterialColors:
+    """Holds material design color bases."""
+
+    primary: tuple[float, float]
+    secondary: tuple[float, float]
+    tertiary: tuple[float, float]
+
+
+@dataclass
+class ColorVariant:
+    """Holds dark and light variants of a color."""
+
+    dark: tuple[int, int, int]
+    light: tuple[int, int, int]
+
+
+@dataclass
+class VariantConfig:
+    """Configuration for processing a variant."""
+
+    name: str
+    props: tuple[float | str, float, float | str, float | str]
+    mat_colors: MaterialColors
+    source_hls: tuple[float, float, float]
+    theme: str
+    colors: dict[str, str]
+
+
 class Extension(Plugin):
     """Manages the background image."""
 
@@ -156,6 +186,7 @@ class Extension(Plugin):
         return choice
 
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
+        """Prepare the wallpaper image for the given monitor."""
         if not self.rounded_manager:
             return prepare_for_quotes(img_path)
 
@@ -184,7 +215,7 @@ class Extension(Plugin):
                     return "light"
                 if "prefer-dark" in output or "'dark'" in output:
                     return "dark"
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.debug("gsettings not available for theme detection")
 
         # Try darkman
@@ -197,7 +228,7 @@ class Extension(Plugin):
             stdout, _ = await proc.communicate()
             if proc.returncode == 0:
                 return stdout.decode().strip()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.debug("darkman not available for theme detection")
 
         return "dark"
@@ -251,7 +282,20 @@ class Extension(Plugin):
             }
         return oklab_args
 
-    def _generate_palette(  # noqa: PLR0915
+    def _get_rgb_for_variant(
+        self,
+        l_val: str | float,
+        cur_h: float,
+        cur_s: float,
+        source_hls: tuple[float, float, float],
+    ) -> tuple[int, int, int]:
+        """Get RGB color for a specific variant (lightness)."""
+        if l_val == "source":
+            r, g, b = colorsys.hls_to_rgb(*source_hls)
+            return int(r * 255), int(g * 255), int(b * 255)
+        return get_variant_color(cur_h, cur_s, float(l_val))
+
+    def _generate_palette(
         self,
         rgb_list: list[tuple[int, int, int]],
         process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]],
@@ -268,70 +312,102 @@ class Extension(Plugin):
             h_tert, s_tert = hue, sat
 
         colors = {"scheme": theme}
+        mat_colors = MaterialColors(primary=(hue, sat), secondary=(h_sec, s_sec), tertiary=(h_tert, s_tert))
 
-        for name, (h_off, s_mult, l_dark, l_light) in MATERIAL_VARIATIONS.items():
-            used_h = hue
-            used_s = sat
-            used_off = h_off
-
-            if self.config.get("variant") == "islands":
-                if "secondary" in name and "fixed" not in name:
-                    used_h = h_sec
-                    used_s = s_sec
-                    used_off = 0.0
-                elif "tertiary" in name and "fixed" not in name:
-                    used_h = h_tert
-                    used_s = s_tert
-                    used_off = 0.0
-
-            cur_h = (
-                float(used_off[1:])
-                if isinstance(used_off, str) and used_off.startswith("=")
-                else (used_h + float(cast("float", used_off))) % 1.0
+        for name, props in MATERIAL_VARIATIONS.items():
+            self._process_material_variant(
+                VariantConfig(
+                    name=name,
+                    props=cast("tuple[float | str, float, float | str, float | str]", props),
+                    mat_colors=mat_colors,
+                    source_hls=(hue, light, sat),
+                    theme=theme,
+                    colors=colors,
+                )
             )
-            cur_s = max(0.0, min(1.0, used_s * s_mult))
-
-            # Handle source special case
-            if l_dark == "source":
-                r_dark, g_dark, b_dark = colorsys.hls_to_rgb(hue, light, sat)
-                r_dark, g_dark, b_dark = int(r_dark * 255), int(g_dark * 255), int(b_dark * 255)
-            else:
-                r_dark, g_dark, b_dark = get_variant_color(cur_h, cur_s, float(cast("str", l_dark)))
-
-            if l_light == "source":
-                r_light, g_light, b_light = colorsys.hls_to_rgb(hue, light, sat)
-                r_light, g_light, b_light = int(r_light * 255), int(g_light * 255), int(b_light * 255)
-            else:
-                r_light, g_light, b_light = get_variant_color(cur_h, cur_s, float(cast("str", l_light)))
-
-            # Dark variants
-            colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)
-            colors[f"colors.{name}.dark.hex"] = to_hex(r_dark, g_dark, b_dark)
-            colors[f"colors.{name}.dark.hex_stripped"] = to_hex(r_dark, g_dark, b_dark)[1:]
-            colors[f"colors.{name}.dark.rgb"] = to_rgb(r_dark, g_dark, b_dark)
-            colors[f"colors.{name}.dark.rgba"] = to_rgba(r_dark, g_dark, b_dark)
-
-            # Light variants
-            colors[f"colors.{name}.light"] = to_hex(r_light, g_light, b_light)
-            colors[f"colors.{name}.light.hex"] = to_hex(r_light, g_light, b_light)
-            colors[f"colors.{name}.light.hex_stripped"] = to_hex(r_light, g_light, b_light)[1:]
-            colors[f"colors.{name}.light.rgb"] = to_rgb(r_light, g_light, b_light)
-            colors[f"colors.{name}.light.rgba"] = to_rgba(r_light, g_light, b_light)
-
-            # Default (chosen)
-            if theme == "dark":
-                r_chosen, g_chosen, b_chosen = r_dark, g_dark, b_dark
-            else:
-                r_chosen, g_chosen, b_chosen = r_light, g_light, b_light
-
-            chosen_hex = to_hex(r_chosen, g_chosen, b_chosen)
-            colors[f"colors.{name}"] = chosen_hex
-            colors[f"colors.{name}.default.hex"] = chosen_hex
-            colors[f"colors.{name}.default.hex_stripped"] = chosen_hex[1:]
-            colors[f"colors.{name}.default.rgb"] = to_rgb(r_chosen, g_chosen, b_chosen)
-            colors[f"colors.{name}.default.rgba"] = to_rgba(r_chosen, g_chosen, b_chosen)
 
         return colors
+
+    def _process_material_variant(
+        self,
+        config: VariantConfig,
+    ) -> None:
+        """Process a single material variant and populate colors."""
+        h_off, s_mult, l_dark, l_light = config.props
+        used_h, used_s, used_off = self._get_base_hs(config.name, config.mat_colors, cast("float | str", h_off))
+
+        cur_h = float(used_off[1:]) if isinstance(used_off, str) and used_off.startswith("=") else (used_h + float(used_off)) % 1.0
+        cur_s = max(0.0, min(1.0, used_s * s_mult))
+
+        rgb_dark = self._get_rgb_for_variant(cast("float | str", l_dark), cur_h, cur_s, config.source_hls)
+        rgb_light = self._get_rgb_for_variant(cast("float | str", l_light), cur_h, cur_s, config.source_hls)
+
+        self._populate_colors(
+            config.colors,
+            config.name,
+            config.theme,
+            ColorVariant(
+                dark=rgb_dark,
+                light=rgb_light,
+            ),
+        )
+
+    def _get_base_hs(
+        self,
+        name: str,
+        mat_colors: MaterialColors,
+        h_off: float | str,
+    ) -> tuple[float, float, float | str]:
+        """Determine base hue, saturation and offset for a color rule."""
+        used_h, used_s = mat_colors.primary
+        used_off = h_off
+
+        if self.config.get("variant") == "islands":
+            if "secondary" in name and "fixed" not in name:
+                used_h, used_s = mat_colors.secondary
+                used_off = 0.0
+            elif "tertiary" in name and "fixed" not in name:
+                used_h, used_s = mat_colors.tertiary
+                used_off = 0.0
+        return used_h, used_s, used_off
+
+    def _populate_colors(
+        self,
+        colors: dict[str, str],
+        name: str,
+        theme: str,
+        variant: ColorVariant,
+    ) -> None:
+        """Populate the colors dict with dark, light and default variants."""
+        r_dark, g_dark, b_dark = variant.dark
+        r_light, g_light, b_light = variant.light
+
+        # Dark variants
+        colors[f"colors.{name}.dark"] = to_hex(r_dark, g_dark, b_dark)
+        colors[f"colors.{name}.dark.hex"] = to_hex(r_dark, g_dark, b_dark)
+        colors[f"colors.{name}.dark.hex_stripped"] = to_hex(r_dark, g_dark, b_dark)[1:]
+        colors[f"colors.{name}.dark.rgb"] = to_rgb(r_dark, g_dark, b_dark)
+        colors[f"colors.{name}.dark.rgba"] = to_rgba(r_dark, g_dark, b_dark)
+
+        # Light variants
+        colors[f"colors.{name}.light"] = to_hex(r_light, g_light, b_light)
+        colors[f"colors.{name}.light.hex"] = to_hex(r_light, g_light, b_light)
+        colors[f"colors.{name}.light.hex_stripped"] = to_hex(r_light, g_light, b_light)[1:]
+        colors[f"colors.{name}.light.rgb"] = to_rgb(r_light, g_light, b_light)
+        colors[f"colors.{name}.light.rgba"] = to_rgba(r_light, g_light, b_light)
+
+        # Default (chosen)
+        if theme == "dark":
+            r_chosen, g_chosen, b_chosen = r_dark, g_dark, b_dark
+        else:
+            r_chosen, g_chosen, b_chosen = r_light, g_light, b_light
+
+        chosen_hex = to_hex(r_chosen, g_chosen, b_chosen)
+        colors[f"colors.{name}"] = chosen_hex
+        colors[f"colors.{name}.default.hex"] = chosen_hex
+        colors[f"colors.{name}.default.hex_stripped"] = chosen_hex[1:]
+        colors[f"colors.{name}.default.rgb"] = to_rgb(r_chosen, g_chosen, b_chosen)
+        colors[f"colors.{name}.default.rgba"] = to_rgba(r_chosen, g_chosen, b_chosen)
 
     def _set_alpha(self, color: str, alpha: str) -> str:
         """Set alpha channel for a color."""
@@ -427,7 +503,7 @@ class Extension(Plugin):
                 self.log.info("Running post_hook for %s: %s", name, post_hook)
                 await asyncio.create_subprocess_shell(post_hook)
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.exception("Error processing template %s", name)
 
     async def _generate_templates(self, img_path: str, color: str | None = None) -> None:
@@ -475,6 +551,7 @@ class Extension(Plugin):
         return variables
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
+        """Run one iteration of the wallpaper loop."""
         cmd_template = self.config.get("command")
         img_path = self.select_next_image()
         monitors: list[MonitorInfo] = await fetch_monitors(self)

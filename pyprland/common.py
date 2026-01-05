@@ -43,29 +43,29 @@ MAX_SOCKET_PATH_LEN = 107
 
 try:
     # May throw an OSError because AF_UNIX path is too long: try to work around it only if needed
-    original_ipc_folder = (
+    ORIGINAL_IPC_FOLDER = (
         f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
         if os.path.exists(f"{os.environ.get('XDG_RUNTIME_DIR', '')}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}")
         else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     )
 
-    if len(original_ipc_folder) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
+    if len(ORIGINAL_IPC_FOLDER) >= MAX_SOCKET_PATH_LEN - MAX_SOCKET_FILE_LEN:
         IPC_FOLDER = f"/tmp/.pypr-{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
     else:
-        IPC_FOLDER = original_ipc_folder
+        IPC_FOLDER = ORIGINAL_IPC_FOLDER
 
     def init_ipc_folder() -> None:
         """Initialize the IPC folder."""
-        if original_ipc_folder != IPC_FOLDER and not os.path.exists(IPC_FOLDER):
+        if ORIGINAL_IPC_FOLDER != IPC_FOLDER and not os.path.exists(IPC_FOLDER):
             with contextlib.suppress(OSError):
-                os.symlink(original_ipc_folder, IPC_FOLDER)
+                os.symlink(ORIGINAL_IPC_FOLDER, IPC_FOLDER)
 
 except KeyError:
     print("This is a fatal error, assuming we are running documentation generation or testing in a sandbox, hence ignoring it")
     IPC_FOLDER = "/"
 
     def init_ipc_folder() -> None:
-        pass
+        """Initialize the IPC folder."""
 
 
 def set_terminal_size(descriptor: int, rows: int, cols: int) -> None:

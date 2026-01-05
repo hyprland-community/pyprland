@@ -1,6 +1,6 @@
 """Toggle monitors on or off."""
 
-from typing import Any, cast
+from typing import Any, cast  # pylint: disable=unused-import
 
 from .interface import Plugin
 

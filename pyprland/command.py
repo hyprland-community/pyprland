@@ -39,7 +39,7 @@ def remove_duplicate(names: list[str]) -> Callable:
     Will check arguments as well
     """
 
-    def _remove_duplicates(fn: Callable) -> Callable:
+    def _remove_duplicates(func: Callable) -> Callable:
         """Wrapper for the decorator."""
 
         async def _wrapper(self: "Pyprland", full_name: str, *args, **kwargs) -> bool:
@@ -49,7 +49,7 @@ def remove_duplicate(names: list[str]) -> Callable:
                 if key == _dedup_last_call.get(full_name):
                     return True
                 _dedup_last_call[full_name] = key
-            return cast("bool", await fn(self, full_name, *args, **kwargs))
+            return cast("bool", await func(self, full_name, *args, **kwargs))
 
         return _wrapper
 
@@ -276,6 +276,7 @@ class Pyprland:
         await asyncio.wait_for(asyncio.gather(*active_plugins), timeout=TASK_TIMEOUT / 2)
 
     async def _abort_plugins(self, writer: asyncio.StreamWriter) -> None:
+        """Abort all plugins and stop the server."""
         await self.exit_plugins()
         # cancel the task group
         for task in self.tasks:
@@ -325,7 +326,7 @@ class Pyprland:
             full_name = f"run_{cmd}"
 
             if PYPR_DEMO:
-                os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221
+                os.system(f"notify-send -t 4000 '{data}'")  # noqa: ASYNC221, ASYNC102
 
             if not await self._call_handler(full_name, *args, notify=cmd):
                 self.log.warning("No such command: %s", cmd)
@@ -431,6 +432,7 @@ async def run_daemon() -> None:
 
 
 def get_commands_help(manager: Pyprland) -> dict:
+    """Get the available commands and their documentation."""
     docs = {
         "edit": "Edit the configuration file. (not in pypr-client)",
         "dumpjson": "Dump the configuration in JSON format.",

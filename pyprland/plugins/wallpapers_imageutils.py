@@ -52,6 +52,7 @@ class RoundedImageManager:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
+        """Build the cache key for the image."""
         return f"{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def get_path(self, key: str) -> str:
@@ -72,11 +73,7 @@ class RoundedImageManager:
                 resized = ImageOps.fit(img, (width, height), method=resample)
 
                 scale = 4
-                image_width, image_height = resized.width * scale, resized.height * scale
-                rounded_mask = Image.new("L", (image_width, image_height), 0)
-                corner_draw = ImageDraw.Draw(rounded_mask)
-                corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
-                mask = rounded_mask.resize(resized.size, resample=resample)
+                mask = self._create_rounded_mask(resized.width, resized.height, scale, resample)
 
                 result = Image.new("RGB", resized.size, "black")
                 result.paste(resized.convert("RGB"), mask=mask)
@@ -84,22 +81,31 @@ class RoundedImageManager:
 
         return dest
 
-
-def to_hex(r: float, g: float, b: float) -> str:
-    """Convert float rgb to hex."""
-    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
-
-
-def to_rgb(r: float, g: float, b: float) -> str:
-    """Convert float rgb to rgb string."""
-    return f"rgb({int(r * 255)}, {int(g * 255)}, {int(b * 255)})"
+    def _create_rounded_mask(self, width: int, height: int, scale: int, resample: Image.Resampling) -> Image.Image:
+        """Create a rounded mask."""
+        image_width, image_height = width * scale, height * scale
+        rounded_mask = Image.new("L", (image_width, image_height), 0)
+        corner_draw = ImageDraw.Draw(rounded_mask)
+        corner_draw.rounded_rectangle((0, 0, image_width - 1, image_height - 1), radius=self.radius * scale, fill=255)
+        return rounded_mask.resize((width, height), resample=resample)
 
 
-def to_rgba(r: float, g: float, b: float) -> str:
-    """Convert float rgb to rgba string."""
-    return f"rgba({int(r * 255)}, {int(g * 255)}, {int(b * 255)}, 1.0)"
+def to_hex(red: int, green: int, blue: int) -> str:
+    """Convert integer rgb to hex."""
+    return f"#{red:02x}{green:02x}{blue:02x}"
 
 
-def get_variant_color(h: float, s: float, l: float) -> tuple[float, float, float]:  # noqa: E741
+def to_rgb(red: int, green: int, blue: int) -> str:
+    """Convert integer rgb to rgb string."""
+    return f"rgb({red}, {green}, {blue})"
+
+
+def to_rgba(red: int, green: int, blue: int) -> str:
+    """Convert integer rgb to rgba string."""
+    return f"rgba({red}, {green}, {blue}, 1.0)"
+
+
+def get_variant_color(hue: float, saturation: float, lightness: float) -> tuple[int, int, int]:
     """Get variant color."""
-    return colorsys.hls_to_rgb(h, max(0.0, min(1.0, l)), s)
+    r, g, b = colorsys.hls_to_rgb(hue, max(0.0, min(1.0, lightness)), saturation)
+    return int(r * 255), int(g * 255), int(b * 255)

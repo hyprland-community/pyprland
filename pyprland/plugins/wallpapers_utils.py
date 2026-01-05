@@ -3,14 +3,15 @@
 import math
 
 try:
+    # pylint: disable=unused-import
     from PIL import Image, ImageDraw, ImageOps
-
-    can_edit_image = True
 except ImportError:
-    can_edit_image = False
-    Image = None  # type: ignore
-    ImageDraw = None  # type: ignore
-    ImageOps = None  # type: ignore
+    can_edit_image = False  # pylint: disable=invalid-name
+    Image = None  # type: ignore # pylint: disable=invalid-name
+    ImageDraw = None  # type: ignore # pylint: disable=invalid-name
+    ImageOps = None  # type: ignore # pylint: disable=invalid-name
+else:
+    can_edit_image = True  # pylint: disable=invalid-name
 
 SRGB_LINEAR_CUTOFF = 0.04045
 SRGB_R_CUTOFF = 0.0031308
@@ -183,7 +184,7 @@ def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
 
             return final_colors
 
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return [(0, 0, 0)] * 3
 
 
@@ -208,11 +209,12 @@ def nicify_oklab(
     Returns:
         Tuple of (R, G, B) with values 0-255
     """
+    # pylint: disable=too-many-locals
 
     # Convert sRGB to linear RGB
-    def to_linear(c: float) -> float:
-        c = c / 255.0
-        return c / 12.92 if c <= SRGB_LINEAR_CUTOFF else pow((c + 0.055) / 1.055, 2.4)
+    def to_linear(val: float) -> float:
+        val = val / 255.0
+        return val / 12.92 if val <= SRGB_LINEAR_CUTOFF else pow((val + 0.055) / 1.055, 2.4)
 
     r_lin = to_linear(rgb[0])
     g_lin = to_linear(rgb[1])
@@ -260,8 +262,8 @@ def nicify_oklab(
     b_out = -0.0041960771 * l_lin - 0.7034186147 * m_lin + 1.7076147010 * s_lin
 
     # Convert back to sRGB
-    def to_srgb(c: float) -> float:
-        return 12.92 * c if c <= SRGB_R_CUTOFF else 1.055 * pow(c, 1 / 2.4) - 0.055
+    def to_srgb(val: float) -> float:
+        return 12.92 * val if val <= SRGB_R_CUTOFF else 1.055 * pow(val, 1 / 2.4) - 0.055
 
     return (
         int(round(max(0, min(255, to_srgb(r_out) * 255)))),

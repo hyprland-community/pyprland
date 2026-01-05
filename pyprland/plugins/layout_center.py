@@ -12,7 +12,7 @@ from functools import partial
 from typing import Any, cast
 
 from ..common import is_rotated, state
-from ..types import ClientInfo, MonitorInfo
+from ..types import ClientInfo, MonitorInfo  # pylint: disable=unused-import
 from .interface import Plugin
 
 

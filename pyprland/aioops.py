@@ -17,10 +17,13 @@ except ImportError:
     import os
 
     class AsyncFile:
+        """Async file wrapper."""
+
         def __init__(self, file: io.TextIOWrapper):
             self.file = file
 
         async def readlines(self) -> list[str]:
+            """Read lines."""
             return self.file.readlines()
 
         async def __aenter__(self):
@@ -37,7 +40,7 @@ except ImportError:
     @contextlib.asynccontextmanager  # type: ignore[no-redef]
     async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
         """Async > sync wrapper."""
-        with open(*args, **kwargs) as f:  # noqa: ASYNC230
+        with open(*args, **kwargs) as f:  # noqa: ASYNC101, ASYNC230, pylint: disable=unspecified-encoding
             yield AsyncFile(f)
 
     async def aiexists(*args, **kwargs) -> bool:

@@ -4,8 +4,6 @@ import asyncio
 import contextlib
 import time
 from collections.abc import Iterable
-from dataclasses import dataclass
-from enum import Flag, auto
 from functools import partial
 from typing import cast
 
@@ -15,6 +13,7 @@ from ...ipc import get_client_props, get_monitor_props, notify_error
 from ...types import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
+from .common import FocusTracker, HideFlavors
 from .helpers import (
     apply_offset,
     compute_offset,
@@ -33,15 +32,6 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
 # Ad-hoc classes & functions {{{
-class HideFlavors(Flag):
-    """Flags for different hide behavior."""
-
-    NONE = auto()
-    FORCED = auto()
-    TRIGGERED_BY_AUTOHIDE = auto()
-    IGNORE_TILED = auto()
-
-
 class WindowRuleSet:
     """Windowrule set builder."""
 
@@ -63,6 +53,7 @@ class WindowRuleSet:
         self._params.append((param, value))
 
     def _get_content(self) -> Iterable[str]:
+        """Get the windowrule content."""
         if state.hyprland_version > VersionInfo(0, 47, 2):
             if state.hyprland_version < VersionInfo(0, 53, 0):
                 for p in self._params:
@@ -82,19 +73,6 @@ class WindowRuleSet:
     def get_content(self) -> list[str]:
         """Get the windowrule content."""
         return list(self._get_content())
-
-
-@dataclass
-class FocusTracker:
-    """Focus tracking object."""
-
-    prev_focused_window: str
-    prev_focused_window_wrkspc: str
-
-    def clear(self) -> None:
-        """Clear the tracking."""
-        self.prev_focused_window = ""
-        self.prev_focused_window_wrkspc = ""
 
 
 def get_animation_type(scratch: Scratch) -> str:
@@ -838,7 +816,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             return True
         return False
 
-    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: PLR0912, C901
+    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: C901
         """<name> hides scratchpad "name" (accepts "*")."""
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))
@@ -865,6 +843,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.warning("%s is already hidden", uid)
             return
 
+        await self._hide_scratch(scratch, active_window, active_workspace)
+
+    async def _hide_scratch(self, scratch: Scratch, active_window: str, active_workspace: str) -> None:
+        """Perform the actual hide operation."""
         clients = await self.hyprctl_json("clients")
         await scratch.update_client_info(clients=clients)
         ref_position = scratch.client_info["at"]
@@ -880,15 +862,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             scratch.meta.extra_positions.update(positions)
         scratch.visible = False
         scratch.meta.should_hide = False
-        self.log.info("Hiding %s", uid)
+        self.log.info("Hiding %s", scratch.uid)
         await self._pin_scratch(scratch)
         await self._hide_transition(scratch, monitor_info)
 
         if not scratch.conf.get_bool("close_on_hide", False):
-            await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(uid)},address:{scratch.full_address}")
+            await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{scratch.full_address}")
 
             for addr in scratch.extra_addr:
-                await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(uid)},address:{addr}")
+                await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{addr}")
                 await asyncio.sleep(0.01)
         else:
             await self.hyprctl(f"closewindow address:{scratch.full_address}")

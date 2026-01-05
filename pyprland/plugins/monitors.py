@@ -25,7 +25,7 @@ def get_dims(mon: MonitorInfo, config: dict[str, Any] | None = None) -> tuple[in
         try:
             if isinstance(res, str) and "x" in res:
                 width, height = map(int, res.split("x"))
-            elif isinstance(res, (list, tuple)):
+            elif isinstance(res, list | tuple):
                 width, height = int(res[0]), int(res[1])
         except (ValueError, IndexError):
             pass
@@ -112,6 +112,7 @@ class Extension(Plugin):
     def _build_graph(
         self, config: dict[str, Any], monitors_by_name: dict[str, MonitorInfo]
     ) -> tuple[dict[str, list[tuple[str, str]]], dict[str, int]]:
+        """Build the dependency graph for monitor layout."""
         tree: dict[str, list[tuple[str, str]]] = defaultdict(list)
         in_degree: dict[str, int] = defaultdict(int)
 
@@ -135,6 +136,7 @@ class Extension(Plugin):
         in_degree: dict[str, int],
         config: dict[str, Any],
     ) -> dict[str, tuple[int, int]]:
+        """Compute the positions of all monitors."""
         queue = [name for name in monitors_by_name if in_degree[name] == 0]
         positions: dict[str, tuple[int, int]] = {}
         for name in queue:
@@ -147,14 +149,15 @@ class Extension(Plugin):
                 continue
             processed.add(ref_name)
 
-            ref_x, ref_y = positions[ref_name]
-            ref_mon = monitors_by_name[ref_name]
-
             for child_name, rule in tree[ref_name]:
-                child_mon = monitors_by_name[child_name]
-                child_config = config.get(child_name, {})
-                ref_config = config.get(ref_name, {})
-                x, y = self._compute_xy(ref_mon, child_mon, ref_x, ref_y, rule, ref_config, child_config)
+                x, y = self._compute_xy(
+                    monitors_by_name[ref_name],
+                    monitors_by_name[child_name],
+                    positions[ref_name],
+                    rule,
+                    config.get(ref_name, {}),
+                    config.get(child_name, {}),
+                )
                 positions[child_name] = (x, y)
 
                 in_degree[child_name] -= 1
@@ -165,6 +168,7 @@ class Extension(Plugin):
     async def _apply_layout(
         self, positions: dict[str, tuple[int, int]], monitors_by_name: dict[str, MonitorInfo], config: dict[str, Any]
     ) -> bool:
+        """Apply the computed layout."""
         if not positions:
             return False
 
@@ -185,36 +189,37 @@ class Extension(Plugin):
             await self.hyprctl(cmd, "keyword")
         return True
 
-    def _compute_xy(  # noqa: PLR0913
+    def _compute_xy(  # noqa: PLR0913, pylint: disable=too-many-positional-arguments
         self,
         ref_mon: MonitorInfo,
         mon: MonitorInfo,
-        ref_x: int,
-        ref_y: int,
+        ref_rect: tuple[int, int],
         rule: str,
         ref_config: dict[str, Any] | None = None,
         mon_config: dict[str, Any] | None = None,
     ) -> tuple[int, int]:
         """Compute position of `mon` relative to `ref_mon` based on `rule`."""
+        ref_x, ref_y = ref_rect
         ref_w, ref_h = get_dims(ref_mon, ref_config)
         mon_w, mon_h = get_dims(mon, mon_config)
         rule = rule.lower().replace("_", "").replace("-", "")
 
-        ref_rect = (ref_x, ref_y, ref_w, ref_h)
+        rect = (ref_x, ref_y, ref_w, ref_h)
         mon_dim = (mon_w, mon_h)
 
         if "left" in rule:
-            return self._place_left(ref_rect, mon_dim, rule)
+            return self._place_left(rect, mon_dim, rule)
         if "right" in rule:
-            return self._place_right(ref_rect, mon_dim, rule)
+            return self._place_right(rect, mon_dim, rule)
         if "top" in rule:
-            return self._place_top(ref_rect, mon_dim, rule)
+            return self._place_top(rect, mon_dim, rule)
         if "bottom" in rule:
-            return self._place_bottom(ref_rect, mon_dim, rule)
+            return self._place_bottom(rect, mon_dim, rule)
 
         return ref_x, ref_y
 
     def _place_left(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Place the monitor to the left of the reference."""
         ref_x, ref_y, _ref_w, ref_h = ref_rect
         mon_w, mon_h = mon_dim
         x = ref_x - mon_w
@@ -226,6 +231,7 @@ class Extension(Plugin):
         return int(x), int(y)
 
     def _place_right(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Place the monitor to the right of the reference."""
         ref_x, ref_y, ref_w, ref_h = ref_rect
         _mon_w, mon_h = mon_dim
         x = ref_x + ref_w
@@ -237,6 +243,7 @@ class Extension(Plugin):
         return int(x), int(y)
 
     def _place_top(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Place the monitor to the top of the reference."""
         ref_x, ref_y, ref_w, _ref_h = ref_rect
         mon_w, mon_h = mon_dim
         y = ref_y - mon_h
@@ -248,8 +255,9 @@ class Extension(Plugin):
         return int(x), int(y)
 
     def _place_bottom(self, ref_rect: tuple[int, int, int, int], mon_dim: tuple[int, int], rule: str) -> tuple[int, int]:
+        """Place the monitor to the bottom of the reference."""
         ref_x, ref_y, ref_w, ref_h = ref_rect
-        mon_w, mon_h = mon_dim
+        mon_w, _mon_h = mon_dim
         y = ref_y + ref_h
         x = ref_x
         if "right" in rule:
@@ -277,9 +285,7 @@ class Extension(Plugin):
 
         cleaned_config: dict[str, dict[str, Any]] = {}
 
-        placement_config = self.config.get("placement", {})
-
-        for pat, rules in placement_config.items():
+        for pat, rules in self.config.get("placement", {}).items():
             # Find the subject monitor
             mon = self._get_mon_by_pat(pat, monitors_by_descr, monitors_by_name)
             if not mon:
