@@ -7,9 +7,9 @@ commands:
     - name: wall pause
       description: Stop cycling the wallpaper after a delay
     - name: wall color "#ff0000"
-      description: Re-generate the templates with the given color
+      description: Re-generate the [templates](#templates) with the given color
     - name: wall color "#ff0000" neutral
-      description: Re-generate the templates with the given color and color_scheme (color filter)
+      description: Re-generate the templates with the given color and [color scheme](#color-scheme) (color filter)
 
 
 ---

@@ -7,7 +7,7 @@ commands:
   - name: hide [scratchpad name]
     description: Hide the given scratchpad
   - name: attach
-    description: Toggle attaching/anchoring the currently focused window to the (last used) scratchpad
+    description: Toggle attaching/anchoring the currently focused window to the (last used) scratchpad. (see also [multi](#multi))
 
 Note: show and hide can accept '*' as a parameter, applying changes to every scratchpad.
 
