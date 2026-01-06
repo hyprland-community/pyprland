@@ -51,9 +51,7 @@ interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
 recurse = true
 clear_command = "swww clear"
-command = """
-swww img --outputs "[output]"  "[file]"
-"""
+command = "swww img --outputs '[output]'  '[file]'"
 
 ```
 
