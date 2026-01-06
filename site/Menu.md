@@ -6,14 +6,16 @@ Menu based plugins have the following configuration options:
 
 Not set by default, will autodetect the available menu engine.
 
-Supported engines:
+Supported engines (will be tested in order):
 
+- fuzzel
 - tofi
 - rofi
 - wofi
 - bemenu
 - dmenu
 - anyrun
+- walker
 
 > [!note]
 > If your menu system isn't supported, you can open a [feature request](https://github.com/hyprland-community/pyprland/issues/new?assignees=fdev31&labels=bug&projects=&template=feature_request.md&title=%5BFEAT%5D+Description+of+the+feature)

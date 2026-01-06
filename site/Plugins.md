@@ -6,4 +6,7 @@ This page lists every plugin provided by Pyprland out of the box, more can be en
 
 "🌟" indicates some maturity & reliability level of the plugin, considering age, attention paid and complexity - from 0 to 3.
 
+Some plugins require an external **graphical menu system**, such as *rofi*.
+Each plugin can use a different menu system but the [configuration is unified](Menu). In case no [engine](Menu#engine) is provided some auto-detection of installed applications will happen.
+
 <PluginList/>
