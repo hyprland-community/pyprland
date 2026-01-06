@@ -1,7 +1,7 @@
 ![rect](https://github.com/hyprland-community/pyprland/assets/238622/3fab93b6-6445-4e7b-b757-035095b5c8e8)
 
 [![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
-[![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.com/channels/1055990214411169892/1230972154330218526)
+[![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.com/channels/1458202721294356522/1458202722892386519)
 
 [Documentation](https://hyprland-community.github.io/pyprland) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
