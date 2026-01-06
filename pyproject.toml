@@ -14,7 +14,7 @@ packages = [
 requires-python = ">=3.11"
 dependencies = [
     "aiofiles >= 23.2.1",
-    "pillow[rounded] >= 12.1.0",
+    "pillow[rounded] >= 10.0.0",
 ]
 
 [dependency-groups]
