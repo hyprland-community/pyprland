@@ -1,7 +1,7 @@
 <template>
   <ul v-for="command in commands" :key="command.name">
     <li>
-      <code v-html="command.name.replace(/[ ]*$/, '').replace(/ /g, '&ensp;')" />
+      <code v-html="command.name.replace(/[ ]*$/, '').replace(/ +/g, '&ensp;')" />&ensp;
       <span v-html="renderDescription(command.description)" />
     </li>
   </ul>
