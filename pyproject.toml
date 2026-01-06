@@ -17,6 +17,9 @@ dependencies = [
     "pillow[rounded] >= 10.0.0",
 ]
 
+[project.scripts]
+pypr = "pyprland.command:main"
+
 [dependency-groups]
 dev = [
     "pytest >=7.4.3",
