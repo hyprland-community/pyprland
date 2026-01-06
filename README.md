@@ -25,6 +25,11 @@ Contributions, suggestions, bug reports and comments are welcome.
 
 You may also want to browse or install [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
 
+# Recent changes
+
+- Almost rewrite of the monitors plugin - hopefully good this time
+- Wallpapers plugin can add rounded corners to each screen and manage a background-derived color scheme (matugen / pywal alike)
+
 <details>
 <summary>
 About Pyprland (latest stable is: <b>2.4.3</b>)
