@@ -51,6 +51,10 @@ interval = 60 # change every hour
 extensions = ["jpg", "jpeg"]
 recurse = true
 clear_command = "swww clear"
+command = """
+swww img --outputs "[output]"  "[file]"
+"""
+
 ```
 
 Note that for applications like `swww`, you'll need to start a daemon separately (eg: from `hyprland.conf`).
