@@ -29,6 +29,7 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 
 > [!tip]
 > Uses **hyprpaper** by default, but can be configured to use any other application.
+> You'll need to run hyprpaper separately for now. (eg: `uwsm app -- hyprpaper`)
 
 <details>
     <summary>Minimal example using defaults (requires <b>hyprpaper</b>)</summary>
