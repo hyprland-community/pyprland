@@ -28,10 +28,16 @@ features:
     details: Designed for performance and simplicity
 ---
 
-## What is Pyprland?
+# What is Pyprland?
 
 It's a software that extends the functionality of the great [Hyprland](https://hyprland.org/) window manager, adding new features and improving the existing ones.
 
 It also enables a high degree of customization and automation, making it easier to adapt to your workflow.
 
 To understand the potential of Pyprland, you can check the [plugins](./Plugins) page.
+
+# Major recent changes
+
+- Major rewrite of the [Monitors plugin](/monitors) delivers improved stability and functionality.
+- The [Wallpapers plugin](/wallpapers) now applies [rounded corners](/wallpapers#radius) per display and derives cohesive [color schemes from the background](/wallpapers#templates) (Matugen/Pywal-inspired).
+
