@@ -31,7 +31,7 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 > Uses **hyprpaper** by default, but can be configured to use any other application.
 
 <details>
-    <summary>Minimal example using defaults(requires <b>hyprpaper</b>)</summary>
+    <summary>Minimal example using defaults (requires <b>hyprpaper</b>)</summary>
 
 ```toml
 [wallpapers]
