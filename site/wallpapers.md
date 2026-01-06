@@ -1,11 +1,11 @@
 ---
 commands:
     - name: wall next
-      description: Changes the current background image, resume cycling if paused
+      description: Changes the current background image, resume activity if paused
     - name: wall clear
       description: Removes the current background image and pause cycling
     - name: wall pause
-      description: Stop cycling the wallpaper after a delay
+      description: Stops updating the wallpaper automatically
     - name: wall color "#ff0000"
       description: Re-generate the [templates](#templates) with the given color
     - name: wall color "#ff0000" neutral
