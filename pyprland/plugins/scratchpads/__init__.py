@@ -400,7 +400,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             if not scratch.client_info:
                 continue  # type: ignore
             if scratch.have_address(full_address):
-                self.last_focused = scratch
+                if scratch.full_address == full_address:
+                    self.last_focused = scratch
                 self.cancel_task(uid)
             elif scratch.visible and scratch.conf.get("unfocus") == "hide":
                 last_shown = scratch.meta.last_shown
@@ -514,6 +515,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if self.state.active_window in scratch.extra_addr:
             scratch.extra_addr.remove(focused)
         else:
+            for s in self.scratches.values():
+                if focused in s.extra_addr:
+                    s.extra_addr.remove(focused)
             scratch.extra_addr.add(focused)
 
         if scratch.conf.get("pinned", True):

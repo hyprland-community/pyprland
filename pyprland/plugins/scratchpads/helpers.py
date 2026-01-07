@@ -36,6 +36,8 @@ def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, i
         pos1: First position (x, y)
         pos2: Second position (x, y)
     """
+    if pos1 is None or pos2 is None:
+        return (0, 0)
     return pos1[0] - pos2[0], pos1[1] - pos2[1]
 
 

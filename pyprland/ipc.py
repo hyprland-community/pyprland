@@ -267,9 +267,12 @@ async def get_client_props(
     else:
         prop_name, prop_value = next(iter(kw.items()))
 
-    for client in clients or await hyprctl_json("clients", logger=logger):
+    clients_list = clients or await hyprctl_json("clients", logger=logger)
+
+    for client in clients_list:
         assert isinstance(client, dict)
-        if match_fn(client.get(prop_name), prop_value):
+        val = client.get(prop_name)
+        if match_fn(val, prop_value):
             return client  # type: ignore
     return None
 
