@@ -174,6 +174,7 @@ class DynMonitorConfig:
             default: Default value if not found
         """
         value = self.get(name)
+        # print(f"DEBUG: get_bool {name} = {value}")
         if isinstance(value, str):
             lv = value.lower().strip()
             return lv not in {"false", "no", "off", "0"}

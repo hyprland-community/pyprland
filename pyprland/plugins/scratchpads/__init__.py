@@ -260,6 +260,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 await self.procs[uid].communicate()
                 code = self.procs[uid].returncode
                 error = f"The command failed with code {code}" if code else "The command terminated successfully, is it already running?"
+                # If command terminated successfully but we didn't find the window,
+                # it might mean it was already running but we lost track or failed to find it.
+                # In this specific case, we should ensure we clean up the stale PID reference
+                # so the next attempt doesn't think it's still alive.
+                if not code:
+                    scratch.reset(-1)  # Clear PID
+                    del self.procs[uid]
+
             self.log.error('"%s": %s', scratch.conf["command"], error)
             await notify_error(error)
             return False
@@ -276,11 +284,14 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         item = self.scratches.get(name=uid)
         assert item
 
+        pt = item.conf.get_bool("process_tracking", True)
+
         if not item.have_command:
             return True
 
-        if item.conf.get_bool("process_tracking", True):
+        if pt:
             if not await item.is_alive():
+                self.log.info(f"{uid} is dead, respawning...")
                 await self._configure_windowrules(item)
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):

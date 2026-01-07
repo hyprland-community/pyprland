@@ -219,8 +219,37 @@ class Scratch:  # {{{
         if not self.have_command:
             return True
         if self.conf.get_bool("process_tracking", True):
+            if self.pid < 1:
+                return False
             path = f"/proc/{self.pid}"
             if await aiexists(path):
+                # Verify process name/cmdline if possible to detect PID reuse
+                # We check /proc/[pid]/comm which contains the executable name
+                comm_path = os.path.join(path, "comm")
+                try:
+                    async with aiopen(comm_path, mode="r", encoding="utf-8") as f:
+                        # comm usually has a single line with the process name
+                        proc_name = (await f.read()).strip()
+                        # Simple check: does the command string contain this name?
+                        # This is a heuristic; 'command' could be complex ("kitty --class foo").
+                        # proc_name would be "kitty".
+                        # So we check if proc_name is a substring of the configured command.
+                        # Note: This might be too loose or too strict depending on aliases, but covers basic cases.
+                        cmd = self.conf.get_str("command", "")
+                        if proc_name and proc_name not in cmd:
+                            self.log.warning(
+                                "Process %s exists but name '%s' does not match command '%s'. Assuming PID reuse.", self.pid, proc_name, cmd
+                            )
+                            # PID reuse detected: this PID is invalid.
+                            # We should consider it NOT alive so we can respawn.
+                            return False
+
+                        self.log.debug("Process %s name '%s' matches command '%s'.", self.pid, proc_name, cmd)
+                except (OSError, FileNotFoundError):
+                    # If we can't read comm, maybe it just died or permissions issue.
+                    # Fallback to status check below.
+                    pass
+
                 async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
                     for line in await f.readlines():
                         if line.startswith("State"):
