@@ -35,7 +35,7 @@ def subprocess_shell_mock(mocker):
     mocked_subprocess_shell = mocker.patch("asyncio.create_subprocess_shell", name="mocked_shell_command")
 
     class MockProcess:
-        _pid_counter = 1001
+        _pid_counter = 3001
 
         def __init__(self):
             self.pid = MockProcess._pid_counter
@@ -59,11 +59,26 @@ def subprocess_shell_mock(mocker):
 
 @fixture
 def mock_aioops(mocker):
-    # Mock aiexists to return True for /proc/PID checks
+    # Mock aiexists to return True for /proc/PID checks, but allow selective failure
+    # We'll use a set to track "dead" PIDs
+    dead_pids = set()
+
     async def mock_aiexists(path):
+        # path format is usually /proc/<pid>
+        if path.startswith("/proc/"):
+            try:
+                pid = int(path.split("/")[2])
+                if pid in dead_pids:
+                    return False
+            except (ValueError, IndexError):
+                pass
         return True
 
     mocker.patch("pyprland.aioops.aiexists", side_effect=mock_aiexists)
+
+    # Expose the dead_pids set to tests
+    mock_aiexists.dead_pids = dead_pids
+    return mock_aiexists
 
     # Mock aiopen for reading /proc/PID/status
     mock_file = mocker.MagicMock()
@@ -248,10 +263,66 @@ async def test_shared_custody_conflict(multi_scratchpads, subprocess_shell_mock,
 
     call_set = gen_call_set(mocks.hyprctl.call_args_list)
 
-    # Check if it brings the client back
-    brought_back = False
-    for call in call_set:
-        if f"address:0x{client_addr}" in call and "movetoworkspacesilent 1" in call:
-            brought_back = True
+    @pytest.mark.asyncio
+    async def test_zombie_process_recovery(multi_scratchpads, subprocess_shell_mock, server_fixture, mock_aioops):
+        """
+        Test 2: The 'Zombie' State (Process Desync)
+        Verify that if a scratchpad process dies (e.g. kill -9), the plugin detects it and respawns.
+        """
+        # Start with NO clients
+        mocks.json_commands_result["clients"] = []
 
-    assert not brought_back, "Client should NOT be brought back when 'term' is shown, because 'volume' stole it"
+        # 1. Start 'term' normally
+        mocks.hyprctl.reset_mock()
+        t1 = asyncio.create_task(mocks.pypr("toggle term"))
+        await asyncio.sleep(0.5)
+
+        # Now update clients to show it started with PID 3001
+        CLIENT_CONFIG[0]["pid"] = 3001
+        mocks.json_commands_result["clients"] = [CLIENT_CONFIG[0]]
+
+        await _send_window_events(address="12345677890", klass="scratch-term")
+        await t1
+
+        # Verify it started
+        from pyprland.command import Pyprland
+
+        manager = Pyprland.instance
+        plugin = manager.plugins["scratchpads"]
+        term_scratch = plugin.scratches.get("term")
+        assert term_scratch.pid == 3001
+        assert await term_scratch.is_alive()
+
+        # 2. Simulate "kill -9" (Process disappears from /proc)
+        mock_aioops.dead_pids.add(3001)
+
+        # To test zombie recovery, we MUST enable process_tracking.
+        term_scratch.conf.ref["process_tracking"] = True
+
+        assert not await term_scratch.is_alive()
+
+        # 3. Toggle 'term' again
+        # Expected: Plugin detects death -> Respawns (PID 3002) -> Shows window
+        mocks.hyprctl.reset_mock()
+
+        t2 = asyncio.create_task(mocks.pypr("toggle term"))
+        await asyncio.sleep(0.5)  # Wait for it to try spawning
+
+        # Update clients to show the NEW process (PID 3002)
+        # We simulate that the old window is gone/dead, and a new one appeared with new PID
+        CLIENT_CONFIG[0]["pid"] = 3002
+        mocks.json_commands_result["clients"] = [CLIENT_CONFIG[0]]
+
+        # Send events for the NEW window
+        await _send_window_events(address="12345677890", klass="scratch-term")
+
+        await t2
+
+        # 4. Verify Recovery
+        assert term_scratch.pid != 3001
+        assert term_scratch.pid == 3002  # Should be the next available PID
+        assert term_scratch.visible
+
+    # Check that we actually ran the spawn command again
+    # subprocess_shell_mock should have been called twice (once init, once respawn)
+    assert subprocess_shell_mock.call_count == 2

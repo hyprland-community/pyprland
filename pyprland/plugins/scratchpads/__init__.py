@@ -248,6 +248,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
         if uid in self.procs:
             with contextlib.suppress(ProcessLookupError):
                 self.procs[uid].kill()
+            del self.procs[uid]  # ensure the old process is removed from the dict
         self.scratches.reset(scratch)
         await self.start_scratch_command(uid)
         self.log.info("starting %s", uid)
