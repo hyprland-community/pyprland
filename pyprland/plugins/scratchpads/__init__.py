@@ -670,6 +670,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             self.log.error("Failed to show %s, aborting.", uid)
             return
 
+        if not was_alive:
+            was_alive = await scratch.is_alive()
+
         excluded_ids = scratch.conf.get("excludes", [])
         restore_excluded = scratch.conf.get_bool("restore_excluded", False)
         if excluded_ids == "*":
