@@ -15,7 +15,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from .types import MonitorInfo, VersionInfo
+from .models import MonitorInfo, VersionInfo
 
 __all__ = [
     "DEBUG",

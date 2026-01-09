@@ -16,8 +16,8 @@ from typing import Any, Self, cast
 from pyprland.common import IPC_FOLDER, SharedState, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
 from pyprland.ipc import init as ipc_init
+from pyprland.models import PyprError
 from pyprland.plugins.interface import Plugin
-from pyprland.types import PyprError
 from pyprland.version import VERSION
 
 CONTROL = f"{IPC_FOLDER}/.pyprland.sock"

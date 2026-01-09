@@ -3,7 +3,7 @@
 import json
 from typing import cast
 
-from ..types import VersionInfo
+from ..models import VersionInfo
 from .interface import Plugin
 
 DEFAULT_VERSION = VersionInfo(9, 9, 9)

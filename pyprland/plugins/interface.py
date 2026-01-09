@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from ..common import Configuration, SharedState, get_logger
 from ..ipc import get_controls
-from ..types import ClientInfo
+from ..models import ClientInfo
 
 
 class Plugin:

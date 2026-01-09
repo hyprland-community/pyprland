@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Iterable
 
-from ..types import VersionInfo
+from ..models import VersionInfo
 from .interface import Plugin
 
 

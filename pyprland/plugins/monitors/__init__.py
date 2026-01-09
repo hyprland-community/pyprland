@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from typing import Any, cast
 
-from ...types import MonitorInfo
+from ...models import MonitorInfo
 from ..interface import Plugin
 from .layout import MONITOR_PROPS, compute_xy, get_dims
 

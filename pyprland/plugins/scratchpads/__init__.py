@@ -9,7 +9,7 @@ from typing import cast
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated
 from ...ipc import get_client_props, get_monitor_props, notify_error
-from ...types import ClientInfo, MonitorInfo, VersionInfo
+from ...models import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
 from .common import FocusTracker, HideFlavors
@@ -30,7 +30,7 @@ DEFAULT_HIDE_DELAY = 0  # in seconds
 DEFAULT_HYSTERESIS = 0.4  # in seconds
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
+class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Scratchpads addon."""
 
     procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
@@ -497,8 +497,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
                 del self._hysteresis_tasks[uid]
             return True
         return False
-
-    # Commands {{{
 
     async def run_attach(self) -> None:
         """Attach the focused window to the last focused scratchpad."""
@@ -1001,8 +999,3 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring {{{
             ):
                 self.log.debug("Previous scratch: %s", self.scratches.get(addr=tracker.prev_focused_window))
                 await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
-
-    # }}}
-
-
-# }}}

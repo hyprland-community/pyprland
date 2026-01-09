@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
 from ...common import SharedState
-from ...types import ClientInfo, MonitorInfo, VersionInfo
+from ...models import ClientInfo, MonitorInfo, VersionInfo
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
 
 if TYPE_CHECKING:

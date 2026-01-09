@@ -16,7 +16,7 @@ from collections.abc import Callable
 from typing import Any
 
 from ...common import SharedState, is_rotated
-from ...types import MonitorInfo
+from ...models import MonitorInfo
 
 
 def mk_scratch_name(uid: str) -> str:
@@ -29,7 +29,7 @@ def mk_scratch_name(uid: str) -> str:
     return f"special:S-{escaped}"
 
 
-def compute_offset(pos1: tuple[int, int], pos2: tuple[int, int]) -> tuple[int, int]:
+def compute_offset(pos1: tuple[int, int] | None, pos2: tuple[int, int] | None) -> tuple[int, int]:
     """Compute the offset between two positions.
 
     Args:

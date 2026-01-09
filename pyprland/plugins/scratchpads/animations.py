@@ -6,7 +6,7 @@ import enum
 from typing import cast
 
 from ...adapters.units import convert_monitor_dimension
-from ...types import ClientInfo, MonitorInfo
+from ...models import ClientInfo, MonitorInfo
 from .helpers import get_size
 
 

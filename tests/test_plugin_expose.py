@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 from pyprland.plugins.expose import Extension
-from pyprland.types import ClientInfo
+from pyprland.models import ClientInfo
 from pyprland.common import SharedState
 
 

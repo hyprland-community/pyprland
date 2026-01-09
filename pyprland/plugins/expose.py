@@ -1,6 +1,6 @@
 """expose Brings every client window to screen for selection."""
 
-from ..types import ClientInfo
+from ..models import ClientInfo
 from .interface import Plugin
 
 

@@ -1,7 +1,7 @@
 """Conversion functions for units used in Pyprland & plugins."""
 
 from ..common import is_rotated
-from ..types import MonitorInfo
+from ..models import MonitorInfo
 
 
 def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorInfo) -> int:

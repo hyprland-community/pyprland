@@ -19,7 +19,7 @@ from logging import Logger
 from typing import Any, cast
 
 from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
-from .types import ClientInfo, JSONResponse, MonitorInfo, PyprError
+from .models import ClientInfo, JSONResponse, MonitorInfo, PyprError
 
 log: Logger | None = None
 

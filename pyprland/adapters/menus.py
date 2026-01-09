@@ -7,7 +7,7 @@ from logging import Logger
 from typing import TYPE_CHECKING
 
 from ..common import apply_variables, get_logger
-from ..types import PyprError
+from ..models import PyprError
 
 if TYPE_CHECKING:
     from ..common import Configuration

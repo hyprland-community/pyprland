@@ -3,7 +3,7 @@ import json
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland import ipc
-from pyprland.types import PyprError
+from pyprland.models import PyprError
 
 
 @pytest.fixture

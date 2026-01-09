@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ...types import MonitorInfo
+from ...models import MonitorInfo
 
 MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 

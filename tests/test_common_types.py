@@ -1,4 +1,4 @@
-from pyprland.types import VersionInfo
+from pyprland.models import VersionInfo
 
 
 def test_version_info_init():

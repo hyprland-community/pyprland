@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from ..types import ClientInfo, MonitorInfo
+from ..models import ClientInfo, MonitorInfo
 from .interface import Plugin
 
 
