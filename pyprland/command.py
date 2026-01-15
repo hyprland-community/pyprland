@@ -89,6 +89,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.queues: dict[str, asyncio.Queue] = {}
         self._dedup_last_call = {}
         self.state = SharedState()
+        if os.environ.get("NIRI_SOCKET"):
+            self.state.environment = "niri"
         self._set_instance(self)
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 

@@ -23,6 +23,12 @@ class Plugin:
     hyprctl: Callable
     " `pyprland.ipc.hyprctl` using the plugin's logger "
 
+    nirictl: Callable
+    " `pyprland.ipc.nirictl` using the plugin's logger "
+
+    nirictl_json: Callable
+    " `pyprland.ipc.nirictl_json` using the plugin's logger "
+
     notify: Callable
     " `pyprland.ipc.notify` using the plugin's logger "
 
@@ -51,6 +57,8 @@ class Plugin:
             self.notify,
             self.notify_info,
             self.notify_error,
+            self.nirictl,
+            self.nirictl_json,
         ) = ctrl
         self.config = Configuration({}, logger=self.log)
 

@@ -240,6 +240,7 @@ class SharedState:
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address
+    environment: str = "hyprland"
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)

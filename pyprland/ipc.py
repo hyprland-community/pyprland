@@ -5,6 +5,8 @@ __all__ = [
     "get_monitor_props",
     "hyprctl",
     "hyprctl_json",
+    "nirictl",
+    "nirictl_json",
     "notify",
     "notify_error",
     "notify_info",
@@ -12,6 +14,7 @@ __all__ = [
 
 import asyncio
 import json
+import os
 from collections.abc import AsyncGenerator, Callable, Iterable
 from contextlib import asynccontextmanager
 from functools import partial
@@ -25,6 +28,7 @@ log: Logger | None = None
 
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
+NIRI_SOCKET = os.environ.get("NIRI_SOCKET")
 
 
 @asynccontextmanager
@@ -47,6 +51,29 @@ async def hyprctl_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Str
         await writer.wait_closed()
 
 
+@asynccontextmanager
+async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
+    """Context manager for the niri socket.
+
+    Args:
+        logger: Logger to use for error reporting
+    """
+    if not NIRI_SOCKET:
+        logger.critical("NIRI_SOCKET not set!")
+        raise PyprError("Niri is not available")
+    try:
+        reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
+    except FileNotFoundError as e:
+        logger.critical("niri socket not found! is it running ?")
+        raise PyprError from e
+
+    try:
+        yield reader, writer
+    finally:
+        writer.close()
+        await writer.wait_closed()
+
+
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
     """Hyprland notification system.
 
@@ -57,6 +84,10 @@ async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int 
         icon: Icon ID to display
         logger: Logger instance
     """
+    if NIRI_SOCKET:
+        if logger:
+            logger.warning("notify is not supported on Niri")
+        return
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
 
@@ -67,6 +98,21 @@ notify_info = partial(notify, icon=1, duration=5)
 
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
+    if NIRI_SOCKET:
+        async with niri_connection(log or get_logger()) as (reader, writer):
+            writer.write(b'"EventStream"')
+            await writer.drain()
+            # We must return the reader/writer, so we detach them from the context manager?
+            # actually niri_connection closes on exit.
+            # We can't use the context manager here easily if we want to return the stream.
+            # Let's just duplicate the connection logic for this specific case or adapt niri_connection
+
+    if NIRI_SOCKET:
+        reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
+        writer.write(b'"EventStream"')
+        await writer.drain()
+        return reader, writer
+
     return await asyncio.open_unix_connection(EVENTS)
 
 
@@ -92,6 +138,17 @@ def retry_on_reset(func: Callable) -> Callable:
     return wrapper
 
 
+async def _niri_request(payload: str | dict | list, logger: Logger) -> JSONResponse:
+    """Send request to Niri and return response."""
+    async with niri_connection(logger) as (reader, writer):
+        writer.write(json.dumps(payload).encode())
+        await writer.drain()
+        response = await reader.readline()
+        if not response:
+            raise PyprError("Empty response from Niri")
+        return json.loads(response)
+
+
 async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
     """Get response of `command` from the IPC socket.
 
@@ -109,6 +166,21 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 
 @retry_on_reset
+async def nirictl_json(command: str | dict, logger: Logger | None = None) -> Any:
+    """Run a Niri IPC command and return the JSON output.
+
+    Args:
+        command: The command to execute (dict or str)
+        logger: Logger to use (defaults to global log)
+    """
+    logger = cast("Logger", logger or log)
+    ret = await _niri_request(command, logger)
+    if isinstance(ret, dict) and "Ok" in ret:
+        return ret["Ok"]
+    raise PyprError(f"Niri command failed: {ret}")
+
+
+@retry_on_reset
 async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
     """Run an IPC command and return the JSON output.
 
@@ -120,6 +192,33 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONRespon
     ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
     return ret
+
+
+@retry_on_reset
+async def nirictl(args: dict | list, logger: Logger | None = None, weak: bool = False) -> bool:
+    """Run a Niri IPC command. Returns success value.
+
+    Args:
+        args: command dict or list of commands
+        logger: logger to use
+        weak: if True, only log warning on failure
+    """
+    logger = cast("Logger", logger or log)
+    try:
+        ret = await _niri_request(args, logger)
+        if isinstance(ret, dict) and "Ok" in ret:
+            return True
+        if weak:
+            logger.warning("Niri command failed: %s", ret)
+        else:
+            logger.error("Niri command failed: %s", ret)
+        return False
+    except PyprError as e:
+        if weak:
+            logger.warning("Niri command failed: %s", e)
+        else:
+            logger.error("Niri command failed: %s", e)
+        return False
 
 
 # }}}
@@ -283,7 +382,7 @@ def init() -> None:
     log = get_logger("ipc")
 
 
-def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable]:
+def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable, Callable, Callable]:
     """Return (hyprctl, hyprctl_json, notify) configured for the given logger.
 
     Args:
@@ -295,4 +394,6 @@ def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable
         partial(notify, logger=logger),
         partial(notify_info, logger=logger),
         partial(notify_error, logger=logger),
+        partial(nirictl, logger=logger),
+        partial(nirictl_json, logger=logger),
     )
