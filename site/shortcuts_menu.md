@@ -77,7 +77,7 @@ annotate = [
 
 All the [Menu](./Menu) configuration items are also available.
 
-### `entries` (REQUIRED)
+### `entries` <Badge type="danger" text="required" />
 
 Defines the menu entries. Supports [Variables](./Variables)
 

@@ -76,7 +76,7 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 
 ## Configuration
 
-### `path` (REQUIRED)
+### `path` <Badge type="danger" text="required" />
 
 path to a folder or list of folders that will be searched. Can also be a list, eg:
 

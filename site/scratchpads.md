@@ -76,7 +76,7 @@ bind = $mainMod,Y,exec,pypr attach
 
 ## Configuration
 
-### `command` (REQUIRED)
+### `command` <Badge type="danger" text="required" />
 
 This is the command you wish to run in the scratchpad.
 

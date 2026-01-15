@@ -20,7 +20,7 @@ Runs your favorite bar app (gbar, ags / hyprpanel, waybar, ...) with option to p
 
 ## Configuration
 
-### `command` (REQUIRED)
+### `command` <Badge type="danger" text="required" />
 
 The command which runs the menu bar. The string `[monitor]` will be replaced by the best monitor.
 

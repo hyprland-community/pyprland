@@ -60,7 +60,7 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 ## Configuration
 
-### `placement` (REQUIRED)
+### `placement` <Badge type="danger" text="required" />
 
 Supported placements are:
 
