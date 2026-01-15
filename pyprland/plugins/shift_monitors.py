@@ -8,6 +8,8 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Shift workspaces across monitors."""
 
+    environments = ["hyprland"]
+
     monitors: list[str] = []
 
     async def init(self) -> None:

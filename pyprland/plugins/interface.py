@@ -14,6 +14,9 @@ class Plugin:
 
     aborted = False
 
+    environments: list[str] = []
+    " The supported environments for this plugin. Empty list means all environments. "
+
     hyprctl_json: Callable
     " `pyprland.ipc.hyprctl_json` using the plugin's logger "
 

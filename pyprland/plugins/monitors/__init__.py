@@ -12,6 +12,8 @@ from .layout import MONITOR_PROPS, compute_xy, get_dims
 class Extension(Plugin):
     """Control monitors layout."""
 
+    environments = ["hyprland"]
+
     _mon_by_pat_cache: dict[str, MonitorInfo] = {}
 
     async def on_reload(self) -> None:

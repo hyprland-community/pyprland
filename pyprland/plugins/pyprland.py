@@ -3,7 +3,7 @@
 import json
 from typing import cast
 
-from ..models import VersionInfo
+from ..models import PyprError, VersionInfo
 from .interface import Plugin
 
 DEFAULT_VERSION = VersionInfo(9, 9, 9)
@@ -24,11 +24,12 @@ class Extension(Plugin):
         try:
             version_info = await self.hyprctl_json("version")
             assert isinstance(version_info, dict)
-        except json.JSONDecodeError:
-            self.log.exception("Fail to parse hyprctl version")
-            await self.notify_error("Error: 'hyprctl version' didn't print valid data")
+        except (FileNotFoundError, json.JSONDecodeError, PyprError):
+            self.log.warning("Fail to parse hyprctl version")
+            # await self.notify_error("Error: 'hyprctl version' didn't print valid data")
         else:
             _tag = version_info.get("tag")
+
             if _tag and _tag != "unknown":
                 assert isinstance(_tag, str)
                 version_str = _tag.split("-", 1)[0]
@@ -46,13 +47,19 @@ class Extension(Plugin):
                 version_str = ""
 
         if not version_str:
-            self.log.error("Fail to parse version information: %s - using default", version_info)
+            self.log.warning("Fail to parse version information: %s - using default", version_info)
             self.state.hyprland_version = DEFAULT_VERSION
 
-        self.state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
-        monitors = await self.hyprctl_json("monitors")
-        self.state.monitors = [mon["name"] for mon in monitors]
-        self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
+        try:
+            self.state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
+            monitors = await self.hyprctl_json("monitors")
+            self.state.monitors = [mon["name"] for mon in monitors]
+            self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
+        except (FileNotFoundError, PyprError):
+            self.log.warning("Hyprland socket not found, assuming no hyprland")
+            self.state.active_workspace = "unknown"
+            self.state.monitors = []
+            self.state.active_monitor = "unknown"
 
     async def event_monitoradded(self, name: str) -> None:
         """Track monitor.

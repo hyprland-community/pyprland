@@ -8,6 +8,8 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Force workspaces to follow the focus / mouse."""
 
+    environments = ["hyprland"]
+
     workspace_list: list[int] = []
 
     async def on_reload(self) -> None:

@@ -50,6 +50,8 @@ async def is_bar_alive(pid: int, hyprctl_json: Callable[..., Any]) -> int | bool
 class Extension(Plugin):
     """Manage desktop bars application."""
 
+    environments = ["hyprland"]
+
     monitors: set[str]
     proc = None
     cur_monitor: str | None = ""

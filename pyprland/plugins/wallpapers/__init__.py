@@ -33,6 +33,8 @@ async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
 class Extension(Plugin):
     """Manages the background image."""
 
+    environments = ["hyprland"]
+
     default_image_ext: set[str] | list[str] = {"png", "jpg", "jpeg"}
     image_list: list[str] = []
     running = True

@@ -61,7 +61,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
     """Main app object."""
 
     server: asyncio.Server
-    event_reader: asyncio.StreamReader
+    event_reader: asyncio.StreamReader | None = None
     stopped = False
     config: dict[str, dict] = {}
     tasks: list[asyncio.Task] = []
@@ -171,6 +171,10 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             modname = f"pyprland.plugins.{name}"
         try:
             plug = importlib.import_module(modname).Extension(name)
+            desktop = self.config["pyprland"].get("desktop", "hyprland")
+            if plug.environments and desktop not in plug.environments:
+                self.log.info("Skipping plugin %s: desktop %s not supported %s", name, desktop, plug.environments)
+                return False
             plug.state = self.state
             if init:
                 await plug.init()
@@ -305,6 +309,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
     async def read_events_loop(self) -> None:
         """Consume the event loop and calls corresponding handlers."""
+        if self.event_reader is None:
+            return
         while not self.stopped:
             try:
                 data = (await self.event_reader.readline()).decode(errors="replace")
@@ -442,11 +448,13 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
     async def run(self) -> None:
         """Run the server and the event listener."""
-        await asyncio.gather(
+        tasks = [
             asyncio.create_task(self.serve()),
-            asyncio.create_task(self.read_events_loop()),
             asyncio.create_task(self.plugins_runner()),
-        )
+        ]
+        if self.event_reader:
+            tasks.append(asyncio.create_task(self.read_events_loop()))
+        await asyncio.gather(*tasks)
 
 
 async def get_event_stream_with_retry(max_retry: int = 10) -> tuple[asyncio.StreamReader, asyncio.StreamWriter] | tuple[None, Exception]:
@@ -473,13 +481,16 @@ async def run_daemon() -> None:
     manager = Pyprland()
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
 
-    events_reader, events_writer = await get_event_stream_with_retry()
-    if events_reader is None:
-        manager.log.critical("Failed to open hyprland event stream: %s.", events_writer)
-        await notify_fatal("Failed to open hyprland event stream")
-        raise PyprError from cast("Exception", events_writer)
+    try:
+        events_reader, events_writer = await get_event_stream_with_retry()
+    except Exception:
+        events_reader, events_writer = None, None
 
-    manager.event_reader = events_reader
+    if events_reader is None:
+        manager.log.warning("Failed to open hyprland event stream: %s.", events_writer)
+        # await notify_fatal("Failed to open hyprland event stream")
+    else:
+        manager.event_reader = events_reader
 
     await manager.initialize()
 
@@ -493,9 +504,10 @@ async def run_daemon() -> None:
         manager.log.critical("cancelled")
     else:
         await manager.exit_plugins()
-        assert isinstance(events_writer, asyncio.StreamWriter)
-        events_writer.close()
-        await events_writer.wait_closed()
+        if events_writer:
+            assert isinstance(events_writer, asyncio.StreamWriter)
+            events_writer.close()
+            await events_writer.wait_closed()
         manager.server.close()
         await manager.server.wait_closed()
 
