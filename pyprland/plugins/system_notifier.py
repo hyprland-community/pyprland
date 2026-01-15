@@ -7,7 +7,7 @@ from copy import deepcopy
 from typing import cast
 
 from ..adapters.colors import convert_color
-from ..common import apply_filter
+from ..common import apply_filter, notify_send
 from .interface import Plugin
 
 try:
@@ -131,9 +131,7 @@ class Extension(Plugin):
                 if rule["pattern"].search(content):
                     text = apply_filter(content, cast("str", rule["filter"])) if rule["filter"] else content
                     if self.config.get("use_notify_send", False):
-                        await self.hyprctl(
-                            f"exec notify-send '{text}' --expire-time={rule['duration'] * 1000} --app-name=pyprland-system-notifier"
-                        )
+                        await notify_send(text, duration=rule["duration"] * 1000)
                     else:
                         await self.notify(text, color=rule["color"], duration=rule["duration"])
 

@@ -123,26 +123,28 @@ async def test_notify_send_option(extension):
 
     props = [{"pattern": r"Match me", "duration": 2}]
 
-    task = asyncio.create_task(extension.start_parser("test_parser", props))
-    await asyncio.sleep(0.01)
+    with patch("pyprland.plugins.system_notifier.notify_send", new_callable=AsyncMock) as mock_notify_send:
+        task = asyncio.create_task(extension.start_parser("test_parser", props))
+        await asyncio.sleep(0.01)
 
-    await q.put("Match me")
-    await asyncio.sleep(0.01)
+        await q.put("Match me")
+        await asyncio.sleep(0.01)
 
-    # Should use hyprctl exec notify-send instead of self.notify
-    extension.notify.assert_not_called()
-    extension.hyprctl.assert_called_once()
-    args = extension.hyprctl.call_args[0][0]
-    assert "notify-send" in args
-    assert "'Match me'" in args
-    assert "--expire-time=2000" in args
+        # Should use notify_send instead of self.notify or self.hyprctl
+        extension.notify.assert_not_called()
+        extension.hyprctl.assert_not_called()
 
-    extension.running = False
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+        mock_notify_send.assert_called_once()
+        args, kwargs = mock_notify_send.call_args
+        assert args[0] == "Match me"
+        assert kwargs["duration"] == 2000
+
+        extension.running = False
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 @pytest.mark.asyncio

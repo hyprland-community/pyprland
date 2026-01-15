@@ -21,7 +21,7 @@ from functools import partial
 from logging import Logger
 from typing import Any, cast
 
-from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
+from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger, notify_send
 from .models import ClientInfo, JSONResponse, MonitorInfo, PyprError
 
 log: Logger | None = None
@@ -85,8 +85,7 @@ async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int 
         logger: Logger instance
     """
     if NIRI_SOCKET:
-        if logger:
-            logger.warning("notify is not supported on Niri")
+        await notify_send(text, int(duration * 1000))
         return
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
