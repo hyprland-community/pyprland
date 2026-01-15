@@ -10,6 +10,7 @@ const version_names = [
   "2.4.6",
   "2.4.7",
   "2.5.x",
+  "2.6.2",
 ];
 
 const extra_versions = {
