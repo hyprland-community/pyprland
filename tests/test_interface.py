@@ -19,6 +19,8 @@ def plugin():
         plugin = ConcretePlugin("test_plugin")
         # Manually attach mocks for methods used in get_clients
         plugin.hyprctl_json = AsyncMock()
+        plugin.state = Mock()
+        plugin.state.environment = "hyprland"
         return plugin
 
 
