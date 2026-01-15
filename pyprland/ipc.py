@@ -1,29 +1,29 @@
 """Interact with hyprland using sockets."""
 
 __all__ = [
+    "get_response",
     "get_client_props",
     "get_monitor_props",
-    "hyprctl",
-    "hyprctl_json",
-    "nirictl",
-    "nirictl_json",
-    "notify",
+    "hyprctl_connection",
+    "niri_connection",
+    "niri_request",
+    "notify_send",
     "notify_error",
     "notify_info",
-    "set_notify_method",
+    "notify_fatal",
+    "retry_on_reset",
 ]
 
 import asyncio
 import json
 import os
-from collections.abc import AsyncGenerator, Callable, Iterable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from functools import partial
 from logging import Logger
 from typing import Any, cast
 
-from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger, notify_send
-from .models import ClientInfo, JSONResponse, MonitorInfo, PyprError
+from .common import IPC_FOLDER, get_logger, notify_send
+from .models import JSONResponse, PyprError
 
 log: Logger | None = None
 NOTIFY_METHOD = "auto"
@@ -31,6 +31,36 @@ NOTIFY_METHOD = "auto"
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 NIRI_SOCKET = os.environ.get("NIRI_SOCKET")
+
+
+async def notify_error(text: str, duration: int = 3000) -> None:
+    """Send an error notification.
+
+    Args:
+        text: The text to display
+        duration: The duration in milliseconds
+    """
+    await notify_send(text, duration, icon="error")
+
+
+async def notify_fatal(text: str, duration: int = 8000) -> None:
+    """Send a fatal notification.
+
+    Args:
+        text: The text to display
+        duration: The duration in milliseconds
+    """
+    await notify_send(text, duration, icon="computer-fail")
+
+
+async def notify_info(text: str, duration: int = 3000) -> None:
+    """Send an info notification.
+
+    Args:
+        text: The text to display
+        duration: The duration in milliseconds
+    """
+    await notify_send(text, duration, icon="info")
 
 
 @asynccontextmanager
@@ -87,27 +117,6 @@ def set_notify_method(method: str) -> None:
     NOTIFY_METHOD = method
 
 
-async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
-    """Hyprland notification system.
-
-    Args:
-        text: Notification message
-        duration: Notification duration in seconds
-        color: RGB color code (hex)
-        icon: Icon ID to display
-        logger: Logger instance
-    """
-    if NOTIFY_METHOD == "notify-send" or (NOTIFY_METHOD == "auto" and NIRI_SOCKET):
-        await notify_send(text, int(duration * 1000))
-        return
-    await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
-
-
-notify_fatal = partial(notify, icon=3, duration=10)
-notify_error = partial(notify, icon=0, duration=5)
-notify_info = partial(notify, icon=1, duration=5)
-
-
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
     if NIRI_SOCKET:
@@ -135,7 +144,10 @@ def retry_on_reset(func: Callable) -> Callable:
         func: The function to wrap
     """
 
-    async def wrapper(*args, logger: Logger, **kwargs) -> Any:  # noqa: ANN401
+    async def wrapper(*args, logger: Logger | None = None, **kwargs) -> Any:  # noqa: ANN401
+        if logger is None and args and hasattr(args[0], "log"):
+            logger = args[0].log
+        assert logger is not None
         exc = None
         for count in range(3):
             try:
@@ -150,7 +162,8 @@ def retry_on_reset(func: Callable) -> Callable:
     return wrapper
 
 
-async def _niri_request(payload: str | dict | list, logger: Logger) -> JSONResponse:
+@retry_on_reset
+async def niri_request(payload: str | dict | list, logger: Logger) -> JSONResponse:
     """Send request to Niri and return response."""
     async with niri_connection(logger) as (reader, writer):
         writer.write(json.dumps(payload).encode())
@@ -162,7 +175,7 @@ async def _niri_request(payload: str | dict | list, logger: Logger) -> JSONRespo
         return json.loads(response)
 
 
-async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
+async def get_response(command: bytes, logger: Logger) -> JSONResponse:
     """Get response of `command` from the IPC socket.
 
     Args:
@@ -179,236 +192,70 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 
 @retry_on_reset
-async def nirictl_json(command: str | dict, logger: Logger | None = None) -> JSONResponse:
-    """Run a Niri IPC command and return the JSON output.
-
-    Args:
-        command: The command to execute (dict or str)
-        logger: Logger to use (defaults to global log)
-    """
-    logger = cast("Logger", logger or log)
-    ret = await _niri_request(command, logger)
-    if isinstance(ret, dict) and "Ok" in ret:
-        return ret["Ok"]
-    msg = f"Niri command failed: {ret}"
-    raise PyprError(msg)
-
-
-@retry_on_reset
-async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
-    """Run an IPC command and return the JSON output.
-
-    Args:
-        command: The command to execute
-        logger: Logger to use (defaults to global log)
-    """
-    logger = cast("Logger", logger or log)
-    ret = await _get_response(f"-j/{command}".encode(), logger)
-    assert isinstance(ret, list | dict)
-    return ret
-
-
-@retry_on_reset
-async def nirictl(args: dict | list, logger: Logger | None = None, weak: bool = False) -> bool:
-    """Run a Niri IPC command. Returns success value.
-
-    Args:
-        args: command dict or list of commands
-        logger: logger to use
-        weak: if True, only log warning on failure
-    """
-    logger = cast("Logger", logger or log)
-    try:
-        ret = await _niri_request(args, logger)
-        if isinstance(ret, dict) and "Ok" in ret:
-            return True
-    except PyprError:
-        if weak:
-            logger.exception("Niri command failed")
-        else:
-            logger.exception("Niri command failed")
-        return False
-
-    if weak:
-        logger.warning("Niri command failed: %s", ret)
-    else:
-        logger.error("Niri command failed: %s", ret)
-    return False
-
-
-# }}}
-
-
-# hyprctl : batched commands {{{
-def _format_command(command_list: list[str] | list[list[str]], default_base_command: str) -> Iterable[str]:
-    """Format a list of commands to be sent to Hyprland.
-
-    Args:
-        command_list: list of commands to send
-            Each command can be a string or a tuple with the command and the base command
-        default_base_command: type of command to send
-    """
-    for command in command_list:
-        if isinstance(command, str):
-            yield f"{default_base_command} {command}"
-        else:
-            yield f"{command[1]} {command[0]}"
-
-
-@retry_on_reset
-async def hyprctl(args: str | list[str], base_command: str = "dispatch", logger: Logger | None = None, weak: bool = False) -> bool:
-    """Run an IPC command. Returns success value.
-
-    Args:
-        args: single command (str) or list of commands to send to Hyprland
-        base_command: type of command to send
-        logger: logger to use in case of error
-        weak: if True, only log a warning on failure
-
-    Returns:
-        True on success
-    """
-    logger = cast("Logger", logger or log)
-
-    if not args:
-        logger.warning("%s triggered without a command!", base_command)
-        return False
-    logger.debug("%s %s", base_command, args)
-
-    async with hyprctl_connection(logger) as (ctl_reader, ctl_writer):
-        if isinstance(args, list):
-            nb_cmds = len(args)
-            ctl_writer.write(f"[[BATCH]] {' ; '.join(_format_command(args, base_command))}".encode())
-        else:
-            nb_cmds = 1
-            ctl_writer.write(f"/{base_command} {args}".encode())
-        await ctl_writer.drain()
-        resp = await ctl_reader.read(100)
-
-    # remove "\n" from the response
-    resp = b"".join(resp.split(b"\n"))
-    # In Hyprland < 0.40.0 "ok" was returned for success
-    # In newer versions "ok" is not returned anymore (empty response)
-    # So we assume success if response is empty or contains "ok"
-    # But for batch commands, "ok" might be repeated, so we need to be careful
-    # Actually, recent hyprland versions might behave differently.
-    # Let's stick to the current logic but be aware of changes.
-    # The existing logic checks for "ok" * nb_cmds.
-
-    r: bool = resp == b"ok" * nb_cmds
-    if not r:
-        if weak:
-            logger.warning("FAILED %s", resp)
-        else:
-            logger.error("FAILED %s", resp)
-    return r
-
-
-# }}}
-
-
-async def get_monitor_props(logger: Logger | None = None, name: str | None = None) -> MonitorInfo:
-    """Return focused monitor data if `name` is not defined, else use monitor's name.
-
-    Args:
-        logger: logger to use in case of error
-        name: (optional) monitor name
-
-    Returns:
-        dict() with the focused monitor properties
-    """
-    if name:
-
-        def _match_fn(mon: MonitorInfo) -> bool:
-            return mon["name"] == name
-    else:
-
-        def _match_fn(mon: MonitorInfo) -> bool:
-            return cast("bool", mon.get("focused"))
-
-    if NIRI_SOCKET:
-        outputs = await nirictl_json("outputs", logger=logger)
-        for key, output in outputs.items():
-            mon_info = cast(
-                "MonitorInfo",
-                {
-                    "name": key,
-                    "focused": output.get("is_focused", False),
-                    "x": output.get("logical_position", {}).get("x", 0),
-                    "y": output.get("logical_position", {}).get("y", 0),
-                    "width": output.get("logical_size", {}).get("width", 0),
-                    "height": output.get("logical_size", {}).get("height", 0),
-                    "scale": output.get("scale", 1.0),
-                },
-            )
-
-            if _match_fn(mon_info):
-                return mon_info
-        msg = "no focused monitor"
-        raise RuntimeError(msg)
-
-    for monitor in await hyprctl_json("monitors", logger=logger):
-        if _match_fn(cast("MonitorInfo", monitor)):
-            return cast("MonitorInfo", monitor)
-    msg = "no focused monitor"
-    raise RuntimeError(msg)
-
-
-def default_match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
-    """Default match function.
-
-    Args:
-        value1: First value to compare
-        value2: Second value to compare
-    """
-    return bool(value1 == value2)
-
-
 async def get_client_props(
-    logger: Logger | None = None, match_fn: Callable = default_match_fn, clients: list[ClientInfo] | None = None, **kw
-) -> ClientInfo | None:
-    """Return the properties of a client that matches the given `match_fn` (or default to equality) given the keyword arguments.
-
-    Eg.
-        # will return the properties of the client with address "0x1234"
-        get_client_props(logger, addr="0x1234")
-
-        # will return the properties of the client with initialClass containing "fooBar"
-        get_client_props(logger, match_fn=lambda x, y: y in x), initialClass="fooBar")
+    addr: str | None = None,
+    pid: int | None = None,
+    cls: str | None = None,
+    title: str | None = None,
+    logger: Logger | None = None,
+    clients: list[dict[str, Any]] | None = None,
+    **kwargs: Any,
+) -> dict[str, Any] | None:
+    """Find a client properties given its address, PID, class or title.
 
     Args:
-        logger: logger to use in case of error
-        match_fn: function to match the client properties, takes 2 arguments (client_value, config_value)
-        clients: list of clients to search in
-        kw: keyword arguments to match the client properties
-
-        Any other keyword argument will be used to match the client properties. Only one keyword argument is allowed.
-        `addr` aliases `address` and `cls` aliases `class`
-
-        Note: the address of the client must include the "0x" prefix
+        addr: The client address
+        pid: The client PID
+        cls: The client class
+        title: The client title
+        logger: Logger to use for the connection
+        clients: The list of clients (optional)
+        kwargs: Additional arguments
     """
-    assert kw
-
-    addr = kw.get("addr")
-    klass = kw.get("cls")
+    assert logger
 
     if addr:
-        assert len(addr) > MINIMUM_ADDR_LEN, "Client address is invalid"
-        prop_name = "address"
-        prop_value = addr
-    elif klass:
-        prop_name = "class"
-        prop_value = klass
+        assert len(addr) > 2, "Client address is too short"
+
+    if clients is None:
+        if NIRI_SOCKET:
+            clients = cast("list[dict[str, Any]]", await niri_request("Windows", logger))
+        else:
+            clients = cast("list[dict[str, Any]]", await get_response(b"j/clients", logger))
+
+    for client in clients:
+        if addr and client.get("address") == addr:
+            return client
+        if pid and client.get("pid") == pid:
+            return client
+        if cls and client.get("class") == cls:
+            return client
+        if title and client.get("title") == title:
+            return client
+    return None
+
+
+@retry_on_reset
+async def get_monitor_props(name: str | None = None, logger: Logger | None = None, **kwargs: Any) -> dict[str, Any] | None:
+    """Find a monitor properties given its name.
+
+    Args:
+        name: The monitor name
+        logger: Logger to use for the connection
+        kwargs: Additional arguments
+    """
+    assert logger
+    if name is None:
+        return None
+
+    if NIRI_SOCKET:
+        monitors = cast("list[dict[str, Any]]", await niri_request("Monitors", logger))
     else:
-        prop_name, prop_value = next(iter(kw.items()))
+        monitors = cast("list[dict[str, Any]]", await get_response(b"j/monitors", logger))
 
-    clients_list = clients or await hyprctl_json("clients", logger=logger)
-
-    for client in clients_list:
-        assert isinstance(client, dict)
-        val = client.get(prop_name)
-        if match_fn(val, prop_value):
-            return client  # type: ignore
+    for monitor in monitors:
+        if monitor.get("name") == name:
+            return monitor
     return None
 
 
@@ -416,20 +263,3 @@ def init() -> None:
     """Initialize logging."""
     global log
     log = get_logger("ipc")
-
-
-def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable, Callable, Callable]:
-    """Return (hyprctl, hyprctl_json, notify) configured for the given logger.
-
-    Args:
-        logger: Logger to configure the controls with
-    """
-    return (
-        partial(hyprctl, logger=logger),
-        partial(hyprctl_json, logger=logger),
-        partial(notify, logger=logger),
-        partial(notify_info, logger=logger),
-        partial(notify_error, logger=logger),
-        partial(nirictl, logger=logger),
-        partial(nirictl_json, logger=logger),
-    )

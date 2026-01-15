@@ -1,12 +1,10 @@
 """Common plugin interface."""
 
 import contextlib
-from collections.abc import Callable
 from typing import Any
 
 from ..adapters.backend import EnvironmentBackend
 from ..common import Configuration, SharedState, get_logger
-from ..ipc import get_controls
 from ..models import ClientInfo
 
 
@@ -21,26 +19,28 @@ class Plugin:
     backend: EnvironmentBackend
     " The environment backend "
 
-    hyprctl_json: Callable
-    " `pyprland.ipc.hyprctl_json` using the plugin's logger "
+    # Deprecated methods calling backend equivalent
 
-    hyprctl: Callable
-    " `pyprland.ipc.hyprctl` using the plugin's logger "
+    async def hyprctl_json(self, command: str) -> Any:
+        return await self.backend.execute_json(command)
 
-    nirictl: Callable
-    " `pyprland.ipc.nirictl` using the plugin's logger "
+    async def hyprctl(self, command: str | list[str], **kwargs) -> bool:
+        return await self.backend.execute(command, **kwargs)
 
-    nirictl_json: Callable
-    " `pyprland.ipc.nirictl_json` using the plugin's logger "
+    async def nirictl(self, command: str | list[str], **kwargs) -> bool:
+        return await self.backend.execute(command, **kwargs)
 
-    notify: Callable
-    " `pyprland.ipc.notify` using the plugin's logger "
+    async def nirictl_json(self, command: str) -> Any:
+        return await self.backend.execute_json(command)
 
-    notify_info: Callable
-    " `pyprland.ipc.notify_info` using the plugin's logger "
+    async def notify(self, message: str, duration: int = 5000, color: str = "ff1010") -> None:
+        await self.backend.notify(message, duration, color)
 
-    notify_error: Callable
-    " `pyprland.ipc.notify_error` using the plugin's logger "
+    async def notify_info(self, message: str, duration: int = 5000) -> None:
+        await self.backend.notify_info(message, duration)
+
+    async def notify_error(self, message: str, duration: int = 5000) -> None:
+        await self.backend.notify_error(message, duration)
 
     config: Configuration
     " This plugin configuration section as a `dict` object "
@@ -54,16 +54,17 @@ class Plugin:
         """ the plugin name """
         self.log = get_logger(name)
         """ the logger to use for this plugin """
-        ctrl = get_controls(self.log)
-        (
-            self.hyprctl,
-            self.hyprctl_json,  # pylint: disable=invalid-name
-            self.notify,
-            self.notify_info,
-            self.notify_error,
-            self.nirictl,
-            self.nirictl_json,
-        ) = ctrl
+        # Deprecated: use self.backend.* instead
+        # ctrl = get_controls(self.log)
+        # (
+        #     self.hyprctl,
+        #     self.hyprctl_json,  # pylint: disable=invalid-name
+        #     self.notify,
+        #     self.notify_info,
+        #     self.notify_error,
+        #     self.nirictl,
+        #     self.nirictl_json,
+        # ) = ctrl
         self.config = Configuration({}, logger=self.log)
 
     # Functions to override

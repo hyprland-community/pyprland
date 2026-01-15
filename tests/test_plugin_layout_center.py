@@ -10,8 +10,9 @@ def extension():
     ext.state = SharedState()
     ext.state.active_workspace = "1"
     ext.state.active_window = "0x1"
-    ext.hyprctl = AsyncMock()
-    ext.hyprctl_json = AsyncMock()
+    ext.backend = AsyncMock()
+    ext.hyprctl = ext.backend.execute
+    ext.hyprctl_json = ext.backend.execute_json
     ext.notify_error = AsyncMock()
     ext.workspace_info = {"1": {"enabled": True, "addr": "0x1"}}
     ext.config.update({"margin": 50, "offset": "10 20"})

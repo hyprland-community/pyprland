@@ -12,9 +12,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_toggle_dpms(self) -> None:
         """Toggle dpms on/off for every monitor."""
-        monitors = cast("list[dict[str, Any]]", await self.hyprctl_json("monitors"))
+        monitors = cast("list[dict[str, Any]]", await self.backend.execute_json("monitors"))
         powered_off = any(m["dpmsStatus"] for m in monitors)
         if not powered_off:
-            await self.hyprctl("dpms on")
+            await self.backend.execute("dpms on")
         else:
-            await self.hyprctl("dpms off")
+            await self.backend.execute("dpms off")

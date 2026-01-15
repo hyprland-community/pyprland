@@ -17,7 +17,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if self.state.environment == "niri":
             await self.niri_outputschanged({})
         else:
-            self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors"))]
+            self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.backend.execute_json("monitors"))]
 
     async def niri_outputschanged(self, _data: dict) -> None:
         """Track monitors on Niri.
@@ -26,7 +26,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             _data: The event data (unused)
         """
         try:
-            outputs = await self.nirictl_json("outputs")
+            outputs = await self.backend.execute_json("outputs")
             self.monitors = list(outputs.keys())
         except Exception:
             self.log.exception("Failed to update monitors from Niri event")
@@ -42,9 +42,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             # We'll implement a "move workspace to monitor" shift instead for the active workspace.
             direction_int = int(arg)
             if direction_int > 0:
-                await self.nirictl(["action", "move-workspace-to-monitor-right"])
+                await self.backend.execute(["action", "move-workspace-to-monitor-right"])
             else:
-                await self.nirictl(["action", "move-workspace-to-monitor-left"])
+                await self.backend.execute(["action", "move-workspace-to-monitor-left"])
             return
 
         if not self.monitors:
@@ -112,10 +112,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             # For -1: Iterate forwards: swap(i, i+1)
 
             for i in range(n - 1, 0, -1):
-                await self.hyprctl(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i - 1]}")
+                await self.backend.execute(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i - 1]}")
         else:
             for i in range(n - 1):
-                await self.hyprctl(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i + 1]}")
+                await self.backend.execute(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i + 1]}")
 
     async def event_monitoradded(self, monitor: str) -> None:
         """Keep track of monitors.

@@ -54,7 +54,8 @@ async def test_is_bar_alive():
 @pytest.fixture
 def extension():
     ext = Extension("menubar")
-    ext.hyprctl_json = AsyncMock()
+    ext.backend = AsyncMock()
+    ext.hyprctl_json = ext.backend.execute_json
     ext.notify_info = AsyncMock()
     ext.log = Mock()
     ext.config = {"monitors": ["DP-1", "HDMI-A-1"]}

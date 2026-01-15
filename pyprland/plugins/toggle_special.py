@@ -16,11 +16,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         Args:
             special_workspace: The special workspace name
         """
-        aw = cast("dict", await self.hyprctl_json("activewindow"))
+        aw = cast("dict", await self.backend.execute_json("activewindow"))
         wid = aw["workspace"]["id"]
         assert isinstance(wid, int)
         if wid < 1:  # special workspace
-            await self.hyprctl(
+            await self.backend.execute(
                 [
                     f"togglespecialworkspace {special_workspace}",
                     f"movetoworkspacesilent {self.state.active_workspace},address:{aw['address']}",
@@ -28,4 +28,4 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 ]
             )
         else:
-            await self.hyprctl(f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}")
+            await self.backend.execute(f"movetoworkspacesilent special:{special_workspace},address:{aw['address']}")

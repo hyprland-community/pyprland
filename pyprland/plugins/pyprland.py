@@ -27,7 +27,7 @@ class Extension(Plugin):
         auto_increment = False
         version_info = {}
         try:
-            version_info = await self.hyprctl_json("version")
+            version_info = await self.backend.execute_json("version")
             assert isinstance(version_info, dict)
         except (FileNotFoundError, json.JSONDecodeError, PyprError):
             self.log.warning("Fail to parse hyprctl version")
@@ -56,8 +56,8 @@ class Extension(Plugin):
             self.state.hyprland_version = DEFAULT_VERSION
 
         try:
-            self.state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
-            monitors = await self.hyprctl_json("monitors")
+            self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]
+            monitors = await self.backend.execute_json("monitors")
             self.state.monitors = [mon["name"] for mon in monitors]
             self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
         except (FileNotFoundError, PyprError):
@@ -70,7 +70,7 @@ class Extension(Plugin):
         """Initialize Niri specific state."""
         try:
             self.state.active_workspace = "unknown"  # Niri workspaces are dynamic/different
-            outputs = await self.nirictl_json("outputs")
+            outputs = await self.backend.execute_json("outputs")
             self.state.monitors = list(outputs.keys())
             self.state.active_monitor = next((name for name, data in outputs.items() if data.get("is_focused")), "unknown")
             # Set a dummy version for Niri since we don't have version info yet
@@ -89,7 +89,7 @@ class Extension(Plugin):
         """
         if self.state.environment == "niri":
             try:
-                outputs = await self.nirictl_json("outputs")
+                outputs = await self.backend.execute_json("outputs")
                 new_monitors = list(outputs.keys())
                 self.state.monitors = new_monitors
                 # Update active monitor if possible

@@ -12,21 +12,19 @@ class ConcretePlugin(Plugin):
 
 @pytest.fixture
 def plugin():
-    # Mocking get_controls to avoid importing ipc module which might try to connect or setup logging
-    with patch("pyprland.plugins.interface.get_controls") as mock_get_controls:
-        # Mock what get_controls returns (tuple of callables)
-        mock_get_controls.return_value = (Mock(), Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
-        plugin = ConcretePlugin("test_plugin")
-        # Manually attach mocks for methods used in get_clients
-        plugin.hyprctl_json = AsyncMock()
-        plugin.state = Mock()
-        plugin.state.environment = "hyprland"
+    plugin = ConcretePlugin("test_plugin")
+    # Manually attach mocks for methods used in get_clients
+    plugin.hyprctl_json = AsyncMock()
+    plugin.state = Mock()
+    plugin.state.environment = "hyprland"
 
-        # Mock the backend
-        plugin.backend = Mock()
-        plugin.backend.get_clients = AsyncMock()
+    # Mock the backend
+    plugin.backend = Mock()
+    plugin.backend.get_clients = AsyncMock()
+    plugin.backend.execute = AsyncMock()
+    plugin.backend.execute_json = AsyncMock()
 
-        return plugin
+    return plugin
 
 
 @pytest.mark.asyncio

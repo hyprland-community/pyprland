@@ -28,18 +28,18 @@ def get_pid_from_layers(layers: dict) -> bool | int:
     return False
 
 
-async def is_bar_alive(pid: int, hyprctl_json: Callable[..., Any]) -> int | bool:
+async def is_bar_alive(pid: int, execute_json: Callable[..., Any]) -> int | bool:
     """Check if the bar is running.
 
     Args:
         pid: The process ID
-        hyprctl_json: The hyprctl JSON function
+        execute_json: The execute JSON function
     """
     is_running = os.path.exists(f"/proc/{pid}")
     if is_running:
         print("found running", pid)
         return pid
-    layers = await hyprctl_json("layers")
+    layers = await execute_json("layers")
     pid = get_pid_from_layers(layers)
     if pid:
         print("found layer", pid)
@@ -72,7 +72,7 @@ class Extension(Plugin):
             pid = 0
             while True:
                 if pid:
-                    pid = await is_bar_alive(pid, self.hyprctl_json)
+                    pid = await is_bar_alive(pid, self.backend.execute_json)
                     if pid:
                         await asyncio.sleep(IDLE_LOOP_INTERVAL)
                         continue
@@ -119,7 +119,7 @@ class Extension(Plugin):
     async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
         preferred: list[str] = self.config.get("monitors", [])
-        monitors = [m for m in await self.hyprctl_json("monitors") if m.get("currentFormat") != "Invalid"]
+        monitors = [m for m in await self.backend.execute_json("monitors") if m.get("currentFormat") != "Invalid"]
         names = [m["name"] for m in monitors]
         for monitor in preferred:
             if monitor in names:

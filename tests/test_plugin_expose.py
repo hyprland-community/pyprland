@@ -17,7 +17,8 @@ def sample_clients():
 @pytest.fixture
 def extension():
     ext = Extension("expose")
-    ext.hyprctl = AsyncMock()
+    ext.backend = AsyncMock()
+    ext.hyprctl = ext.backend.execute
     ext.get_clients = AsyncMock()
     ext.state = SharedState()
     ext.config = Mock()

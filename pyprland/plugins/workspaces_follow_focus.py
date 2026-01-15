@@ -25,16 +25,18 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         monitor_id, workspace_name = screenid_name.split(",")
         # move every free workspace to the currently focused desktop
         busy_workspaces = {
-            mon["activeWorkspace"]["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors")) if mon["name"] != monitor_id
+            mon["activeWorkspace"]["name"]
+            for mon in cast("list[dict]", await self.backend.execute_json("monitors"))
+            if mon["name"] != monitor_id
         }
-        workspaces = [w["name"] for w in cast("list[dict]", await self.hyprctl_json("workspaces")) if w["id"] > 0]
+        workspaces = [w["name"] for w in cast("list[dict]", await self.backend.execute_json("workspaces")) if w["id"] > 0]
 
         batch: list[str] = []
         for n in workspaces:
             if n in busy_workspaces or n == workspace_name:
                 continue
             batch.append(f"moveworkspacetomonitor name:{n} {monitor_id}")
-        await self.hyprctl(batch)
+        await self.backend.execute(batch)
 
     async def run_change_workspace(self, direction: str) -> None:
         """<direction> Switch workspaces of current monitor, avoiding displayed workspaces.
@@ -44,7 +46,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """
         increment = int(direction)
         # get focused screen info
-        monitors = await self.hyprctl_json("monitors")
+        monitors = await self.backend.execute_json("monitors")
         assert isinstance(monitors, list)
         for monitor in monitors:
             if monitor["focused"]:
@@ -63,7 +65,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         else:
             next_workspace = available_workspaces[(idx + increment) % len(available_workspaces)]
 
-        await self.hyprctl(
+        await self.backend.execute(
             [
                 f"moveworkspacetomonitor name:{next_workspace} {monitor['name']}",
                 f"workspace {next_workspace}",

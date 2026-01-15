@@ -8,7 +8,7 @@ from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated
-from ...ipc import get_client_props, get_monitor_props, notify_error
+from ...ipc import get_client_props, get_monitor_props
 from ...models import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
@@ -91,7 +91,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                         _scratch_classes[_klass],
                     )
                     self.log.error(text, *args)
-                    await self.notify_error(text % args)
+                    await self.backend.notify_error(text % args)
                 _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
@@ -131,11 +131,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if defined_class:
             if self.state.hyprland_version < VersionInfo(0, 53, 0):
                 if self.state.hyprland_version > VersionInfo(0, 47, 2):
-                    await self.hyprctl(f"windowrule unset, class: {defined_class}", "keyword")
+                    await self.backend.execute(f"windowrule unset, class: {defined_class}", "keyword")
                 else:
-                    await self.hyprctl(f"windowrule unset, ^({defined_class})$", "keyword")
+                    await self.backend.execute(f"windowrule unset, ^({defined_class})$", "keyword")
             else:
-                await self.hyprctl(f"windowrule[{scratch.uid}]:enable false", "keyword")
+                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false", "keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules).
@@ -154,7 +154,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             forced_monitor = scratch.conf.get("force_monitor")
             if forced_monitor and forced_monitor not in self.state.monitors:
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
-                await self.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
+                await self.backend.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
             monitor = await self.get_monitor_props(name=cast("str | None", forced_monitor))
             width, height = convert_coords(scratch.conf.get_str("size", "80% 80%"), monitor)
@@ -187,7 +187,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if set_aspect:
                 wr.set("size", f"{width} {height}")
 
-            await self.hyprctl(wr.get_content(), "keyword")
+            await self.backend.execute(wr.get_content(), "keyword")
 
     async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
         """Wait for a client to be up and running.
@@ -263,7 +263,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 code = self.procs[uid].returncode
                 error = f"The command failed with code {code}" if code else "The command terminated successfully, is it already running?"
             self.log.error('"%s": %s', scratch.conf["command"], error)
-            await notify_error(error)
+            await self.backend.notify_error(error)
             return False
         return True
 
@@ -286,7 +286,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 await self._configure_windowrules(item)
                 self.log.info("%s is not running, starting...", uid)
                 if not await self._start_scratch(item):
-                    await notify_error(f'Failed to show scratch "{item.uid}"')
+                    await self.backend.notify_error(f'Failed to show scratch "{item.uid}"')
                     return False
             await self._unset_windowrules(item)
             return True
@@ -522,7 +522,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             scratch.extra_addr.add(focused)
 
         if scratch.conf.get("pinned", True):
-            await self.hyprctl(f"pin address:{focused}")
+            await self.backend.execute(f"pin address:{focused}")
 
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name" (supports multiple names).
@@ -539,7 +539,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         first_scratch = self.scratches.get(uids[0])
         if not first_scratch:
             self.log.warning("%s doesn't exist, can't toggle.", uids[0])
-            await notify_error(f"Scratchpad '{uids[0]}' not found, check your configuration & the toggle parameter")
+            await self.backend.notify_error(f"Scratchpad '{uids[0]}' not found, check your configuration & the toggle parameter")
             return
 
         self.log.debug(
@@ -550,7 +550,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if first_scratch.conf.get_bool("alt_toggle"):
             # Needs to be on any monitor (if workspace matches)
             extra_visibility_check = first_scratch.meta.space_identifier in await get_all_space_identifiers(
-                await self.hyprctl_json("monitors")
+                await self.backend.execute_json("monitors")
             )
         else:
             # Needs to be on the active monitor+workspace
@@ -642,7 +642,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             "frombottom": f"movewindowpixel 0 {off_y}",
             "fromtop": f"movewindowpixel 0 {-off_y}",
         }
-        await self.hyprctl(
+        await self.backend.execute(
             [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]
         )
 
@@ -659,7 +659,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         if not scratch:
             self.log.warning("%s doesn't exist, can't hide.", uid)
-            await notify_error(f"Scratchpad '{uid}' not found, check your configuration or the show parameter")
+            await self.backend.notify_error(f"Scratchpad '{uid}' not found, check your configuration or the show parameter")
             return
 
         self.cancel_task(uid)
@@ -723,7 +723,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
                     if scratch.conf.get("pinned", True):
-                        await self.hyprctl(f"pin address:{address}")
+                        await self.backend.execute(f"pin address:{address}")
                     hit = True
         return hit
 
@@ -771,7 +771,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 ]
             )
 
-        await self.hyprctl(move_commands)
+        await self.backend.execute(move_commands)
         await self._update_infos(scratch, clients)
 
         position_fixed = False
@@ -781,7 +781,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if not position_fixed:
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
             await self._animate_show(scratch, monitor, relative_animation)
-        await self.hyprctl(f"focuswindow address:{scratch.full_address}")
+        await self.backend.execute(f"focuswindow address:{scratch.full_address}")
 
         if not scratch.client_info["pinned"]:
             await self._pin_scratch(scratch)
@@ -797,9 +797,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """
         if not scratch.conf.get("pinned", True):
             return
-        await self.hyprctl(f"pin address:{scratch.full_address}")
+        await self.backend.execute(f"pin address:{scratch.full_address}")
         for addr in scratch.extra_addr:
-            await self.hyprctl(f"pin address:{addr}")
+            await self.backend.execute(f"pin address:{addr}")
 
     async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]) -> None:
         """Update the client info.
@@ -860,7 +860,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                         pos = apply_offset(main_win_position, off)
                         animation_commands.append(list(pos) + [address])
 
-            await self.hyprctl([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
+            await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
 
     async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
         """Apply the size from config.
@@ -877,7 +877,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 max_width, max_height = convert_coords(cast("str", max_size), monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
-            await self.hyprctl(f"resizewindowpixel exact {width} {height},address:{scratch.full_address}")
+            await self.backend.execute(f"resizewindowpixel exact {width} {height},address:{scratch.full_address}")
 
     async def _fix_position(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Apply the `position` config parameter.
@@ -890,7 +890,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if position:
             x_pos, y_pos = convert_coords(cast("str", position), monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await self.hyprctl(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}")
+            await self.backend.execute(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}")
             return True
         return False
 
@@ -908,7 +908,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         scratch = self.scratches.get(uid)
 
         if not scratch:
-            await notify_error(f"Scratchpad '{uid}' not found, check your configuration or the hide parameter")
+            await self.backend.notify_error(f"Scratchpad '{uid}' not found, check your configuration or the hide parameter")
             self.log.warning("%s is not configured", uid)
             return
 
@@ -922,7 +922,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         active_workspace = self.state.active_workspace
 
         if not scratch.visible and not flavor & HideFlavors.FORCED and not flavor & HideFlavors.TRIGGERED_BY_AUTOHIDE:
-            await notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
+            await self.backend.notify_error(f"Scratchpad '{uid}' is not visible, will not hide.")
             self.log.warning("%s is already hidden", uid)
             return
 
@@ -956,16 +956,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await self._hide_transition(scratch, monitor_info)
 
         if not scratch.conf.get_bool("close_on_hide", False):
-            await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{scratch.full_address}")
+            await self.backend.execute(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{scratch.full_address}")
 
             for addr in scratch.extra_addr:
-                await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{addr}")
+                await self.backend.execute(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{addr}")
                 await asyncio.sleep(0.01)
         else:
-            await self.hyprctl(f"closewindow address:{scratch.full_address}")
+            await self.backend.execute(f"closewindow address:{scratch.full_address}")
 
             for addr in scratch.extra_addr:
-                await self.hyprctl(f"closewindow address:{addr}")
+                await self.backend.execute(f"closewindow address:{addr}")
                 await asyncio.sleep(0.01)
 
         for e_uid in scratch.excluded_scratches:
@@ -1000,4 +1000,4 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 and not client["workspace"]["name"].startswith("special")
             ):
                 self.log.debug("Previous scratch: %s", self.scratches.get(addr=tracker.prev_focused_window))
-                await self.hyprctl(f"focuswindow address:{tracker.prev_focused_window}")
+                await self.backend.execute(f"focuswindow address:{tracker.prev_focused_window}")

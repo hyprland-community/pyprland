@@ -60,7 +60,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
     async def run_relayout(self) -> None:
         """Recompute & apply every monitors's layout."""
-        monitors = cast("list[dict]", await self.hyprctl_json("monitors"))
+        monitors = cast("list[dict]", await self.backend.execute_json("monitors"))
         for monitor in monitors:
             await self.event_monitoradded(monitor["name"], no_default=True, monitors=monitors)
 
@@ -73,7 +73,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             monitors: The list of monitors
         """
         if not monitors:
-            monitors = cast("list", await self.hyprctl_json("monitors"))
+            monitors = cast("list", await self.backend.execute_json("monitors"))
 
         assert monitors
 
@@ -127,6 +127,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                             y = ref["y"]
 
                         self.log.info("Will place %s @ %s,%s", monitor_name, x, y)
-                        configure_monitors(monitors, monitor_name, x, y)
+                        asyncio.create_task(self.backend.execute(f"keyword monitor {monitor_name},preferred,{x}x{y},1"))
                         return True
         return False

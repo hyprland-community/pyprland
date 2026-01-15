@@ -21,7 +21,7 @@ class Extension(MenuMixin, Plugin):
         except KeyError:
             await self.notify_error("unknown window origin")
         else:
-            await self.hyprctl(f"movetoworkspacesilent {origin},address:{addr}")
+            await self.backend.execute(f"movetoworkspacesilent {origin},address:{addr}")
 
     async def run_fetch_client_menu(self) -> None:
         """Select a client window and move it to the active workspace."""
@@ -37,4 +37,4 @@ class Extension(MenuMixin, Plugin):
             num = int(choice.split(None, 1)[0]) - 1
             addr = clients[num]["address"]
             self._windows_origins[addr] = clients[num]["workspace"]["name"]
-            await self.hyprctl(f"movetoworkspace {self.state.active_workspace},address:{addr}")
+            await self.backend.execute(f"movetoworkspace {self.state.active_workspace},address:{addr}")

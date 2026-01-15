@@ -25,6 +25,6 @@ class Extension(Plugin):
         for client in clients:
             if client["address"] == _addr:
                 if client["class_"] in active_classes or client["title"] in active_titles:
-                    await self.hyprctl(["execr fcitx5-remote -o"])
+                    await self.backend.execute(["execr fcitx5-remote -o"])
                 if client["class_"] in inactive_classes or client["title"] in inactive_titles:
-                    await self.hyprctl(["execr fcitx5-remote -c"])
+                    await self.backend.execute(["execr fcitx5-remote -c"])

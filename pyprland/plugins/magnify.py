@@ -84,8 +84,8 @@ class Extension(Plugin):
             start = int((2.0 ** (prev_factor - 1) if expo else prev_factor) * 10)
             end = int((2.0 ** (self.cur_factor - 1) if expo else self.cur_factor) * 10)
             for i in self.animated_eased_zoom(start, end, duration):
-                await self.hyprctl(f"{self.keyword} {i / 10:.4f}", "keyword")
+                await self.backend.execute(f"{self.keyword} {i / 10:.4f}", base_command="keyword")
                 await asyncio.sleep(1.0 / 60)
         self.zoomed = self.cur_factor != 1
         factor = 2 ** (self.cur_factor - 1) if expo else self.cur_factor
-        await self.hyprctl(f"{self.keyword} {factor:.4f}", "keyword")
+        await self.backend.execute(f"{self.keyword} {factor:.4f}", base_command="keyword")

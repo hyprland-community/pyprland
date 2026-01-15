@@ -6,8 +6,9 @@ from pyprland.plugins.lost_windows import Extension, contains
 @pytest.fixture
 def extension():
     ext = Extension("lost_windows")
-    ext.hyprctl = AsyncMock()
-    ext.hyprctl_json = AsyncMock()
+    ext.backend = AsyncMock()
+    ext.hyprctl = ext.backend.execute
+    ext.hyprctl_json = ext.backend.execute_json
     ext.get_clients = AsyncMock()
     return ext
 

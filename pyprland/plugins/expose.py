@@ -33,7 +33,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                     f"focuswindow address:{self.state.active_window}",
                 )
             )
-            await self.hyprctl(commands)
+            await self.backend.execute(commands)
             self.exposed = []
         else:
             self.exposed = await self.get_clients(workspace_bl=self.state.active_workspace)
@@ -41,4 +41,4 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             for client in self.exposed_clients:
                 commands.append(f"movetoworkspacesilent special:exposed,address:{client['address']}")
             commands.append("togglespecialworkspace exposed")
-            await self.hyprctl(commands)
+            await self.backend.execute(commands)

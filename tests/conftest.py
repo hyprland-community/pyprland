@@ -93,7 +93,7 @@ async def sample1_config(monkeypatch):
     yield
 
 
-async def mocked_hyprctl_json(command, logger=None):
+async def mocked_hyprctl_json(self, command, logger=None):
     if command in mocks.json_commands_result:
         return mocks.json_commands_result[command]
     if command.startswith("monitors"):
@@ -144,8 +144,10 @@ async def server_fixture(monkeypatch, mocker):
     monkeypatch.setattr("asyncio.open_unix_connection", mocked_unix_connection)
     monkeypatch.setattr("asyncio.start_unix_server", mocked_unix_server)
 
-    monkeypatch.setattr("pyprland.ipc.hyprctl_json", mocked_hyprctl_json)
-    monkeypatch.setattr("pyprland.ipc.hyprctl", mocks.hyprctl)
+    from pyprland.adapters.hyprland import HyprlandBackend
+
+    monkeypatch.setattr(HyprlandBackend, "execute_json", mocked_hyprctl_json)
+    monkeypatch.setattr(HyprlandBackend, "execute", mocks.hyprctl)
 
     from pyprland import ipc
     from pyprland.command import run_daemon

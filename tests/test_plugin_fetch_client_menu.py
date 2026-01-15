@@ -10,7 +10,8 @@ def extension():
     ext.state = SharedState()
     ext.state.active_workspace = "1"
     ext.state.active_window = "0x123"
-    ext.hyprctl = AsyncMock()
+    ext.backend = AsyncMock()
+    ext.hyprctl = ext.backend.execute
     ext.notify_error = AsyncMock()
     ext.get_clients = AsyncMock()
     ext.menu = AsyncMock()

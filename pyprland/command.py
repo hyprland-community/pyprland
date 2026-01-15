@@ -184,6 +184,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 return False
             plug.state = self.state
             plug.backend = self.backend
+            if hasattr(plug, "backend") and plug.backend:
+                # Injected backend should handle execute and execute_json
+                pass
+            elif self.backend:
+                plug.backend = self.backend
             if init:
                 await plug.init()
                 self.queues[name] = asyncio.Queue()

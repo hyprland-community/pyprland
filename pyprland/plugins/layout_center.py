@@ -64,7 +64,7 @@ class Extension(Plugin):
             self.last_index = new_client_idx
             if behavior == "background":
                 # focus the main client
-                await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
             elif behavior == "close":
                 await self._run_toggle()
             else:  # foreground
@@ -87,7 +87,7 @@ class Extension(Plugin):
             except StopIteration:
                 pass
             else:
-                await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
 
     async def event_closewindow(self, addr: str) -> None:
         """Disable when the main window is closed.
@@ -121,10 +121,10 @@ class Extension(Plugin):
         """Loads the configuration and apply the tag style."""
         if not self.config.get("style"):
             return
-        await self.hyprctl("windowrulev2 unset, tag:layout_center", "keyword")
+        await self.backend.execute("windowrulev2 unset, tag:layout_center", base_command="keyword")
         commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
         if commands:
-            await self.hyprctl(commands, "keyword")
+            await self.backend.execute(commands, base_command="keyword")
 
     # Utils
 
@@ -151,9 +151,9 @@ class Extension(Plugin):
         addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and cli["floating"]:
-                await self.hyprctl(f"togglefloating address:{addr}")
+                await self.backend.execute(f"togglefloating address:{addr}")
                 if self.config.get("style"):
-                    await self.hyprctl(f"tagwindow -layout_center address:{addr}")
+                    await self.backend.execute(f"tagwindow -layout_center address:{addr}")
                 break
 
     async def prepare_window(self, clients: list[ClientInfo] | None = None) -> None:
@@ -167,15 +167,15 @@ class Extension(Plugin):
         addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and not cli["floating"]:
-                await self.hyprctl(f"togglefloating address:{addr}")
+                await self.backend.execute(f"togglefloating address:{addr}")
                 if self.config.get("style"):
-                    await self.hyprctl(f"tagwindow +layout_center address:{addr}")
+                    await self.backend.execute(f"tagwindow +layout_center address:{addr}")
                 break
 
         x, y, width, height = await self._calculate_centered_geometry(self.margin, self.offset)
 
-        await self.hyprctl(f"resizewindowpixel exact {width} {height},address:{addr}")
-        await self.hyprctl(f"movewindowpixel exact {x} {y},address:{addr}")
+        await self.backend.execute(f"resizewindowpixel exact {width} {height},address:{addr}")
+        await self.backend.execute(f"movewindowpixel exact {x} {y},address:{addr}")
 
     async def _calculate_centered_geometry(
         self, margin_conf: int | tuple[int, int], offset_conf: tuple[int, int]
@@ -193,7 +193,7 @@ class Extension(Plugin):
         margin: tuple[int, int] = (margin_conf, margin_conf) if isinstance(margin_conf, int) else margin_conf
         scale = 1.0
 
-        for monitor in cast("list[dict[str, Any]]", await self.hyprctl_json("monitors")):
+        for monitor in cast("list[dict[str, Any]]", await self.backend.execute_json("monitors")):
             scale = monitor["scale"]
             if monitor["focused"]:
                 width = monitor["width"] - (2 * margin[0])
@@ -244,13 +244,13 @@ class Extension(Plugin):
                 new_client = clients[index]
                 await self.unprepare_window(clients)
                 self.main_window_addr = new_client["address"]
-                await self.hyprctl(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
                 self.last_index = index
                 await self.prepare_window(clients)
         elif default_override:
             command = self.config.get(default_override)
             if command:
-                await self.hyprctl(command)
+                await self.backend.execute(command)
 
     async def _run_toggle(self) -> None:
         """Toggle the center layout."""
