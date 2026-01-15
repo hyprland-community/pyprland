@@ -94,7 +94,7 @@ class Extension(Plugin):
                 self.state.monitors = new_monitors
                 # Update active monitor if possible
                 self.state.active_monitor = next((name for name, data in outputs.items() if data.get("is_focused")), "unknown")
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 self.log.exception("Failed to update monitors from Niri event")
 
     async def event_monitoradded(self, name: str) -> None:

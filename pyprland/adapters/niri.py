@@ -1,7 +1,9 @@
 """Niri adapter."""
 
+import json
 from typing import Any, cast
 
+from ..common import notify_send
 from ..ipc import niri_request
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
@@ -9,6 +11,22 @@ from .backend import EnvironmentBackend
 
 class NiriBackend(EnvironmentBackend):
     """Niri backend implementation."""
+
+    def parse_event(self, raw_data: str) -> tuple[str, Any] | None:
+        """Parse a raw event string into (event_name, event_data)."""
+        if not raw_data.strip().startswith("{"):
+            return None
+        try:
+            event = json.loads(raw_data)
+        except json.JSONDecodeError:
+            self.log.exception("Invalid JSON event: %s", raw_data)
+            return None
+
+        if "Variant" in event:
+            type_name = event["Variant"]["type"]
+            data = event["Variant"]
+            return f"niri_{type_name.lower()}", data
+        return None
 
     async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
@@ -24,11 +42,8 @@ class NiriBackend(EnvironmentBackend):
             ret = await niri_request(command, self.log)
             if isinstance(ret, dict) and "Ok" in ret:
                 return True
-        except Exception:
-            if weak:
-                self.log.exception("Niri command failed")
-            else:
-                self.log.exception("Niri command failed")
+        except Exception:  # pylint: disable=broad-exception-caught
+            self.log.exception("Niri command failed")
             return False
 
         if weak:
@@ -150,7 +165,6 @@ class NiriBackend(EnvironmentBackend):
         """Send a notification."""
         # Niri doesn't have a built-in notification system exposed via IPC like Hyprland's `notify`
         # We rely on `notify-send` via the common utility
-        from ..common import notify_send  # noqa: PLC0415
 
         await notify_send(message, duration, color)
 

@@ -28,7 +28,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         try:
             outputs = await self.backend.execute_json("outputs")
             self.monitors = list(outputs.keys())
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.log.exception("Failed to update monitors from Niri event")
 
     async def run_shift_monitors(self, arg: str) -> None:

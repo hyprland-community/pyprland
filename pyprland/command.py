@@ -339,23 +339,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 self.log.critical("Reader starved")
                 return
 
-            if data.startswith("{"):
-                try:
-                    event = json.loads(data)
-                except json.JSONDecodeError:
-                    self.log.exception("Invalid JSON event: %s", data)
-                    continue
-                if "Variant" in event:
-                    type_name = event["Variant"]["type"]
-                    data = event["Variant"]
-                    await self._call_handler(f"niri_{type_name.lower()}", data)
-                continue
-
-            cmd, params = data.split(">>", 1)
-            full_name = f"event_{cmd}"
-
-            # self.log.debug("[%s] %s", cmd, params.strip())
-            await self._call_handler(full_name, params.rstrip("\n"))
+            parsed_event = self.backend.parse_event(data)
+            if parsed_event:
+                await self._call_handler(*parsed_event)
 
     async def exit_plugins(self) -> None:
         """Exit all plugins."""
@@ -511,7 +497,7 @@ async def run_daemon() -> None:
 
     try:
         events_reader, events_writer = await get_event_stream_with_retry()
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         events_reader, events_writer = None, None
 
     if events_reader is None:

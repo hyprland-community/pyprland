@@ -95,6 +95,13 @@ class HyprlandBackend(EnvironmentBackend):
             # We assume it worked, similar to current implementation
             # detailed error checking for batch is limited in current ipc.py implementation
 
+    def parse_event(self, raw_data: str) -> tuple[str, Any] | None:
+        """Parse a raw event string into (event_name, event_data)."""
+        if ">>" not in raw_data:
+            return None
+        cmd, params = raw_data.split(">>", 1)
+        return f"event_{cmd}", params.rstrip("\n")
+
     async def notify(self, message: str, duration: int = 5000, color: str = "ff1010") -> None:
         """Send a notification."""
         # Using icon -1 for default/generic

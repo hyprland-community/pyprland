@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
-from ..common import SharedState, get_logger
+from ..common import MINIMUM_ADDR_LEN, SharedState, get_logger
 from ..models import ClientInfo, MonitorInfo
 
 
@@ -27,6 +27,10 @@ class EnvironmentBackend(ABC):
     @abstractmethod
     async def get_monitors(self) -> list[MonitorInfo]:
         """Return the list of monitors."""
+
+    @abstractmethod
+    def parse_event(self, raw_data: str) -> tuple[str, Any] | None:
+        """Parse a raw event string into (event_name, event_data)."""
 
     async def get_monitor_props(self, name: str | None = None) -> MonitorInfo:
         """Return focused monitor data if `name` is not defined, else use monitor's name."""
@@ -76,8 +80,6 @@ class EnvironmentBackend(ABC):
 
         This serves as a backend-agnostic implementation, assuming get_clients() returns the list of clients.
         """
-        from ..common import MINIMUM_ADDR_LEN  # noqa: PLC0415
-
         if match_fn is None:
 
             def default_match_fn(value1: Any, value2: Any) -> bool:  # noqa: ANN401
