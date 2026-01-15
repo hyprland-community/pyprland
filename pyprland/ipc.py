@@ -2,8 +2,6 @@
 
 __all__ = [
     "get_response",
-    "get_client_props",
-    "get_monitor_props",
     "hyprctl_connection",
     "niri_connection",
     "niri_request",
@@ -20,7 +18,7 @@ import os
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from logging import Logger
-from typing import Any, cast
+from typing import Any
 
 from .common import IPC_FOLDER, get_logger, notify_send
 from .models import JSONResponse, PyprError
@@ -189,74 +187,6 @@ async def get_response(command: bytes, logger: Logger) -> JSONResponse:
 
     decoded_data = reader_data.decode("utf-8", errors="replace")
     return json.loads(decoded_data)  # type: ignore
-
-
-@retry_on_reset
-async def get_client_props(
-    addr: str | None = None,
-    pid: int | None = None,
-    cls: str | None = None,
-    title: str | None = None,
-    logger: Logger | None = None,
-    clients: list[dict[str, Any]] | None = None,
-    **kwargs: Any,
-) -> dict[str, Any] | None:
-    """Find a client properties given its address, PID, class or title.
-
-    Args:
-        addr: The client address
-        pid: The client PID
-        cls: The client class
-        title: The client title
-        logger: Logger to use for the connection
-        clients: The list of clients (optional)
-        kwargs: Additional arguments
-    """
-    assert logger
-
-    if addr:
-        assert len(addr) > 2, "Client address is too short"
-
-    if clients is None:
-        if NIRI_SOCKET:
-            clients = cast("list[dict[str, Any]]", await niri_request("Windows", logger))
-        else:
-            clients = cast("list[dict[str, Any]]", await get_response(b"j/clients", logger))
-
-    for client in clients:
-        if addr and client.get("address") == addr:
-            return client
-        if pid and client.get("pid") == pid:
-            return client
-        if cls and client.get("class") == cls:
-            return client
-        if title and client.get("title") == title:
-            return client
-    return None
-
-
-@retry_on_reset
-async def get_monitor_props(name: str | None = None, logger: Logger | None = None, **kwargs: Any) -> dict[str, Any] | None:
-    """Find a monitor properties given its name.
-
-    Args:
-        name: The monitor name
-        logger: Logger to use for the connection
-        kwargs: Additional arguments
-    """
-    assert logger
-    if name is None:
-        return None
-
-    if NIRI_SOCKET:
-        monitors = cast("list[dict[str, Any]]", await niri_request("Monitors", logger))
-    else:
-        monitors = cast("list[dict[str, Any]]", await get_response(b"j/monitors", logger))
-
-    for monitor in monitors:
-        if monitor.get("name") == name:
-            return monitor
-    return None
 
 
 def init() -> None:

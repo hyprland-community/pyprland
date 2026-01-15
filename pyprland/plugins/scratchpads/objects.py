@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
+from ...adapters.backend import EnvironmentBackend
 from ...aioops import aiexists, aiopen
 from ...common import SharedState
 from ...models import ClientInfo, MonitorInfo, VersionInfo
@@ -104,7 +105,7 @@ class MetaInfo:
 class Scratch:  # {{{
     """A scratchpad state including configuration & client state."""
 
-    get_client_props: "ClientPropGetter"
+    # get_client_props: "ClientPropGetter"
     client_info: ClientInfo
     visible = False
     uid = ""
@@ -113,10 +114,11 @@ class Scratch:  # {{{
     excluded_scratches: list[str] = []
     state: SharedState
 
-    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState, log: logging.Logger) -> None:
+    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState, log: logging.Logger, backend: EnvironmentBackend) -> None:
         self.log = log
         self.uid = uid
         self.state = state
+        self.backend = backend
         self.set_config(opts)
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
@@ -240,7 +242,7 @@ class Scratch:  # {{{
             clients: The list of clients
         """
         match_by, match_val = self.get_match_props()
-        return await self.get_client_props(
+        return await self.backend.get_client_props(
             match_fn=get_match_fn(match_by, match_val),
             clients=clients,
             **{match_by: match_val},
@@ -287,7 +289,7 @@ class Scratch:  # {{{
         """
         if client_info is None:
             if self.have_command:
-                client_info = await self.get_client_props(addr=self.full_address, clients=clients)
+                client_info = await self.backend.get_client_props(addr=self.full_address, clients=clients)
             else:
                 client_info = await self.fetch_matching_client(clients=clients)
 

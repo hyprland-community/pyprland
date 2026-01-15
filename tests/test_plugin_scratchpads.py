@@ -62,7 +62,13 @@ async def test_not_found(scratchpads, subprocess_shell_mock, server_fixture):
     await mocks.pypr("toggle foobar")
     await wait_called(mocks.hyprctl)
 
-    assert mocks.hyprctl.call_args[0][1] == "notify"
+    # Check for notification in kwargs
+    found = False
+    for call in mocks.hyprctl.call_args_list:
+        if call.kwargs.get("base_command") == "notify":
+            found = True
+            break
+    assert found
 
 
 def gen_call_set(call_list: list) -> set[str]:
@@ -96,7 +102,6 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
         "moveworkspacetomonitor special:S-term DP-1",
         "alterzorder top,address:0x12345677890",
         "focuswindow address:0x12345677890",
-        "logger",
         "movetoworkspacesilent 1,address:0x12345677890",
     }:
         assert expected in call_set
@@ -116,7 +121,6 @@ async def test_std(scratchpads, subprocess_shell_mock, server_fixture):
         "alterzorder top,address:0x12345677890",
         "focuswindow address:0x12345677890",
         "movetoworkspacesilent special:S-term,address:0x12345677890",
-        "logger",
         "movetoworkspacesilent 1,address:0x12345677890",
     }:
         assert expected in call_set
@@ -215,11 +219,11 @@ async def test_attach_sanity_checks(scratchpads, subprocess_shell_mock, server_f
     # Verify notification about self-attach
     found_notification = False
     for call in mocks.hyprctl.call_args_list:
-        args = call[0]
-        if isinstance(args, tuple) and len(args) > 1 and args[1] == "notify":
-            if "Scratch can't attach to itself" in args[0]:
+        if call.kwargs.get("base_command") == "notify":
+            args = call[0][0]
+            if "Scratch can't attach to itself" in args:
                 found_notification = True
-            if "Scratchpad 'term' not found" in args[0]:
+            if "Scratchpad 'term' not found" in args:
                 pass
 
     assert found_notification, "Should notify when attaching scratchpad to itself"

@@ -76,7 +76,8 @@ def mock_aioops(mocker):
 
     # Patch aiexists in both locations
     mocker.patch("pyprland.aioops.aiexists", side_effect=mock_aiexists)
-    mocker.patch("pyprland.plugins.scratchpads.helpers.aiexists", side_effect=mock_aiexists)
+    # mocker.patch("pyprland.plugins.scratchpads.helpers.aiexists", side_effect=mock_aiexists)
+    mocker.patch("pyprland.plugins.scratchpads.objects.aiexists", side_effect=mock_aiexists)
 
     # Expose the dead_pids set to tests
     mock_aiexists.dead_pids = dead_pids
@@ -104,7 +105,8 @@ def mock_aioops(mocker):
         return mock_file
 
     mocker.patch("pyprland.aioops.aiopen", side_effect=mock_aiopen)
-    mocker.patch("pyprland.plugins.scratchpads.helpers.aiopen", side_effect=mock_aiopen)
+    # mocker.patch("pyprland.plugins.scratchpads.helpers.aiopen", side_effect=mock_aiopen)
+    mocker.patch("pyprland.plugins.scratchpads.objects.aiopen", side_effect=mock_aiopen)
     return mock_aiexists
 
 

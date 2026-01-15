@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 56
+:total-count: 57
 
 --------------------------------------------------------------------------------
 
@@ -171,4 +171,13 @@ Skip "configreloaded" in monitors plugin if it's due to the post_command of wall
 
 :bugid: 55
 :created: 2025-12-02T22:10:17
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+scratchpads: attach / detach only attaches !
+==================================================================================================
+
+:bugid: 56
+:created: 2026-1-11T22:10:17
 :priority: 0

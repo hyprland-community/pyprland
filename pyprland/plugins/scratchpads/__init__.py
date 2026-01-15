@@ -8,7 +8,6 @@ from typing import cast
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated
-from ...ipc import get_client_props, get_monitor_props
 from ...models import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import Plugin
 from .animations import AnimationTarget, Placement
@@ -49,9 +48,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._hysteresis_tasks = {}
-        self.get_client_props = staticmethod(partial(get_client_props, logger=self.log))
-        Scratch.get_client_props = self.get_client_props
-        self.get_monitor_props = staticmethod(partial(get_monitor_props, logger=self.log))
 
     async def exit(self) -> None:
         """Exit hook."""
@@ -95,7 +91,9 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
-        scratches = {name: Scratch(name, self.config, self.state, self.log) for name, options in self.config.iter_subsections()}
+        scratches = {
+            name: Scratch(name, self.config, self.state, self.log, self.backend) for name, options in self.config.iter_subsections()
+        }
 
         scratches_to_spawn = set()
         for name, new_scratch in scratches.items():
@@ -156,7 +154,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
                 await self.backend.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
-            monitor = await self.get_monitor_props(name=cast("str | None", forced_monitor))
+            monitor = await self.backend.get_monitor_props(name=cast("str | None", forced_monitor))
             width, height = convert_coords(scratch.conf.get_str("size", "80% 80%"), monitor)
 
             if "float" not in skipped_windowrules:
@@ -584,7 +582,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         """
         offset = scratch.conf.get("offset")
         if monitor is None:
-            monitor = await get_monitor_props(self.log, name=scratch.forced_monitor)
+            monitor = await self.backend.get_monitor_props(name=scratch.forced_monitor)
         rotated = is_rotated(monitor)
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
@@ -692,7 +690,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
         scratch.visible = True
         scratch.meta.space_identifier = get_active_space_identifier(self.state)
-        monitor = await self.get_monitor_props(name=scratch.forced_monitor)
+        monitor = await self.backend.get_monitor_props(name=scratch.forced_monitor)
 
         assert monitor
         assert scratch.full_address, "No address !"
@@ -815,7 +813,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             for alt_addr in scratch.extra_addr:
                 # Get the client info for the extra addresses
                 try:
-                    client_info = await self.get_client_props(addr="0x" + alt_addr, clients=clients)
+                    client_info = await self.backend.get_client_props(addr="0x" + alt_addr, clients=clients)
                     if not client_info:
                         continue
                     await scratch.update_client_info(clients=clients, client_info=client_info)
