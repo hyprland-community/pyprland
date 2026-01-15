@@ -84,7 +84,7 @@ max_size = "1200px 100%"
 
 ## `lazy`
 
-default to `false`.
+default to `true`.
 
 when set to `true`, prevents the command from being started when pypr starts, it will be started when the scratchpad is first used instead.
 
@@ -111,7 +111,7 @@ Number of pixels for the **hide** sliding animation (how far the window will go)
 
 ## `hide_delay`
 
-Defaults to `0.2`
+Defaults to `0`
 
 Delay (in seconds) after which the hide animation happens, before hiding the scratchpad.
 
@@ -120,10 +120,6 @@ Rule of thumb, if you have an animation with speed "7", as in:
     animation = windowsOut, 1, 7, easeInOut, popin 80%
 ```
 You can divide the value by two and round to the lowest value, here `3`, then divide by 10, leading to `hide_delay = 0.3`.
-
-## `restore_focus`
-
-Enabled by default, set to `false` if you don't want the focused state to be restored when a scratchpad is hidden.
 
 ## `force_monitor`
 
@@ -138,9 +134,9 @@ It applies when the `toggle` command is triggered and the toggled scratchpad is 
 
 Instead of moving the scratchpad to the focused screen, it will hide the scratchpad.
 
-## `allow_special_workspaces`
+## `allow_special_workspace`
 
-Default value is `false` (can't be enabled when using *Hyprland* < 0.39 where this behavior can't be controlled and is disabled).
+Default value is `true` (can't be enabled when using *Hyprland* < 0.39 where this behavior can't be controlled and is disabled).
 
 When enabled, you can toggle a scratchpad over a special workspace.
 It will always use the "normal" workspace otherwise.
@@ -151,6 +147,7 @@ Default value is `true`.
 
 When enabled, the focus will be restored in a best effort way as en attempt to improve the user experience.
 If you face issues such as spontaneous workspace changes, you can disable this feature.
+
 
 ## `close_on_hide`
 

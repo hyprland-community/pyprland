@@ -65,11 +65,11 @@ bind = $mainMod, down, movefocus, d
 
 ### `on_new_client`
 
-Defaults to `"foreground"`.
+Defaults to `"focus"`.
 
 Changes the behavior when a new window opens, possible options are:
 
-- "foreground" to make the new window the main window
+- "focus" (or "foreground") to make the new window the main window
 - "background" to make the new window appear in the background
 - "close" to stop the centered layout when a new window opens
 

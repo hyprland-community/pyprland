@@ -141,8 +141,8 @@ allows to run a command when no monitor layout has been changed (no rule applied
 unknown = "wlrlui"
 ```
 
-### `trim_offset`
+### `relayout_on_config_change`
 
-`true` by default,
+`true` by default.
 
-Prevents having arbitrary window offsets or negative values.
+When enabled, re-apply the monitor layout when the configuration is reloaded.
