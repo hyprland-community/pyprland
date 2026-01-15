@@ -95,7 +95,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             self.state.environment = "niri"
             self.backend = NiriBackend(self.state)
         else:
-            self.backend = HyprlandBackend(self.state)
+            self.backend = cast("Any", HyprlandBackend(self.state))
         self._set_instance(self)
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 

@@ -170,7 +170,7 @@ async def niri_request(payload: str | dict | list, logger: Logger) -> JSONRespon
         if not response:
             msg = "Empty response from Niri"
             raise PyprError(msg)
-        return json.loads(response)
+        return json.loads(response)  # type: ignore
 
 
 async def get_response(command: bytes, logger: Logger) -> JSONResponse:

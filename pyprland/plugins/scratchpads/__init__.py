@@ -91,9 +91,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
-        scratches = {
-            name: Scratch(name, self.config, self.state, self.log, self.backend) for name, options in self.config.iter_subsections()
-        }
+        scratches = {name: Scratch(name, self.config, self) for name, options in self.config.iter_subsections()}
 
         scratches_to_spawn = set()
         for name, new_scratch in scratches.items():
@@ -129,11 +127,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if defined_class:
             if self.state.hyprland_version < VersionInfo(0, 53, 0):
                 if self.state.hyprland_version > VersionInfo(0, 47, 2):
-                    await self.backend.execute(f"windowrule unset, class: {defined_class}", "keyword")
+                    await self.backend.execute(f"windowrule unset, class: {defined_class}")
                 else:
-                    await self.backend.execute(f"windowrule unset, ^({defined_class})$", "keyword")
+                    await self.backend.execute(f"windowrule unset, ^({defined_class})$")
             else:
-                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false", "keyword")
+                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules).
@@ -185,7 +183,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if set_aspect:
                 wr.set("size", f"{width} {height}")
 
-            await self.backend.execute(wr.get_content(), "keyword")
+            await self.backend.execute(wr.get_content())
 
     async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
         """Wait for a client to be up and running.

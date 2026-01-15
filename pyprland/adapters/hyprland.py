@@ -1,6 +1,7 @@
+"""Hyprland adapter."""
+
 from typing import Any, cast
 
-from ..common import SharedState
 from ..ipc import get_response, hyprctl_connection, retry_on_reset
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
@@ -8,9 +9,6 @@ from .backend import EnvironmentBackend
 
 class HyprlandBackend(EnvironmentBackend):
     """Hyprland backend implementation."""
-
-    def __init__(self, state: SharedState) -> None:
-        super().__init__(state)
 
     def _format_command(self, command_list: list[str] | list[list[str]], default_base_command: str) -> list[str]:
         """Format a list of commands to be sent to Hyprland."""
@@ -23,7 +21,7 @@ class HyprlandBackend(EnvironmentBackend):
         return result
 
     @retry_on_reset
-    async def execute(self, command: str | list[str], **kwargs) -> bool:
+    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)
@@ -79,23 +77,6 @@ class HyprlandBackend(EnvironmentBackend):
     async def get_monitors(self) -> list[MonitorInfo]:
         """Return the list of monitors."""
         return cast("list[MonitorInfo]", await self.execute_json("monitors"))
-
-    async def get_monitor_props(self, name: str | None = None) -> MonitorInfo:
-        """Return focused monitor data if `name` is not defined, else use monitor's name."""
-        if name:
-
-            def _match_fn(mon: MonitorInfo) -> bool:
-                return mon["name"] == name
-        else:
-
-            def _match_fn(mon: MonitorInfo) -> bool:
-                return cast("bool", mon.get("focused"))
-
-        for monitor in await self.execute_json("monitors"):
-            if _match_fn(cast("MonitorInfo", monitor)):
-                return cast("MonitorInfo", monitor)
-        msg = "no focused monitor"
-        raise RuntimeError(msg)
 
     async def execute_batch(self, commands: list[str]) -> None:
         """Execute a batch of commands."""

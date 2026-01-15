@@ -1,6 +1,7 @@
+"""Niri adapter."""
+
 from typing import Any, cast
 
-from ..common import SharedState
 from ..ipc import niri_request
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
@@ -9,10 +10,7 @@ from .backend import EnvironmentBackend
 class NiriBackend(EnvironmentBackend):
     """Niri backend implementation."""
 
-    def __init__(self, state: SharedState) -> None:
-        super().__init__(state)
-
-    async def execute(self, command: str | list[str], **kwargs) -> bool:
+    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
         weak = kwargs.get("weak", False)
         # Niri commands are typically lists of strings or objects, not a single string command line
@@ -129,37 +127,6 @@ class NiriBackend(EnvironmentBackend):
             )
             monitors.append(mon_info)
         return monitors
-
-    async def get_monitor_props(self, name: str | None = None) -> MonitorInfo:
-        """Return focused monitor data if `name` is not defined, else use monitor's name."""
-        if name:
-
-            def _match_fn(mon: MonitorInfo) -> bool:
-                return mon["name"] == name
-        else:
-
-            def _match_fn(mon: MonitorInfo) -> bool:
-                return cast("bool", mon.get("focused"))
-
-        outputs = await self.execute_json("outputs")
-        for key, output in outputs.items():
-            mon_info = cast(
-                "MonitorInfo",
-                {
-                    "name": key,
-                    "focused": output.get("is_focused", False),
-                    "x": output.get("logical_position", {}).get("x", 0),
-                    "y": output.get("logical_position", {}).get("y", 0),
-                    "width": output.get("logical_size", {}).get("width", 0),
-                    "height": output.get("logical_size", {}).get("height", 0),
-                    "scale": output.get("scale", 1.0),
-                },
-            )
-
-            if _match_fn(mon_info):
-                return mon_info
-        msg = "no focused monitor"
-        raise RuntimeError(msg)
 
     async def execute_batch(self, commands: list[str]) -> None:
         """Execute a batch of commands."""

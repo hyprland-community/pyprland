@@ -16,7 +16,9 @@ sed -i '/## What/,$d' versions/$version/index.md
 echo "## Version $version archive" >> versions/$version/index.md
 git add versions/$version/*.md
 
-sed -i "/const version_names/s#\]\$#, '${version}']#" .vitepress/config.mjs
+# append   '${version}'], on the line matching "const version_names"
+sed -i "/const version_names/s#\[\$#[\n  '${version}',#" .vitepress/config.mjs
+#sed -i "/const version_names/s#\[\$#  '${version}'],#" .vitepress/config.mjs
 git add .vitepress/config.mjs
 
 git commit . -m "Archive documentation for version $version" --no-verify

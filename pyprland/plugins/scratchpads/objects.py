@@ -3,13 +3,11 @@
 __all__ = ["Scratch"]
 
 import asyncio
-import logging
 import os
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
-from ...adapters.backend import EnvironmentBackend
 from ...aioops import aiexists, aiopen
 from ...common import SharedState
 from ...models import ClientInfo, MonitorInfo, VersionInfo
@@ -19,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import pyprland.plugins.scratchpads as _scratchpads_extension_m
+    from pyprland.plugins.scratchpads import Extension
 
     class ClientPropGetter(Protocol):
         """type for the get_client_props function."""
@@ -114,11 +113,11 @@ class Scratch:  # {{{
     excluded_scratches: list[str] = []
     state: SharedState
 
-    def __init__(self, uid: str, opts: dict[str, Any], state: SharedState, log: logging.Logger, backend: EnvironmentBackend) -> None:
-        self.log = log
+    def __init__(self, uid: str, opts: dict[str, Any], plugin: "Extension") -> None:
+        self.log = plugin.log
         self.uid = uid
-        self.state = state
-        self.backend = backend
+        self.state = plugin.state
+        self.backend = plugin.backend
         self.set_config(opts)
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()

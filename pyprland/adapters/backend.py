@@ -28,12 +28,22 @@ class EnvironmentBackend(ABC):
     async def get_monitors(self) -> list[MonitorInfo]:
         """Return the list of monitors."""
 
-    @abstractmethod
     async def get_monitor_props(self, name: str | None = None) -> MonitorInfo:
         """Return focused monitor data if `name` is not defined, else use monitor's name."""
+        monitors = await self.get_monitors()
+        if name:
+            for mon in monitors:
+                if mon["name"] == name:
+                    return mon
+        else:
+            for mon in monitors:
+                if mon.get("focused"):
+                    return mon
+        msg = "no focused monitor"
+        raise RuntimeError(msg)
 
     @abstractmethod
-    async def execute(self, command: str | list[str], **kwargs) -> bool:
+    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
 
     @abstractmethod
@@ -96,5 +106,5 @@ class EnvironmentBackend(ABC):
             assert isinstance(client, dict)
             val = client.get(prop_name)
             if match_fn(val, prop_value):
-                return client  # type: ignore
+                return client
         return None

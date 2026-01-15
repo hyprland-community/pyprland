@@ -21,25 +21,32 @@ class Plugin:
 
     # Deprecated methods calling backend equivalent
 
-    async def hyprctl_json(self, command: str) -> Any:
+    async def hyprctl_json(self, command: str) -> Any:  # noqa: ANN401
+        """(Deprecated) Execute a hyprctl command and return the JSON result."""
         return await self.backend.execute_json(command)
 
-    async def hyprctl(self, command: str | list[str], **kwargs) -> bool:
+    async def hyprctl(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+        """(Deprecated) Execute a hyprctl command."""
         return await self.backend.execute(command, **kwargs)
 
-    async def nirictl(self, command: str | list[str], **kwargs) -> bool:
+    async def nirictl(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+        """(Deprecated) Execute a nirictl command."""
         return await self.backend.execute(command, **kwargs)
 
-    async def nirictl_json(self, command: str) -> Any:
+    async def nirictl_json(self, command: str) -> Any:  # noqa: ANN401
+        """(Deprecated) Execute a nirictl command and return the JSON result."""
         return await self.backend.execute_json(command)
 
     async def notify(self, message: str, duration: int = 5000, color: str = "ff1010") -> None:
+        """(Deprecated) Send a notification."""
         await self.backend.notify(message, duration, color)
 
     async def notify_info(self, message: str, duration: int = 5000) -> None:
+        """(Deprecated) Send an info notification."""
         await self.backend.notify_info(message, duration)
 
     async def notify_error(self, message: str, duration: int = 5000) -> None:
+        """(Deprecated) Send an error notification."""
         await self.backend.notify_error(message, duration)
 
     config: Configuration

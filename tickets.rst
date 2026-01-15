@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 57
+:total-count: 58
 
 --------------------------------------------------------------------------------
 
@@ -176,8 +176,21 @@ Skip "configreloaded" in monitors plugin if it's due to the post_command of wall
 --------------------------------------------------------------------------------
 
 scratchpads: attach / detach only attaches !
-==================================================================================================
+============================================
 
 :bugid: 56
 :created: 2026-1-11T22:10:17
 :priority: 0
+
+--------------------------------------------------------------------------------
+
+When "reload"ing, improve the merge algorithm of the config
+===========================================================
+
+:bugid: 58
+:created: 2026-01-15T21:30:00
+:priority: 0
+
+- delete missing keys in src
+- replace content of lists and dicts recursively (keeping references intact)
+use clear + update / extend etc...
