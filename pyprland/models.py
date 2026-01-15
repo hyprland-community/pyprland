@@ -5,7 +5,7 @@ from enum import Enum
 from typing import TypedDict
 
 PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
-JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]]
+JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]] | PlainTypes
 
 
 class RetensionTimes(float, Enum):

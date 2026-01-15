@@ -60,7 +60,8 @@ async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Stream
     """
     if not NIRI_SOCKET:
         logger.critical("NIRI_SOCKET not set!")
-        raise PyprError("Niri is not available")
+        msg = "Niri is not available"
+        raise PyprError(msg)
     try:
         reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
     except FileNotFoundError as e:
@@ -144,7 +145,8 @@ async def _niri_request(payload: str | dict | list, logger: Logger) -> JSONRespo
         await writer.drain()
         response = await reader.readline()
         if not response:
-            raise PyprError("Empty response from Niri")
+            msg = "Empty response from Niri"
+            raise PyprError(msg)
         return json.loads(response)
 
 
@@ -165,7 +167,7 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 
 @retry_on_reset
-async def nirictl_json(command: str | dict, logger: Logger | None = None) -> Any:
+async def nirictl_json(command: str | dict, logger: Logger | None = None) -> JSONResponse:
     """Run a Niri IPC command and return the JSON output.
 
     Args:
@@ -176,7 +178,8 @@ async def nirictl_json(command: str | dict, logger: Logger | None = None) -> Any
     ret = await _niri_request(command, logger)
     if isinstance(ret, dict) and "Ok" in ret:
         return ret["Ok"]
-    raise PyprError(f"Niri command failed: {ret}")
+    msg = f"Niri command failed: {ret}"
+    raise PyprError(msg)
 
 
 @retry_on_reset
@@ -207,17 +210,18 @@ async def nirictl(args: dict | list, logger: Logger | None = None, weak: bool = 
         ret = await _niri_request(args, logger)
         if isinstance(ret, dict) and "Ok" in ret:
             return True
+    except PyprError:
         if weak:
-            logger.warning("Niri command failed: %s", ret)
+            logger.exception("Niri command failed")
         else:
-            logger.error("Niri command failed: %s", ret)
+            logger.exception("Niri command failed")
         return False
-    except PyprError as e:
-        if weak:
-            logger.warning("Niri command failed: %s", e)
-        else:
-            logger.error("Niri command failed: %s", e)
-        return False
+
+    if weak:
+        logger.warning("Niri command failed: %s", ret)
+    else:
+        logger.error("Niri command failed: %s", ret)
+    return False
 
 
 # }}}
