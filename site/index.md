@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  text: "Hyprland extensions"
-  tagline: Enhance your desktop capabilities with Pyprland
+  text: "Extensions for your desktop environment"
+  tagline: Enhance your desktop experience with Pyprland
   image:
     src: /logo.svg
     alt: logo
@@ -30,7 +30,7 @@ features:
 
 # What is Pyprland?
 
-It's a software that extends the functionality of the great [Hyprland](https://hyprland.org/) window manager, adding new features and improving the existing ones.
+It's a software that extends the functionality of your desktop environment (Hyprland, Niri, etc...), adding new features and improving the existing ones.
 
 It also enables a high degree of customization and automation, making it easier to adapt to your workflow.
 

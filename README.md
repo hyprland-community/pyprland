@@ -5,13 +5,13 @@
 
 [Documentation](https://hyprland-community.github.io/pyprland) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
-## Enhance your Hyprland experience with Pyprland
+## Enhance your desktop experience with Pyprland
 
-Welcome to Pyprland, your gateway to extending the capabilities of [Hyprland](https://hyprland.org/).
+Welcome to Pyprland, your gateway to extending the capabilities of your desktop environment (Hyprland, Niri, ...).
 Pyprland offers a plethora of plugins designed for simplicity and efficiency,
 allowing you to supercharge your productivity and customize your user experience.
 
-You can think of it as a *Gnome tweak tool* but for Hyprland users (involves editing text files).
+You can think of it as a *Gnome tweak tool* but for Tiling Window Managers (involves editing text files).
 With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use.
 
 Note that usage of Python and architecture of the software encourages using many plugins
