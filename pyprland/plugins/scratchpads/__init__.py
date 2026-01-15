@@ -127,11 +127,11 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if defined_class:
             if self.state.hyprland_version < VersionInfo(0, 53, 0):
                 if self.state.hyprland_version > VersionInfo(0, 47, 2):
-                    await self.backend.execute(f"windowrule unset, class: {defined_class}")
+                    await self.backend.execute(f"windowrule unset, class: {defined_class}", base_command="keyword")
                 else:
-                    await self.backend.execute(f"windowrule unset, ^({defined_class})$")
+                    await self.backend.execute(f"windowrule unset, ^({defined_class})$", base_command="keyword")
             else:
-                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false")
+                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false", base_command="keyword")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules).
@@ -183,7 +183,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             if set_aspect:
                 wr.set("size", f"{width} {height}")
 
-            await self.backend.execute(wr.get_content())
+            await self.backend.execute(wr.get_content(), base_command="keyword")
 
     async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
         """Wait for a client to be up and running.
