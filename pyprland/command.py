@@ -13,6 +13,8 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Self, cast
 
+from pyprland.adapters.hyprland import HyprlandBackend
+from pyprland.adapters.niri import NiriBackend
 from pyprland.common import IPC_FOLDER, SharedState, get_logger, init_logger, merge, run_interactive_program
 from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info, set_notify_method
 from pyprland.ipc import init as ipc_init
@@ -91,6 +93,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.state = SharedState()
         if os.environ.get("NIRI_SOCKET"):
             self.state.environment = "niri"
+            self.backend = NiriBackend(self.state)
+        else:
+            self.backend = HyprlandBackend(self.state)
         self._set_instance(self)
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
@@ -178,6 +183,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 self.log.info("Skipping plugin %s: desktop %s not supported %s", name, desktop, plug.environments)
                 return False
             plug.state = self.state
+            plug.backend = self.backend
             if init:
                 await plug.init()
                 self.queues[name] = asyncio.Queue()

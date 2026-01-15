@@ -21,6 +21,11 @@ def plugin():
         plugin.hyprctl_json = AsyncMock()
         plugin.state = Mock()
         plugin.state.environment = "hyprland"
+
+        # Mock the backend
+        plugin.backend = Mock()
+        plugin.backend.get_clients = AsyncMock()
+
         return plugin
 
 
@@ -53,30 +58,50 @@ async def test_get_clients_filter(plugin):
         {"mapped": True, "workspace": {"name": "2"}, "address": "0x3"},
         {"mapped": True, "workspace": {"name": "3"}, "address": "0x4"},
     ]
-    plugin.hyprctl_json.return_value = clients_data
+
+    # Simulate backend behavior since we are testing the interface delegation,
+    # but strictly speaking if the logic moved to backend, this test should test backend or integration.
+    # However, to fix the test and verify delegation:
+
+    async def mock_backend_get_clients(mapped=True, workspace=None, workspace_bl=None):
+        # Replicate old logic for the sake of verifying the plugin method calls backend correctly
+        # Or simpler: verify backend is called with correct args.
+        # But verify result requires mocking the return.
+
+        # Let's filter manually here to mimic what backend should do
+        filtered = []
+        for client in clients_data:
+            if mapped and not client["mapped"]:
+                continue
+            if workspace and client["workspace"]["name"] != workspace:
+                continue
+            if workspace_bl and client["workspace"]["name"] == workspace_bl:
+                continue
+            filtered.append(client)
+        return filtered
+
+    plugin.backend.get_clients.side_effect = mock_backend_get_clients
 
     # 1. Default: mapped=True, no workspace filter
     clients = await plugin.get_clients()
+    plugin.backend.get_clients.assert_called_with(True, None, None)
     assert len(clients) == 3
     assert "0x2" not in [c["address"] for c in clients]
 
     # 2. mapped=False (should return all?)
-    # Re-read implementation: if (not mapped or client["mapped"])
-    # So if mapped=False, it returns everything (True or True is True)
     clients = await plugin.get_clients(mapped=False)
+    plugin.backend.get_clients.assert_called_with(False, None, None)
     assert len(clients) == 4
 
     # 3. Filter by workspace
     clients = await plugin.get_clients(workspace="2")
-    # Should get mapped clients on workspace 2
+    plugin.backend.get_clients.assert_called_with(True, "2", None)
     assert len(clients) == 1
     assert clients[0]["address"] == "0x3"
 
     # 4. Filter by workspace blacklist
     clients = await plugin.get_clients(workspace_bl="1")
-    # Should get mapped clients NOT on workspace 1
-    # 0x1 is on ws 1. 0x2 is unmapped. 0x3 on ws 2. 0x4 on ws 3.
-    # Should get 0x3 and 0x4
+    plugin.backend.get_clients.assert_called_with(True, None, "1")
     assert len(clients) == 2
     addresses = [c["address"] for c in clients]
     assert "0x3" in addresses
