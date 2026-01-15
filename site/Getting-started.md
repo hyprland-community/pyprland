@@ -105,6 +105,15 @@ plugins = [
 ]
 ```
 
+### Global Configuration Options
+
+You can add the following options to the `[pyprland]` section:
+
+- **notification_type**: Controls how Pyprland sends notifications.
+  - `"auto"` (default): Adapts to the running environment (Niri uses `notify-send`, Hyprland uses `hyprctl notify`).
+  - `"notify-send"`: Forces use of the `notify-send` command (useful if you want standard desktop notifications on Hyprland).
+  - `"native"`: Forces use of the compositor's native notification system (if available).
+
 <details>
   <summary>
 More complex example

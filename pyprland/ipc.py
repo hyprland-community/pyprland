@@ -10,6 +10,7 @@ __all__ = [
     "notify",
     "notify_error",
     "notify_info",
+    "set_notify_method",
 ]
 
 import asyncio
@@ -25,6 +26,7 @@ from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger, notify_send
 from .models import ClientInfo, JSONResponse, MonitorInfo, PyprError
 
 log: Logger | None = None
+NOTIFY_METHOD = "auto"
 
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
@@ -75,6 +77,16 @@ async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Stream
         await writer.wait_closed()
 
 
+def set_notify_method(method: str) -> None:
+    """Set the notification method.
+
+    Args:
+        method: The method to use ("auto", "native", "notify-send")
+    """
+    global NOTIFY_METHOD
+    NOTIFY_METHOD = method
+
+
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
     """Hyprland notification system.
 
@@ -85,7 +97,7 @@ async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int 
         icon: Icon ID to display
         logger: Logger instance
     """
-    if NIRI_SOCKET:
+    if NOTIFY_METHOD == "notify-send" or (NOTIFY_METHOD == "auto" and NIRI_SOCKET):
         await notify_send(text, int(duration * 1000))
         return
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)

@@ -14,7 +14,7 @@ from functools import partial
 from typing import Any, Self, cast
 
 from pyprland.common import IPC_FOLDER, SharedState, get_logger, init_logger, merge, run_interactive_program
-from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info
+from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info, set_notify_method
 from pyprland.ipc import init as ipc_init
 from pyprland.models import PyprError
 from pyprland.plugins.interface import Plugin
@@ -244,6 +244,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         """
         await self.__open_config()
         assert self.config
+        if "notification_type" in self.config["pyprland"]:
+            set_notify_method(self.config["pyprland"]["notification_type"])
         await self.__load_plugins_config(init=init)
         colored_logs = self.config["pyprland"].get("colored_handlers_log", True)
         self.log_handler = self.colored_log_handler if colored_logs else self.plain_log_handler

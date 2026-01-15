@@ -112,6 +112,9 @@ duration = 10
 
 If you want your notifications to display in your desktop environment's preferred notification UI rather than Hyprland's native notifications, you can set `use_notify_send` to `true`. This will send them via [libnotify](https://gitlab.gnome.org/GNOME/libnotify) using the [`notify-send`](https://man.archlinux.org/man/notify-send.1) command.
 
+> [!note]
+> This option forces `notify-send` for this specific plugin. If you have set the global `notification_type = "notify-send"` in the `[pyprland]` section, this plugin will naturally use it without this option needing to be set.
+
 ```toml
 [system_notifier]
 use_notify_send = true
