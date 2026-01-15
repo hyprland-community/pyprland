@@ -118,7 +118,7 @@ class Extension(Plugin):
         """When a new monitor is added, set the background."""
         self.next_background_event.set()
 
-    async def event_OutputsChanged(self, _: dict) -> None:
+    async def niri_outputschanged(self, _: dict) -> None:
         """When the monitor configuration changes (Niri), set the background."""
         self.next_background_event.set()
 

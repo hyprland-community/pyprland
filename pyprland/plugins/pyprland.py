@@ -81,7 +81,7 @@ class Extension(Plugin):
             self.state.monitors = []
             self.state.active_monitor = "unknown"
 
-    async def event_OutputsChanged(self, _data: dict) -> None:
+    async def niri_outputschanged(self, _data: dict) -> None:
         """Track monitors on Niri.
 
         Args:

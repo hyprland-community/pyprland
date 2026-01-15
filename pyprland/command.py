@@ -332,12 +332,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 try:
                     event = json.loads(data)
                 except json.JSONDecodeError:
-                    self.log.error("Invalid JSON event: %s", data)
+                    self.log.exception("Invalid JSON event: %s", data)
                     continue
                 if "Variant" in event:
                     type_name = event["Variant"]["type"]
                     data = event["Variant"]
-                    await self._call_handler(f"event_{type_name}", data)
+                    await self._call_handler(f"niri_{type_name.lower()}", data)
                 continue
 
             cmd, params = data.split(">>", 1)
