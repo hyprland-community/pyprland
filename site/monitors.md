@@ -11,7 +11,12 @@ commands:
 Allows relative placement of monitors depending on the model ("description" returned by `hyprctl monitors`).
 Useful if you have multiple monitors connected to a video signal switch or using a laptop and plugging monitors having different relative positions.
 
+> [!Tip]
+> This plugin also supports Niri. It will automatically detect the environment and use `nirictl` to apply the layout.
+> Note that "hotplug_commands" and "unknown" commands may need adjustment for Niri (e.g. using `sh -c '...'` or Niri specific tools).
+
 Syntax:
+
 
 ```toml
 [monitors.placement]
