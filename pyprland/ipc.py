@@ -5,10 +5,6 @@ __all__ = [
     "hyprctl_connection",
     "niri_connection",
     "niri_request",
-    "notify_send",
-    "notify_error",
-    "notify_info",
-    "notify_fatal",
     "retry_on_reset",
 ]
 
@@ -20,7 +16,7 @@ from contextlib import asynccontextmanager
 from logging import Logger
 from typing import Any
 
-from .common import IPC_FOLDER, get_logger, notify_send
+from .common import IPC_FOLDER, get_logger
 from .models import JSONResponse, PyprError
 
 log: Logger | None = None
@@ -29,36 +25,6 @@ NOTIFY_METHOD = "auto"
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
 NIRI_SOCKET = os.environ.get("NIRI_SOCKET")
-
-
-async def notify_error(text: str, duration: int = 3000) -> None:
-    """Send an error notification.
-
-    Args:
-        text: The text to display
-        duration: The duration in milliseconds
-    """
-    await notify_send(text, duration, icon="error")
-
-
-async def notify_fatal(text: str, duration: int = 8000) -> None:
-    """Send a fatal notification.
-
-    Args:
-        text: The text to display
-        duration: The duration in milliseconds
-    """
-    await notify_send(text, duration, icon="computer-fail")
-
-
-async def notify_info(text: str, duration: int = 3000) -> None:
-    """Send an info notification.
-
-    Args:
-        text: The text to display
-        duration: The duration in milliseconds
-    """
-    await notify_send(text, duration, icon="info")
 
 
 @asynccontextmanager

@@ -37,7 +37,7 @@ placement = {}
     # FIXME: find a method call to wait
     await asyncio.sleep(0.1)
 
-    assert placement != cfg["placement"]
+    assert placement is cfg["placement"]
     assert bool_opt != cfg["startup_relayout"]
     assert cfg["startup_relayout"] is True
     assert cfg["placement"] == {}

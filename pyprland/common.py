@@ -142,12 +142,13 @@ def run_interactive_program(command: str) -> None:
         termios.tcsetattr(sys.stdin, termios.TCSANOW, termios.tcgetattr(0))
 
 
-def merge(merged: dict[str, Any], obj2: dict[str, Any]) -> dict[str, Any]:
+def merge(merged: dict[str, Any], obj2: dict[str, Any], replace: bool = False) -> dict[str, Any]:
     """Merge the content of d2 into d1.
 
     Args:
         merged (dict): Dictionary to merge into
         obj2 (dict): Dictionary to merge from
+        replace (bool): If True, replace content of lists and dicts recursively, deleting missing keys in src.
 
     Returns:
          dictionary with the merged content
@@ -156,13 +157,22 @@ def merge(merged: dict[str, Any], obj2: dict[str, Any]) -> dict[str, Any]:
         merge({"a": {"b": 1}}, {"a": {"c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     """
+    if replace:
+        to_remove = [k for k in merged if k not in obj2]
+        for k in to_remove:
+            del merged[k]
+
     for key, value in obj2.items():
         if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
             # If both values are dictionaries, recursively merge them
-            merge(merged[key], value)
+            merge(merged[key], value, replace=replace)
         elif key in merged and isinstance(merged[key], list) and isinstance(value, list):
             # If both values are lists, concatenate them
-            merged[key] += value
+            if replace:
+                merged[key].clear()
+                merged[key].extend(value)
+            else:
+                merged[key] += value
         else:
             # Otherwise, update the value or add the key-value pair
             merged[key] = value

@@ -56,8 +56,9 @@ async def test_load_config_toml_with_notify(pyprland_app):
         patch("os.path.exists", return_value=True),
         patch("builtins.open", new_callable=MagicMock),
         patch("tomllib.load", return_value=mock_toml),
-        patch("pyprland.command.notify_info", new_callable=AsyncMock),
     ):
+        pyprland_app.backend.notify_info = AsyncMock()
+
         # Mock _load_single_plugin to side-effect populate plugins
         async def mock_load_plugin(name, init):
             plug = Mock()
@@ -90,8 +91,9 @@ async def test_load_config_json_fallback(pyprland_app):
         patch("os.path.exists", side_effect=side_effects),
         patch("builtins.open", new_callable=MagicMock),
         patch("json.loads", return_value=mock_json),
-        patch("pyprland.command.notify_info", new_callable=AsyncMock),
     ):
+        pyprland_app.backend.notify_info = AsyncMock()
+
         # Mock _load_single_plugin same as above
         async def mock_load_plugin(name, init):
             plug = Mock()
@@ -135,13 +137,13 @@ async def test_run_plugin_handler_exception(pyprland_app):
     mock_plugin.test_method = AsyncMock(side_effect=Exception("Boom"))
 
     pyprland_app.log_handler = Mock()
+    pyprland_app.backend.notify_error = AsyncMock()
 
     # Should not raise
-    with patch("pyprland.command.notify_error", new_callable=AsyncMock) as mock_notify:
-        await pyprland_app._run_plugin_handler(mock_plugin, "test_method", ())
+    await pyprland_app._run_plugin_handler(mock_plugin, "test_method", ())
 
-        mock_notify.assert_called()
-        pyprland_app.log.exception.assert_called()
+    pyprland_app.backend.notify_error.assert_called()
+    pyprland_app.log.exception.assert_called()
 
 
 @pytest.mark.asyncio

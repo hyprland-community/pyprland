@@ -16,7 +16,7 @@ from typing import Any, Self, cast
 from pyprland.adapters.hyprland import HyprlandBackend
 from pyprland.adapters.niri import NiriBackend
 from pyprland.common import IPC_FOLDER, SharedState, get_logger, init_logger, merge, run_interactive_program
-from pyprland.ipc import get_event_stream, notify_error, notify_fatal, notify_info, set_notify_method
+from pyprland.ipc import get_event_stream, set_notify_method
 from pyprland.ipc import init as ipc_init
 from pyprland.models import PyprError
 from pyprland.plugins.interface import Plugin
@@ -107,7 +107,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             # Config file is invalid
             txt = f"Failed to load config, missing {e} section"
             self.log.critical(txt)
-            await notify_fatal(txt)
+            await self.backend.notify_error(txt, duration=8000)
             raise PyprError from e
 
     async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
@@ -128,7 +128,6 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         else:
             if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
                 self.log.warning("Consider changing your configuration to TOML format.")
-            self.config.clear()
             fname = os.path.expanduser(os.path.expandvars(CONFIG_FILE))
 
         config = self.__load_config_file(fname)
@@ -136,7 +135,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         if not config_filename:
             for extra_config in list(config["pyprland"].get("include", [])):
                 merge(config, await self.__open_config(extra_config))
-            self.config.update(config)
+            merge(self.config, config, replace=True)
         return config
 
     def __load_config_file(self, fname: str) -> dict[str, Any]:
@@ -197,10 +196,10 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             self.plugins[name] = plug
         except ModuleNotFoundError as e:
             self.log.exception("Unable to locate plugin called '%s'", name)
-            await notify_info(f'Config requires plugin "{name}" but pypr can\'t find it: {e}')
+            await self.backend.notify_info(f'Config requires plugin "{name}" but pypr can\'t find it: {e}')
             return False
         except Exception as e:
-            await notify_info(f"Error loading plugin {name}: {e}")
+            await self.backend.notify_info(f"Error loading plugin {name}: {e}")
             self.log.exception("Error loading plugin %s:", name)
             raise PyprError from e
         return True
@@ -236,7 +235,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 except TimeoutError:
                     self.plugins[name].log.info("timed out on reload")
                 except Exception as e:
-                    await notify_info(f"Error initializing plugin {name}: {e}")
+                    await self.backend.notify_info(f"Error initializing plugin {name}: {e}")
                     self.log.exception("Error initializing plugin %s:", name)
                     raise PyprError from e
                 else:
@@ -295,10 +294,10 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             await getattr(plugin, full_name)(*params)
         except AssertionError as e:
             self.log.exception("This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues")
-            await notify_error(f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}")
+            await self.backend.notify_error(f"Pypr integrity check failed on {plugin.name}::{full_name}: {e}")
         except Exception as e:  # pylint: disable=W0718
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
-            await notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
+            await self.backend.notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
 
     @remove_duplicate(names=["event_activewindow", "event_activewindowv2"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
@@ -319,7 +318,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 elif not plugin.aborted:
                     await self.queues[plugin.name].put(task)
         if notify and not handled:
-            await notify_info(f'"{notify}" not found')
+            await self.backend.notify_info(f'"{notify}" not found')
         return handled
 
     async def read_events_loop(self) -> None:
@@ -502,7 +501,7 @@ async def run_daemon() -> None:
 
     if events_reader is None:
         manager.log.warning("Failed to open hyprland event stream: %s.", events_writer)
-        # await notify_fatal("Failed to open hyprland event stream")
+        # await manager.backend.notify_fatal("Failed to open hyprland event stream")
     else:
         manager.event_reader = events_reader
 
@@ -586,7 +585,7 @@ async def run_client() -> None:
         reader, writer = await asyncio.open_unix_connection(CONTROL)
     except (ConnectionRefusedError, FileNotFoundError) as e:
         manager.log.critical("Failed to open control socket, is pypr daemon running ?")
-        await notify_error("Pypr can't connect, is daemon running ?")
+        await manager.backend.notify_error("Pypr can't connect, is daemon running ?")
         raise PyprError from e
 
     args = sys.argv[1:]
@@ -633,7 +632,6 @@ def main() -> None:
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and os.path.exists(CONTROL):
-        asyncio.run(notify_fatal("Trying to run pypr more than once ?"))
         log.critical(
             """%s exists,
 is pypr already running ?
