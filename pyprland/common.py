@@ -1,5 +1,6 @@
 """Shared utilities: logging."""
 
+import asyncio
 import contextlib
 import fcntl
 import logging
@@ -27,6 +28,7 @@ __all__ = [
     "SharedState",
     "apply_filter",
     "is_rotated",
+    "notify_send",
 ]
 
 
@@ -240,6 +242,7 @@ class SharedState:
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address
+    environment: str = "hyprland"
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)
@@ -399,3 +402,25 @@ def is_rotated(monitor: MonitorInfo) -> bool:
         True if the monitor is rotated (transform is 1, 3, 5, or 7)
     """
     return monitor["transform"] in {1, 3, 5, 7}
+
+
+async def notify_send(text: str, duration: int = 3000, color: str | None = None, icon: str | None = None) -> None:
+    """Send a notification using notify-send.
+
+    Args:
+        text: The text to display
+        duration: The duration in milliseconds
+        color: The color to use (currently unused by notify-send but kept for API compatibility)
+        icon: The icon to use
+    """
+    del color  # unused
+    args = ["notify-send", text, f"--expire-time={duration}", "--app-name=pyprland"]
+    if icon:
+        args.append(f"--icon={icon}")
+
+    # notify-send doesn't support color directly in standard implementations without custom patches or specific notification daemons
+    # so we ignore color for now to keep it generic, or we could use hints if we knew the daemon supported them.
+
+    with contextlib.suppress(FileNotFoundError):
+        # We don't care about the output
+        await asyncio.create_subprocess_exec(*args)

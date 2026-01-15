@@ -14,11 +14,20 @@ class Plugin:
 
     aborted = False
 
+    environments: list[str] = []
+    " The supported environments for this plugin. Empty list means all environments. "
+
     hyprctl_json: Callable
     " `pyprland.ipc.hyprctl_json` using the plugin's logger "
 
     hyprctl: Callable
     " `pyprland.ipc.hyprctl` using the plugin's logger "
+
+    nirictl: Callable
+    " `pyprland.ipc.nirictl` using the plugin's logger "
+
+    nirictl_json: Callable
+    " `pyprland.ipc.nirictl_json` using the plugin's logger "
 
     notify: Callable
     " `pyprland.ipc.notify` using the plugin's logger "
@@ -48,6 +57,8 @@ class Plugin:
             self.notify,
             self.notify_info,
             self.notify_error,
+            self.nirictl,
+            self.nirictl_json,
         ) = ctrl
         self.config = Configuration({}, logger=self.log)
 
@@ -89,6 +100,14 @@ class Plugin:
             workspace: Filter for specific workspace name
             workspace_bl: Filter to blacklist a specific workspace name
         """
+        if self.state.environment == "niri":
+            return [
+                self._map_niri_client(client)
+                for client in cast("list[dict]", await self.nirictl_json("windows"))
+                if (not mapped or client.get("is_mapped", True))
+                and (workspace is None or str(client.get("workspace_id")) == workspace)
+                and (workspace_bl is None or str(client.get("workspace_id")) != workspace_bl)
+            ]
         return [
             client
             for client in cast("list[ClientInfo]", await self.hyprctl_json("clients"))
@@ -96,3 +115,32 @@ class Plugin:
             and (workspace is None or cast("str", client["workspace"]["name"]) == workspace)
             and (workspace_bl is None or cast("str", client["workspace"]["name"]) != workspace_bl)
         ]
+
+    def _map_niri_client(self, niri_client: dict[str, Any]) -> ClientInfo:
+        """Helper to map Niri window dict to ClientInfo TypedDict."""
+        return cast(
+            "ClientInfo",
+            {
+                "address": str(niri_client.get("id")),
+                "class": niri_client.get("app_id"),
+                "title": niri_client.get("title"),
+                "workspace": {"name": str(niri_client.get("workspace_id"))},
+                "pid": -1,
+                "mapped": niri_client.get("is_mapped", True),
+                "hidden": False,
+                "at": (0, 0),
+                "size": (0, 0),
+                "floating": False,
+                "monitor": -1,
+                "initialClass": niri_client.get("app_id"),
+                "initialTitle": niri_client.get("title"),
+                "xwayland": False,
+                "pinned": False,
+                "fullscreen": False,
+                "fullscreenMode": 0,
+                "fakeFullscreen": False,
+                "grouped": [],
+                "swallowing": "",
+                "focusHistoryID": 0,
+            },
+        )

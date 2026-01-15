@@ -7,6 +7,8 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Expose all clients on the active workspace."""
 
+    environments = ["hyprland"]
+
     exposed: list[ClientInfo] = []
 
     @property

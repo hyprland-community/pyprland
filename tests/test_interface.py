@@ -15,10 +15,12 @@ def plugin():
     # Mocking get_controls to avoid importing ipc module which might try to connect or setup logging
     with patch("pyprland.plugins.interface.get_controls") as mock_get_controls:
         # Mock what get_controls returns (tuple of callables)
-        mock_get_controls.return_value = (Mock(), Mock(), Mock(), Mock(), Mock())
+        mock_get_controls.return_value = (Mock(), Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
         plugin = ConcretePlugin("test_plugin")
         # Manually attach mocks for methods used in get_clients
         plugin.hyprctl_json = AsyncMock()
+        plugin.state = Mock()
+        plugin.state.environment = "hyprland"
         return plugin
 
 

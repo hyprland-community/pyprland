@@ -9,6 +9,8 @@ def extension():
     ext.hyprctl = AsyncMock()
     ext.hyprctl_json = AsyncMock()
     ext.monitors = ["M1", "M2", "M3"]
+    ext.state = Mock()  # Mock the state
+    ext.state.environment = "hyprland"  # Default to hyprland for existing tests
     return ext
 
 

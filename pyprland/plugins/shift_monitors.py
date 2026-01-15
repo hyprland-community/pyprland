@@ -8,11 +8,28 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Shift workspaces across monitors."""
 
+    environments = ["hyprland"]
+
     monitors: list[str] = []
 
     async def init(self) -> None:
         """Initialize the plugin."""
-        self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors"))]
+        if self.state.environment == "niri":
+            await self.niri_outputschanged({})
+        else:
+            self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.hyprctl_json("monitors"))]
+
+    async def niri_outputschanged(self, _data: dict) -> None:
+        """Track monitors on Niri.
+
+        Args:
+            _data: The event data (unused)
+        """
+        try:
+            outputs = await self.nirictl_json("outputs")
+            self.monitors = list(outputs.keys())
+        except Exception:
+            self.log.exception("Failed to update monitors from Niri event")
 
     async def run_shift_monitors(self, arg: str) -> None:
         """<direction> Swaps monitors' workspaces in the given direction.
@@ -20,6 +37,16 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         Args:
             arg: The direction to shift
         """
+        if self.state.environment == "niri":
+            # Niri doesn't support swapping workspaces between monitors easily.
+            # We'll implement a "move workspace to monitor" shift instead for the active workspace.
+            direction_int = int(arg)
+            if direction_int > 0:
+                await self.nirictl(["action", "move-workspace-to-monitor-right"])
+            else:
+                await self.nirictl(["action", "move-workspace-to-monitor-left"])
+            return
+
         if not self.monitors:
             return
 

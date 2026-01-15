@@ -8,6 +8,8 @@ from .interface import Plugin
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Toggle monitors on or off."""
 
+    environments = ["hyprland"]
+
     async def run_toggle_dpms(self) -> None:
         """Toggle dpms on/off for every monitor."""
         monitors = cast("list[dict[str, Any]]", await self.hyprctl_json("monitors"))

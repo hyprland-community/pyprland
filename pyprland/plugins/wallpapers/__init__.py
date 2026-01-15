@@ -23,6 +23,41 @@ from .theme import detect_theme, generate_palette, get_color_scheme_props
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
     """Fetch monitor information from hyprctl."""
+    if extension.state.environment == "niri":
+        monitors = await extension.nirictl_json("outputs")
+        res = []
+        # Mapping Niri strings to Hyprland-like integers for imageutils compatibility
+        # 0: normal, 1: 90, 2: 180, 3: 270, ... (odd numbers rotate dimensions)
+        transform_map = {
+            "normal": 0,
+            "90": 1,
+            "180": 2,
+            "270": 3,
+            "flipped": 4,
+            "flipped-90": 5,
+            "flipped-180": 6,
+            "flipped-270": 7,
+        }
+
+        for name, data in monitors.items():
+            # Fallback to physical if logical isn't present (unlikely for active outputs)
+            info = data.get("logical") or data.get("physical") or {}
+            t_val = info.get("transform", "normal")
+            # Handle case where transform might be a dict in some Niri versions
+            if isinstance(t_val, dict):
+                t_val = t_val.get("transform", "normal")
+
+            res.append(
+                MonitorInfo(
+                    name=name,
+                    width=int(info.get("width", 0)),
+                    height=int(info.get("height", 0)),
+                    transform=transform_map.get(t_val, 0),
+                    scale=info.get("scale", 1.0),
+                )
+            )
+        return res
+
     monitors = await extension.hyprctl_json("monitors")
     return [
         MonitorInfo(name=m["name"], width=int(m["width"]), height=int(m["height"]), transform=m["transform"], scale=m["scale"])
@@ -32,6 +67,8 @@ async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
 
 class Extension(Plugin):
     """Manages the background image."""
+
+    environments = ["hyprland", "niri"]
 
     default_image_ext: set[str] | list[str] = {"png", "jpg", "jpeg"}
     image_list: list[str] = []
@@ -79,6 +116,10 @@ class Extension(Plugin):
 
     async def event_monitoradded(self, _: str) -> None:
         """When a new monitor is added, set the background."""
+        self.next_background_event.set()
+
+    async def niri_outputschanged(self, _: dict) -> None:
+        """When the monitor configuration changes (Niri), set the background."""
         self.next_background_event.set()
 
     def select_next_image(self) -> str:

@@ -31,6 +31,16 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 > Uses **hyprpaper** by default, but can be configured to use any other application.
 > You'll need to run hyprpaper separately for now. (eg: `uwsm app -- hyprpaper`)
 
+## Niri support
+
+Niri is supported, but you must ensure that you are using a wallpaper manager that supports it (eg: `swww`).
+
+```toml
+[wallpapers]
+path = "/home/me/Pictures/Wallpapers"
+command = "swww img [file]"
+```
+
 <details>
     <summary>Minimal example using defaults (requires <b>hyprpaper</b>)</summary>
 

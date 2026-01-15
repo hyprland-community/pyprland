@@ -5,26 +5,32 @@ __all__ = [
     "get_monitor_props",
     "hyprctl",
     "hyprctl_json",
+    "nirictl",
+    "nirictl_json",
     "notify",
     "notify_error",
     "notify_info",
+    "set_notify_method",
 ]
 
 import asyncio
 import json
+import os
 from collections.abc import AsyncGenerator, Callable, Iterable
 from contextlib import asynccontextmanager
 from functools import partial
 from logging import Logger
 from typing import Any, cast
 
-from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger
+from .common import IPC_FOLDER, MINIMUM_ADDR_LEN, get_logger, notify_send
 from .models import ClientInfo, JSONResponse, MonitorInfo, PyprError
 
 log: Logger | None = None
+NOTIFY_METHOD = "auto"
 
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
+NIRI_SOCKET = os.environ.get("NIRI_SOCKET")
 
 
 @asynccontextmanager
@@ -47,6 +53,40 @@ async def hyprctl_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Str
         await writer.wait_closed()
 
 
+@asynccontextmanager
+async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
+    """Context manager for the niri socket.
+
+    Args:
+        logger: Logger to use for error reporting
+    """
+    if not NIRI_SOCKET:
+        logger.critical("NIRI_SOCKET not set!")
+        msg = "Niri is not available"
+        raise PyprError(msg)
+    try:
+        reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
+    except FileNotFoundError as e:
+        logger.critical("niri socket not found! is it running ?")
+        raise PyprError from e
+
+    try:
+        yield reader, writer
+    finally:
+        writer.close()
+        await writer.wait_closed()
+
+
+def set_notify_method(method: str) -> None:
+    """Set the notification method.
+
+    Args:
+        method: The method to use ("auto", "native", "notify-send")
+    """
+    global NOTIFY_METHOD
+    NOTIFY_METHOD = method
+
+
 async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int = -1, logger: None | Logger = None) -> None:
     """Hyprland notification system.
 
@@ -57,6 +97,9 @@ async def notify(text: str, duration: int = 3, color: str = "ff1010", icon: int 
         icon: Icon ID to display
         logger: Logger instance
     """
+    if NOTIFY_METHOD == "notify-send" or (NOTIFY_METHOD == "auto" and NIRI_SOCKET):
+        await notify_send(text, int(duration * 1000))
+        return
     await hyprctl(f"{icon} {int(duration * 1000)} rgb({color})  {text}", "notify", logger=logger)
 
 
@@ -67,6 +110,21 @@ notify_info = partial(notify, icon=1, duration=5)
 
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
+    if NIRI_SOCKET:
+        async with niri_connection(log or get_logger()) as (reader, writer):
+            writer.write(b'"EventStream"')
+            await writer.drain()
+            # We must return the reader/writer, so we detach them from the context manager?
+            # actually niri_connection closes on exit.
+            # We can't use the context manager here easily if we want to return the stream.
+            # Let's just duplicate the connection logic for this specific case or adapt niri_connection
+
+    if NIRI_SOCKET:
+        reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
+        writer.write(b'"EventStream"')
+        await writer.drain()
+        return reader, writer
+
     return await asyncio.open_unix_connection(EVENTS)
 
 
@@ -92,6 +150,18 @@ def retry_on_reset(func: Callable) -> Callable:
     return wrapper
 
 
+async def _niri_request(payload: str | dict | list, logger: Logger) -> JSONResponse:
+    """Send request to Niri and return response."""
+    async with niri_connection(logger) as (reader, writer):
+        writer.write(json.dumps(payload).encode())
+        await writer.drain()
+        response = await reader.readline()
+        if not response:
+            msg = "Empty response from Niri"
+            raise PyprError(msg)
+        return json.loads(response)
+
+
 async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
     """Get response of `command` from the IPC socket.
 
@@ -109,6 +179,22 @@ async def _get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 
 @retry_on_reset
+async def nirictl_json(command: str | dict, logger: Logger | None = None) -> JSONResponse:
+    """Run a Niri IPC command and return the JSON output.
+
+    Args:
+        command: The command to execute (dict or str)
+        logger: Logger to use (defaults to global log)
+    """
+    logger = cast("Logger", logger or log)
+    ret = await _niri_request(command, logger)
+    if isinstance(ret, dict) and "Ok" in ret:
+        return ret["Ok"]
+    msg = f"Niri command failed: {ret}"
+    raise PyprError(msg)
+
+
+@retry_on_reset
 async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONResponse:
     """Run an IPC command and return the JSON output.
 
@@ -120,6 +206,34 @@ async def hyprctl_json(command: str, logger: Logger | None = None) -> JSONRespon
     ret = await _get_response(f"-j/{command}".encode(), logger)
     assert isinstance(ret, list | dict)
     return ret
+
+
+@retry_on_reset
+async def nirictl(args: dict | list, logger: Logger | None = None, weak: bool = False) -> bool:
+    """Run a Niri IPC command. Returns success value.
+
+    Args:
+        args: command dict or list of commands
+        logger: logger to use
+        weak: if True, only log warning on failure
+    """
+    logger = cast("Logger", logger or log)
+    try:
+        ret = await _niri_request(args, logger)
+        if isinstance(ret, dict) and "Ok" in ret:
+            return True
+    except PyprError:
+        if weak:
+            logger.exception("Niri command failed")
+        else:
+            logger.exception("Niri command failed")
+        return False
+
+    if weak:
+        logger.warning("Niri command failed: %s", ret)
+    else:
+        logger.error("Niri command failed: %s", ret)
+    return False
 
 
 # }}}
@@ -212,6 +326,27 @@ async def get_monitor_props(logger: Logger | None = None, name: str | None = Non
         def _match_fn(mon: MonitorInfo) -> bool:
             return cast("bool", mon.get("focused"))
 
+    if NIRI_SOCKET:
+        outputs = await nirictl_json("outputs", logger=logger)
+        for key, output in outputs.items():
+            mon_info = cast(
+                "MonitorInfo",
+                {
+                    "name": key,
+                    "focused": output.get("is_focused", False),
+                    "x": output.get("logical_position", {}).get("x", 0),
+                    "y": output.get("logical_position", {}).get("y", 0),
+                    "width": output.get("logical_size", {}).get("width", 0),
+                    "height": output.get("logical_size", {}).get("height", 0),
+                    "scale": output.get("scale", 1.0),
+                },
+            )
+
+            if _match_fn(mon_info):
+                return mon_info
+        msg = "no focused monitor"
+        raise RuntimeError(msg)
+
     for monitor in await hyprctl_json("monitors", logger=logger):
         if _match_fn(cast("MonitorInfo", monitor)):
             return cast("MonitorInfo", monitor)
@@ -283,7 +418,7 @@ def init() -> None:
     log = get_logger("ipc")
 
 
-def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable]:
+def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable, Callable, Callable, Callable]:
     """Return (hyprctl, hyprctl_json, notify) configured for the given logger.
 
     Args:
@@ -295,4 +430,6 @@ def get_controls(logger: Logger) -> tuple[Callable, Callable, Callable, Callable
         partial(notify, logger=logger),
         partial(notify_info, logger=logger),
         partial(notify_error, logger=logger),
+        partial(nirictl, logger=logger),
+        partial(nirictl_json, logger=logger),
     )

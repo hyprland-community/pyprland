@@ -6,6 +6,8 @@ from .interface import Plugin
 class Extension(Plugin):
     """A plugin to auto-switch Fcitx5 input method status by window class/title."""
 
+    environments = ["hyprland"]
+
     async def event_activewindowv2(self, _addr: str) -> None:
         """A plugin to auto-switch Fcitx5 input method status by window class/title.
 

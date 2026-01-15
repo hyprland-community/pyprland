@@ -3,7 +3,7 @@
 import json
 from typing import cast
 
-from ..models import VersionInfo
+from ..models import PyprError, VersionInfo
 from .interface import Plugin
 
 DEFAULT_VERSION = VersionInfo(9, 9, 9)
@@ -15,6 +15,11 @@ class Extension(Plugin):
     async def init(self) -> None:
         """Initialize the plugin."""
         self.state.active_window = ""
+
+        if self.state.environment == "niri":
+            await self._init_niri()
+            return
+
         # Examples:
         # "tag": "v0.40.0-127-g4e42107d", (for git)
         # "tag": "v0.40.0", (stable)
@@ -24,11 +29,12 @@ class Extension(Plugin):
         try:
             version_info = await self.hyprctl_json("version")
             assert isinstance(version_info, dict)
-        except json.JSONDecodeError:
-            self.log.exception("Fail to parse hyprctl version")
-            await self.notify_error("Error: 'hyprctl version' didn't print valid data")
+        except (FileNotFoundError, json.JSONDecodeError, PyprError):
+            self.log.warning("Fail to parse hyprctl version")
+            # await self.notify_error("Error: 'hyprctl version' didn't print valid data")
         else:
             _tag = version_info.get("tag")
+
             if _tag and _tag != "unknown":
                 assert isinstance(_tag, str)
                 version_str = _tag.split("-", 1)[0]
@@ -46,13 +52,50 @@ class Extension(Plugin):
                 version_str = ""
 
         if not version_str:
-            self.log.error("Fail to parse version information: %s - using default", version_info)
+            self.log.warning("Fail to parse version information: %s - using default", version_info)
             self.state.hyprland_version = DEFAULT_VERSION
 
-        self.state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
-        monitors = await self.hyprctl_json("monitors")
-        self.state.monitors = [mon["name"] for mon in monitors]
-        self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
+        try:
+            self.state.active_workspace = (await self.hyprctl_json("activeworkspace"))["name"]
+            monitors = await self.hyprctl_json("monitors")
+            self.state.monitors = [mon["name"] for mon in monitors]
+            self.state.active_monitor = next(mon["name"] for mon in monitors if mon["focused"])
+        except (FileNotFoundError, PyprError):
+            self.log.warning("Hyprland socket not found, assuming no hyprland")
+            self.state.active_workspace = "unknown"
+            self.state.monitors = []
+            self.state.active_monitor = "unknown"
+
+    async def _init_niri(self) -> None:
+        """Initialize Niri specific state."""
+        try:
+            self.state.active_workspace = "unknown"  # Niri workspaces are dynamic/different
+            outputs = await self.nirictl_json("outputs")
+            self.state.monitors = list(outputs.keys())
+            self.state.active_monitor = next((name for name, data in outputs.items() if data.get("is_focused")), "unknown")
+            # Set a dummy version for Niri since we don't have version info yet
+            self.state.hyprland_version = DEFAULT_VERSION
+        except (FileNotFoundError, PyprError):
+            self.log.warning("Niri socket not found or failed to query")
+            self.state.active_workspace = "unknown"
+            self.state.monitors = []
+            self.state.active_monitor = "unknown"
+
+    async def niri_outputschanged(self, _data: dict) -> None:
+        """Track monitors on Niri.
+
+        Args:
+            _data: The event data (unused)
+        """
+        if self.state.environment == "niri":
+            try:
+                outputs = await self.nirictl_json("outputs")
+                new_monitors = list(outputs.keys())
+                self.state.monitors = new_monitors
+                # Update active monitor if possible
+                self.state.active_monitor = next((name for name, data in outputs.items() if data.get("is_focused")), "unknown")
+            except Exception:
+                self.log.exception("Failed to update monitors from Niri event")
 
     async def event_monitoradded(self, name: str) -> None:
         """Track monitor.

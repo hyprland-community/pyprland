@@ -12,6 +12,8 @@ from .layout import MONITOR_PROPS, compute_xy, get_dims
 class Extension(Plugin):
     """Control monitors layout."""
 
+    environments = ["hyprland"]
+
     _mon_by_pat_cache: dict[str, MonitorInfo] = {}
 
     async def on_reload(self) -> None:
@@ -64,6 +66,9 @@ class Extension(Plugin):
         Args:
             monitors: Optional list of monitors to use. If not provided, fetches current state.
         """
+        if self.state.environment == "niri":
+            return await self._run_relayout_niri()
+
         if monitors is None:
             monitors = cast("list[MonitorInfo]", await self.hyprctl_json("monitors all"))
 
@@ -97,6 +102,55 @@ class Extension(Plugin):
         positions = self._compute_positions(enabled_monitors_by_name, tree, in_degree, config)
 
         # 4 & 5. Normalize and Apply
+        return await self._apply_layout(positions, monitors_by_name, config)
+
+    async def _run_relayout_niri(self) -> bool:
+        """Niri implementation of relayout."""
+        outputs = await self.nirictl_json("outputs")
+        monitors: list[MonitorInfo] = []
+        for name, data in outputs.items():
+            mode: dict[str, Any] = next((m for m in data.get("modes", []) if m.get("is_active")), {})
+            monitors.append(
+                cast(
+                    "MonitorInfo",
+                    {
+                        "name": name,
+                        "description": f"{data.get('make', '')} {data.get('model', '')}".strip(),
+                        "make": data.get("make", ""),
+                        "model": data.get("model", ""),
+                        "width": mode.get("width", 0),
+                        "height": mode.get("height", 0),
+                        "refreshRate": mode.get("refresh_rate", 60000) / 1000.0,
+                        "x": data.get("logical", {}).get("x", 0),
+                        "y": data.get("logical", {}).get("y", 0),
+                        "scale": data.get("logical", {}).get("scale", 1.0),
+                        "transform": 0,  # Niri doesn't expose transform easily in same format?
+                        "focused": data.get("is_focused", False),
+                    },
+                )
+            )
+
+        self._clear_mon_by_pat_cache()
+
+        # 1. Resolve configuration
+        config = self._resolve_names(monitors)
+        if not config:
+            self.log.debug("No configuration item is applicable")
+            return False
+
+        monitors_by_name = {m["name"]: m for m in monitors}
+
+        # Niri doesn't support disabling via this plugin yet (needs IPC research), but we can layout.
+
+        enabled_monitors_by_name = monitors_by_name  # Assume all enabled for now
+
+        # 2. Build dependency graph
+        tree, in_degree = self._build_graph(config, enabled_monitors_by_name)
+
+        # 3. Compute Layout
+        positions = self._compute_positions(enabled_monitors_by_name, tree, in_degree, config)
+
+        # 4 & 5. Apply
         return await self._apply_layout(positions, monitors_by_name, config)
 
     def _build_graph(
@@ -187,6 +241,9 @@ class Extension(Plugin):
         if not positions and not has_disabled:
             return False
 
+        if self.state.environment == "niri":
+            return await self._apply_niri_layout(positions, config)
+
         if positions:
             min_x = min(x for x, y in positions.values())
             min_y = min(y for x, y in positions.values())
@@ -210,6 +267,27 @@ class Extension(Plugin):
         for cmd in cmds:
             self.log.debug(cmd)
             await self.hyprctl(cmd, "keyword")
+        return True
+
+    async def _apply_niri_layout(
+        self,
+        positions: dict[str, tuple[int, int]],
+        config: dict[str, Any],
+    ) -> bool:
+        """Apply Niri layout."""
+        for name, (x, y) in positions.items():
+            # nirictl msg action set-output-position "HDMI-A-1" 0 0
+            await self.nirictl(["output", name, "position", str(x), str(y)])
+
+            mon_config = config.get(name, {})
+            scale = mon_config.get("scale")
+            if scale:
+                await self.nirictl(["output", name, "scale", str(scale)])
+
+            transform = mon_config.get("transform")
+            if transform is not None:
+                await self.nirictl(["output", name, "transform", str(transform)])
+
         return True
 
     def _build_monitor_command(self, monitor: MonitorInfo, config: dict[str, Any]) -> str:

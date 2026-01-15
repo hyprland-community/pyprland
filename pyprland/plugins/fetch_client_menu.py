@@ -7,6 +7,8 @@ from .interface import Plugin
 class Extension(MenuMixin, Plugin):
     """Shows a menu with shortcuts."""
 
+    environments = ["hyprland"]
+
     _windows_origins: dict[str, str] = {}
 
     # Commands

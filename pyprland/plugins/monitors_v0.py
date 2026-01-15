@@ -47,6 +47,8 @@ def configure_monitors(monitors: list[dict[str, Any]], screenid: str, pos_x: int
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """The monitors plugin."""
 
+    environments = ["hyprland"]
+
     async def load_config(self, config: dict[str, Any]) -> None:
         """Load the configuration.
 

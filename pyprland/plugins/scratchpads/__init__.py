@@ -33,6 +33,8 @@ DEFAULT_HYSTERESIS = 0.4  # in seconds
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Scratchpads addon."""
 
+    environments = ["hyprland"]
+
     procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
     scratches = ScratchDB()
 

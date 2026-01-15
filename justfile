@@ -1,5 +1,5 @@
-pyenv := ".tox/py313-linting"
-testenv := ".tox/py313-unit"
+pyenv := ".tox/py314-linting"
+testenv := ".tox/py314-unit"
 
 test *params='tests':
     {{testenv}}/bin/pytest --pdb -s {{params}}

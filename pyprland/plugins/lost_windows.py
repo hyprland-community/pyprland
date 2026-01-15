@@ -21,6 +21,8 @@ def contains(monitor: MonitorInfo, window: ClientInfo) -> bool:
 class Extension(Plugin):  # pylint: disable=missing-class-docstring
     """Moves unreachable client windows to the currently focused workspace."""
 
+    environments = ["hyprland"]
+
     async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""
         monitors = cast("list", await self.hyprctl_json("monitors"))
