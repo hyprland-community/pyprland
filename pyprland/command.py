@@ -173,7 +173,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             modname = f"pyprland.plugins.{name}"
         try:
             plug = importlib.import_module(modname).Extension(name)
-            desktop = self.config["pyprland"].get("desktop", "hyprland")
+            desktop = self.config["pyprland"].get("desktop", self.state.environment)
             if plug.environments and desktop not in plug.environments:
                 self.log.info("Skipping plugin %s: desktop %s not supported %s", name, desktop, plug.environments)
                 return False
@@ -327,6 +327,19 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             if not data:
                 self.log.critical("Reader starved")
                 return
+
+            if data.startswith("{"):
+                try:
+                    event = json.loads(data)
+                except json.JSONDecodeError:
+                    self.log.error("Invalid JSON event: %s", data)
+                    continue
+                if "Variant" in event:
+                    type_name = event["Variant"]["type"]
+                    data = event["Variant"]
+                    await self._call_handler(f"event_{type_name}", data)
+                continue
+
             cmd, params = data.split(">>", 1)
             full_name = f"event_{cmd}"
 

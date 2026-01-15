@@ -326,6 +326,27 @@ async def get_monitor_props(logger: Logger | None = None, name: str | None = Non
         def _match_fn(mon: MonitorInfo) -> bool:
             return cast("bool", mon.get("focused"))
 
+    if NIRI_SOCKET:
+        outputs = await nirictl_json("outputs", logger=logger)
+        for key, output in outputs.items():
+            mon_info = cast(
+                "MonitorInfo",
+                {
+                    "name": key,
+                    "focused": output.get("is_focused", False),
+                    "x": output.get("logical_position", {}).get("x", 0),
+                    "y": output.get("logical_position", {}).get("y", 0),
+                    "width": output.get("logical_size", {}).get("width", 0),
+                    "height": output.get("logical_size", {}).get("height", 0),
+                    "scale": output.get("scale", 1.0),
+                },
+            )
+
+            if _match_fn(mon_info):
+                return mon_info
+        msg = "no focused monitor"
+        raise RuntimeError(msg)
+
     for monitor in await hyprctl_json("monitors", logger=logger):
         if _match_fn(cast("MonitorInfo", monitor)):
             return cast("MonitorInfo", monitor)
