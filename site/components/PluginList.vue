@@ -119,10 +119,10 @@ export default {
                     environments: ['hyprland', 'niri']
                 },
                 {
-                    name: 'bar',
+                    name: 'menubar',
                     stars: 3,
                     description: 'improves multi-monitor handling of the status bar - restarts it on crashes',
-                    environments: ['hyprland']
+                    environments: ['hyprland', 'niri']
                 },
                 {
                     name: 'expose',
@@ -162,7 +162,7 @@ export default {
                     name: 'monitors',
                     stars: 3,
                     description: 'allows relative placement and configuration of monitors',
-                    environments: ['hyprland']
+                    environments: ['hyprland', 'niri']
                 },
                 {
                     name: 'fcitx5_switcher',

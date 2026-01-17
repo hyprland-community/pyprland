@@ -8,11 +8,23 @@ from ...models import MonitorInfo
 from ..interface import Plugin
 from .layout import MONITOR_PROPS, compute_xy, get_dims
 
+# Niri transform string to Hyprland-compatible integer mapping
+NIRI_TRANSFORM_MAP = {
+    "Normal": 0,
+    "90": 1,
+    "180": 2,
+    "270": 3,
+    "Flipped": 4,
+    "Flipped90": 5,
+    "Flipped180": 6,
+    "Flipped270": 7,
+}
+
 
 class Extension(Plugin):
     """Control monitors layout."""
 
-    environments = ["hyprland"]
+    environments = ["hyprland", "niri"]
 
     _mon_by_pat_cache: dict[str, MonitorInfo] = {}
 
@@ -55,6 +67,15 @@ class Extension(Plugin):
             default_command = self.config.get("unknown")
             if default_command:
                 await asyncio.create_subprocess_shell(default_command)
+
+    async def niri_outputschanged(self, _data: dict) -> None:
+        """Handle Niri output changes.
+
+        Args:
+            _data: Event data from Niri (unused)
+        """
+        await asyncio.sleep(self.config.get("new_monitor_delay", 1.0))
+        await self._run_relayout()
 
     async def run_relayout(self) -> bool:
         """Recompute & apply every monitors's layout."""
@@ -107,28 +128,8 @@ class Extension(Plugin):
     async def _run_relayout_niri(self) -> bool:
         """Niri implementation of relayout."""
         outputs = await self.nirictl_json("outputs")
-        monitors: list[MonitorInfo] = []
-        for name, data in outputs.items():
-            mode: dict[str, Any] = next((m for m in data.get("modes", []) if m.get("is_active")), {})
-            monitors.append(
-                cast(
-                    "MonitorInfo",
-                    {
-                        "name": name,
-                        "description": f"{data.get('make', '')} {data.get('model', '')}".strip(),
-                        "make": data.get("make", ""),
-                        "model": data.get("model", ""),
-                        "width": mode.get("width", 0),
-                        "height": mode.get("height", 0),
-                        "refreshRate": mode.get("refresh_rate", 60000) / 1000.0,
-                        "x": data.get("logical", {}).get("x", 0),
-                        "y": data.get("logical", {}).get("y", 0),
-                        "scale": data.get("logical", {}).get("scale", 1.0),
-                        "transform": 0,  # Niri doesn't expose transform easily in same format?
-                        "focused": data.get("is_focused", False),
-                    },
-                )
-            )
+
+        monitors: list[MonitorInfo] = [self._niri_output_to_monitor_info(name, data) for name, data in outputs.items()]
 
         self._clear_mon_by_pat_cache()
 
@@ -140,9 +141,17 @@ class Extension(Plugin):
 
         monitors_by_name = {m["name"]: m for m in monitors}
 
-        # Niri doesn't support disabling via this plugin yet (needs IPC research), but we can layout.
+        # Handle monitors to disable
+        monitors_to_disable = set()
+        for cfg in config.values():
+            if "disables" in cfg:
+                monitors_to_disable.update(cfg["disables"])
 
-        enabled_monitors_by_name = monitors_by_name  # Assume all enabled for now
+        for name in monitors_to_disable:
+            if name in monitors_by_name:
+                monitors_by_name[name]["to_disable"] = True
+
+        enabled_monitors_by_name = {k: v for k, v in monitors_by_name.items() if not v.get("to_disable")}
 
         # 2. Build dependency graph
         tree, in_degree = self._build_graph(config, enabled_monitors_by_name)
@@ -152,6 +161,35 @@ class Extension(Plugin):
 
         # 4 & 5. Apply
         return await self._apply_layout(positions, monitors_by_name, config)
+
+    def _niri_output_to_monitor_info(self, name: str, data: dict[str, Any]) -> MonitorInfo:
+        """Convert Niri output data to MonitorInfo.
+
+        Args:
+            name: Output name
+            data: Niri output data dictionary
+        """
+        mode: dict[str, Any] = next((m for m in data.get("modes", []) if m.get("is_active")), {})
+        logical = data.get("logical") or {}
+        transform_str = logical.get("transform", "Normal")
+
+        return cast(
+            "MonitorInfo",
+            {
+                "name": name,
+                "description": f"{data.get('make', '')} {data.get('model', '')}".strip(),
+                "make": data.get("make", ""),
+                "model": data.get("model", ""),
+                "width": mode.get("width", 0),
+                "height": mode.get("height", 0),
+                "refreshRate": mode.get("refresh_rate", 60000) / 1000.0,
+                "x": logical.get("x", 0),
+                "y": logical.get("y", 0),
+                "scale": logical.get("scale", 1.0),
+                "transform": NIRI_TRANSFORM_MAP.get(transform_str, 0),
+                "focused": data.get("is_focused", False),
+            },
+        )
 
     def _build_graph(
         self, config: dict[str, Any], monitors_by_name: dict[str, MonitorInfo]
@@ -242,7 +280,7 @@ class Extension(Plugin):
             return False
 
         if self.state.environment == "niri":
-            return await self._apply_niri_layout(positions, config)
+            return await self._apply_niri_layout(positions, monitors_by_name, config)
 
         if positions:
             min_x = min(x for x, y in positions.values())
@@ -272,21 +310,45 @@ class Extension(Plugin):
     async def _apply_niri_layout(
         self,
         positions: dict[str, tuple[int, int]],
+        monitors_by_name: dict[str, MonitorInfo],
         config: dict[str, Any],
     ) -> bool:
-        """Apply Niri layout."""
+        """Apply Niri layout.
+
+        Args:
+            positions: Computed (x, y) positions for each monitor
+            monitors_by_name: Mapping of monitor names to info
+            config: Configuration dictionary
+        """
+        # Transform names for Niri (numeric -> string)
+        transform_names = ["Normal", "90", "180", "270", "Flipped", "Flipped90", "Flipped180", "Flipped270"]
+
+        # Handle disabled monitors first
+        for name, mon in monitors_by_name.items():
+            if mon.get("to_disable"):
+                await self.nirictl({"Output": {"output": name, "action": "Off"}})
+
+        # Apply positions and settings for enabled monitors
         for name, (x, y) in positions.items():
-            # nirictl msg action set-output-position "HDMI-A-1" 0 0
-            await self.nirictl(["output", name, "position", str(x), str(y)])
+            # Set position
+            await self.nirictl({"Output": {"output": name, "action": {"Position": {"Specific": {"x": x, "y": y}}}}})
 
             mon_config = config.get(name, {})
+
+            # Set scale if configured
             scale = mon_config.get("scale")
             if scale:
-                await self.nirictl(["output", name, "scale", str(scale)])
+                await self.nirictl({"Output": {"output": name, "action": {"Scale": {"Specific": float(scale)}}}})
 
+            # Set transform if configured
             transform = mon_config.get("transform")
             if transform is not None:
-                await self.nirictl(["output", name, "transform", str(transform)])
+                # Convert numeric transform to Niri string if needed
+                if isinstance(transform, int) and 0 <= transform < len(transform_names):
+                    transform_str = transform_names[transform]
+                else:
+                    transform_str = str(transform)
+                await self.nirictl({"Output": {"output": name, "action": {"Transform": {"transform": transform_str}}}})
 
         return True
 

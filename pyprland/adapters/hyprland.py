@@ -21,7 +21,7 @@ class HyprlandBackend(EnvironmentBackend):
         return result
 
     @retry_on_reset
-    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)

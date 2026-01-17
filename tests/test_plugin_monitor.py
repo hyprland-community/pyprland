@@ -322,8 +322,9 @@ async def test_events4():
 async def test_nothing():
     await tst.pypr("inexistent")
     assert tst.hyprctl.call_count == 1
-    assert "notify" in tst.hyprctl.call_args[0][0]
-    assert "No such command" in tst.hyprctl.call_args[0][0]
+    # Check that notify was called with base_command="notify"
+    assert tst.hyprctl.call_args.kwargs.get("base_command") == "notify"
+    assert "not found" in tst.hyprctl.call_args[0][0]
 
 
 import pytest

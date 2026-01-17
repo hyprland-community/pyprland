@@ -29,7 +29,7 @@ class Plugin:
         """(Deprecated) Execute a hyprctl command."""
         return await self.backend.execute(command, **kwargs)
 
-    async def nirictl(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+    async def nirictl(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
         """(Deprecated) Execute a nirictl command."""
         return await self.backend.execute(command, **kwargs)
 

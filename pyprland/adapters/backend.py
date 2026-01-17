@@ -47,7 +47,7 @@ class EnvironmentBackend(ABC):
         raise RuntimeError(msg)
 
     @abstractmethod
-    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
 
     @abstractmethod

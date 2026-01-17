@@ -14,6 +14,9 @@ Runs your favorite bar app (gbar, ags / hyprpanel, waybar, ...) with option to p
 - Automatically restarts the menu bar on crash
 - Checks which monitors are on and take the best one from a provided list
 
+> [!tip]
+> This plugin supports both Hyprland and Niri. It will automatically detect the environment and use the appropriate IPC commands.
+
 ## Command
 
 <CommandList :commands="$frontmatter.commands" />

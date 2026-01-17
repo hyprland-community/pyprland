@@ -28,7 +28,7 @@ class NiriBackend(EnvironmentBackend):
             return f"niri_{type_name.lower()}", data
         return None
 
-    async def execute(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
+    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
         """Execute a command (or list of commands)."""
         weak = kwargs.get("weak", False)
         # Niri commands are typically lists of strings or objects, not a single string command line

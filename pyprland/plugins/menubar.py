@@ -3,22 +3,24 @@
 import asyncio
 import contextlib
 import os
-from collections.abc import Callable
 from time import time
-from typing import Any, cast
+from typing import TYPE_CHECKING, cast
 
 from ..common import apply_variables
 from .interface import Plugin
+
+if TYPE_CHECKING:
+    from ..adapters.backend import EnvironmentBackend
 
 COOLDOWN_TIME = 60
 IDLE_LOOP_INTERVAL = 10
 
 
-def get_pid_from_layers(layers: dict) -> bool | int:
-    """Get the PID of the bar from the layers.
+def get_pid_from_layers_hyprland(layers: dict) -> bool | int:
+    """Get the PID of the bar from Hyprland layers.
 
     Args:
-        layers: The layers dictionary
+        layers: The layers dictionary from hyprctl
     """
     for screen in layers:
         for layer in layers[screen]["levels"].values():
@@ -28,29 +30,58 @@ def get_pid_from_layers(layers: dict) -> bool | int:
     return False
 
 
-async def is_bar_alive(pid: int, execute_json: Callable[..., Any]) -> int | bool:
+def is_bar_in_layers_niri(layers: list) -> bool:
+    """Check if a bar exists in Niri layers.
+
+    Args:
+        layers: List of LayerSurface from Niri
+
+    Note: Niri's LayerSurface doesn't include PID, so we can only
+    detect presence, not recover the PID.
+    """
+    return any(layer.get("namespace", "").startswith("bar-") for layer in layers)
+
+
+async def is_bar_alive(
+    pid: int,
+    backend: "EnvironmentBackend",
+    environment: str,
+) -> int | bool:
     """Check if the bar is running.
 
     Args:
         pid: The process ID
-        execute_json: The execute JSON function
+        backend: The environment backend
+        environment: Current environment ("hyprland" or "niri")
     """
+    # First check /proc - works for any spawned process
     is_running = os.path.exists(f"/proc/{pid}")
     if is_running:
-        print("found running", pid)
         return pid
-    layers = await execute_json("layers")
-    pid = get_pid_from_layers(layers)
-    if pid:
-        print("found layer", pid)
-        return pid
+
+    # Try to detect via layers query
+    if environment == "niri":
+        with contextlib.suppress(OSError, AssertionError, KeyError):
+            layers = await backend.execute_json("Layers")
+            if is_bar_in_layers_niri(layers):
+                # Bar exists but we lost PID tracking
+                # Return True to prevent respawn
+                return True
+    else:
+        # Hyprland
+        with contextlib.suppress(OSError, AssertionError, KeyError):
+            layers = await backend.execute_json("layers")
+            found_pid = get_pid_from_layers_hyprland(layers)
+            if found_pid:
+                return found_pid
+
     return False
 
 
 class Extension(Plugin):
     """Manage desktop bars application."""
 
-    environments = ["hyprland"]
+    environments = ["hyprland", "niri"]
 
     monitors: set[str]
     proc = None
@@ -72,7 +103,7 @@ class Extension(Plugin):
             pid = 0
             while True:
                 if pid:
-                    pid = await is_bar_alive(pid, self.backend.execute_json)
+                    pid = await is_bar_alive(pid, self.backend, self.state.environment)
                     if pid:
                         await asyncio.sleep(IDLE_LOOP_INTERVAL)
                         continue
@@ -119,8 +150,16 @@ class Extension(Plugin):
     async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
         preferred: list[str] = self.config.get("monitors", [])
-        monitors = [m for m in await self.backend.execute_json("monitors") if m.get("currentFormat") != "Invalid"]
-        names = [m["name"] for m in monitors]
+
+        if self.state.environment == "niri":
+            # Niri: outputs is a dict, enabled outputs have current_mode set
+            outputs = await self.backend.execute_json("outputs")
+            names = [name for name, data in outputs.items() if data.get("current_mode") is not None]
+        else:
+            # Hyprland
+            monitors = await self.backend.execute_json("monitors")
+            names = [m["name"] for m in monitors if m.get("currentFormat") != "Invalid"]
+
         for monitor in preferred:
             if monitor in names:
                 return monitor
@@ -141,6 +180,32 @@ class Extension(Plugin):
             if 0 <= new_idx < cur_idx:
                 self.kill()
                 await self.on_reload()
+
+    async def niri_outputschanged(self, _data: dict) -> None:
+        """Handle Niri output changes.
+
+        Args:
+            _data: Event data from Niri (unused)
+        """
+        if not self.cur_monitor:
+            return
+
+        preferred = self.config.get("monitors", [])
+        cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor in preferred else 999
+
+        # Check if a more preferred monitor appeared
+        try:
+            outputs = await self.backend.execute_json("outputs")
+            for name in outputs:
+                if name in preferred:
+                    new_idx = preferred.index(name)
+                    if 0 <= new_idx < cur_idx:
+                        # A more preferred monitor appeared
+                        self.kill()
+                        await self.on_reload()
+                        return
+        except Exception:  # pylint: disable=broad-exception-caught
+            self.log.exception("Error checking outputs")
 
     async def exit(self) -> None:
         """Kill the process."""
