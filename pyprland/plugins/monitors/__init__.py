@@ -266,7 +266,7 @@ class Extension(Plugin):
 
         for cmd in cmds:
             self.log.debug(cmd)
-            await self.hyprctl(cmd)
+            await self.hyprctl(cmd, base_command="keyword")
         return True
 
     async def _apply_niri_layout(
