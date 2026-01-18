@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, Mock
 
+import pytest
 import tomllib
 from pytest_asyncio import fixture
 
@@ -16,6 +17,23 @@ os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = "ABCD"
 
 CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
+# Error patterns to detect in stderr during tests
+ERROR_PATTERNS = [
+    "failed:",
+    "Error:",
+    "ERROR",
+    "Exception",
+    "Traceback",
+]
+
+# Patterns to ignore (false positives)
+ERROR_IGNORE_PATTERNS = [
+    "notify_error",  # Method name, not an actual error
+    "ConnectionResetError",  # Expected in some cleanup scenarios
+    "BrokenPipeError",  # Expected in some cleanup scenarios
+    "DeprecationWarning",  # Python deprecation warnings
+]
+
 
 def pytest_configure():
     """Runs once before all."""
@@ -23,6 +41,37 @@ def pytest_configure():
     from pyprland.common import init_logger
 
     init_logger("/dev/null", force_debug=True)
+
+
+def _contains_error(text: str) -> str | None:
+    """Check if text contains error patterns, returns the matching line or None."""
+    for line in text.split("\n"):
+        # Skip ignored patterns
+        if any(ignore in line for ignore in ERROR_IGNORE_PATTERNS):
+            continue
+        # Check for error patterns
+        for pattern in ERROR_PATTERNS:
+            if pattern in line:
+                return line.strip()
+    return None
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Check captured stderr for error patterns after each test."""
+    outcome = yield
+    report = outcome.get_result()
+
+    # Only check after the test call phase (not setup/teardown)
+    if call.when == "call" and report.passed:
+        # Check captured output sections
+        for section_name, content in report.sections:
+            if "stderr" in section_name.lower() or "captured" in section_name.lower():
+                error_line = _contains_error(content)
+                if error_line:
+                    report.outcome = "failed"
+                    report.longrepr = f"Error detected in captured output:\n{error_line}"
+                    return
 
 
 # Mocks
