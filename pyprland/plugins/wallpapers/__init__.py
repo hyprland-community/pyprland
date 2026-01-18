@@ -268,6 +268,9 @@ class Extension(Plugin):
         elif arg.startswith("cl"):  # clear
             self._paused = True
             await self.terminate()
+            if not self.config.get("command"):
+                proc = await asyncio.create_subprocess_shell("pkill hyprpaper")
+                await proc.wait()
             clear_command = self.config.get("clear_command")
             if clear_command:
                 proc = await asyncio.create_subprocess_shell(clear_command)
