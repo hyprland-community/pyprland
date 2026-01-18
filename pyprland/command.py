@@ -298,6 +298,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         except Exception as e:  # pylint: disable=W0718
             self.log.exception("%s::%s(%s) failed:", plugin.name, full_name, params)
             await self.backend.notify_error(f"Pypr error {plugin.name}::{full_name}: {e}")
+            if os.environ.get("PYPRLAND_STRICT_ERRORS"):
+                raise
 
     @remove_duplicate(names=["event_activewindow", "event_activewindowv2"])
     async def _call_handler(self, full_name: str, *params: str, notify: str = "") -> bool:
@@ -449,6 +451,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 self.log.exception("Timeout running plugin %s::%s", name, task)
             except Exception:  # pylint: disable=W0718
                 self.log.exception("Unhandled error running plugin %s::%s", name, task)
+                if os.environ.get("PYPRLAND_STRICT_ERRORS"):
+                    raise
             if is_pyprland and q.empty():
                 self.pyprland_mutex_event.set()
 

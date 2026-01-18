@@ -24,4 +24,9 @@ plugins = ["pypr_examples.focus_counter"]
 @pytest.mark.asyncio
 async def test_ext_plugin():
     await tst.pypr("dummy")
-    assert tst.hyprctl.call_count == 0, "No error notification should be emitted"
+    await tst.wait_queues()
+    # The plugin should successfully call notify_info, which invokes hyprctl
+    assert tst.hyprctl.call_count == 1, "notify_info should be called once"
+    # Check that the notification was an info notification (not an error)
+    call_args = tst.hyprctl.call_args[0][0]
+    assert "Focus changed" in call_args, "Should contain focus change message"

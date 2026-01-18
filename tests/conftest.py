@@ -19,6 +19,7 @@ CONFIG_1 = tomllib.load(open("tests/sample_config.toml", "rb"))
 
 def pytest_configure():
     """Runs once before all."""
+    os.environ["PYPRLAND_STRICT_ERRORS"] = "1"
     from pyprland.common import init_logger
 
     init_logger("/dev/null", force_debug=True)
@@ -47,6 +48,23 @@ class GlobalMocks:
         assert self.pyprctrl
         await self.pyprctrl[0].q.put(b"%s\n" % cmd.encode("utf-8"))
         await self._pypr_command_reader(*self.pyprctrl)
+
+    async def wait_queues(self):
+        """Wait for all plugin queues to be empty.
+
+        This ensures background tasks have finished processing.
+        """
+        from pyprland.command import Pyprland
+
+        if Pyprland.instance is None:
+            return
+        for _ in range(100):  # max 10 seconds
+            all_empty = all(q.empty() for q in Pyprland.instance.queues.values())
+            if all_empty:
+                # Give one more tick for any pending task to complete
+                await asyncio.sleep(0.01)
+                return
+            await asyncio.sleep(0.1)
 
     async def send_event(self, cmd):
         """Simulates receiving a Hyprland event."""

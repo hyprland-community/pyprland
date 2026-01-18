@@ -1,7 +1,6 @@
 """Sample plugin
 Exposes a "dummy" command: `pypr dummy` showing a notification
-- listen to `æctivewindowv2` Hyprland event to count focus changes
-- uses `color` configuration item with a default value.
+- listen to `activewindowv2` Hyprland event to count focus changes
 """
 
 from pyprland.plugins.interface import Plugin
@@ -17,10 +16,8 @@ class Extension(Plugin):
         # The doc string above is used in `pypr help`
 
         monitor_list = await self.hyprctl_json("monitors")
-        color = self.config.get("color", "3333BB")
         await self.notify_info(
             f"Focus changed {self.focus_changes} times on {len(monitor_list)} monitor(s)",
-            color=color,
         )
 
     async def event_activewindowv2(self, _addr) -> None:

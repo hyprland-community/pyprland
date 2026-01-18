@@ -130,8 +130,11 @@ async def test_run_plugin_handler_success(pyprland_app):
 
 
 @pytest.mark.asyncio
-async def test_run_plugin_handler_exception(pyprland_app):
+async def test_run_plugin_handler_exception(pyprland_app, monkeypatch):
     """Test that plugin exceptions are caught and logged."""
+    # Disable strict mode for this test - we're testing the resilient behavior
+    monkeypatch.delenv("PYPRLAND_STRICT_ERRORS", raising=False)
+
     mock_plugin = Mock()
     mock_plugin.name = "test_plugin"
     mock_plugin.test_method = AsyncMock(side_effect=Exception("Boom"))
