@@ -4,6 +4,8 @@ commands:
     description: Restart/refresh Menu Bar on the "best" monitor.
   - name: bar stop
     description: Stop the Menu Bar process
+  - name: bar toggle
+    description: Toggle the Menu Bar visibility (stop if running, start if stopped)
 ---
 
 # menubar

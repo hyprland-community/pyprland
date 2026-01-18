@@ -58,8 +58,8 @@ _shtab_pypr_attract_lost_defaults_added=0
 
 _shtab_pypr_bar_options=(
     "(- : *)"{-h,--help}"[show this help message and exit]"
-    ":Starts gBar on the first available monitor:(restart stop)"
-    ":Starts gBar on the first available monitor:(restart stop)"
+    ":Starts gBar on the first available monitor:(restart stop toggle)"
+    ":Starts gBar on the first available monitor:(restart stop toggle)"
 )
 
 # guard to ensure default positional specs are added only once per session

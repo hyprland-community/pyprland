@@ -130,12 +130,23 @@ class Extension(Plugin):
 
         self.ongoing_task = asyncio.create_task(_run_loop())
 
+    def is_running(self) -> bool:
+        """Check if the bar is currently running."""
+        return self.proc is not None and self.ongoing_task is not None
+
     async def run_bar(self, args: str) -> None:
-        """<restart|stop> Start (default), restart or stop gBar.
+        """<restart|stop|toggle> Start (default), restart, stop or toggle gBar.
 
         Args:
             args: The command arguments
         """
+        if args.startswith("toggle"):
+            if self.is_running():
+                self.kill()
+            else:
+                await self.on_reload()
+            return
+
         self.kill()
         if not args.startswith("stop"):
             await self.on_reload()
