@@ -30,6 +30,10 @@ except ImportError:
             """Read lines."""
             return self.file.readlines()
 
+        async def read(self) -> str:
+            """Read lines."""
+            return self.file.read()
+
         async def __aenter__(self):
             return self
 
