@@ -108,7 +108,7 @@ class TestManagedProcess:
     async def test_iter_lines(self):
         """Test iterating over stdout lines."""
         proc = ManagedProcess()
-        await proc.start("echo -e 'line1\nline2\nline3'", stdout=asyncio.subprocess.PIPE)
+        await proc.start("printf 'line1\nline2\nline3\n'", stdout=asyncio.subprocess.PIPE)
 
         lines = [line async for line in proc.iter_lines()]
         assert lines == ["line1", "line2", "line3"]
