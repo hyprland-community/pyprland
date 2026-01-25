@@ -1,12 +1,13 @@
-import asyncio
 from typing import cast
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import tomllib
 
 from .conftest import mocks as tst
 from .testtools import wait_called
+
+from pyprland.manager import Pyprland
 
 
 @pytest.mark.usefixtures("sample1_config", "server_fixture")
@@ -20,9 +21,7 @@ plugins = ["monitors"]
 startup_relayout = true
 placement = {}
 """
-    from pyprland.command import Pyprland
-
-    master = cast(Pyprland, Pyprland.instance)
+    master = cast(Pyprland, tst.pyprland_instance)
     cfg = master.plugins["monitors"].config
 
     placement = cfg["placement"]
@@ -30,12 +29,15 @@ placement = {}
 
     load_proxy = Mock(wraps=lambda x: tomllib.loads(config))
 
+    # Wrap the plugin's load_config to detect when config is updated
+    original_load_config = master.plugins["monitors"].load_config
+    load_config_proxy = AsyncMock(wraps=original_load_config)
+    master.plugins["monitors"].load_config = load_config_proxy
+
     monkeypatch.setattr("tomllib.load", load_proxy)
     await tst.pypr("reload")
 
-    await wait_called(load_proxy)
-    # FIXME: find a method call to wait
-    await asyncio.sleep(0.1)
+    await wait_called(load_config_proxy)
 
     assert placement is cfg["placement"]
     assert bool_opt != cfg["startup_relayout"]

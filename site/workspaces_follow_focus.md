@@ -1,7 +1,4 @@
 ---
-commands:
-    - name: change_workspace [direction]
-      description: Changes the workspace of the focused monitor in the given direction.
 ---
 
 # workspaces_follow_focus
@@ -21,12 +18,11 @@ bind = $mainMod, K, exec, pypr change_workspace +1
 bind = $mainMod, J, exec, pypr change_workspace -1
  ```
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="workspaces_follow_focus" />
 
 ## Configuration
 
-### `max_workspaces`
+<PluginConfig plugin="workspaces_follow_focus" linkPrefix="config-" />
 
-Limits the number of workspaces when switching, defaults value is `10`.

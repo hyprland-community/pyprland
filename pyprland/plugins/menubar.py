@@ -7,10 +7,12 @@ from time import time
 from typing import TYPE_CHECKING, cast
 
 from ..common import apply_variables
+from ..process import ManagedProcess
+from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 if TYPE_CHECKING:
-    from ..adapters.backend import EnvironmentBackend
+    from ..adapters.proxy import BackendProxy
 
 COOLDOWN_TIME = 60
 IDLE_LOOP_INTERVAL = 10
@@ -21,12 +23,16 @@ def get_pid_from_layers_hyprland(layers: dict) -> bool | int:
 
     Args:
         layers: The layers dictionary from hyprctl
+
+    Returns:
+        PID if bar found with valid PID, False otherwise
     """
     for screen in layers:
         for layer in layers[screen]["levels"].values():
             for instance in layer:
                 if instance["namespace"].startswith("bar-"):
-                    return instance["pid"] > 0 and cast("int", instance["pid"])
+                    pid = instance.get("pid", 0)
+                    return pid if pid > 0 else False
     return False
 
 
@@ -44,7 +50,7 @@ def is_bar_in_layers_niri(layers: list) -> bool:
 
 async def is_bar_alive(
     pid: int,
-    backend: "EnvironmentBackend",
+    backend: "BackendProxy",
     environment: str,
 ) -> int | bool:
     """Check if the bar is running.
@@ -79,19 +85,30 @@ async def is_bar_alive(
 
 
 class Extension(Plugin):
-    """Manage desktop bars application."""
+    """Improves multi-monitor handling of the status bar and restarts it on crashes."""
 
     environments = ["hyprland", "niri"]
 
+    config_schema = ConfigItems(
+        ConfigField(
+            "command",
+            str,
+            default="uwsm app -- ashell",
+            description="Command to run the bar (supports [monitor] variable)",
+            required=True,
+        ),
+        ConfigField("monitors", list, default=[], description="Preferred monitors list in order of priority"),
+    )
+
     monitors: set[str]
-    proc = None
+    proc: ManagedProcess | None = None
     cur_monitor: str | None = ""
 
     ongoing_task: asyncio.Task | None = None
 
     async def on_reload(self) -> None:
         """Start the process."""
-        self.kill()
+        await self.stop()
         self._run_program()
 
     def _run_program(self) -> None:
@@ -100,22 +117,24 @@ class Extension(Plugin):
             self.ongoing_task.cancel()
 
         async def _run_loop() -> None:
-            pid = 0
+            pid: int | bool = 0
             while True:
                 if pid:
-                    pid = await is_bar_alive(pid, self.backend, self.state.environment)
+                    pid = await is_bar_alive(pid if isinstance(pid, int) else 0, self.backend, self.state.environment)
                     if pid:
                         await asyncio.sleep(IDLE_LOOP_INTERVAL)
                         continue
 
                 await self.set_best_monitor()
+                command = self.get_config_str("command")
                 cmd = apply_variables(
-                    self.config.get("command", "gBar bar [monitor]"),
+                    command,
                     {"monitor": self.cur_monitor if self.cur_monitor else ""},
                 )
                 start_time = time()
-                self.proc = await asyncio.create_subprocess_shell(cmd)
-                pid = self.proc.pid
+                self.proc = ManagedProcess()
+                await self.proc.start(cmd)
+                pid = self.proc.pid or 0
                 await self.proc.wait()
 
                 now = time()
@@ -125,7 +144,7 @@ class Extension(Plugin):
                 text = f"Menu Bar crashed, restarting in {delay}s." if delay > 0 else "Menu Bar crashed, restarting immediately."
                 self.log.warning(text)
                 if delay:
-                    await self.notify_info(text)
+                    await self.backend.notify_info(text)
                 await asyncio.sleep(delay or 0.1)
 
         self.ongoing_task = asyncio.create_task(_run_loop())
@@ -135,19 +154,19 @@ class Extension(Plugin):
         return self.proc is not None and self.ongoing_task is not None
 
     async def run_bar(self, args: str) -> None:
-        """<restart|stop|toggle> Start (default), restart, stop or toggle gBar.
+        """<restart|stop|toggle> Start (default), restart, stop or toggle the menu bar.
 
         Args:
             args: The command arguments
         """
         if args.startswith("toggle"):
             if self.is_running():
-                self.kill()
+                await self.stop()
             else:
                 await self.on_reload()
             return
 
-        self.kill()
+        await self.stop()
         if not args.startswith("stop"):
             await self.on_reload()
 
@@ -155,12 +174,15 @@ class Extension(Plugin):
         """Set the best monitor to use in `cur_monitor`."""
         self.cur_monitor = await self.get_best_monitor()
         if not self.cur_monitor:
-            self.cur_monitor = next(iter(self.state.monitors))
-            await self.notify_info(f"gBar: No preferred monitor found, using {self.cur_monitor}")
+            if not self.state.active_monitors:
+                self.log.error("No monitors available for bar")
+                return
+            self.cur_monitor = self.state.active_monitors[0]
+            await self.backend.notify_info(f"menubar: No preferred monitor found, using {self.cur_monitor}")
 
     async def get_best_monitor(self) -> str:
         """Get best monitor according to preferred list."""
-        preferred: list[str] = self.config.get("monitors", [])
+        preferred_monitors = self.get_config_list("monitors")
 
         if self.state.environment == "niri":
             # Niri: outputs is a dict, enabled outputs have current_mode set
@@ -168,12 +190,12 @@ class Extension(Plugin):
             names = [name for name, data in outputs.items() if data.get("current_mode") is not None]
         else:
             # Hyprland
-            monitors = await self.backend.execute_json("monitors")
+            monitors = await self.backend.get_monitors()
             names = [m["name"] for m in monitors if m.get("currentFormat") != "Invalid"]
 
-        for monitor in preferred:
+        for monitor in preferred_monitors:
             if monitor in names:
-                return monitor
+                return cast("str", monitor)
         return ""
 
     async def event_monitoradded(self, monitor: str) -> None:
@@ -183,13 +205,13 @@ class Extension(Plugin):
             monitor: The monitor name
         """
         if self.cur_monitor:
-            preferred = self.config.get("monitors", [])
+            preferred = self.get_config_list("monitors")
             cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor else 999
             if monitor not in preferred:
                 return
             new_idx = preferred.index(monitor)
             if 0 <= new_idx < cur_idx:
-                self.kill()
+                await self.stop()
                 await self.on_reload()
 
     async def niri_outputschanged(self, _data: dict) -> None:
@@ -201,7 +223,7 @@ class Extension(Plugin):
         if not self.cur_monitor:
             return
 
-        preferred = self.config.get("monitors", [])
+        preferred = self.get_config_list("monitors")
         cur_idx = preferred.index(self.cur_monitor) if self.cur_monitor in preferred else 999
 
         # Check if a more preferred monitor appeared
@@ -212,22 +234,23 @@ class Extension(Plugin):
                     new_idx = preferred.index(name)
                     if 0 <= new_idx < cur_idx:
                         # A more preferred monitor appeared
-                        self.kill()
+                        await self.stop()
                         await self.on_reload()
                         return
-        except Exception:  # pylint: disable=broad-exception-caught
-            self.log.exception("Error checking outputs")
+        except (OSError, RuntimeError) as e:
+            self.log.warning("Error checking outputs: %s", e)
 
     async def exit(self) -> None:
-        """Kill the process."""
-        self.kill()
+        """Stop the process."""
+        await self.stop()
 
-    def kill(self) -> None:
-        """Kill the process."""
+    async def stop(self) -> None:
+        """Stop the process and supervision task."""
+        if self.ongoing_task:
+            self.ongoing_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.ongoing_task
+            self.ongoing_task = None
         if self.proc:
-            if self.ongoing_task:
-                self.ongoing_task.cancel()
-                self.ongoing_task = None
-            with contextlib.suppress(ProcessLookupError):
-                self.proc.kill()
+            await self.proc.stop()
             self.proc = None

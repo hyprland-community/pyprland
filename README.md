@@ -2,28 +2,21 @@
 
 [![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
 [![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.com/channels/1458202721294356522/1458202722892386519)
+[![Documentation](https://img.shields.io/badge/Documentation-Read%20Now-brightgreen?style=for-the-badge)](https://hyprland-community.github.io/pyprland)
 
-[Documentation](https://hyprland-community.github.io/pyprland) • [Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
+[Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
-## Enhance your desktop experience with Pyprland
+## Power up your desktop
 
-Welcome to Pyprland, your gateway to extending the capabilities of your desktop environment (Hyprland, Niri, ...).
-Pyprland offers a plethora of plugins designed for simplicity and efficiency,
-allowing you to supercharge your productivity and customize your user experience.
+A plugin system that extends your tiling compositor with features like scratchpads, screen magnification, window menus, and more.
 
-You can think of it as a *Gnome tweak tool* but for Tiling Window Managers (involves editing text files).
-With a "100%" plugin-based architecture, Pyprland is designed to be lightweight and easy to use.
-
-Note that usage of Python and architecture of the software encourages using many plugins
-with little impact on the footprint and performance.
+Think of it as a *Gnome tweak tool* for tiling window managers. With a fully plugin-based architecture, it's lightweight and easy to customize.
 
 Contributions, suggestions, bug reports and comments are welcome.
 
 - Explore our variety of [plugins](https://hyprland-community.github.io/pyprland/Plugins.html)
-  to tailor your Hyprland setup to your liking.
-- New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide.
-
-You may also want to browse or install [my dotfiles](https://github.com/fdev31/dotfiles) for some working examples.
+- New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide
+- Browse [my dotfiles](https://github.com/fdev31/dotfiles) for working examples
 
 # Recent changes
 
@@ -32,7 +25,7 @@ You may also want to browse or install [my dotfiles](https://github.com/fdev31/d
 
 <details>
 <summary>
-About Pyprland (latest stable is: <b>2.4.3</b>)
+About Pyprland (latest stable is: <b>2.6.2</b>)
 </summary>
 
 [![Packaging Status](https://repology.org/badge/vertical-allrepos/pyprland.svg)](https://repology.org/project/pyprland/versions)

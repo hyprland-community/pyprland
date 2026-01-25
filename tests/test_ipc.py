@@ -1,10 +1,21 @@
 import asyncio
 import json
+import logging
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland import ipc
 from pyprland.models import PyprError
 from pyprland.adapters.hyprland import HyprlandBackend
+
+
+@pytest.fixture
+def test_log():
+    """Provide a silent logger for tests."""
+    logger = logging.getLogger("test_ipc")
+    logger.handlers.clear()
+    logger.addHandler(logging.NullHandler())
+    logger.propagate = False
+    return logger
 
 
 @pytest.fixture
@@ -58,35 +69,35 @@ async def test_get_response(mock_open_connection):
 
 
 @pytest.mark.asyncio
-async def test_hyprland_backend_execute_success(mock_open_connection):
+async def test_hyprland_backend_execute_success(mock_open_connection, test_log):
     mock_connect, reader, writer = mock_open_connection
     reader.read.return_value = b"ok"
 
     state = Mock()
     backend = HyprlandBackend(state)
 
-    result = await backend.execute("some_command")
+    result = await backend.execute("some_command", log=test_log)
 
     assert result is True
     writer.write.assert_called_with(b"/dispatch some_command")
 
 
 @pytest.mark.asyncio
-async def test_hyprland_backend_execute_failure(mock_open_connection):
+async def test_hyprland_backend_execute_failure(mock_open_connection, test_log):
     mock_connect, reader, writer = mock_open_connection
     reader.read.return_value = b"err"
 
     state = Mock()
     backend = HyprlandBackend(state)
 
-    result = await backend.execute("some_command")
+    result = await backend.execute("some_command", log=test_log)
 
     assert result is False
     # Check if logged error? Need to spy on logger or check side effects if implemented
 
 
 @pytest.mark.asyncio
-async def test_hyprland_backend_execute_batch(mock_open_connection):
+async def test_hyprland_backend_execute_batch(mock_open_connection, test_log):
     mock_connect, reader, writer = mock_open_connection
     reader.read.return_value = b"okok"
 
@@ -94,7 +105,7 @@ async def test_hyprland_backend_execute_batch(mock_open_connection):
     backend = HyprlandBackend(state)
 
     cmds = ["cmd1", "cmd2"]
-    result = await backend.execute(cmds)
+    result = await backend.execute(cmds, log=test_log)
 
     assert result is True
     # Verify the batch format string
@@ -105,7 +116,7 @@ async def test_hyprland_backend_execute_batch(mock_open_connection):
 
 
 @pytest.mark.asyncio
-async def test_backend_get_client_props(mock_open_connection):
+async def test_backend_get_client_props(mock_open_connection, test_log):
     # Mock execute_json on the backend instead of ipc.hyprctl_json
     state = Mock()
     backend = HyprlandBackend(state)
@@ -116,13 +127,13 @@ async def test_backend_get_client_props(mock_open_connection):
     backend.execute_json = AsyncMock(return_value=clients)
 
     # By address
-    client = await backend.get_client_props(addr="0x123")
+    client = await backend.get_client_props(addr="0x123", log=test_log)
     assert client == clients[0]
 
     # By class
-    client = await backend.get_client_props(cls="Browser")
+    client = await backend.get_client_props(cls="Browser", log=test_log)
     assert client == clients[1]
 
     # By custom prop
-    client = await backend.get_client_props(title="Something")  # Not found
+    client = await backend.get_client_props(title="Something", log=test_log)  # Not found
     assert client is None

@@ -12,8 +12,8 @@ for fname in ${FILENAMES[@]}; do
 done
 
 # recursively install the ~/config/hypr/pyprland.d folder into $name/hypr/pyprland.d
-cp -r ~/.config/hypr/pyprland.d $name/hypr/
+# cp -r ~/.config/hypr/pyprland.d $name/hypr/
 
-for fname in "config" "style.scss" ; do
-    install -T ~/.config/gBar/$fname $name/hypr/gBar/$fname
-done
+# for fname in "config" "style.scss" ; do
+#     install -T ~/.config/gBar/$fname $name/hypr/gBar/$fname
+# done

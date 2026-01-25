@@ -1,0 +1,311 @@
+{
+  "name": "scratchpads",
+  "description": "Makes your applications into dropdowns & togglable popups.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "attach",
+      "signature": "attach",
+      "short_description": "Attach the focused window to the last focused scratchpad.",
+      "full_description": "Attach the focused window to the last focused scratchpad."
+    },
+    {
+      "name": "hide",
+      "signature": "hide <name>",
+      "short_description": "hides scratchpad \"name\" (accepts \"*\").",
+      "full_description": "<name> hides scratchpad \"name\" (accepts \"*\").\n\nArgs:\n    uid: The scratchpad name\n    flavor: The hide flavor"
+    },
+    {
+      "name": "show",
+      "signature": "show <name>",
+      "short_description": "shows scratchpad \"name\" (accepts \"*\").",
+      "full_description": "<name> shows scratchpad \"name\" (accepts \"*\").\n\nArgs:\n    uid: The scratchpad name"
+    },
+    {
+      "name": "toggle",
+      "signature": "toggle <name>",
+      "short_description": "toggles visibility of scratchpad \"name\" (supports multiple names).",
+      "full_description": "<name> toggles visibility of scratchpad \"name\" (supports multiple names).\n\nArgs:\n    uid_or_uids: The scratchpad name(s)"
+    }
+  ],
+  "config": [
+    {
+      "name": "[scratchpad].command",
+      "type": "str",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run (omit for unmanaged scratchpads)",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].class",
+      "type": "str",
+      "required": false,
+      "recommended": true,
+      "default": "",
+      "description": "Window class for matching",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].animation",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "fromTop",
+      "description": "Animation type",
+      "choices": [
+        "",
+        "fromTop",
+        "fromBottom",
+        "fromLeft",
+        "fromRight"
+      ]
+    },
+    {
+      "name": "[scratchpad].size",
+      "type": "str",
+      "required": false,
+      "recommended": true,
+      "default": "80% 80%",
+      "description": "Window size (e.g. '80% 80%')",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].position",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Explicit position override",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].margin",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 60,
+      "description": "Pixels from screen edge",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].offset",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Hide animation distance",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].max_size",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Maximum window size",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].lazy",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Start on first use",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].pinned",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Sticky to monitor",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].multi",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Allow multiple windows",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].unfocus",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Action on unfocus ('hide' or empty)",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].hysteresis",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 0.4,
+      "description": "Delay before unfocus hide",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].excludes",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Scratches to hide when shown",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].restore_excluded",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Restore excluded on hide",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].preserve_aspect",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Keep size/position across shows",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].hide_delay",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 0.0,
+      "description": "Delay before hide animation",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].force_monitor",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Always show on specific monitor",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].alt_toggle",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Alternative toggle for multi-monitor",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].allow_special_workspace",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Allow over special workspaces",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].smart_focus",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Restore focus on hide",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].close_on_hide",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Close instead of hide",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].match_by",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "pid",
+      "description": "Match method: pid, class, initialClass, title, initialTitle",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].initialClass",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='initialClass'",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].initialTitle",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='initialTitle'",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].title",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='title'",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].process_tracking",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Enable process management",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].skip_windowrules",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Rules to skip: aspect, float, workspace",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].use",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Inherit from another scratchpad definition",
+      "choices": null
+    },
+    {
+      "name": "[scratchpad].monitor",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "Per-monitor config overrides",
+      "choices": null
+    }
+  ]
+}

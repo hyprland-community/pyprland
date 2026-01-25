@@ -1,23 +1,28 @@
 """Shift workspaces across monitors."""
 
-from typing import cast
-
+from ..validation import ConfigItems
 from .interface import Plugin
+from .mixins import MonitorTrackingMixin
+
+MIN_MONITORS_FOR_SHIFT = 2  # Need at least 2 monitors to shift workspaces
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring
-    """Shift workspaces across monitors."""
+class Extension(MonitorTrackingMixin, Plugin):
+    """Moves workspaces from monitor to monitor (carousel)."""
 
     environments = ["hyprland"]
 
-    monitors: list[str] = []
+    config_schema = ConfigItems()
+
+    monitors: list[str]
 
     async def init(self) -> None:
         """Initialize the plugin."""
+        self.monitors = []
         if self.state.environment == "niri":
             await self.niri_outputschanged({})
         else:
-            self.monitors: list[str] = [mon["name"] for mon in cast("list[dict]", await self.backend.execute_json("monitors"))]
+            self.monitors = [mon["name"] for mon in await self.backend.get_monitors()]
 
     async def niri_outputschanged(self, _data: dict) -> None:
         """Track monitors on Niri.
@@ -28,8 +33,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         try:
             outputs = await self.backend.execute_json("outputs")
             self.monitors = list(outputs.keys())
-        except Exception:  # pylint: disable=broad-exception-caught
-            self.log.exception("Failed to update monitors from Niri event")
+        except (OSError, RuntimeError) as e:
+            self.log.warning("Failed to update monitors from Niri event: %s", e)
 
     async def run_shift_monitors(self, arg: str) -> None:
         """<direction> Swaps monitors' workspaces in the given direction.
@@ -84,7 +89,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         # We need to swap safely.
 
         n = len(self.monitors)
-        if n < 2:
+        if n < MIN_MONITORS_FOR_SHIFT:
             return
 
         if direction > 0:
@@ -116,22 +121,3 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         else:
             for i in range(n - 1):
                 await self.backend.execute(f"swapactiveworkspaces {self.monitors[i]} {self.monitors[i + 1]}")
-
-    async def event_monitoradded(self, monitor: str) -> None:
-        """Keep track of monitors.
-
-        Args:
-            monitor: The monitor name
-        """
-        self.monitors.append(monitor)
-
-    async def event_monitorremoved(self, monitor: str) -> None:
-        """Keep track of monitors.
-
-        Args:
-            monitor: The monitor name
-        """
-        try:
-            self.monitors.remove(monitor)
-        except ValueError:
-            self.log.warning("Monitor %s not found in state - can't be removed", monitor)

@@ -2,11 +2,15 @@
 
 Menu based plugins have the following configuration options:
 
-### `engine`
+<PluginConfig plugin="menu" linkPrefix="config-" />
 
-Not set by default, will autodetect the available menu engine.
+### `engine` {#config-engine}
 
-Supported engines (will be tested in order):
+<ConfigDefault plugin="menu" option="engine" />
+
+Auto-detects the available menu engine if not set.
+
+Supported engines (tested in order):
 
 - fuzzel
 - tofi
@@ -22,17 +26,18 @@ Supported engines (will be tested in order):
 >
 > In case the engine isn't recognized, `engine` + `parameters` configuration options will be used to start the process, it requires a dmenu-like behavior.
 
-### `parameters`
+### `parameters` {#config-parameters}
 
-Extra parameters added to the engine command, the default value is specific to each engine.
+<ConfigDefault plugin="menu" option="parameters" />
 
-> [!important]
-> Setting this will override the default value!
->
-> In general, *rofi*-like programs will require at least `-dmenu` option.
+Extra parameters added to the engine command. Setting this will override the engine's default value.
 
 > [!tip]
-> You can use '[prompt]' in the parameters, it will be replaced by the prompt, eg:
+> You can use `[prompt]` in the parameters, it will be replaced by the prompt, eg for rofi/wofi:
 > ```sh
 > -dmenu -matching fuzzy -i -p '[prompt]'
 > ```
+
+#### Default parameters per engine
+
+<EngineDefaults />

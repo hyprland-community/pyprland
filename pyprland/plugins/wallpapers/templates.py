@@ -141,5 +141,5 @@ class TemplateEngine:
                 self.log.info("Running post_hook for %s: %s", name, post_hook)
                 await asyncio.create_subprocess_shell(post_hook)
 
-        except Exception:  # pylint: disable=broad-exception-caught
+        except OSError:
             self.log.exception("Error processing template %s", name)

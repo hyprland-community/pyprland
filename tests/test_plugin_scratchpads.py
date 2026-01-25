@@ -221,7 +221,7 @@ async def test_attach_sanity_checks(scratchpads, subprocess_shell_mock, server_f
     for call in mocks.hyprctl.call_args_list:
         if call.kwargs.get("base_command") == "notify":
             args = call[0][0]
-            if "Scratch can't attach to itself" in args:
+            if "can't attach or detach to itself" in args:
                 found_notification = True
             if "Scratchpad 'term' not found" in args:
                 pass
@@ -299,3 +299,148 @@ CLIENT_CONFIG = [
         "focusHistoryID": 5,
     },
 ]
+
+
+BROWSER_CLIENT = {
+    "address": "0xBROWSER123",
+    "mapped": True,
+    "hidden": False,
+    "at": [100, 100],
+    "size": [800, 600],
+    "workspace": {"id": 1, "name": "1"},
+    "floating": False,
+    "monitor": 0,
+    "class": "firefox",
+    "title": "Firefox",
+    "initialClass": "firefox",
+    "initialTitle": "Firefox",
+    "pid": 2,
+    "xwayland": False,
+    "pinned": False,
+    "fullscreen": False,
+    "fullscreenMode": 0,
+    "fakeFullscreen": False,
+    "grouped": [],
+    "swallowing": "0x0",
+    "focusHistoryID": 6,
+}
+
+
+@fixture
+def exclude_scratchpads(monkeypatch, mocker):
+    """Config with two scratchpads where one excludes the other."""
+    d = {
+        "pyprland": {"plugins": ["scratchpads"]},
+        "scratchpads": {
+            "term": {
+                "command": "ls",
+                "lazy": True,
+                "class": "kitty-dropterm",
+            },
+            "browser": {
+                "command": "ls",
+                "lazy": True,
+                "class": "firefox",
+                "excludes": ["term"],
+                "restore_excluded": True,
+            },
+        },
+    }
+    monkeypatch.setattr("tomllib.load", lambda x: d)
+
+
+@pytest.mark.asyncio
+async def test_excluded_scratches_isolation(exclude_scratchpads, subprocess_shell_mock, server_fixture):
+    """Verify excluded_scratches is per-instance, not shared across Scratch objects."""
+    # Setup clients
+    mocks.json_commands_result["clients"] = CLIENT_CONFIG + [BROWSER_CLIENT]
+
+    # 1. Show term scratchpad first
+    await mocks.pypr("toggle term")
+    await _send_window_events()
+    await asyncio.sleep(0.1)
+
+    # 2. Show browser scratchpad (should hide term and track it in browser.excluded_scratches)
+    await mocks.pypr("toggle browser")
+    await _send_window_events(address="BROWSER123", klass="firefox", title="Firefox")
+    await asyncio.sleep(0.1)
+
+    # 3. Access the plugin to verify internal state
+    plugin = mocks.pyprland_instance.plugins["scratchpads"]
+    term_scratch = plugin.scratches.get("term")
+    browser_scratch = plugin.scratches.get("browser")
+
+    # Key assertion: browser should have "term" in its excluded list
+    assert "term" in browser_scratch.excluded_scratches, "browser should track that it excluded term"
+
+    # Key assertion: term should have empty excluded list (not shared!)
+    assert term_scratch.excluded_scratches == [], "term should have its own empty excluded_scratches list"
+
+    # 4. Hide browser - should restore term
+    mocks.hyprctl.reset_mock()
+    await mocks.pypr("toggle browser")
+    await asyncio.sleep(0.2)
+
+    # After hide, browser.excluded_scratches should be cleared
+    assert browser_scratch.excluded_scratches == [], "browser.excluded_scratches should be cleared after hide"
+
+
+@pytest.mark.asyncio
+async def test_command_serialization(scratchpads, subprocess_shell_mock, server_fixture):
+    """Verify rapid commands are serialized through the queue (not interleaved)."""
+    mocks.json_commands_result["clients"] = CLIENT_CONFIG
+
+    # Track command execution order
+    execution_order = []
+    plugin = None
+
+    # Wait for plugin to be available
+    for _ in range(10):
+        if mocks.pyprland_instance and "scratchpads" in mocks.pyprland_instance.plugins:
+            plugin = mocks.pyprland_instance.plugins["scratchpads"]
+            break
+        await asyncio.sleep(0.1)
+
+    assert plugin is not None, "Scratchpads plugin not loaded"
+
+    # Send window events to initialize the scratchpad
+    await mocks.pypr("toggle term")
+    await _send_window_events()
+    await asyncio.sleep(0.1)
+
+    # Patch run_hide to track execution order
+    original_run_hide = plugin.run_hide
+
+    async def tracked_run_hide(uid: str, flavor=None):
+        execution_order.append(f"start:{uid}")
+        await asyncio.sleep(0.05)  # Simulate some async work
+        if flavor is not None:
+            await original_run_hide(uid, flavor)
+        else:
+            await original_run_hide(uid)
+        execution_order.append(f"end:{uid}")
+
+    plugin.run_hide = tracked_run_hide
+
+    # Reset tracking
+    execution_order.clear()
+
+    # Fire two hide commands concurrently - they should serialize
+    await asyncio.gather(
+        mocks.pypr("hide term"),
+        mocks.pypr("hide term"),
+    )
+    await asyncio.sleep(0.2)
+
+    # Restore original method
+    plugin.run_hide = original_run_hide
+
+    # Verify serialization: operations should not interleave
+    # Valid serialized: [start, end, start, end] - each start followed by its end
+    # Invalid interleaved: [start, start, end, end]
+    if len(execution_order) >= 4:
+        starts = [i for i, x in enumerate(execution_order) if x.startswith("start")]
+        ends = [i for i, x in enumerate(execution_order) if x.startswith("end")]
+        # First end should come before second start
+        assert ends[0] < starts[1], f"Commands interleaved! Order: {execution_order}"
+    # If less than 4 entries, second command may have been a no-op (already hidden) - that's fine

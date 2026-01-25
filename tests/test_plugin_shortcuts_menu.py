@@ -1,11 +1,12 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock
 from pyprland.plugins.shortcuts_menu import Extension
-from pyprland.common import Configuration, SharedState
+from pyprland.config import Configuration
+from pyprland.common import SharedState
 
 
 @pytest.fixture
-def extension():
+def extension(test_logger):
     ext = Extension("shortcuts_menu")
     ext.state = SharedState()
     ext.config = Configuration(
@@ -16,7 +17,9 @@ def extension():
                 "Simple": "echo hello",
             },
             "skip_single": True,
-        }
+        },
+        logger=test_logger,
+        schema=ext.config_schema,  # Apply schema for default value lookups
     )
     ext.menu = AsyncMock()
     # Explicitly set configured to avoid real menu initialization
@@ -71,7 +74,11 @@ async def test_run_menu_cancellation(extension):
 @pytest.mark.asyncio
 async def test_run_menu_with_skip_single(extension):
     # Setup config with a single entry to test skip_single
-    extension.config = Configuration({"entries": {"SingleGroup": {"OnlyOption": "do_something"}}})
+    extension.config = Configuration(
+        {"entries": {"SingleGroup": {"OnlyOption": "do_something"}}},
+        logger=extension.config.log,
+        schema=extension.config_schema,  # Apply schema for default value lookups
+    )
     extension._run_command = AsyncMock()
 
     await extension.run_menu()

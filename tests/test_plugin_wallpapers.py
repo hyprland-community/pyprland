@@ -3,17 +3,18 @@ import os
 import asyncio
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from pyprland.plugins.wallpapers import Extension
-from pyprland.common import Configuration, SharedState
+from pyprland.config import Configuration
+from pyprland.common import SharedState
 
 
 @pytest.fixture
-def extension(mocker):
+def extension(mocker, test_logger):
     # Mock global state variables that might be accessed
 
     ext = Extension("wallpapers")
     ext.state = SharedState()
     ext.state.variables = {}
-    ext.config = Configuration({"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "recurse": False})
+    ext.config = Configuration({"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "recurse": False}, logger=test_logger)
     ext.log = Mock()
     ext.hyprctl_json = AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}])
     ext.hyprctl = AsyncMock()
@@ -25,10 +26,10 @@ async def test_on_reload(extension, mocker):
     # Mock expand_path
     mocker.patch("pyprland.plugins.wallpapers.expand_path", side_effect=lambda x: x)
 
-    # Mock get_files_with_ext to return an async iterator
+    # Mock get_files_with_ext to return an async iterator (yields full paths like the real function)
     async def mock_get_files(*args, **kwargs):
-        yield "wp1.png"
-        yield "wp2.jpg"
+        yield "/tmp/wallpapers/wp1.png"
+        yield "/tmp/wallpapers/wp2.jpg"
 
     mocker.patch("pyprland.plugins.wallpapers.get_files_with_ext", side_effect=mock_get_files)
 
@@ -68,7 +69,7 @@ async def test_run_wall_next(extension):
 
 
 @pytest.mark.asyncio
-async def test_detect_theme(mocker):
+async def test_detect_theme(mocker, test_logger):
     # Mock subprocess for gsettings
     proc_mock = AsyncMock()
     proc_mock.communicate.return_value = (b"'prefer-dark'\n", b"")
@@ -78,7 +79,7 @@ async def test_detect_theme(mocker):
 
     from pyprland.plugins.wallpapers.theme import detect_theme
 
-    theme = await detect_theme()
+    theme = await detect_theme(test_logger)
     assert theme == "dark"
 
 

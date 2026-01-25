@@ -22,7 +22,7 @@ async def test_run_toggle_special_minimize(extension):
 
     await extension.run_toggle_special("minimized")
 
-    extension.backend.execute.assert_called_with("movetoworkspacesilent special:minimized,address:0x123")
+    extension.backend.move_window_to_workspace.assert_called_with("0x123", "special:minimized")
 
 
 @pytest.mark.asyncio

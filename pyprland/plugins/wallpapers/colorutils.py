@@ -22,6 +22,7 @@ MIN_HUE_DIST = 21
 HUE_DIFF_THRESHOLD = 128
 HUE_MAX = 256
 KERNEL_SUM = 16.0
+TARGET_COLOR_COUNT = 3  # Number of dominant colors to extract from image
 
 
 def _build_hue_histogram(hsv_pixels: list[tuple[int, int, int]]) -> tuple[list[float], list[list[int]]]:
@@ -167,7 +168,7 @@ def _select_colors_from_peaks(
         final_colors.append(_get_best_pixel_for_hue(p_hue, hue_pixel_indices, hsv_pixels, rgb_pixels))
 
     # 3. Third Color: The most distinct hue
-    if len(final_colors) >= 2 and peaks:
+    if len(final_colors) >= TARGET_COLOR_COUNT - 1 and peaks:
         best_dist = -1.0
         best_peak_idx = -1
 
@@ -214,13 +215,15 @@ def get_dominant_colors(img_path: str) -> list[tuple[int, int, int]]:
 
             final_colors = _select_colors_from_peaks(peaks, hue_pixel_indices, hsv_pixels, rgb_pixels)
 
-            while len(final_colors) < 3:
+            while len(final_colors) < TARGET_COLOR_COUNT:
                 final_colors.append(final_colors[0] if final_colors else (0, 0, 0))
 
             return final_colors
 
-    except Exception:  # pylint: disable=broad-exception-caught
-        return [(0, 0, 0)] * 3
+    except (OSError, ValueError) as e:  # PIL can raise various exceptions
+        # Log would require passing logger; return default silently
+        _ = e  # Acknowledge the exception was captured
+        return [(0, 0, 0)] * TARGET_COLOR_COUNT
 
 
 def nicify_oklab(

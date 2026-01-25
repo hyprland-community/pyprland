@@ -1,0 +1,105 @@
+{
+  "name": "layout_center",
+  "description": "A workspace layout where one window is centered and maximized while others are in the background.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "layout_center",
+      "signature": "layout_center",
+      "short_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.",
+      "full_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.\n\nArgs:\n    what: The command to run"
+    }
+  ],
+  "config": [
+    {
+      "name": "margin",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 60,
+      "description": "Margin around the centered window in pixels",
+      "choices": null
+    },
+    {
+      "name": "offset",
+      "type": "str or list or tuple",
+      "required": false,
+      "recommended": false,
+      "default": [
+        0,
+        0
+      ],
+      "description": "Offset of the centered window as 'X Y' or [X, Y]",
+      "choices": null
+    },
+    {
+      "name": "style",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window rules to apply to the centered window",
+      "choices": null
+    },
+    {
+      "name": "captive_focus",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Keep focus on the centered window",
+      "choices": null
+    },
+    {
+      "name": "on_new_client",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "focus",
+      "description": "Behavior when a new window opens",
+      "choices": [
+        "focus",
+        "background",
+        "close"
+      ]
+    },
+    {
+      "name": "next",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run when 'next' is called and layout is disabled",
+      "choices": null
+    },
+    {
+      "name": "prev",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run when 'prev' is called and layout is disabled",
+      "choices": null
+    },
+    {
+      "name": "next2",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Alternative command for 'next'",
+      "choices": null
+    },
+    {
+      "name": "prev2",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Alternative command for 'prev'",
+      "choices": null
+    }
+  ]
+}

@@ -11,8 +11,6 @@ def extension():
     ext.state.active_workspace = "1"
     ext.state.active_window = "0x123"
     ext.backend = AsyncMock()
-    ext.hyprctl = ext.backend.execute
-    ext.notify_error = AsyncMock()
     ext.get_clients = AsyncMock()
     ext.menu = AsyncMock()
     ext.config.update({"separator": "|"})
@@ -30,7 +28,7 @@ async def test_run_unfetch_client_success(extension):
 
     await extension.run_unfetch_client()
 
-    extension.hyprctl.assert_called_with("movetoworkspacesilent 2,address:0x123")
+    extension.backend.move_window_to_workspace.assert_called_with("0x123", "2")
 
 
 @pytest.mark.asyncio
@@ -39,8 +37,8 @@ async def test_run_unfetch_client_unknown(extension):
 
     await extension.run_unfetch_client()
 
-    extension.notify_error.assert_called_with("unknown window origin")
-    extension.hyprctl.assert_not_called()
+    extension.backend.notify_error.assert_called_with("unknown window origin")
+    extension.backend.execute.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -63,8 +61,8 @@ async def test_run_fetch_client_menu(extension):
     # Verify action
     # Should save origin
     assert extension._windows_origins["0xDEF"] == "3"
-    # Should move window
-    extension.hyprctl.assert_called_with(f"movetoworkspace {extension.state.active_workspace},address:0xDEF")
+    # Should move window (non-silent since we want to follow the window)
+    extension.backend.move_window_to_workspace.assert_called_with("0xDEF", extension.state.active_workspace, silent=False)
 
 
 @pytest.mark.asyncio
@@ -74,4 +72,4 @@ async def test_run_fetch_client_menu_cancel(extension):
 
     await extension.run_fetch_client_menu()
 
-    extension.hyprctl.assert_not_called()
+    extension.backend.move_window_to_workspace.assert_not_called()

@@ -3,12 +3,12 @@
 import asyncio
 import colorsys
 import contextlib
-import os
-import os.path
 import random
 from typing import Any
 
 from ...common import apply_variables
+from ...process import ManagedProcess
+from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .colorutils import can_edit_image, get_dominant_colors, nicify_oklab
 from .imageutils import (
@@ -22,58 +22,50 @@ from .theme import detect_theme, generate_palette, get_color_scheme_props
 
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
-    """Fetch monitor information from hyprctl."""
-    if extension.state.environment == "niri":
-        monitors = await extension.nirictl_json("outputs")
-        res = []
-        # Mapping Niri strings to Hyprland-like integers for imageutils compatibility
-        # 0: normal, 1: 90, 2: 180, 3: 270, ... (odd numbers rotate dimensions)
-        transform_map = {
-            "normal": 0,
-            "90": 1,
-            "180": 2,
-            "270": 3,
-            "flipped": 4,
-            "flipped-90": 5,
-            "flipped-180": 6,
-            "flipped-270": 7,
-        }
+    """Fetch monitor information from the backend.
 
-        for name, data in monitors.items():
-            # Fallback to physical if logical isn't present (unlikely for active outputs)
-            info = data.get("logical") or data.get("physical") or {}
-            t_val = info.get("transform", "normal")
-            # Handle case where transform might be a dict in some Niri versions
-            if isinstance(t_val, dict):
-                t_val = t_val.get("transform", "normal")
-
-            res.append(
-                MonitorInfo(
-                    name=name,
-                    width=int(info.get("width", 0)),
-                    height=int(info.get("height", 0)),
-                    transform=transform_map.get(t_val, 0),
-                    scale=info.get("scale", 1.0),
-                )
-            )
-        return res
-
-    monitors = await extension.hyprctl_json("monitors")
+    Works with any backend that implements get_monitors().
+    """
+    monitors = await extension.backend.get_monitors()
     return [
-        MonitorInfo(name=m["name"], width=int(m["width"]), height=int(m["height"]), transform=m["transform"], scale=m["scale"])
+        MonitorInfo(
+            name=m["name"],
+            width=int(m["width"]),
+            height=int(m["height"]),
+            transform=m["transform"],
+            scale=m["scale"],
+        )
         for m in monitors
     ]
 
 
 class Extension(Plugin):
-    """Manages the background image."""
+    """Handles random wallpapers at regular intervals, with support for rounded corners and color scheme generation."""
 
-    environments = ["hyprland", "niri"]
+    config_schema = ConfigItems(
+        ConfigField("path", (str, list), required=True, description="Path(s) to wallpaper images or directories"),
+        ConfigField("interval", int, default=10, description="Minutes between wallpaper changes"),
+        ConfigField("extensions", list, description="File extensions to include (e.g., ['png', 'jpg'])", default=["png", "jpeg", "jpg"]),
+        ConfigField("recurse", bool, default=False, description="Recursively search subdirectories"),
+        ConfigField("unique", bool, default=False, description="Use different wallpaper per monitor"),
+        ConfigField("radius", int, default=0, description="Corner radius for rounded corners"),
+        ConfigField("command", str, description="Custom command to set wallpaper ([file] and [output] variables)"),
+        ConfigField("post_command", str, description="Command to run after setting wallpaper"),
+        ConfigField("clear_command", str, description="Command to run when clearing wallpaper"),
+        ConfigField(
+            "color_scheme",
+            str,
+            default="",
+            description="Color scheme for palette generation",
+            choices=["", "pastel", "fluo", "fluorescent", "vibrant", "mellow", "neutral", "earth"],
+        ),
+        ConfigField("variant", str, description="Color variant type for palette"),
+        ConfigField("templates", dict, description="Template files for color palette generation"),
+    )
 
-    default_image_ext: set[str] | list[str] = {"png", "jpg", "jpeg"}
-    image_list: list[str] = []
+    image_list: list[str]
     running = True
-    proc: list = []
+    proc: list[ManagedProcess]
     loop = None
 
     next_background_event = asyncio.Event()
@@ -85,15 +77,22 @@ class Extension(Plugin):
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
-        cfg_path = self.config["path"]
+        self.image_list = []
+        # Require 'command' when not on Hyprland (hyprpaper default only works there)
+        if not self.get_config("command") and self.state.environment != "hyprland":
+            self.log.error(
+                "'command' config is required for environment '%s' (hyprpaper default only works on Hyprland)",
+                self.state.environment,
+            )
+            return
+
+        cfg_path: str | list[str] = self.get_config("path")  # type: ignore[assignment]
         paths = [expand_path(cfg_path)] if isinstance(cfg_path, str) else [expand_path(p) for p in cfg_path]
-        extensions = self.config.get("extensions", self.default_image_ext)
-        radius = int(self.config.get("radius", 0))
+        extensions = self.get_config_list("extensions")
+        radius = self.get_config_int("radius")
 
         self.image_list = [
-            os.path.join(path, fname)
-            for path in paths
-            async for fname in get_files_with_ext(path, extensions, recurse=self.config.get_bool("recurse"))
+            full_path for path in paths async for full_path in get_files_with_ext(path, extensions, recurse=self.get_config_bool("recurse"))
         ]
 
         if radius > 0 and can_edit_image:
@@ -140,11 +139,13 @@ class Extension(Plugin):
         """Run one command."""
         cmd = apply_variables(template, values)
         self.log.info("Running %s", cmd)
-        self.proc.append(await asyncio.create_subprocess_shell(cmd))
+        proc = ManagedProcess()
+        await proc.start(cmd)
+        self.proc.append(proc)
 
     async def _generate_templates(self, img_path: str, color: str | None = None) -> None:
         """Generate templates from the image."""
-        templates = self.config.get("templates")
+        templates = self.get_config_dict("templates") if "templates" in self.config else None
         if not templates:
             return
 
@@ -160,22 +161,23 @@ class Extension(Plugin):
             dominant_colors = [c_rgb] * 3
         else:
             dominant_colors = await asyncio.to_thread(get_dominant_colors, img_path=img_path)
-        theme = await detect_theme()
+        theme = await detect_theme(self.log)
 
         def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
             # reduce blue level for earth
-            if self.config.get("color_scheme") == "earth":
+            color_scheme = self.get_config_str("color_scheme")
+            if color_scheme == "earth":
                 rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
 
-            color_scheme = self.config.get("color_scheme", "")
             r, g, b = nicify_oklab(rgb, **get_color_scheme_props(color_scheme))
             return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
 
+        variant = self.get_config_str("variant") or None
         replacements = generate_palette(
             dominant_colors,
             theme=theme,
             process_color=process_color,
-            variant_type=self.config.get("variant"),
+            variant_type=variant,
         )
         replacements["image"] = img_path
 
@@ -185,8 +187,7 @@ class Extension(Plugin):
 
     async def update_vars(self, variables: dict[str, Any], monitor: MonitorInfo, img_path: str) -> dict[str, Any]:
         """Get fresh variables for the given monitor."""
-        unique = self.config.get("unique", False)
-        if unique:
+        if self.get_config_bool("unique"):
             img_path = self.select_next_image()
         filename = await self._prepare_wallpaper(monitor, img_path)
         variables.update({"file": filename, "output": monitor.name})
@@ -194,7 +195,8 @@ class Extension(Plugin):
 
     async def _iter_one(self, variables: dict[str, Any]) -> None:
         """Run one iteration of the wallpaper loop."""
-        cmd_template = self.config.get("command")
+        cmd_template = self.get_config("command")
+        assert isinstance(cmd_template, str) or cmd_template is None
         img_path = self.select_next_image()
         monitors: list[MonitorInfo] = await fetch_monitors(self)
 
@@ -212,7 +214,7 @@ class Extension(Plugin):
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
             for cmd in command_collector:
-                await self.hyprctl(["execr hyprctl hyprpaper " + cmd])
+                await self.backend.execute(["execr hyprctl hyprpaper " + cmd])
 
         # Generate templates after wallpaper is selected
         await self._generate_templates(img_path)
@@ -220,14 +222,15 @@ class Extension(Plugin):
         # check if the command failed
         for proc in self.proc:
             if proc.returncode:
-                await self.notify_error("wallpaper command failed")
+                await self.backend.notify_error("wallpaper command failed")
                 break
 
-        if self.config.get("post_command"):
-            command = apply_variables(self.config["post_command"], variables)
-            proc = await asyncio.create_subprocess_shell(command)
-            if await proc.wait() != 0:
-                await self.notify_error("wallpaper post_command failed")
+        post_command = self.get_config_str("post_command")
+        if post_command:
+            command = apply_variables(post_command, variables)
+            post_proc = await asyncio.create_subprocess_shell(command)
+            if await post_proc.wait() != 0:
+                await self.backend.notify_error("wallpaper post_command failed")
 
     async def main_loop(self) -> None:
         """Run the main plugin loop in the 'background'."""
@@ -240,7 +243,8 @@ class Extension(Plugin):
                 variables = self.state.variables.copy()
                 await self._iter_one(variables)
 
-            interval = asyncio.sleep(60 * self.config.get("interval", 10))
+            interval_minutes = self.get_config_float("interval")
+            interval = asyncio.sleep(60 * interval_minutes)
             await asyncio.wait(
                 [
                     asyncio.create_task(interval),
@@ -251,12 +255,9 @@ class Extension(Plugin):
 
     async def terminate(self) -> None:
         """Exit existing process if any."""
-        if self.proc:
-            for proc in self.proc:
-                if proc.returncode is None:
-                    proc.terminate()
-                await proc.wait()
-        self.proc[:] = []
+        for proc in self.proc:
+            await proc.stop()
+        self.proc.clear()
 
     async def run_wall(self, arg: str) -> None:
         """<next|clear|pause|color> skip, stop, pause or change color of background."""
@@ -268,13 +269,13 @@ class Extension(Plugin):
         elif arg.startswith("cl"):  # clear
             self._paused = True
             await self.terminate()
-            if not self.config.get("command"):
-                proc = await asyncio.create_subprocess_shell("pkill hyprpaper")
-                await proc.wait()
-            clear_command = self.config.get("clear_command")
+            if not self.get_config("command") and self.state.environment == "hyprland":
+                pkill_proc = await asyncio.create_subprocess_shell("pkill hyprpaper")
+                await pkill_proc.wait()
+            clear_command = self.get_config_str("clear_command")
             if clear_command:
-                proc = await asyncio.create_subprocess_shell(clear_command)
-                await proc.wait()
+                clear_proc = await asyncio.create_subprocess_shell(clear_command)
+                await clear_proc.wait()
         elif arg.startswith("co"):  # color
             # expect an #rgb color code
             args = arg.split()

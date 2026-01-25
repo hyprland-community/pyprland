@@ -1,0 +1,136 @@
+{
+  "name": "wallpapers",
+  "description": "Handles random wallpapers at regular intervals, with support for rounded corners and color scheme generation.",
+  "environments": [],
+  "commands": [
+    {
+      "name": "wall",
+      "signature": "wall",
+      "short_description": "<next|clear|pause|color> skip, stop, pause or change color of background.",
+      "full_description": "<next|clear|pause|color> skip, stop, pause or change color of background."
+    }
+  ],
+  "config": [
+    {
+      "name": "path",
+      "type": "str or list",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "Path(s) to wallpaper images or directories",
+      "choices": null
+    },
+    {
+      "name": "interval",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 10,
+      "description": "Minutes between wallpaper changes",
+      "choices": null
+    },
+    {
+      "name": "extensions",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [
+        "png",
+        "jpeg",
+        "jpg"
+      ],
+      "description": "File extensions to include (e.g., ['png', 'jpg'])",
+      "choices": null
+    },
+    {
+      "name": "recurse",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Recursively search subdirectories",
+      "choices": null
+    },
+    {
+      "name": "unique",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Use different wallpaper per monitor",
+      "choices": null
+    },
+    {
+      "name": "radius",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 0,
+      "description": "Corner radius for rounded corners",
+      "choices": null
+    },
+    {
+      "name": "command",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Custom command to set wallpaper ([file] and [output] variables)",
+      "choices": null
+    },
+    {
+      "name": "post_command",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run after setting wallpaper",
+      "choices": null
+    },
+    {
+      "name": "clear_command",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run when clearing wallpaper",
+      "choices": null
+    },
+    {
+      "name": "color_scheme",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Color scheme for palette generation",
+      "choices": [
+        "",
+        "pastel",
+        "fluo",
+        "fluorescent",
+        "vibrant",
+        "mellow",
+        "neutral",
+        "earth"
+      ]
+    },
+    {
+      "name": "variant",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Color variant type for palette",
+      "choices": null
+    },
+    {
+      "name": "templates",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Template files for color palette generation",
+      "choices": null
+    }
+  ]
+}

@@ -1,7 +1,9 @@
 """Hyprland adapter."""
 
+from logging import Logger
 from typing import Any, cast
 
+from ..constants import DEFAULT_NOTIFICATION_DURATION_MS
 from ..ipc import get_response, hyprctl_connection, retry_on_reset
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
@@ -21,17 +23,23 @@ class HyprlandBackend(EnvironmentBackend):
         return result
 
     @retry_on_reset
-    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
-        """Execute a command (or list of commands)."""
+    async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:  # noqa: ANN401
+        """Execute a command (or list of commands).
+
+        Args:
+            command: The command to execute
+            log: Logger to use for this operation
+            **kwargs: Additional arguments (base_command, weak, etc.)
+        """
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)
 
         if not command:
-            self.log.warning("%s triggered without a command!", base_command)
+            log.warning("%s triggered without a command!", base_command)
             return False
-        self.log.debug("%s %s", base_command, command)
+        log.debug("%s %s", base_command, command)
 
-        async with hyprctl_connection(self.log) as (ctl_reader, ctl_writer):
+        async with hyprctl_connection(log) as (ctl_reader, ctl_writer):
             if isinstance(command, list):
                 nb_cmds = len(command)
                 ctl_writer.write(f"[[BATCH]] {' ; '.join(self._format_command(command, base_command))}".encode())
@@ -47,15 +55,21 @@ class HyprlandBackend(EnvironmentBackend):
         r: bool = resp == b"ok" * nb_cmds
         if not r:
             if weak:
-                self.log.warning("FAILED %s", resp)
+                log.warning("FAILED %s", resp)
             else:
-                self.log.error("FAILED %s", resp)
+                log.error("FAILED %s", resp)
         return r
 
     @retry_on_reset
-    async def execute_json(self, command: str, **kwargs: Any) -> Any:  # noqa: ANN401, ARG002
-        """Execute a command and return the JSON result."""
-        ret = await get_response(f"-j/{command}".encode(), self.log)
+    async def execute_json(self, command: str, *, log: Logger, **kwargs: Any) -> Any:  # noqa: ANN401, ARG002
+        """Execute a command and return the JSON result.
+
+        Args:
+            command: The command to execute
+            log: Logger to use for this operation
+            **kwargs: Additional arguments
+        """
+        ret = await get_response(f"-j/{command}".encode(), log)
         assert isinstance(ret, list | dict)
         return ret
 
@@ -64,60 +78,112 @@ class HyprlandBackend(EnvironmentBackend):
         mapped: bool = True,
         workspace: str | None = None,
         workspace_bl: str | None = None,
+        *,
+        log: Logger,
     ) -> list[ClientInfo]:
-        """Return the list of clients, optionally filtered."""
+        """Return the list of clients, optionally filtered.
+
+        Args:
+            mapped: If True, only return mapped clients
+            workspace: Filter to this workspace name
+            workspace_bl: Blacklist this workspace name
+            log: Logger to use for this operation
+        """
         return [
             client
-            for client in cast("list[ClientInfo]", await self.execute_json("clients"))
+            for client in cast("list[ClientInfo]", await self.execute_json("clients", log=log))
             if (not mapped or client["mapped"])
             and (workspace is None or cast("str", client["workspace"]["name"]) == workspace)
             and (workspace_bl is None or cast("str", client["workspace"]["name"]) != workspace_bl)
         ]
 
-    async def get_monitors(self) -> list[MonitorInfo]:
-        """Return the list of monitors."""
-        return cast("list[MonitorInfo]", await self.execute_json("monitors"))
+    async def get_monitors(self, *, log: Logger, include_disabled: bool = False) -> list[MonitorInfo]:
+        """Return the list of monitors.
 
-    async def execute_batch(self, commands: list[str]) -> None:
-        """Execute a batch of commands."""
+        Args:
+            log: Logger to use for this operation
+            include_disabled: If True, include disabled monitors
+        """
+        cmd = "monitors all" if include_disabled else "monitors"
+        return cast("list[MonitorInfo]", await self.execute_json(cmd, log=log))
+
+    async def execute_batch(self, commands: list[str], *, log: Logger) -> None:
+        """Execute a batch of commands.
+
+        Args:
+            commands: List of commands to execute
+            log: Logger to use for this operation
+        """
         if not commands:
             return
 
-        self.log.debug("Batch %s", commands)
+        log.debug("Batch %s", commands)
 
         # Format commands for batch execution
         # Based on ipc.py _format_command implementation
         formatted_cmds = [f"dispatch {command}" for command in commands]
 
-        async with hyprctl_connection(self.log) as (_, ctl_writer):
+        async with hyprctl_connection(log) as (_, ctl_writer):
             ctl_writer.write(f"[[BATCH]] {' ; '.join(formatted_cmds)}".encode())
             await ctl_writer.drain()
             # We assume it worked, similar to current implementation
             # detailed error checking for batch is limited in current ipc.py implementation
 
-    def parse_event(self, raw_data: str) -> tuple[str, Any] | None:
-        """Parse a raw event string into (event_name, event_data)."""
+    def parse_event(self, raw_data: str, *, log: Logger) -> tuple[str, Any] | None:  # noqa: ARG002
+        """Parse a raw event string into (event_name, event_data).
+
+        Args:
+            raw_data: Raw event string from the compositor
+            log: Logger to use for this operation (unused in Hyprland - simple parsing)
+        """
         if ">>" not in raw_data:
             return None
         cmd, params = raw_data.split(">>", 1)
         return f"event_{cmd}", params.rstrip("\n")
 
-    async def notify(self, message: str, duration: int = 5000, color: str = "ff1010") -> None:
-        """Send a notification."""
+    async def notify(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, color: str = "ff1010", *, log: Logger) -> None:
+        """Send a notification.
+
+        Args:
+            message: The notification message
+            duration: Duration in milliseconds
+            color: Hex color code
+            log: Logger to use for this operation
+        """
         # Using icon -1 for default/generic
-        await self._notify_impl(message, duration, color, -1)
+        await self._notify_impl(message, duration, color, -1, log=log)
 
-    async def notify_info(self, message: str, duration: int = 5000) -> None:
-        """Send an info notification."""
+    async def notify_info(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, *, log: Logger) -> None:
+        """Send an info notification.
+
+        Args:
+            message: The notification message
+            duration: Duration in milliseconds
+            log: Logger to use for this operation
+        """
         # Using icon 1 for info
-        await self._notify_impl(message, duration, "1010ff", 1)
+        await self._notify_impl(message, duration, "1010ff", 1, log=log)
 
-    async def notify_error(self, message: str, duration: int = 5000) -> None:
-        """Send an error notification."""
+    async def notify_error(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, *, log: Logger) -> None:
+        """Send an error notification.
+
+        Args:
+            message: The notification message
+            duration: Duration in milliseconds
+            log: Logger to use for this operation
+        """
         # Using icon 0 for error
-        await self._notify_impl(message, duration, "ff1010", 0)
+        await self._notify_impl(message, duration, "ff1010", 0, log=log)
 
-    async def _notify_impl(self, text: str, duration: int, color: str, icon: int) -> None:
-        """Internal notify implementation."""
+    async def _notify_impl(self, text: str, duration: int, color: str, icon: int, *, log: Logger) -> None:
+        """Internal notify implementation.
+
+        Args:
+            text: The notification text
+            duration: Duration in milliseconds
+            color: Hex color code
+            icon: Icon code (-1 default, 0 error, 1 info)
+            log: Logger to use for this operation
+        """
         # This mirrors ipc.notify logic for Hyprland
-        await self.execute(f"{icon} {duration} rgb({color})  {text}", base_command="notify")
+        await self.execute(f"{icon} {duration} rgb({color})  {text}", log=log, base_command="notify")

@@ -1,16 +1,4 @@
 ---
-commands:
-  - name: layout_center toggle
-    description: toggles the layout on and off
-  - name: layout_center next
-    description: switches to the next window (if layout is on) else runs the [next](#next) command
-  - name: layout_center prev
-    description: switches to the previous window (if layout is on) else runs the [prev](#prev) command
-  - name: layout_center next2
-    description: switches to the next window (if layout is on) else runs the [prev](#prev2) command
-  - name: layout_center prev2
-    description: switches to the previous window (if layout is on) else runs the [prev2](#prev2) command
-
 ---
 # layout_center
 
@@ -20,9 +8,9 @@ other windows are tiled as usual in the background.
 On `toggle`, the active window is made floating and centered if the layout wasn't enabled, else reverts the floating status.
 
 With `next` and `prev` you can cycle the active window, keeping the same layout type.
-If the layout_center isn't active and `next` or `prev` is used, it will call the [next](#next) and [prev](#prev) configuration options.
+If the layout_center isn't active and `next` or `prev` is used, it will call the [next](#config-next) and [prev](#config-next) configuration options.
 
-To allow full override of the focus keys, [next2](#next2) and [prev2](#prev2) are provided, they do the same actions as "next" and "prev" but allow different fallback commands.
+To allow full override of the focus keys, `next2` and `prev2` are provided, they do the same actions as `next` and `prev` but allow different fallback commands.
 
 <details>
 <summary>Configuration sample</summary>
@@ -59,51 +47,57 @@ bind = $mainMod, down, movefocus, d
 
 ## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="layout_center" />
 
 ## Configuration
 
-### `on_new_client`
+<PluginConfig plugin="layout_center" linkPrefix="config-" />
 
-Defaults to `"focus"`.
+### `style` {#config-style}
 
-Changes the behavior when a new window opens, possible options are:
+<ConfigDefault plugin="layout_center" option="style" />
 
-- "focus" (or "foreground") to make the new window the main window
-- "background" to make the new window appear in the background
-- "close" to stop the centered layout when a new window opens
-
-### `style`
-
-| Requires Hyprland > 0.40.0
-
-Not set by default.
-
-Allow to set a list of styles to the main (centered) window, eg:
+Custom Hyprland style rules applied to the centered window. Requires Hyprland > 0.40.0.
 
 ```toml
 style = ["opacity 1", "bordercolor rgb(FFFF00)"]
 ```
 
-### `margin`
+### `on_new_client` {#config-on-new-client}
 
-default value is `60`
+<ConfigDefault plugin="layout_center" option="on_new_client" />
 
-margin (in pixels) used when placing the center window, calculated from the border of the screen.
+Behavior when a new window opens while layout is active:
 
-Example to make the main window be 100px far from the monitor's limits:
+- `"focus"` (or `"foreground"`) - make the new window the main window
+- `"background"` - make the new window appear in the background  
+- `"close"` - stop the centered layout when a new window opens
+
+### `next` / `prev` {#config-next}
+
+<ConfigDefault plugin="layout_center" option="next" />
+
+Hyprland dispatcher command to run when layout_center isn't active:
+
 ```toml
-margin = 100
+next = "movefocus r"
+prev = "movefocus l"
 ```
 
-You can also set a different margin for width and height by using a list:
+### `next2` / `prev2` {#config-next2}
+
+<ConfigDefault plugin="layout_center" option="next2" />
+
+Alternative fallback commands for vertical navigation:
+
 ```toml
-margin = [10, 60]
+next2 = "movefocus d"
+prev2 = "movefocus u"
 ```
 
-### `offset`
+### `offset` {#config-offset}
 
-default value is `[0, 0]`
+<ConfigDefault plugin="layout_center" option="offset" />
 
 offset in pixels applied to the main window position
 
@@ -112,33 +106,19 @@ Example shift the main window 20px down:
 offset = [0, 20]
 ```
 
-### `next`
-### `next2`
 
-not set by default
+### `margin` {#config-margin}
 
-When the *layout_center* isn't active and the *next* command is triggered, defines the hyprland dispatcher command to run.
+<ConfigDefault plugin="layout_center" option="margin" />
 
-`next2` is a similar option, used by the `next2` command, allowing to map "next" to both vertical and horizontal focus change.
+margin (in pixels) used when placing the center window, calculated from the border of the screen.
 
-Eg:
+Example to make the main window be 100px far from the monitor's limits:
 ```toml
-next = "movefocus r"
+margin = 100
 ```
-
-### `prev`
-### `prev2`
-
-Same as `next` but for the `prev` and `prev2` commands.
-
-
-### `captive_focus`
-
-default value is `false`
+You can also set a different margin for width and height by using a list:
 
 ```toml
-captive_focus = true
+margin = [100, 100]
 ```
-
-Sets the focus on the main window when the focus changes.
-You may love it or hate it...

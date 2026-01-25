@@ -17,10 +17,18 @@ from logging import Logger
 from typing import Any
 
 from .common import IPC_FOLDER, get_logger
+from .constants import IPC_MAX_RETRIES, IPC_RETRY_DELAY_MULTIPLIER
 from .models import JSONResponse, PyprError
 
-log: Logger | None = None
-NOTIFY_METHOD = "auto"
+
+class _IpcState:
+    """Module-level state container to avoid global statements."""
+
+    log: Logger | None = None
+    notify_method: str = "auto"
+
+
+_state = _IpcState()
 
 HYPRCTL = f"{IPC_FOLDER}/.socket.sock"
 EVENTS = f"{IPC_FOLDER}/.socket2.sock"
@@ -77,14 +85,13 @@ def set_notify_method(method: str) -> None:
     Args:
         method: The method to use ("auto", "native", "notify-send")
     """
-    global NOTIFY_METHOD
-    NOTIFY_METHOD = method
+    _state.notify_method = method
 
 
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
     if NIRI_SOCKET:
-        async with niri_connection(log or get_logger()) as (reader, writer):
+        async with niri_connection(_state.log or get_logger()) as (reader, writer):
             writer.write(b'"EventStream"')
             await writer.drain()
             # We must return the reader/writer, so we detach them from the context manager?
@@ -108,19 +115,24 @@ def retry_on_reset(func: Callable) -> Callable:
         func: The function to wrap
     """
 
-    async def wrapper(*args, logger: Logger | None = None, **kwargs) -> Any:  # noqa: ANN401
-        if logger is None and args and hasattr(args[0], "log"):
-            logger = args[0].log
-        assert logger is not None
+    async def wrapper(*args, log: Logger | None = None, logger: Logger | None = None, **kwargs) -> Any:  # noqa: ANN401
+        # Support both 'log' and 'logger' parameter names
+        effective_log = log or logger
+        if effective_log is None and args and hasattr(args[0], "log"):
+            effective_log = args[0].log
+        assert effective_log is not None
         exc = None
-        for count in range(3):
+        for count in range(IPC_MAX_RETRIES):
             try:
-                return await func(*args, **kwargs, logger=logger)
+                # Pass as 'log' for backend methods, 'logger' for IPC functions
+                if "log" in func.__code__.co_varnames:
+                    return await func(*args, **kwargs, log=effective_log)
+                return await func(*args, **kwargs, logger=effective_log)
             except ConnectionResetError as e:  # noqa: PERF203
                 exc = e
-                logger.warning("ipc connection problem, retrying...")
-                await asyncio.sleep(0.5 * count)
-        logger.error("ipc connection failed.")
+                effective_log.warning("ipc connection problem, retrying...")
+                await asyncio.sleep(IPC_RETRY_DELAY_MULTIPLIER * count)
+        effective_log.error("ipc connection failed.")
         raise ConnectionResetError from exc
 
     return wrapper
@@ -157,5 +169,4 @@ async def get_response(command: bytes, logger: Logger) -> JSONResponse:
 
 def init() -> None:
     """Initialize logging."""
-    global log
-    log = get_logger("ipc")
+    _state.log = get_logger("ipc")

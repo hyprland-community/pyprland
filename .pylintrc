@@ -31,7 +31,7 @@ load-plugins=
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=R0903,W0603,yield-inside-async-function
+disable=R0903,W0603,yield-inside-async-function,unnecessary-ellipsis
 
 
 [REPORTS]
@@ -188,7 +188,7 @@ max-attributes=10
 min-public-methods=2
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=24
 
 
 [IMPORTS]

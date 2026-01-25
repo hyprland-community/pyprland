@@ -23,7 +23,7 @@ plugins = ["pypr_examples.focus_counter"]
 @pytest.mark.usefixtures("external_plugin_config", "server_fixture")
 @pytest.mark.asyncio
 async def test_ext_plugin():
-    await tst.pypr("dummy")
+    await tst.pypr("counter")
     await tst.wait_queues()
     # The plugin should successfully call notify_info, which invokes hyprctl
     assert tst.hyprctl.call_count == 1, "notify_info should be called once"

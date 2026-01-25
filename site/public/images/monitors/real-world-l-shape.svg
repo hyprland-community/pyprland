@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 342 359">
+  <style>
+    .monitor {
+      stroke: var(--vp-c-border, #c2c2c4);
+      stroke-width: 2;
+    }
+    .monitor-a { fill: #60a5fa; }  /* Pastel Blue */
+    .monitor-b { fill: #86efac; }  /* Pastel Green */
+    .monitor-c { fill: #fdba74; }  /* Pastel Orange */
+    .label {
+      fill: #1f2937;  /* Dark gray, almost black */
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+  </style>
+  <rect class="monitor monitor-a" x="10" y="10" width="130.12048192771084" height="231.3253012048193" rx="4" />
+  <text class="label" x="75.06024096385542" y="125.66265060240966">A</text>
+  <rect class="monitor monitor-c" x="140.12048192771084" y="133.3253012048193" width="192.0" height="108.0" rx="4" />
+  <text class="label" x="236.12048192771084" y="187.3253012048193">C</text>
+  <rect class="monitor monitor-b" x="10" y="241.3253012048193" width="192.0" height="108.0" rx="4" />
+  <text class="label" x="106.0" y="295.3253012048193">B</text>
+</svg>

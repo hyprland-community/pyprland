@@ -1,10 +1,17 @@
+---
+---
 # Fine tuning scratchpads
+
+> [!note]
+> For basic setup, see [Scratchpads](./scratchpads).
 
 Advanced configuration options
 
-## `use`
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['use', 'pinned', 'excludes', 'restore_excluded', 'unfocus', 'hysteresis', 'preserve_aspect', 'offset', 'hide_delay', 'force_monitor', 'alt_toggle', 'allow_special_workspace', 'smart_focus', 'close_on_hide', 'monitor']" />
 
-No default value.
+### `use` {#config-use}
+
+<ConfigDefault plugin="scratchpads" option="use" />
 
 List of scratchpads (or single string) that will be used for the default values of this scratchpad.
 Think about *templates*:
@@ -22,36 +29,36 @@ class = "kitty-dropterm"
 use = "terminals"
 ```
 
-## `pinned`
+### `pinned` {#config-pinned}
 
-`true` by default
+<ConfigDefault plugin="scratchpads" option="pinned" />
 
 Makes the scratchpad "sticky" to the monitor, following any workspace change.
 
-## `excludes`
+### `excludes` {#config-excludes}
 
-No default value.
+<ConfigDefault plugin="scratchpads" option="excludes" />
 
 List of scratchpads to hide when this one is displayed, eg: `excludes = ["term", "volume"]`.
 If you want to hide every displayed scratch you can set this to the string `"*"` instead of a list: `excludes = "*"`.
 
-## `restore_excluded`
+### `restore_excluded` {#config-restore-excluded}
 
-`false` by default.
+<ConfigDefault plugin="scratchpads" option="restore_excluded" />
 
 When enabled, will remember the scratchpads which have been closed due to `excludes` rules, so when the scratchpad is hidden, those previously hidden scratchpads will be shown again.
 
-## `unfocus`
+### `unfocus` {#config-unfocus}
 
-No default value.
+<ConfigDefault plugin="scratchpads" option="unfocus" />
 
 When set to `"hide"`, allow to hide the window when the focus is lost.
 
 Use `hysteresis` to change the reactivity
 
-## `hysteresis`
+### `hysteresis` {#config-hysteresis}
 
-Defaults to `0.4` (seconds)
+<ConfigDefault plugin="scratchpads" option="hysteresis" />
 
 Controls how fast a scratchpad hiding on unfocus will react. Check `unfocus` option.
 Set to `0` to disable.
@@ -59,48 +66,17 @@ Set to `0` to disable.
 > [!important]
 > Only relevant when `unfocus="hide"` is used.
 
-## `margin`
+### `preserve_aspect` {#config-preserve-aspect}
 
-default value is `60`.
+<ConfigDefault plugin="scratchpads" option="preserve_aspect" />
 
-number of pixels separating the scratchpad from the screen border, depends on the [animation](./scratchpads#animation) set.
-
-> [!tip]
-> It is also possible to set a string to express percentages of the screen (eg: '`3%`').
-
-## `max_size`
-
-No default value.
-
-Same format as `size` (see above), only used if `size` is also set.
-
-Limits the `size` of the window accordingly.
-To ensure a window will not be too large on a wide screen for instance:
-
-```toml
-size = "60% 30%"
-max_size = "1200px 100%"
-```
-
-## `lazy`
-
-default to `true`.
-
-when set to `true`, prevents the command from being started when pypr starts, it will be started when the scratchpad is first used instead.
-
-- Good: saves resources when the scratchpad isn't needed
-- Bad: slows down the first display (app has to launch before showing)
-
-## `preserve_aspect`
-
-Not set by default.
 When set to `true`, will preserve the size and position of the scratchpad when called repeatedly from the same monitor and workspace even though an `animation` , `position` or `size` is used (those will be used for the initial setting only).
 
 Forces the `lazy` option.
 
-## `offset`
+### `offset` {#config-offset}
 
-In pixels, default to `0` (client's window size + margin).
+<ConfigDefault plugin="scratchpads" option="offset" />
 
 Number of pixels for the **hide** sliding animation (how far the window will go).
 
@@ -109,9 +85,9 @@ Number of pixels for the **hide** sliding animation (how far the window will go)
 > - `margin` is automatically added to the offset
 > - automatic (value not set) is same as `"100%"`
 
-## `hide_delay`
+### `hide_delay` {#config-hide-delay}
 
-Defaults to `0`
+<ConfigDefault plugin="scratchpads" option="hide_delay" />
 
 Delay (in seconds) after which the hide animation happens, before hiding the scratchpad.
 
@@ -121,37 +97,42 @@ Rule of thumb, if you have an animation with speed "7", as in:
 ```
 You can divide the value by two and round to the lowest value, here `3`, then divide by 10, leading to `hide_delay = 0.3`.
 
-## `force_monitor`
+### `force_monitor` {#config-force-monitor}
+
+<ConfigDefault plugin="scratchpads" option="force_monitor" />
 
 If set to some monitor name (eg: `"DP-1"`), it will always use this monitor to show the scratchpad.
 
-## `alt_toggle`
+### `alt_toggle` {#config-alt-toggle}
 
-Default value is `false`
+<ConfigDefault plugin="scratchpads" option="alt_toggle" />
 
 When enabled, use an alternative `toggle` command logic for multi-screen setups.
 It applies when the `toggle` command is triggered and the toggled scratchpad is visible on a screen which is not the focused one.
 
 Instead of moving the scratchpad to the focused screen, it will hide the scratchpad.
 
-## `allow_special_workspace`
+### `allow_special_workspace` {#config-allow-special-workspace}
 
-Default value is `true` (can't be enabled when using *Hyprland* < 0.39 where this behavior can't be controlled and is disabled).
+<ConfigDefault plugin="scratchpads" option="allow_special_workspace" />
 
 When enabled, you can toggle a scratchpad over a special workspace.
 It will always use the "normal" workspace otherwise.
 
-## `smart_focus`
+> [!note]
+> Can't be disabled when using *Hyprland* < 0.39 where this behavior can't be controlled.
 
-Default value is `true`.
+### `smart_focus` {#config-smart-focus}
 
-When enabled, the focus will be restored in a best effort way as en attempt to improve the user experience.
+<ConfigDefault plugin="scratchpads" option="smart_focus" />
+
+When enabled, the focus will be restored in a best effort way as an attempt to improve the user experience.
 If you face issues such as spontaneous workspace changes, you can disable this feature.
 
 
-## `close_on_hide`
+### `close_on_hide` {#config-close-on-hide}
 
-Default value is `false`.
+<ConfigDefault plugin="scratchpads" option="close_on_hide" />
 
 When enabled, the window in the scratchpad is closed instead of hidden when `pypr hide <name>` is run.
 This option implies `lazy = true`.
@@ -159,3 +140,23 @@ This can be useful on laptops where background apps may increase battery power d
 
 Note: Currently this option changes the hide animation to use hyprland's close window animation.
 
+### `monitor` {#config-monitor}
+
+<ConfigDefault plugin="scratchpads" option="monitor" />
+
+Per-monitor configuration overrides. Most display-related attributes can be changed (not `command`, `class` or `process_tracking`).
+
+Use the `monitor.<monitor name>` configuration item to override values, eg:
+
+```toml
+[scratchpads.music.monitor.eDP-1]
+position = "30% 50%"
+animation = "fromBottom"
+```
+
+You may want to inline it for simple cases:
+
+```toml
+[scratchpads.music]
+monitor = {HDMI-A-1={size = "30% 50%"}}
+```

@@ -1,7 +1,7 @@
 """Common types from Hyprland API."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, IntEnum, StrEnum
 from typing import TypedDict
 
 PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
@@ -89,3 +89,22 @@ class VersionInfo:
 
 class PyprError(BaseException):
     """Used for errors which already triggered logging."""
+
+
+# Exit codes for client
+class ExitCode(IntEnum):
+    """Standard exit codes for pypr client."""
+
+    SUCCESS = 0
+    USAGE_ERROR = 1  # No command provided, invalid arguments
+    ENV_ERROR = 2  # Missing environment variables
+    CONNECTION_ERROR = 3  # Cannot connect to daemon
+    COMMAND_ERROR = 4  # Command execution failed
+
+
+# Socket response protocol
+class ResponsePrefix(StrEnum):
+    """Response prefixes for daemon-client communication."""
+
+    OK = "OK"
+    ERROR = "ERROR"

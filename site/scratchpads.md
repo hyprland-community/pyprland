@@ -1,16 +1,4 @@
 ---
-commands:
-  - name: toggle [scratchpad name]
-    description: Toggle the given scratchpad
-  - name: show [scratchpad name]
-    description: Show the given scratchpad
-  - name: hide [scratchpad name]
-    description: Hide the given scratchpad
-  - name: attach
-    description: Toggle attaching/anchoring the currently focused window to the (last used) scratchpad. (see also [multi](#multi))
-
-Note: show and hide can accept '*' as a parameter, applying changes to every scratchpad.
-
 ---
 # scratchpads
 
@@ -68,7 +56,7 @@ bind = $mainMod,Y,exec,pypr attach
 
 ## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="scratchpads" />
 
 > [!tip]
 > You can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
@@ -76,15 +64,31 @@ bind = $mainMod,Y,exec,pypr attach
 
 ## Configuration
 
-### `command` <Badge type="danger" text="required" />
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['command', 'class', 'animation', 'size', 'position', 'margin', 'max_size', 'multi', 'lazy']" />
 
-This is the command you wish to run in the scratchpad.
+> [!tip]
+> Looking for more options? See:
+> - [Advanced Configuration](./scratchpads_advanced) - unfocus, excludes, monitor overrides, and more
+> - [Troubleshooting](./scratchpads_nonstandard) - PWAs, emacsclient, custom window matching
 
-It supports [Variables](./Variables)
+### `command` {#config-command}
 
-### `animation`
+<ConfigDefault plugin="scratchpads" option="command" />
 
-Type of animation to use, default value is "fromTop":
+This is the command you wish to run in the scratchpad. It supports [variables](./Variables).
+
+### `class` {#config-class}
+
+<ConfigDefault plugin="scratchpads" option="class" />
+
+Allows _Pyprland_ prepare the window for a correct animation and initial positioning.
+Check your window's class with: `hyprctl clients | grep class`
+
+### `animation` {#config-animation}
+
+<ConfigDefault plugin="scratchpads" option="animation" />
+
+Type of animation to use:
 
 - `null` / `""` (no animation)
 - `fromTop` (stays close to upper screen border)
@@ -92,9 +96,9 @@ Type of animation to use, default value is "fromTop":
 - `fromLeft` (stays close to left screen border)
 - `fromRight` (stays close to right screen border)
 
-### `size` (recommended)
+### `size` {#config-size}
 
-No default value.
+<ConfigDefault plugin="scratchpads" option="size" />
 
 Each time scratchpad is shown, window will be resized according to the provided values.
 
@@ -109,21 +113,16 @@ regardless of which monitor it was first launched on.
 > - **pixels** for absolute values (`px` suffix), eg: `800px 600px`
 > - a mix is possible, eg: `800px 40%`
 
-### `class` (recommended)
+### `position` {#config-position}
 
-No default value.
+<ConfigDefault plugin="scratchpads" option="position" />
 
-Allows _Pyprland_ prepare the window for a correct animation and initial positioning.
-
-### `position`
-
-No default value, overrides the automatic margin-based position.
-
+Overrides the automatic margin-based position.
 Sets the scratchpad client window position relative to the top-left corner.
 
 Same format as `size` (see above)
 
-Example of scratchpad that always seat on the top-right corner of the screen:
+Example of scratchpad that always sits on the top-right corner of the screen:
 
 ```toml
 [scratchpads.term_quake]
@@ -136,12 +135,31 @@ class = "term_quake"
 > [!note]
 > If `position` is not provided, the window is placed according to `margin` on one axis and centered on the other.
 
-### `multi`
+### `margin` {#config-margin}
 
-Defaults to `true`.
+<ConfigDefault plugin="scratchpads" option="margin" />
+
+Pixels from the screen edge when using animations. Used to position the window along the animation axis.
+
+### `max_size` {#config-max-size}
+
+<ConfigDefault plugin="scratchpads" option="max_size" />
+
+Maximum window size. Same format as `size`. Useful to prevent scratchpads from growing too large on big monitors.
+
+### `multi` {#config-multi}
+
+<ConfigDefault plugin="scratchpads" option="multi" />
 
 When set to `false`, only one client window is supported for this scratchpad.
 Otherwise other matching windows will be **attach**ed to the scratchpad.
+Allows the `attach` command on the scratchpad.
+
+### `lazy` {#config-lazy}
+
+<ConfigDefault plugin="scratchpads" option="lazy" />
+
+When `true`, the scratchpad command is only started on first use instead of at startup.
 
 ## Advanced configuration
 
@@ -150,23 +168,3 @@ To go beyond the basic setup and have a look at every configuration item, you ca
 - [Advanced](./scratchpads_advanced) contains options for fine-tuners or specific tastes (eg: i3 compatibility)
 - [Non-Standard](./scratchpads_nonstandard) contains options for "broken" applications
 like progressive web apps (PWA) or emacsclient, use only if you can't get it to work otherwise
-
-## Monitor specific overrides
-
-You can use different settings for a specific screen.
-Most attributes related to the display can be changed (not `command`, `class` or `process_tracking` for instance).
-
-Use the `monitor.<monitor name>` configuration item to override values, eg:
-
-```toml
-[scratchpads.music.monitor.eDP-1]
-position = "30% 50%"
-animation = "fromBottom"
-```
-
-You may want to inline it for simple cases:
-
-```toml
-[scratchpads.music]
-monitor = {HDMI-A-1={size = "30% 50%"}}
-```

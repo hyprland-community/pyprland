@@ -1,0 +1,80 @@
+{
+  "name": "pyprland",
+  "description": "Internal built-in plugin allowing caching states and implementing special commands.",
+  "environments": [],
+  "commands": [],
+  "config": [
+    {
+      "name": "plugins",
+      "type": "list",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "List of plugins to load",
+      "choices": null
+    },
+    {
+      "name": "include",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Additional config files or folders to include",
+      "choices": null
+    },
+    {
+      "name": "plugins_paths",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Additional paths to search for third-party plugins",
+      "choices": null
+    },
+    {
+      "name": "colored_handlers_log",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Enable colored log output for event handlers (debugging)",
+      "choices": null
+    },
+    {
+      "name": "notification_type",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "auto",
+      "description": "Notification method: 'auto', 'notify-send', or 'native'",
+      "choices": null
+    },
+    {
+      "name": "variables",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "User-defined variables for string substitution (see Variables page)",
+      "choices": null
+    },
+    {
+      "name": "hyprland_version",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Override auto-detected Hyprland version (e.g., '0.40.0')",
+      "choices": null
+    },
+    {
+      "name": "desktop",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Override auto-detected desktop environment (e.g., 'hyprland', 'niri'). Empty means auto-detect.",
+      "choices": null
+    }
+  ]
+}

@@ -2,51 +2,51 @@
 
 import asyncio
 import contextlib
-import time
 from functools import partial
 from typing import cast
 
-from ...adapters.units import convert_coords, convert_monitor_dimension
-from ...common import MINIMUM_ADDR_LEN, apply_variables, is_rotated
-from ...models import ClientInfo, MonitorInfo, VersionInfo
+from ...adapters.units import convert_coords
+from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
+from ...models import ClientInfo, VersionInfo
 from ..interface import Plugin
-from .animations import AnimationTarget, Placement
 from .common import FocusTracker, HideFlavors
+from .events import EventsMixin
 from .helpers import (
-    apply_offset,
     compute_offset,
     get_active_space_identifier,
     get_all_space_identifiers,
     get_match_fn,
     mk_scratch_name,
 )
+from .lifecycle import LifecycleMixin
 from .lookup import ScratchDB
-from .objects import Scratch, WindowRuleSet
-
-AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
-DEFAULT_MARGIN = 60  # in pixels
-DEFAULT_HIDE_DELAY = 0  # in seconds
-DEFAULT_HYSTERESIS = 0.4  # in seconds
+from .objects import Scratch
+from .schema import validate_scratchpad_config
+from .transitions import TransitionsMixin
+from .windowruleset import WindowRuleSet
 
 
-class Extension(Plugin):  # pylint: disable=missing-class-docstring
-    """Scratchpads addon."""
+class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
+    """Makes your applications into dropdowns & togglable popups."""
 
     environments = ["hyprland"]
 
-    procs: dict[str, asyncio.subprocess.Process] = {}  # pylint: disable=no-member
-    scratches = ScratchDB()
+    procs: dict[str, asyncio.subprocess.Process]
+    scratches: ScratchDB
 
     workspace = ""  # Currently active workspace
     monitor = ""  # Currently active monitor
 
     _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
-    focused_window_tracking: dict[str, FocusTracker] = {}
+    focused_window_tracking: dict[str, FocusTracker]
     previously_focused_window: str = ""
     last_focused: Scratch | None = None
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
+        self.procs = {}
+        self.scratches = ScratchDB()
+        self.focused_window_tracking = {}
         self._hysteresis_tasks = {}
 
     async def exit(self) -> None:
@@ -71,6 +71,29 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 await proc.wait()
 
         await asyncio.gather(*(die_in_piece(scratch) for scratch in self.scratches.values()))
+
+    def validate_config(self) -> list[str]:
+        """Validate scratchpads configuration."""
+        errors: list[str] = []
+
+        for name, scratch_config in self.config.iter_subsections():
+            # Skip per-monitor subsections (e.g. "term.monitor.DP-1") - validated within schema
+            if "." in name:
+                continue
+
+            errors.extend(validate_scratchpad_config(name, scratch_config))
+
+        return errors
+
+    @classmethod
+    def validate_config_static(cls, _plugin_name: str, config: dict) -> list[str]:
+        """Validate scratchpads configuration without instantiation."""
+        errors: list[str] = []
+        for name, scratch_config in config.items():
+            if not isinstance(scratch_config, dict) or "." in name:
+                continue
+            errors.extend(validate_scratchpad_config(name, scratch_config))
+        return errors
 
     async def on_reload(self) -> None:
         """Config loader."""
@@ -101,7 +124,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             else:
                 # else register it
                 self.scratches.register(new_scratch, name)
-                is_lazy = new_scratch.conf.get_bool("lazy", True)
+                is_lazy = new_scratch.conf.get_bool("lazy")
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
@@ -123,15 +146,15 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         Args:
             scratch: The scratchpad object
         """
-        defined_class = scratch.conf.get("class", "")
+        defined_class = scratch.conf.get("class")
         if defined_class:
             if self.state.hyprland_version < VersionInfo(0, 53, 0):
                 if self.state.hyprland_version > VersionInfo(0, 47, 2):
-                    await self.backend.execute(f"windowrule unset, class: {defined_class}", base_command="keyword")
+                    await self.backend.set_keyword(f"windowrule unset, class: {defined_class}")
                 else:
-                    await self.backend.execute(f"windowrule unset, ^({defined_class})$", base_command="keyword")
+                    await self.backend.set_keyword(f"windowrule unset, ^({defined_class})$")
             else:
-                await self.backend.execute(f"windowrule[{scratch.uid}]:enable false", base_command="keyword")
+                await self.backend.set_keyword(f"windowrule[{scratch.uid}]:enable false")
 
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules).
@@ -140,20 +163,20 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             scratch: The scratchpad object
         """
         self.scratches.set_state(scratch, "configured")
-        animation_type: str = scratch.conf.get_str("animation", "fromTop").lower()
-        defined_class: str = scratch.conf.get_str("class", "")
-        skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules", []))
+        animation_type: str = scratch.conf.get_str("animation").lower()
+        defined_class: str = scratch.conf.get_str("class")
+        skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules"))
         wr = WindowRuleSet(self.state)
         wr.set_class(defined_class)
         wr.set_name(scratch.uid)
         if defined_class:
             forced_monitor = scratch.conf.get("force_monitor")
-            if forced_monitor and forced_monitor not in self.state.monitors:
+            if forced_monitor and forced_monitor not in self.state.active_monitors:
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
                 await self.backend.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
             monitor = await self.backend.get_monitor_props(name=cast("str | None", forced_monitor))
-            width, height = convert_coords(scratch.conf.get_str("size", "80% 80%"), monitor)
+            width, height = convert_coords(scratch.conf.get_str("size"), monitor)
 
             if "float" not in skipped_windowrules:
                 if self.state.hyprland_version < VersionInfo(0, 53, 0):
@@ -185,302 +208,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
 
             await self.backend.execute(wr.get_content(), base_command="keyword")
 
-    async def __wait_for_client(self, scratch: Scratch, use_proc: bool = True) -> bool:
-        """Wait for a client to be up and running.
-
-        if `match_by=` is used, will use the match criteria, else the process's PID will be used.
-
-        Args:
-            scratch: The scratchpad object
-            use_proc: whether to use the process object
-        """
-        self.log.info("==> Wait for %s spawning", scratch.uid)
-        interval_range = [0.1] * 10 + [0.2] * 20 + [0.5] * 15
-        for interval in interval_range:
-            await asyncio.sleep(interval)
-            is_alive = await scratch.is_alive()
-
-            # skips the checks if the process isn't started (just wait)
-            if is_alive or not use_proc:
-                info = await scratch.fetch_matching_client()
-                if info:
-                    await scratch.update_client_info(info)
-                    self.log.info(
-                        "=> %s client (proc:%s, addr:%s) detected on time",
-                        scratch.uid,
-                        scratch.pid,
-                        scratch.full_address,
-                    )
-                    self.scratches.register(scratch)
-                    self.scratches.clear_state(scratch, "respawned")
-                    return True
-            if use_proc and not is_alive:
-                return False
-        return False
-
-    async def _start_scratch_nopid(self, scratch: Scratch) -> bool:
-        """Ensure alive, PWA version.
-
-        Args:
-            scratch: The scratchpad object
-        """
-        uid = scratch.uid
-        started = scratch.meta.no_pid
-        if not await scratch.is_alive():
-            started = False
-        if not started:
-            self.scratches.reset(scratch)
-            await self.start_scratch_command(uid)
-            r = await self.__wait_for_client(scratch, use_proc=False)
-            scratch.meta.no_pid = r
-            return r
-        return True
-
-    async def _start_scratch(self, scratch: Scratch) -> bool:
-        """Ensure alive, standard version.
-
-        Args:
-            scratch: The scratchpad object
-        """
-        uid = scratch.uid
-        if uid in self.procs:
-            with contextlib.suppress(ProcessLookupError):
-                self.procs[uid].kill()
-            del self.procs[uid]  # ensure the old process is removed from the dict
-        self.scratches.reset(scratch)
-        await self.start_scratch_command(uid)
-        self.log.info("starting %s", uid)
-        if not await self.__wait_for_client(scratch):
-            self.log.error("⚠ Failed spawning %s as proc %s", uid, scratch.pid)
-            if await scratch.is_alive():
-                error = "The command didn't open a window"
-            else:
-                await self.procs[uid].communicate()
-                code = self.procs[uid].returncode
-                error = f"The command failed with code {code}" if code else "The command terminated successfully, is it already running?"
-            self.log.error('"%s": %s', scratch.conf["command"], error)
-            await self.backend.notify_error(error)
-            return False
-        return True
-
-    async def ensure_alive(self, uid: str) -> bool:
-        """Ensure the scratchpad is started.
-
-        Returns true if started
-
-        Args:
-            uid: The scratchpad name
-        """
-        item = self.scratches.get(name=uid)
-        assert item
-
-        if not item.have_command:
-            return True
-
-        if item.conf.get_bool("process_tracking", True):
-            if not await item.is_alive():
-                await self._configure_windowrules(item)
-                self.log.info("%s is not running, starting...", uid)
-                if not await self._start_scratch(item):
-                    await self.backend.notify_error(f'Failed to show scratch "{item.uid}"')
-                    return False
-            await self._unset_windowrules(item)
-            return True
-
-        return await self._start_scratch_nopid(item)
-
-    async def start_scratch_command(self, name: str) -> None:
-        """Spawn a given scratchpad's process.
-
-        Args:
-            name: The scratchpad name
-        """
-        scratch = self.scratches.get(name)
-        assert scratch
-        self.scratches.set_state(scratch, "respawned")
-        old_pid = self.procs[name].pid if name in self.procs else 0
-        command = apply_variables(cast("str", scratch.conf["command"]), self.state.variables)
-        proc = await asyncio.create_subprocess_shell(command)
-        self.procs[name] = proc
-        pid = proc.pid
-        scratch.reset(pid)
-        self.scratches.register(scratch, pid=pid)
-        self.log.info("scratch %s (%s) has pid %s", scratch.uid, scratch.conf.get("command"), pid)
-        if old_pid:
-            self.scratches.clear(pid=old_pid)
-
-    async def update_scratch_info(self, orig_scratch: Scratch | None = None) -> None:
-        """Update Scratchpad information.
-
-        If `scratch` is given, update only this scratchpad.
-        Else, update every scratchpad.
-
-        Args:
-            orig_scratch: The scratchpad object
-        """
-        pid = orig_scratch.pid if orig_scratch else None
-        for client in await self.hyprctl_json("clients"):
-            assert isinstance(client, dict)
-            if pid and pid != client["pid"]:
-                continue
-            # if no address registered, register it
-            # + update client info in any case
-            scratch = self.scratches.get(addr=client["address"][2:])
-            if not scratch and client["pid"]:
-                scratch = self.scratches.get(pid=client["pid"])
-            if scratch:
-                self.scratches.register(scratch, addr=client["address"][2:])
-                await scratch.update_client_info(cast("ClientInfo", client))
-                break
-        else:
-            self.log.info("Didn't update scratch info %s", self)
-
-    # Events {{{
-
-    async def event_changefloatingmode(self, args: str) -> None:
-        """Update the floating mode of scratchpads.
-
-        Args:
-            args: The arguments passed to the event
-        """
-        addr, _onoff = args.split(",")
-        onoff = int(_onoff)
-        for scratch in self.scratches.values():
-            if scratch.address == addr:
-                scratch.client_info["floating"] = bool(onoff)
-
-    async def event_workspace(self, name: str) -> None:
-        """Workspace hook.
-
-        Args:
-            name: The workspace name
-        """
-        for scratch in self.scratches.values():
-            scratch.event_workspace(name)
-
-        self.workspace = name
-
-    async def event_closewindow(self, addr: str) -> None:
-        """Close window hook.
-
-        Args:
-            addr: The window address
-        """
-        # Removes this address from the extra_addr
-        addr = "0x" + addr
-        for scratch in self.scratches.values():
-            if addr in scratch.extra_addr:
-                scratch.extra_addr.remove(addr)
-            if addr in scratch.meta.extra_positions:
-                del scratch.meta.extra_positions[addr]
-
-    async def event_monitorremoved(self, monitor_name: str) -> None:
-        """Hides scratchpads on the removed screen.
-
-        Args:
-            monitor_name: The monitor name
-        """
-        for scratch in self.scratches.values():
-            if scratch.monitor == monitor_name:
-                try:
-                    await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
-                except Exception as e:  # pylint: disable=broad-except
-                    self.log.exception("Failed to hide %s", scratch.uid)
-                    await self.notify_info(f"Failed to hide {scratch.uid}: {e}")
-
-    async def event_activewindowv2(self, addr: str) -> None:
-        """Active windows hook.
-
-        Args:
-            addr: The window address
-        """
-        full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
-        for uid, scratch in self.scratches.items():
-            if not scratch.client_info:
-                continue  # type: ignore
-            if scratch.have_address(full_address):
-                if scratch.full_address == full_address:
-                    self.last_focused = scratch
-                self.cancel_task(uid)
-            elif scratch.visible and scratch.conf.get("unfocus") == "hide":
-                last_shown = scratch.meta.last_shown
-                if last_shown + AFTER_SHOW_INHIBITION > time.time():
-                    self.log.debug(
-                        "(SKIPPED) hide %s because another client is active",
-                        uid,
-                    )
-                    continue
-
-                await self._hysteresis_handling(scratch)
-        self.previously_focused_window = full_address
-
-    async def _hysteresis_handling(self, scratch: Scratch) -> None:
-        """Hysteresis handling.
-
-        Args:
-            scratch: The scratchpad object
-        """
-        hysteresis = scratch.conf.get_float("hysteresis", DEFAULT_HYSTERESIS)
-        if hysteresis:
-            self.cancel_task(scratch.uid)
-
-            async def _task(scratch: Scratch, delay: float) -> None:
-                await asyncio.sleep(delay)
-                self.log.debug("hide %s because another client is active", scratch.uid)
-                await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
-
-                with contextlib.suppress(KeyError):
-                    del self._hysteresis_tasks[scratch.uid]
-
-            self._hysteresis_tasks[scratch.uid] = asyncio.create_task(_task(scratch, hysteresis))
-        else:
-            self.log.debug("hide %s because another client is active", scratch.uid)
-            await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
-
-    async def _alternative_lookup(self) -> bool:
-        """If not matching by pid, use specific matching and return True."""
-        class_lookup_hack = [s for s in self.scratches.get_by_state("respawned") if s.conf.get("match_by", "pid") != "pid"]
-        if not class_lookup_hack:
-            return False
-        self.log.debug("Lookup hack triggered")
-        clients = cast("list[ClientInfo]", await self.hyprctl_json("clients"))
-        for pending_scratch in class_lookup_hack:
-            match_by, match_value = pending_scratch.get_match_props()
-            match_fn = get_match_fn(match_by, match_value)
-            for client in clients:
-                if match_fn(client[match_by], match_value):  # type: ignore
-                    self.scratches.register(pending_scratch, addr=client["address"][2:])
-                    self.log.debug("client class found: %s", client)
-                    await pending_scratch.update_client_info(client)
-        return True
-
-    async def event_openwindow(self, params: str) -> None:
-        """Open windows hook.
-
-        Args:
-            params: The arguments passed to the event
-        """
-        addr, _wrkspc, _kls, _title = params.split(",", 3)
-        item = self.scratches.get(addr=addr)
-        respawned = list(self.scratches.get_by_state("respawned"))
-
-        if item:
-            # Ensure initialized (no-op if already initialized)
-            await item.initialize(self)
-        elif respawned:
-            # NOTE: for windows which aren't related to the process (see #8)
-            if not await self._alternative_lookup():
-                self.log.info("Updating Scratch info")
-                await self.update_scratch_info()
-            if item and item.meta.should_hide:
-                await self.run_hide(item.uid, flavor=HideFlavors.FORCED)
-        else:
-            clients = await self.hyprctl_json("clients")
-            for item in self.scratches.values():
-                if await self._handle_multiwindow(item, clients):
-                    return
-
-    # }}}
     def cancel_task(self, uid: str) -> bool:
         """Cancel a task.
 
@@ -496,29 +223,57 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             return True
         return False
 
+    async def _detach_window(self, scratch: Scratch, address: str) -> None:
+        """Detach a window from a scratchpad.
+
+        Args:
+            scratch: The scratchpad to detach from
+            address: The window address to detach
+        """
+        scratch.extra_addr.remove(address)
+        if scratch.conf.get("pinned"):
+            await self.backend.pin_window(address)  # toggles pin off
+
+    async def _attach_window(self, scratch: Scratch, address: str) -> None:
+        """Attach a window to a scratchpad.
+
+        Args:
+            scratch: The scratchpad to attach to
+            address: The window address to attach
+        """
+        # Remove from any other scratchpad first
+        for s in self.scratches.values():
+            if address in s.extra_addr:
+                s.extra_addr.remove(address)
+        scratch.extra_addr.add(address)
+        if scratch.conf.get("pinned"):
+            await self.backend.pin_window(address)
+        # If scratchpad is visible, move the attached window to same workspace
+        if scratch.visible and scratch.client_info:
+            workspace = scratch.client_info.get("workspace", {}).get("name", "")
+            if workspace:
+                await self.backend.move_window_to_workspace(address, workspace)
+
     async def run_attach(self) -> None:
         """Attach the focused window to the last focused scratchpad."""
         if not self.last_focused:
-            await self.notify_error("No scratchpad was focused")
+            await self.backend.notify_error("No scratchpad was focused")
             return
         focused = self.state.active_window
+        if not focused or len(focused) < MINIMUM_FULL_ADDR_LEN:
+            await self.backend.notify_error("No valid window focused")
+            return
         scratch = self.last_focused
         if focused == scratch.full_address:
-            await self.notify_info("Scratch can't attach to itself")
+            await self.backend.notify_info(f"Scratch {scratch.uid} can't attach or detach to itself")
             return
         if not scratch.visible:
             await self.run_show(scratch.uid)
 
-        if self.state.active_window in scratch.extra_addr:
-            scratch.extra_addr.remove(focused)
+        if focused in scratch.extra_addr:
+            await self._detach_window(scratch, focused)
         else:
-            for s in self.scratches.values():
-                if focused in s.extra_addr:
-                    s.extra_addr.remove(focused)
-            scratch.extra_addr.add(focused)
-
-        if scratch.conf.get("pinned", True):
-            await self.backend.execute(f"pin address:{focused}")
+            await self._attach_window(scratch, focused)
 
     async def run_toggle(self, uid_or_uids: str) -> None:
         """<name> toggles visibility of scratchpad "name" (supports multiple names).
@@ -546,7 +301,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if first_scratch.conf.get_bool("alt_toggle"):
             # Needs to be on any monitor (if workspace matches)
             extra_visibility_check = first_scratch.meta.space_identifier in await get_all_space_identifiers(
-                await self.backend.execute_json("monitors")
+                await self.backend.get_monitors()
             )
         else:
             # Needs to be on the active monitor+workspace
@@ -570,77 +325,6 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 else:
                     tasks.append(partial(self.run_show, uid))
         await asyncio.gather(*(asyncio.create_task(t()) for t in tasks))
-
-    async def get_offsets(self, scratch: Scratch, monitor: MonitorInfo | None = None) -> tuple[int, int]:
-        """Return offset from config or use margin as a ref.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-        """
-        offset = scratch.conf.get("offset")
-        if monitor is None:
-            monitor = await self.backend.get_monitor_props(name=scratch.forced_monitor)
-        rotated = is_rotated(monitor)
-        aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
-
-        if offset:
-            return cast("tuple[int, int]", (convert_monitor_dimension(cast("str", offset), ref, monitor) for ref in aspect))
-
-        mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
-
-        offsets = [convert_monitor_dimension("100%", dim, monitor) for dim in mon_size]
-        return cast("tuple[int, int]", offsets)
-
-    async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
-        """Animate hiding a scratchpad.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-        """
-        animation_type: str = scratch.animation_type
-
-        if not animation_type:
-            return False
-
-        await self._slide_animation(animation_type, scratch, await self.get_offsets(scratch, monitor))
-        delay: float = scratch.conf.get_float("hide_delay", DEFAULT_HIDE_DELAY)
-        if delay:
-            await asyncio.sleep(delay)  # await for animation to finish
-        return True
-
-    async def _slide_animation(
-        self,
-        animation_type: str,
-        scratch: Scratch,
-        offset: tuple[int, int],
-        target: AnimationTarget = AnimationTarget.ALL,
-    ) -> None:
-        """Slides the window `offset` pixels respecting `animation_type`.
-
-        Args:
-            animation_type: The animation type
-            scratch: The scratchpad object
-            offset: The offset to slide
-            target: The target of the animation
-        """
-        addresses: list[str] = []
-        if target != AnimationTarget.MAIN:
-            addresses.extend(scratch.extra_addr)
-        if target != AnimationTarget.EXTRA:
-            addresses.append(scratch.full_address)
-        off_x, off_y = offset
-
-        animation_actions = {
-            "fromright": f"movewindowpixel {off_x} 0",
-            "fromleft": f"movewindowpixel {-off_x} 0",
-            "frombottom": f"movewindowpixel 0 {off_y}",
-            "fromtop": f"movewindowpixel 0 {-off_y}",
-        }
-        await self.backend.execute(
-            [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]
-        )
 
     async def run_show(self, uid: str) -> None:
         """<name> shows scratchpad "name" (accepts "*").
@@ -669,8 +353,8 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         if not was_alive:
             was_alive = await scratch.is_alive()
 
-        excluded_ids = scratch.conf.get("excludes", [])
-        restore_excluded = scratch.conf.get_bool("restore_excluded", False)
+        excluded_ids = scratch.conf.get("excludes")
+        restore_excluded = scratch.conf.get_bool("restore_excluded")
         if excluded_ids == "*":
             excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
         elif excluded_ids is None:
@@ -703,7 +387,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             scratch: The scratchpad object
             clients: The list of clients
         """
-        if not scratch.conf.get_bool("multi", True):
+        if not scratch.conf.get_bool("multi"):
             return False
         try:
             match_by, match_value = scratch.get_match_props()
@@ -718,177 +402,10 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 address = client["address"]
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
-                    if scratch.conf.get("pinned", True):
-                        await self.backend.execute(f"pin address:{address}")
+                    if scratch.conf.get("pinned"):
+                        await self.backend.pin_window(address)
                     hit = True
         return hit
-
-    async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool) -> None:
-        """Performs the transition to visible state.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-            was_alive: Whether the scratchpad was already alive
-        """
-        forbid_special = not scratch.conf.get_bool("allow_special_workspace", True)
-        wrkspc = (
-            monitor["activeWorkspace"]["name"]
-            if forbid_special
-            or not monitor["specialWorkspace"]["name"]
-            or monitor["specialWorkspace"]["name"].startswith("special:scratch")
-            else monitor["specialWorkspace"]["name"]
-        )
-        if self.previously_focused_window:
-            self.focused_window_tracking[scratch.uid] = FocusTracker(self.previously_focused_window, wrkspc)
-
-        scratch.meta.last_shown = time.time()
-        # Start the transition
-        preserve_aspect = scratch.conf.get_bool("preserve_aspect")
-        should_set_aspect = (
-            not (preserve_aspect and was_alive) or scratch.monitor != self.state.active_monitor
-        )  # Not aspect preserving or it's newly spawned
-        if should_set_aspect:
-            await self._fix_size(scratch, monitor)
-
-        clients = await self.hyprctl_json("clients")
-        await self._handle_multiwindow(scratch, clients)
-        # move
-        move_commands = [
-            f"moveworkspacetomonitor {mk_scratch_name(scratch.uid)} {monitor['name']}",
-            f"movetoworkspacesilent {wrkspc},address:{scratch.full_address}",
-            f"alterzorder top,address:{scratch.full_address}",
-        ]
-        for addr in scratch.extra_addr:
-            move_commands.extend(
-                [
-                    f"movetoworkspacesilent {wrkspc},address:{addr}",
-                    f"alterzorder top,address:{addr}",
-                ]
-            )
-
-        await self.backend.execute(move_commands)
-        await self._update_infos(scratch, clients)
-
-        position_fixed = False
-        if should_set_aspect:
-            position_fixed = await self._fix_position(scratch, monitor)
-
-        if not position_fixed:
-            relative_animation = preserve_aspect and was_alive and not should_set_aspect
-            await self._animate_show(scratch, monitor, relative_animation)
-        await self.backend.execute(f"focuswindow address:{scratch.full_address}")
-
-        if not scratch.client_info["pinned"]:
-            await self._pin_scratch(scratch)
-
-        scratch.meta.last_shown = time.time()
-        scratch.meta.monitor_info = monitor
-
-    async def _pin_scratch(self, scratch: Scratch) -> None:
-        """Pin the scratchpad.
-
-        Args:
-            scratch: The scratchpad object
-        """
-        if not scratch.conf.get("pinned", True):
-            return
-        await self.backend.execute(f"pin address:{scratch.full_address}")
-        for addr in scratch.extra_addr:
-            await self.backend.execute(f"pin address:{addr}")
-
-    async def _update_infos(self, scratch: Scratch, clients: list[ClientInfo]) -> None:
-        """Update the client info.
-
-        Args:
-            scratch: The scratchpad object
-            clients: The list of clients
-        """
-        try:
-            # Update position, size & workspace information (workspace properties have been created)
-            await scratch.update_client_info(clients=clients)
-        except KeyError:
-            for alt_addr in scratch.extra_addr:
-                # Get the client info for the extra addresses
-                try:
-                    client_info = await self.backend.get_client_props(addr="0x" + alt_addr, clients=clients)
-                    if not client_info:
-                        continue
-                    await scratch.update_client_info(clients=clients, client_info=client_info)
-                except KeyError:
-                    pass
-                else:
-                    break
-            else:
-                self.log.exception("Lost the client info for %s", scratch.uid)
-
-    async def _animate_show(self, scratch: Scratch, monitor: MonitorInfo, relative_animation: bool) -> None:
-        """Animate the show transition.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-            relative_animation: Whether to use relative animation
-        """
-        animation_type = scratch.animation_type
-        multiwin_enabled = scratch.conf.get_bool("multi", True)
-        if animation_type:
-            animation_commands = []
-
-            if "size" not in scratch.client_info:
-                await self.update_scratch_info(scratch)  # type: ignore
-
-            if relative_animation:
-                main_win_position = apply_offset((monitor["x"], monitor["y"]), scratch.meta.extra_positions[scratch.address])
-            else:
-                main_win_position = Placement.get(
-                    animation_type,
-                    monitor,
-                    scratch.client_info,
-                    scratch.conf.get_int("margin", DEFAULT_MARGIN),
-                )
-            animation_commands.append(list(main_win_position) + [scratch.full_address])
-
-            if multiwin_enabled:
-                for address in scratch.extra_addr:
-                    off = scratch.meta.extra_positions.get(address)
-                    if off:
-                        pos = apply_offset(main_win_position, off)
-                        animation_commands.append(list(pos) + [address])
-
-            await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
-
-    async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
-        """Apply the size from config.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-        """
-        size = scratch.conf.get("size")
-        if size:
-            width, height = convert_coords(cast("str", size), monitor)
-            max_size = scratch.conf.get("max_size")
-            if max_size:
-                max_width, max_height = convert_coords(cast("str", max_size), monitor)
-                width = min(max_width, width)
-                height = min(max_height, height)
-            await self.backend.execute(f"resizewindowpixel exact {width} {height},address:{scratch.full_address}")
-
-    async def _fix_position(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
-        """Apply the `position` config parameter.
-
-        Args:
-            scratch: The scratchpad object
-            monitor: The monitor info
-        """
-        position = scratch.conf.get("position")
-        if position:
-            x_pos, y_pos = convert_coords(cast("str", position), monitor)
-            x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
-            await self.backend.execute(f"movewindowpixel exact {x_pos_abs} {y_pos_abs},address:{scratch.full_address}")
-            return True
-        return False
 
     async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: C901
         """<name> hides scratchpad "name" (accepts "*").
@@ -932,13 +449,13 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             active_window: The active window address
             active_workspace: The active workspace name
         """
-        clients = await self.hyprctl_json("clients")
+        clients = await self.backend.execute_json("clients")
         await scratch.update_client_info(clients=clients)
         ref_position = scratch.client_info["at"]
         monitor_info = scratch.meta.monitor_info
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # collects window which have been created by the app
-        if scratch.conf.get_bool("multi", True):
+        if scratch.conf.get_bool("multi"):
             await self._handle_multiwindow(scratch, clients)
             positions = {}
             for sub_client in clients:
@@ -951,17 +468,17 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
         await self._pin_scratch(scratch)
         await self._hide_transition(scratch, monitor_info)
 
-        if not scratch.conf.get_bool("close_on_hide", False):
-            await self.backend.execute(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{scratch.full_address}")
+        if not scratch.conf.get_bool("close_on_hide"):
+            await self.backend.move_window_to_workspace(scratch.full_address, mk_scratch_name(scratch.uid))
 
             for addr in scratch.extra_addr:
-                await self.backend.execute(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{addr}")
+                await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid))
                 await asyncio.sleep(0.01)
         else:
-            await self.backend.execute(f"closewindow address:{scratch.full_address}")
+            await self.backend.close_window(scratch.full_address)
 
             for addr in scratch.extra_addr:
-                await self.backend.execute(f"closewindow address:{addr}")
+                await self.backend.close_window(addr)
                 await asyncio.sleep(0.01)
 
         for e_uid in scratch.excluded_scratches:
@@ -978,7 +495,7 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
             active_workspace: The active workspace name
             clients: The list of clients
         """
-        if not scratch.conf.get_bool("smart_focus", True):
+        if not scratch.conf.get_bool("smart_focus"):
             return
         for track in self.focused_window_tracking.values():
             if scratch.have_address(track.prev_focused_window):
@@ -996,4 +513,4 @@ class Extension(Plugin):  # pylint: disable=missing-class-docstring
                 and not client["workspace"]["name"].startswith("special")
             ):
                 self.log.debug("Previous scratch: %s", self.scratches.get(addr=tracker.prev_focused_window))
-                await self.backend.execute(f"focuswindow address:{tracker.prev_focused_window}")
+                await self.backend.focus_window(tracker.prev_focused_window)

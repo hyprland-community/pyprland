@@ -1,0 +1,56 @@
+{
+  "commands": [
+    {
+      "name": "help",
+      "short_description": "Show available commands or detailed help for a specific command.",
+      "detail": "Usage:\n  pypr help           List all commands\n  pypr help <command> Show detailed help",
+      "subcommands": []
+    },
+    {
+      "name": "exit",
+      "short_description": "Terminate the pyprland daemon.",
+      "detail": "",
+      "subcommands": []
+    },
+    {
+      "name": "version",
+      "short_description": "Show the pyprland version.",
+      "detail": "",
+      "subcommands": []
+    },
+    {
+      "name": "reload",
+      "short_description": "Reload the configuration file.",
+      "detail": "New plugins will be loaded and configuration options will be updated.\nMost plugins will use the new values on the next command invocation.",
+      "subcommands": []
+    },
+    {
+      "name": "dumpjson",
+      "short_description": "Dump the configuration in JSON format (after includes are processed).",
+      "detail": "",
+      "subcommands": []
+    },
+    {
+      "name": "edit",
+      "short_description": "Edit the configuration file using $EDITOR (or vi), then reload.",
+      "detail": "Not available in pypr-client.",
+      "subcommands": []
+    },
+    {
+      "name": "validate",
+      "short_description": "Validate the configuration file against plugin schemas.",
+      "detail": "Checks all plugin configurations for errors and warnings.\nWorks without the daemon running.\n\nNote: Not available in pypr-client.",
+      "subcommands": []
+    },
+    {
+      "name": "compgen",
+      "short_description": "Generate shell completions. <bash|zsh|fish> [path]",
+      "detail": "Usage:\n  pypr compgen <shell>        Install to default user path\n  pypr compgen <shell> <path> Install to custom path\n\nCompletions include scratchpad names for toggle/show/hide commands.",
+      "subcommands": [
+        "bash",
+        "zsh",
+        "fish"
+      ]
+    }
+  ]
+}

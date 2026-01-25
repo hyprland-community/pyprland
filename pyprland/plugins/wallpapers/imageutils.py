@@ -32,7 +32,7 @@ async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = T
     """
     for fname in await ailistdir(path):
         ext = fname.rsplit(".", 1)[-1]
-        full_path = os.path.join(path, fname)
+        full_path = f"{path}/{fname}"
         if ext.lower() in extensions:
             yield full_path
         elif recurse and os.path.isdir(full_path):
@@ -80,7 +80,7 @@ class RoundedImageManager:
         Args:
             key: Cache key
         """
-        return os.path.join(self.tmpdir, f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
+        return str(Path(self.tmpdir) / f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor.

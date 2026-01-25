@@ -324,7 +324,7 @@ async def test_nothing():
     assert tst.hyprctl.call_count == 1
     # Check that notify was called with base_command="notify"
     assert tst.hyprctl.call_args.kwargs.get("base_command") == "notify"
-    assert "not found" in tst.hyprctl.call_args[0][0]
+    assert "Unknown command" in tst.hyprctl.call_args[0][0]
 
 
 import pytest

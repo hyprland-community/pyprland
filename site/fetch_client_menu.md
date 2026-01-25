@@ -1,7 +1,4 @@
 ---
-commands:
-  - name: fetch_client_menu
-    description: Bring any window to the active workspace using a menu.
 ---
 
 # fetch_client_menu
@@ -12,17 +9,12 @@ A bit like the [expose](./expose) plugin but using a menu instead (less intrusiv
 
 It brings the window to the current workspace, while [expose](./expose) moves the currently focused screen to the application workspace.
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="fetch_client_menu" />
 
 ## Configuration
 
-All the [Menu](Menu) configuration items are also available.
+All the [Menu](./Menu) configuration items are also available.
 
-### `separator`
-
-default value is `"|"`
-
-Changes the character (or string) used to separate a menu entry from its entry number.
-
+<PluginConfig plugin="fetch_client_menu" linkPrefix="config-" />

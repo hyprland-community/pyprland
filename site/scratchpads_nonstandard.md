@@ -1,10 +1,18 @@
+---
+---
 # Troubleshooting scratchpads
+
+> [!note]
+> For basic setup, see [Scratchpads](./scratchpads).
 
 Options that should only be used for applications that are not behaving in a "standard" way, such as `emacsclient` or progressive web apps.
 
-## `match_by`
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['match_by', 'initialClass', 'initialTitle', 'title', 'process_tracking', 'skip_windowrules']" />
 
-Default value is `"pid"`
+### `match_by` {#config-match-by}
+
+<ConfigDefault plugin="scratchpads" option="match_by" />
+
 When set to a sensitive client property value (eg: `class`, `initialClass`, `title`, `initialTitle`), will match the client window using the provided property instead of the PID of the process.
 
 This property must be set accordingly, eg:
@@ -39,9 +47,9 @@ title = "re:.*some string.*"
 > match_by = "class"
 > ```
 
-## `process_tracking`
+### `process_tracking` {#config-process-tracking}
 
-Default value is `true`
+<ConfigDefault plugin="scratchpads" option="process_tracking" />
 
 Allows disabling the process management. Use only if running a progressive web app (Chrome based apps) or similar.
 
@@ -77,9 +85,10 @@ process_tracking = false
 > the process can not be managed the same way as usual apps and the correlation
 > between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
 
-## `skip_windowrules`
+### `skip_windowrules` {#config-skip-windowrules}
 
-Default value is `[]`
+<ConfigDefault plugin="scratchpads" option="skip_windowrules" />
+
 Allows you to skip the window rules for a specific scratchpad.
 Available rules are:
 

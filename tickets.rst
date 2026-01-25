@@ -175,15 +175,6 @@ Skip "configreloaded" in monitors plugin if it's due to the post_command of wall
 
 --------------------------------------------------------------------------------
 
-scratchpads: attach / detach only attaches !
-============================================
-
-:bugid: 56
-:created: 2026-1-11T22:10:17
-:priority: 0
-
---------------------------------------------------------------------------------
-
 When "reload"ing, improve the merge algorithm of the config
 ===========================================================
 

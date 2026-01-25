@@ -1,0 +1,26 @@
+{
+  "name": "workspaces_follow_focus",
+  "description": "Makes non-visible workspaces available on the currently focused screen.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "change_workspace",
+      "signature": "change_workspace [direction]",
+      "short_description": "Switch workspaces of current monitor, avoiding displayed workspaces.",
+      "full_description": "[direction] Switch workspaces of current monitor, avoiding displayed workspaces.\n\nArgs:\n    direction: The direction to switch"
+    }
+  ],
+  "config": [
+    {
+      "name": "max_workspaces",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 10,
+      "description": "Maximum number of workspaces to manage",
+      "choices": null
+    }
+  ]
+}

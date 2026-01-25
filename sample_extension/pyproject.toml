@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pypr_examples"
 version = "0.0.1"
-description = "Hyperland addon counting focus changes"
+description = "Example pyprland plugin counting focus changes"
 authors = [
     "fdev31 <fdev31@gmail.com>",
 ]
@@ -10,11 +10,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pyprland = "^1.6.10"
+pyprland = "^2.4.0"
 
 [build-system]
 requires = [
     "poetry-core",
 ]
 build-backend = "poetry.core.masonry.api"
-

@@ -98,12 +98,11 @@ async def test_is_bar_alive_niri():
 def extension():
     ext = Extension("menubar")
     ext.backend = AsyncMock()
-    ext.hyprctl_json = ext.backend.execute_json
-    ext.notify_info = AsyncMock()
     ext.log = Mock()
     ext.config = {"monitors": ["DP-1", "HDMI-A-1"]}
     ext.state = Mock()
     ext.state.monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
+    ext.state.active_monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
     ext.state.environment = "hyprland"
     return ext
 
@@ -111,7 +110,7 @@ def extension():
 @pytest.mark.asyncio
 async def test_get_best_monitor_hyprland(extension):
     # Setup monitors return for Hyprland
-    extension.backend.execute_json.return_value = [
+    extension.backend.get_monitors.return_value = [
         {"name": "eDP-1", "currentFormat": "1920x1080"},
         {"name": "HDMI-A-1", "currentFormat": "1920x1080"},
     ]
@@ -121,7 +120,7 @@ async def test_get_best_monitor_hyprland(extension):
     assert best == "HDMI-A-1"
 
     # Now let's make DP-1 available
-    extension.backend.execute_json.return_value = [
+    extension.backend.get_monitors.return_value = [
         {"name": "eDP-1", "currentFormat": "1920x1080"},
         {"name": "HDMI-A-1", "currentFormat": "1920x1080"},
         {"name": "DP-1", "currentFormat": "2560x1440"},
@@ -178,13 +177,13 @@ async def test_set_best_monitor(extension):
     extension.get_best_monitor.return_value = ""
     await extension.set_best_monitor()
     assert extension.cur_monitor == "DP-1"  # first in state.monitors mock
-    extension.notify_info.assert_called()
+    extension.backend.notify_info.assert_called()
 
 
 @pytest.mark.asyncio
 async def test_event_monitoradded(extension):
     extension.cur_monitor = "HDMI-A-1"  # Index 1 in config
-    extension.kill = Mock()
+    extension.stop = AsyncMock()
     extension.on_reload = AsyncMock()
 
     # Add a less preferred monitor
@@ -193,22 +192,22 @@ async def test_event_monitoradded(extension):
 
     # Add a more preferred monitor (DP-1 is index 0)
     await extension.event_monitoradded("DP-1")
-    extension.kill.assert_called()
+    extension.stop.assert_called()
     extension.on_reload.assert_called()
 
 
 @pytest.mark.asyncio
 async def test_run_bar(extension):
-    extension.kill = Mock()
+    extension.stop = AsyncMock()
     extension.on_reload = AsyncMock()
 
     await extension.run_bar("start")
-    extension.kill.assert_called()
+    extension.stop.assert_called()
     extension.on_reload.assert_called()
 
-    extension.kill.reset_mock()
+    extension.stop.reset_mock()
     extension.on_reload.reset_mock()
 
     await extension.run_bar("stop")
-    extension.kill.assert_called()
+    extension.stop.assert_called()
     extension.on_reload.assert_not_called()

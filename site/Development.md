@@ -1,146 +1,269 @@
 # Development
 
-It's easy to write your own plugin by making a python package and then indicating it's name as the plugin name.
-
-[Contributing guidelines](https://github.com/hyprland-community/pyprland/blob/main/CONTRIBUTING.md)
-
-# Writing plugins
-
-Plugins can be loaded with full python module path, eg: `"mymodule.pyprlandplugin"`, the loaded module must provide an `Extension` class.
-
-Check the `interface.py` file to know the base methods, also have a look at the example below.
-
-To get more details when an error is occurring, use `pypr --debug <log file path>`, it will also display the log in the console.
-
-> [!note]
-> To quickly get started, you can directly edit the `experimental` built-in plugin.
-> In order to distribute it, make your own Python package or trigger a pull request.
-> If you prefer to make a separate package, check the [examples](https://github.com/hyprland-community/pyprland/blob/main/sample_extension/)'s package
-
-The `Extension` interface provides a couple of built-in attributes:
-
-- `config` : object exposing the plugin section in `pyprland.toml`
-- `notify` ,`notify_error`, `notify_info` : access to Hyprland's notification system
-- `hyprctl`, `hyprctl_json` : invoke [Hyprland's IPC system](https://wiki.hyprland.org/Configuring/Dispatchers/)
-
-
-> [!important]
-> Contact me to get your extension listed on the home page
+It's easy to write your own plugin by making a Python package and then indicating its name as the plugin name.
 
 > [!tip]
-> You can set a `plugins_paths=["/custom/path/example"]` in the `hyprland` section of the configuration to add extra paths (eg: during development).
+> For details on internal architecture, data flows, and design patterns, see the [Architecture](./Architecture) document.
 
-> [!Note]
-> If your extension is at the root of the plugin (this is not recommended, preferable add a name space, as in `johns_pyprland.super_feature`, rather than `super_feature`) you can still import it using the `external:` prefix when you refer to it in the `plugins` list.
+[Contributing guidelines](https://github.com/fdev31/pyprland/blob/main/CONTRIBUTING.md)
 
-# API Documentation
+## Quick Start
 
-Run `tox run -e doc` then visit `http://localhost:8080`
+### Debugging
 
-The most important to know are:
-
-- `hyprctl_json` to get a response from an IPC query
-- `hyprctl` to trigger general IPC commands
-- `on_reload` to be implemented, called when the config is (re)loaded
-- `run_<command_name>` to implement a command
-- `event_<event_name>` called when the given event is emitted by Hyprland
-
-All those methods are _async_
-
-On top of that:
-
-- the first line of a `run_*` command's docstring will be used by the `help` command
-- `self.config` in your _Extension_ contains the entry corresponding to your plugin name in the TOML file
-- `state` from `..common` module contains ready to use information
-- there is a `MenuMixin` in `..adapters.menus` to make menu-based plugins easy
-
-# Workflow
-
-Just `^C` when you make a change and repeat:
+To get detailed logs when an error occurs, use:
 
 ```sh
-pypr exit ; pypr --debug /tmp/output.log
+pypr --debug $HOME/pypr.log
 ```
 
+This displays logs in the console and writes them to the specified file.
 
-## Creating a plugin
+### Quick Experimentation
 
-```python
-from .interface import Plugin
+> [!note]
+> To quickly get started, you can directly edit the built-in [`experimental`](https://github.com/fdev31/pyprland/blob/main/pyprland/plugins/experimental.py) plugin.
+> To distribute your plugin, create your own Python package or submit a pull request.
 
+### Custom Plugin Paths
 
-class Extension(Plugin):
-    " My plugin "
+> [!tip]
+> Set `plugins_paths = ["/custom/path"]` in the `[pyprland]` section of your config to add extra plugin search paths during development.
 
-    async def init(self):
-        await self.notify("My plugin loaded")
-```
+## Writing Plugins
 
-## Adding a command
+### Plugin Loading
 
-Just add a method called `run_<name of your command>` to your `Extension` class, eg with "togglezoom" command:
-
-```python
-    zoomed = False
-
-    async def run_togglezoom(self, args):
-        """ this doc string will show in `help` to document `togglezoom`
-        But this line will not show in the CLI help
-        """
-      if self.zoomed:
-        await self.hyprctl('misc:cursor_zoom_factor 1', 'keyword')
-      else:
-        await self.hyprctl('misc:cursor_zoom_factor 2', 'keyword')
-      self.zoomed = not self.zoomed
-```
-
-## Reacting to an event
-
-Similar as a command, implement some `async def event_<the event you are interested in>` method.
-
-## Code safety
-
-Pypr ensures only one `run_` or `event_` handler runs at a time, allowing the plugins code to stay simple and avoid the need for concurrency handling.
-However, each plugin can run its handlers in parallel.
-
-# Reusable code
-
-```py
-from ..common import state, CastBoolMixin
-```
-
-- `state` provides a couple of handy variables so you don't have to fetch them, allow optimizing the most common operations
-- `Mixins` are providing common code, for instance the `CastBoolMixin` provides the `cast_bool` method to your `Extension`.
-
-If you want to use menus, then the `MenuMixin` will provide:
-- `menu` to show a menu
-- `ensure_menu_configured` to call before you require a menu in your plugin
-
-# Example
-
-You'll find a basic external plugin in the [examples](https://github.com/hyprland-community/pyprland/blob/main/sample_extension/) folder.
-
-It provides one command: `pypr dummy`.
-
-Read the [plugin code](https://github.com/hyprland-community/pyprland/blob/main/sample_extension/pypr_examples/focus_counter.py)
-
-It's a simple python package. To install it for development without a need to re-install it for testing, you can use `pip install -e .` in this folder.
-It's ready to be published using `poetry publish`, don't forget to update the details in the `pyproject.toml` file.
-
-## Usage
-
-Ensure you added `pypr_examples.focus_counter` to your `plugins` list:
+Plugins are loaded by their full Python module path:
 
 ```toml
 [pyprland]
-plugins = [
-  "pypr_examples.focus_counter"
-]
+plugins = ["mypackage.myplugin"]
 ```
 
-Optionally you can customize one color:
+The module must provide an `Extension` class inheriting from [`Plugin`](https://github.com/fdev31/pyprland/blob/main/pyprland/plugins/interface.py).
+
+> [!note]
+> If your extension is at the root level (not recommended), you can import it using the `external:` prefix:
+> ```toml
+> plugins = ["external:myplugin"]
+> ```
+> Prefer namespaced packages like `johns_pyprland.super_feature` instead.
+
+### Plugin Attributes
+
+Your `Extension` class has access to these attributes:
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `self.name` | `str` | Plugin identifier |
+| `self.config` | [`Configuration`](https://github.com/fdev31/pyprland/blob/main/pyprland/config.py) | Plugin's TOML config section |
+| `self.state` | [`SharedState`](https://github.com/fdev31/pyprland/blob/main/pyprland/common.py) | Shared application state (active workspace, monitor, etc.) |
+| `self.backend` | [`EnvironmentBackend`](https://github.com/fdev31/pyprland/blob/main/pyprland/adapters/backend.py) | WM interaction: commands, queries, notifications |
+| `self.log` | `Logger` | Plugin-specific logger |
+
+### Creating Your First Plugin
+
+```python
+from pyprland.plugins.interface import Plugin
+
+
+class Extension(Plugin):
+    """My custom plugin."""
+
+    async def init(self) -> None:
+        """Called once at startup."""
+        self.log.info("My plugin initialized")
+
+    async def on_reload(self) -> None:
+        """Called on init and config reload."""
+        self.log.info(f"Config: {self.config}")
+
+    async def exit(self) -> None:
+        """Cleanup on shutdown."""
+        pass
+```
+
+### Adding Commands
+
+Add `run_<commandname>` methods to handle `pypr <commandname>` calls.
+
+The **first line** of the docstring appears in `pypr help`:
+
+```python
+class Extension(Plugin):
+    zoomed = False
+
+    async def run_togglezoom(self, args: str) -> str | None:
+        """Toggle zoom level.
+
+        This second line won't appear in CLI help.
+        """
+        if self.zoomed:
+            await self.backend.execute("keyword misc:cursor_zoom_factor 1")
+        else:
+            await self.backend.execute("keyword misc:cursor_zoom_factor 2")
+        self.zoomed = not self.zoomed
+```
+
+### Reacting to Events
+
+Add `event_<eventname>` methods to react to [Hyprland events](https://wiki.hyprland.org/IPC/):
+
+```python
+async def event_openwindow(self, params: str) -> None:
+    """React to window open events."""
+    addr, workspace, cls, title = params.split(",", 3)
+    self.log.debug(f"Window opened: {title}")
+
+async def event_workspace(self, workspace: str) -> None:
+    """React to workspace changes."""
+    self.log.info(f"Switched to workspace: {workspace}")
+```
+
+> [!note]
+> **Code Safety:** Pypr ensures only one handler runs at a time per plugin, so you don't need concurrency handling. Each plugin runs independently in parallel. See [Architecture - Manager](./Architecture#manager) for details.
+
+### Configuration Schema
+
+Define expected config fields for automatic validation using [`ConfigField`](https://github.com/fdev31/pyprland/blob/main/pyprland/validation.py):
+
+```python
+from pyprland.plugins.interface import Plugin
+from pyprland.validation import ConfigField
+
+
+class Extension(Plugin):
+    config_schema = [
+        ConfigField("enabled", bool, required=False, default=True),
+        ConfigField("timeout", int, required=False, default=5000),
+        ConfigField("command", str, required=True),
+    ]
+
+    async def on_reload(self) -> None:
+        # Config is validated before on_reload is called
+        cmd = self.config["command"]  # Guaranteed to exist
+```
+
+### Using Menus
+
+For plugins that need menu interaction (rofi, wofi, tofi, etc.), use [`MenuMixin`](https://github.com/fdev31/pyprland/blob/main/pyprland/adapters/menus.py):
+
+```python
+from pyprland.adapters.menus import MenuMixin
+from pyprland.plugins.interface import Plugin
+
+
+class Extension(MenuMixin, Plugin):
+    async def run_select(self, args: str) -> None:
+        """Show a selection menu."""
+        await self.ensure_menu_configured()
+
+        options = ["Option 1", "Option 2", "Option 3"]
+        selected = await self.menu(options, "Choose an option:")
+
+        if selected:
+            await self.backend.notify_info(f"Selected: {selected}")
+```
+
+## Reusable Code
+
+### Shared State
+
+Access commonly needed information without fetching it:
+
+```python
+# Current workspace, monitor, window
+workspace = self.state.active_workspace
+monitor = self.state.active_monitor
+window_addr = self.state.active_window
+
+# Environment detection
+if self.state.environment == "niri":
+    # Niri-specific logic
+    pass
+```
+
+See [Architecture - Shared State](./Architecture#shared-state) for all available fields.
+
+### Mixins
+
+Use mixins for common functionality:
+
+```python
+from pyprland.common import CastBoolMixin
+from pyprland.plugins.interface import Plugin
+
+
+class Extension(CastBoolMixin, Plugin):
+    async def on_reload(self) -> None:
+        # Safely cast config values to bool
+        enabled = self.cast_bool(self.config.get("enabled", True))
+```
+
+## Development Workflow
+
+Restart the daemon after making changes:
+
+```sh
+pypr exit ; pypr --debug $HOME/pypr.log
+```
+
+### API Documentation
+
+Generate and browse the full API documentation:
+
+```sh
+tox run -e doc
+# Then visit http://localhost:8080
+```
+
+## Packaging & Distribution
+
+### Creating an External Plugin Package
+
+See the [sample extension](https://github.com/fdev31/pyprland/tree/main/sample_extension) for a complete example with:
+- Proper package structure
+- `pyproject.toml` configuration
+- Example plugin code: [`focus_counter.py`](https://github.com/fdev31/pyprland/blob/main/sample_extension/pypr_examples/focus_counter.py)
+
+### Development Installation
+
+Install your package in editable mode for testing:
+
+```sh
+cd your-plugin-package/
+pip install -e .
+```
+
+### Publishing
+
+When ready to distribute:
+
+```sh
+poetry publish
+```
+
+Don't forget to update the details in your `pyproject.toml` file first.
+
+### Example Usage
+
+Add your plugin to the config:
 
 ```toml
+[pyprland]
+plugins = ["pypr_examples.focus_counter"]
+
 ["pypr_examples.focus_counter"]
-color = "FFFF00"
+multiplier = 2
 ```
+
+> [!important]
+> Contact the maintainer to get your extension listed on the home page.
+
+## Further Reading
+
+- [Architecture](./Architecture) - Internal system design, data flows, and design patterns
+- [Plugins](./Plugins) - List of available built-in plugins
+- [Sample Extension](https://github.com/fdev31/pyprland/tree/main/sample_extension) - Complete example plugin package
+- [Hyprland IPC](https://wiki.hyprland.org/IPC/) - Hyprland's IPC documentation

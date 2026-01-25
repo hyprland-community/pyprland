@@ -18,7 +18,7 @@ def extension():
 @pytest.mark.asyncio
 async def test_init(extension):
     extension.monitors = []
-    extension.backend.execute_json.return_value = [{"name": "A"}, {"name": "B"}]
+    extension.backend.get_monitors.return_value = [{"name": "A"}, {"name": "B"}]
 
     await extension.init()
 

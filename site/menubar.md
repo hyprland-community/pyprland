@@ -1,11 +1,4 @@
 ---
-commands:
-  - name: bar restart
-    description: Restart/refresh Menu Bar on the "best" monitor.
-  - name: bar stop
-    description: Stop the Menu Bar process
-  - name: bar toggle
-    description: Toggle the Menu Bar visibility (stop if running, start if stopped)
 ---
 
 # menubar
@@ -16,27 +9,34 @@ Runs your favorite bar app (gbar, ags / hyprpanel, waybar, ...) with option to p
 - Automatically restarts the menu bar on crash
 - Checks which monitors are on and take the best one from a provided list
 
+<details>
+<summary>Example</summary>
+
+```toml
+[menubar]
+command = "gBar bar [monitor]"
+monitors = ["DP-1", "HDMI-1", "HDMI-1-A"]
+```
+
+</details>
+
 > [!tip]
 > This plugin supports both Hyprland and Niri. It will automatically detect the environment and use the appropriate IPC commands.
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="menubar" />
 
 ## Configuration
 
-### `command` <Badge type="danger" text="required" />
+<PluginConfig plugin="menubar" linkPrefix="config-" />
 
-The command which runs the menu bar. The string `[monitor]` will be replaced by the best monitor.
+### `command` {#config-command}
 
-### `monitors`
+<ConfigDefault plugin="menubar" option="command" />
 
-List of monitors to chose from, the first have higher priority over the second one etc...
+The command to run the bar. Use `[monitor]` as a placeholder for the monitor name:
 
-
-## Example
-
-```sh
-[gbar]
-monitors = ["DP-1", "HDMI-1", "HDMI-1-A"]
+```toml
+command = "waybar -o [monitor]"
 ```

@@ -48,6 +48,7 @@ def get_parser():
     subparsers.add_parser("edit", help="Edit the configuration file")
     subparsers.add_parser("exit", help="Exit the currently running daemon")
     subparsers.add_parser("help", help="Prints this help message")
+    subparsers.add_parser("validate", help="Validate the configuration file")
     subparsers.add_parser("version", help="Prints the current version")
     subparsers.add_parser("reload", help="Reload the configuration file")
 

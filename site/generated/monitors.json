@@ -1,0 +1,81 @@
+{
+  "name": "monitors",
+  "description": "Allows relative placement and configuration of monitors.",
+  "environments": [
+    "hyprland",
+    "niri"
+  ],
+  "commands": [
+    {
+      "name": "relayout",
+      "signature": "relayout",
+      "short_description": "Recompute & apply every monitors's layout.",
+      "full_description": "Recompute & apply every monitors's layout."
+    }
+  ],
+  "config": [
+    {
+      "name": "startup_relayout",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Relayout monitors on startup",
+      "choices": null
+    },
+    {
+      "name": "relayout_on_config_change",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Relayout when Hyprland config is reloaded",
+      "choices": null
+    },
+    {
+      "name": "new_monitor_delay",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 1.0,
+      "description": "Delay in seconds before handling new monitor",
+      "choices": null
+    },
+    {
+      "name": "unknown",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Command to run when an unknown monitor is detected",
+      "choices": null
+    },
+    {
+      "name": "placement",
+      "type": "dict",
+      "required": true,
+      "recommended": false,
+      "default": {},
+      "description": "Monitor placement rules (pattern -> positioning rules)",
+      "choices": null
+    },
+    {
+      "name": "hotplug_commands",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "Commands to run when specific monitors are plugged (pattern -> command)",
+      "choices": null
+    },
+    {
+      "name": "hotplug_command",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Command to run when any monitor is plugged",
+      "choices": null
+    }
+  ]
+}

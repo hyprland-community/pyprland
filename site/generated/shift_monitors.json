@@ -1,0 +1,16 @@
+{
+  "name": "shift_monitors",
+  "description": "Moves workspaces from monitor to monitor (carousel).",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "shift_monitors",
+      "signature": "shift_monitors <direction>",
+      "short_description": "Swaps monitors' workspaces in the given direction.",
+      "full_description": "<direction> Swaps monitors' workspaces in the given direction.\n\nArgs:\n    arg: The direction to shift"
+    }
+  ],
+  "config": []
+}

@@ -1,7 +1,4 @@
 ---
-commands:
-    - name: menu [name]
-      description: Displays the full menu or part of it if "name" is provided
 ---
 
 # shortcuts_menu
@@ -60,9 +57,9 @@ annotate = [
 </details>
 
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="shortcuts_menu" />
 
 > [!tip]
 > - If "name" is provided it will show the given sub-menu.
@@ -77,15 +74,20 @@ annotate = [
 
 All the [Menu](./Menu) configuration items are also available.
 
-### `entries` <Badge type="danger" text="required" />
+<PluginConfig plugin="shortcuts_menu" linkPrefix="config-" />
 
-Defines the menu entries. Supports [Variables](./Variables)
+### `entries` {#config-entries}
+
+<ConfigDefault plugin="shortcuts_menu" option="entries" />
+
+**Required.** Defines the menu entries. Supports [Variables](./Variables)
 
 ```toml
 [shortcuts_menu.entries]
 "entry 1" = "command to run"
 "entry 2" = "command to run"
 ```
+
 Submenus can be defined too (there is no depth limit):
 
 ```toml
@@ -98,14 +100,12 @@ foobar = "ls"
 
 #### Advanced usage
 
-Instead of navigating a configured list of menu options and running a pre-defined command, you can collect various *variables* (either static list of options selected by the user, or generated from a shell command) and then run a command using those variables. Eg:
+Instead of navigating a configured list of menu options and running a pre-defined command, you can collect various *variables* (either static list of options selected by the user, or generated from a shell command) and then run a command using those variables:
 
 ```toml
 "Play Video" = [
     {name="video_device", command="ls -1 /dev/video*"},
-    {name="player",
-        options=["mpv", "guvcview"]
-    },
+    {name="player", options=["mpv", "guvcview"]},
     "[player] [video_device]"
 ]
 
@@ -131,25 +131,29 @@ You must define a list of objects, containing:
 >   filter = "s/\t.*//"  # will remove everything after the TAB character
 > }
 > ```
-> check the [filters](./filters) page for more details
+> Check the [filters](./filters) page for more details
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start`
-### `command_end`
-### `submenu_start`
-### `submenu_end`
+### `command_start` / `command_end` {#config-command-start}
 
-Allow adding some text (eg: icon) before / after a menu entry.
+<ConfigDefault plugin="shortcuts_menu" option="command_start" />
 
-command_* is for final commands, while submenu_* is for entries leading to another menu.
+Allow adding some text (eg: icon) before / after a menu entry for final commands.
+
+### `submenu_start` / `submenu_end` {#config-submenu-start}
+
+<ConfigDefault plugin="shortcuts_menu" option="submenu_start" />
+
+Allow adding some text (eg: icon) before / after a menu entry leading to another menu.
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-### `skip_single`
+### `skip_single` {#config-skip-single}
 
-Defaults to `true`.
-When disabled, shows the menu even for single options
+<ConfigDefault plugin="shortcuts_menu" option="skip_single" />
+
+When disabled, shows the menu even for single options.
 
 ## Hints
 

@@ -1,5 +1,6 @@
 const enableVersions = true;
 import { defineConfig } from "vitepress";
+import { withMermaid } from "vitepress-plugin-mermaid";
 
 const version_names = [
   "2.3.5",
@@ -68,7 +69,7 @@ const plugin_list = {
 };
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: "Pyprland web",
   base: "/pyprland/",
   description: "The official Pyprland website",
@@ -103,10 +104,22 @@ export default defineConfig({
       collapsible: true,
       collapsed: true,
       "/versions": [
-        { text: "Getting started", link: "./Getting-started" },
+        { text: "Getting Started", link: "./Getting-started" },
+        { text: "Configuration", link: "./Configuration" },
+        { text: "Commands", link: "./Commands" },
         { text: "Plugins", link: "./Plugins" },
         { text: "Troubleshooting", link: "./Troubleshooting" },
         { text: "Development", link: "./Development" },
+        { text: "Examples", link: "./Examples" },
+        {
+          text: "Architecture",
+          link: "./Architecture",
+          collapsed: true,
+          items: [
+            { text: "Overview", link: "./Architecture_overview" },
+            { text: "Core Components", link: "./Architecture_core" },
+          ],
+        },
         plugin_list,
         {
           text: "Return to latest version",
@@ -114,10 +127,22 @@ export default defineConfig({
         },
       ],
       "/": [
-        { text: "Getting started", link: "./Getting-started" },
+        { text: "Getting Started", link: "./Getting-started" },
+        { text: "Configuration", link: "./Configuration" },
+        { text: "Commands", link: "./Commands" },
         { text: "Plugins", link: "./Plugins" },
         { text: "Troubleshooting", link: "./Troubleshooting" },
         { text: "Development", link: "./Development" },
+        { text: "Examples", link: "./Examples" },
+        {
+          text: "Architecture",
+          link: "./Architecture",
+          collapsed: true,
+          items: [
+            { text: "Overview", link: "./Architecture_overview" },
+            { text: "Core Components", link: "./Architecture_core" },
+          ],
+        },
         plugin_list,
       ],
     },
@@ -129,4 +154,10 @@ export default defineConfig({
       },
     ],
   },
-});
+  mermaid: {
+    // Mermaid configuration options
+  },
+  mermaidPlugin: {
+    class: "mermaid",
+  },
+}));

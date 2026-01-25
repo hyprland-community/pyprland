@@ -1,7 +1,4 @@
 ---
-commands:
-    - name: zoom [value]
-      description: Set the current zoom level (absolute or relative) - toggle zooming if no value is provided
 ---
 # magnify
 
@@ -12,7 +9,7 @@ Zooms in and out with an optional animation.
     <summary>Example</summary>
 
 ```sh
-pypr zoom  # sets zoom to `factor` (2 by default)
+pypr zoom  # sets zoom to `factor`
 pypr zoom +1  # will set zoom to 3x
 pypr zoom  # will set zoom to 1x
 pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
@@ -27,15 +24,15 @@ bind = $mainMod SHIFT, Z, exec, pypr zoom
 
 </details>
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="magnify" />
 
-### `[value]`
+### `zoom [factor]`
 
 #### unset / not specified
 
-Will zoom to [factor](#factor-optional) if not zoomed, else will set the zoom to 1x.
+Will zoom to [factor](#config-factor) if not zoomed, else will set the zoom to 1x.
 
 #### floating or integer value
 
@@ -60,21 +57,21 @@ It _looks_ more linear changes than using a single + or -.
 
 ## Configuration
 
-### `factor`
+<PluginConfig plugin="magnify" linkPrefix="config-" />
 
-default value is `2`
+### `factor` {#config-factor}
 
-Scaling factor to be used when no value is provided.
+<ConfigDefault plugin="magnify" option="factor" />
 
-### `duration`
+The zoom level to use when `pypr zoom` is called without arguments.
 
-Default value is `0`
+### `duration` {#config-duration}
 
-Duration in tenths of a second for the zoom animation to last, set to `15` for the former behavior.
-It is not needed anymore with recent Hyprland versions, you can even customize the animation in use:
+<ConfigDefault plugin="magnify" option="duration" />
 
-in *Hyprland* config:
-```
+Animation duration in seconds. Not needed with recent Hyprland versions - you can customize the animation in Hyprland config instead:
+
+```C
 animations {
     bezier = easeInOut,0.65, 0, 0.35, 1
     animation = zoomFactor, 1, 4, easeInOut

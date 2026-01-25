@@ -11,3 +11,16 @@ details {
     border-radius: 5px;
     padding: 0 1ex;
 }
+
+/* Mermaid: Make arrows visible in dark mode */
+.dark .mermaid .edgePath path,
+.dark .mermaid .flowchart-link,
+.dark .mermaid line {
+    stroke: #ffffff !important;
+}
+
+/* Mermaid: Arrow heads in dark mode */
+.dark .mermaid .arrowheadPath,
+.dark .mermaid marker path {
+    fill: #ffffff !important;
+}

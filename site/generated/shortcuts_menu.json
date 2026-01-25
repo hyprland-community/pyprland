@@ -1,0 +1,105 @@
+{
+  "name": "shortcuts_menu",
+  "description": "A flexible way to make your own shortcuts menus & launchers.",
+  "environments": [],
+  "commands": [
+    {
+      "name": "menu",
+      "signature": "menu [name]",
+      "short_description": "Shows the menu, if \"name\" is provided, will only show this sub-menu.",
+      "full_description": "[name] Shows the menu, if \"name\" is provided, will only show this sub-menu.\n\nArgs:\n    name: The menu name"
+    }
+  ],
+  "config": [
+    {
+      "name": "entries",
+      "type": "dict",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "Menu entries structure (nested dict of commands)",
+      "choices": null
+    },
+    {
+      "name": "engine",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Menu engine to use",
+      "choices": [
+        "fuzzel",
+        "tofi",
+        "rofi",
+        "wofi",
+        "bemenu",
+        "dmenu",
+        "anyrun",
+        "walker"
+      ]
+    },
+    {
+      "name": "parameters",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Extra parameters for the menu engine command",
+      "choices": null
+    },
+    {
+      "name": "separator",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": " | ",
+      "description": "Separator for menu display",
+      "choices": null
+    },
+    {
+      "name": "command_start",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Prefix for command entries",
+      "choices": null
+    },
+    {
+      "name": "command_end",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Suffix for command entries",
+      "choices": null
+    },
+    {
+      "name": "submenu_start",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Prefix for submenu entries",
+      "choices": null
+    },
+    {
+      "name": "submenu_end",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "\u279c",
+      "description": "Suffix for submenu entries",
+      "choices": null
+    },
+    {
+      "name": "skip_single",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Auto-select when only one option available",
+      "choices": null
+    }
+  ]
+}

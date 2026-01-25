@@ -1,3 +1,5 @@
+---
+---
 # system_notifier
 
 This plugin adds system notifications based on journal logs (or any program's output).
@@ -43,16 +45,27 @@ filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 ```
 </details>
 
+## Commands
+
+<PluginCommands plugin="system_notifier" />
 
 ## Configuration
 
-### `sources` (recommended)
+<PluginConfig plugin="system_notifier" linkPrefix="config-" />
 
-List of sources to enable (by default nothing is enabled)
+### `sources` {#config-sources}
 
-Each source must contain a `command` to run and a `parser` to use.
+<ConfigDefault plugin="system_notifier" option="sources" />
 
-You can also use a list of parsers, eg:
+List of sources to monitor. Each source must contain a `command` to run and a `parser` to use:
+
+```toml
+[[system_notifier.sources]]
+command = "journalctl -fx"
+parser = "journal"
+```
+
+You can also use multiple parsers:
 
 ```toml
 [[system_notifier.sources]]
@@ -60,71 +73,30 @@ command = "sudo journalctl -fkn"
 parser = ["journal", "custom_parser"]
 ```
 
-#### command (recommended)
+### `parsers` {#config-parsers}
 
-This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated. Aa common option is the system journal output (eg: `journalctl -u nginx`)
+<ConfigDefault plugin="system_notifier" option="parsers" />
 
-#### parser
-
-Sets the list of rules / parser to be used to extract lines of interest.
-Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.
-
-### `parsers` (recommended)
-
-A list of available parsers that can be used to detect lines of interest in the **sources** and re-format it before issuing a notification.
-
-Each parser definition must contain a **pattern** and optionally a **filter**, **color** and **duration**.
-
-#### pattern
+Named parser configurations. Each parser rule contains:
+- `pattern`: regex to match lines of interest
+- `filter`: optional [filter](./filters) to transform text (e.g., `s/.*value: (\d+)/Value=\1/`)
+- `color`: optional color in `"#hex"` or `"rgb()"` format
+- `duration`: notification display time in seconds (default: 3)
 
 ```toml
 [[system_notifier.parsers.custom_parser]]
 pattern = 'special value:'
-```
-
-The pattern is any regular expression.
-
-#### filter
-
-The [filters](./filters) allows to change the text before the notification, eg:
-`filter="s/.*special value: (\d+)/Value=\1/"`
-will set a filter so a string "special value: 42" will lead to the notification "Value=42"
-
-#### color
-
-You can also provide an optional **color** in `"hex"` or `"rgb()"` format
-
-```toml
+filter = "s/.*special value: (\d+)/Value=\1/"
 color = "#FF5500"
-```
-
-#### duration
-
-Notifications display for 3 seconds by default. To change how long they display, use `duration`, which is expressed in seconds.
-
-```toml
-[[system_notifier.parsers.custom_parser]]
-pattern = 'special value:'
 duration = 10
 ```
 
-### use_notify_send
+### Built-in "journal" parser
 
-If you want your notifications to display in your desktop environment's preferred notification UI rather than Hyprland's native notifications, you can set `use_notify_send` to `true`. This will send them via [libnotify](https://gitlab.gnome.org/GNOME/libnotify) using the [`notify-send`](https://man.archlinux.org/man/notify-send.1) command.
+A `journal` parser is provided, detecting link up/down, core dumps, and USB plugs.
 
-> [!note]
-> This option forces `notify-send` for this specific plugin. If you have set the global `notification_type = "notify-send"` in the `[pyprland]` section, this plugin will naturally use it without this option needing to be set.
+### `use_notify_send` {#config-use-notify-send}
 
-```toml
-[system_notifier]
-use_notify_send = true
-```
+<ConfigDefault plugin="system_notifier" option="use_notify_send" />
 
-### default_color
-
-Sets the notification color that will be used when none is provided in a *parser* definition.
-
-```toml
-[system_notifier]
-default_color = "#bbccbb"
-```
+When enabled, forces use of `notify-send` command instead of the compositor's native notification system.

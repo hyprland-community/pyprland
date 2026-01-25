@@ -10,10 +10,16 @@ from .objects import Scratch
 class ScratchDB:  # {{{
     """Single storage for every Scratch allowing a boring lookup & update API."""
 
-    _by_addr: dict[str, Scratch] = {}
-    _by_pid: dict[int, Scratch] = {}
-    _by_name: dict[str, Scratch] = {}
-    _states: defaultdict[str, set[Scratch]] = defaultdict(set)
+    _by_addr: dict[str, Scratch]
+    _by_pid: dict[int, Scratch]
+    _by_name: dict[str, Scratch]
+    _states: defaultdict[str, set[Scratch]]
+
+    def __init__(self) -> None:
+        self._by_addr = {}
+        self._by_pid = {}
+        self._by_name = {}
+        self._states = defaultdict(set)
 
     # State management {{{
     def get_by_state(self, status: str) -> set[Scratch]:

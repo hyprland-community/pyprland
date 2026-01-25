@@ -1,0 +1,45 @@
+{
+  "name": "menu",
+  "description": "Shared configuration for menu-based plugins.",
+  "environments": [],
+  "commands": [],
+  "config": [
+    {
+      "name": "engine",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Menu engine to use",
+      "choices": [
+        "fuzzel",
+        "tofi",
+        "rofi",
+        "wofi",
+        "bemenu",
+        "dmenu",
+        "anyrun",
+        "walker"
+      ]
+    },
+    {
+      "name": "parameters",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Extra parameters for the menu engine command",
+      "choices": null
+    }
+  ],
+  "engine_defaults": {
+    "fuzzel": "--match-mode=fuzzy -d -p '[prompt]'",
+    "tofi": "--prompt-text '[prompt]'",
+    "rofi": "-dmenu -i -p '[prompt]'",
+    "wofi": "-dmenu -i -p '[prompt]'",
+    "bemenu": "-c",
+    "dmenu": "-i",
+    "anyrun": "--plugins libstdin.so --show-results-immediately true",
+    "walker": "-d -k -p '[prompt]'"
+  }
+}

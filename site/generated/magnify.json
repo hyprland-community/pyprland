@@ -1,0 +1,35 @@
+{
+  "name": "magnify",
+  "description": "Toggles zooming of viewport or sets a specific scaling factor.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "zoom",
+      "signature": "zoom [factor]",
+      "short_description": "zooms to \"factor\" or toggles zoom level if factor is omitted.",
+      "full_description": "[factor] zooms to \"factor\" or toggles zoom level if factor is omitted.\n\nIf factor is omitted, it toggles between the configured zoom level and no zoom.\nFactor can be relative (e.g. +0.5 or -0.5)."
+    }
+  ],
+  "config": [
+    {
+      "name": "factor",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 2.0,
+      "description": "Zoom factor when toggling",
+      "choices": null
+    },
+    {
+      "name": "duration",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 0,
+      "description": "Animation duration in frames (0 to disable)",
+      "choices": null
+    }
+  ]
+}

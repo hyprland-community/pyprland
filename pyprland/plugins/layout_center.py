@@ -12,14 +12,34 @@ from functools import partial
 from typing import Any, cast
 
 from ..common import is_rotated
-from ..models import ClientInfo, MonitorInfo  # pylint: disable=unused-import
+from ..constants import MIN_CLIENTS_FOR_LAYOUT
+from ..models import ClientInfo
+from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
 class Extension(Plugin):
-    """Manages a layout with one centered window on top of others."""
+    """A workspace layout where one window is centered and maximized while others are in the background."""
 
     environments = ["hyprland"]
+
+    config_schema = ConfigItems(
+        ConfigField("margin", int, default=60, description="Margin around the centered window in pixels"),
+        ConfigField("offset", (str, list, tuple), default=[0, 0], description="Offset of the centered window as 'X Y' or [X, Y]"),
+        ConfigField("style", list, default=[], description="Window rules to apply to the centered window"),
+        ConfigField("captive_focus", bool, default=False, description="Keep focus on the centered window"),
+        ConfigField(
+            "on_new_client",
+            str,
+            default="focus",
+            choices=["focus", "background", "close"],
+            description="Behavior when a new window opens",
+        ),
+        ConfigField("next", str, description="Command to run when 'next' is called and layout is disabled"),
+        ConfigField("prev", str, description="Command to run when 'prev' is called and layout is disabled"),
+        ConfigField("next2", str, description="Alternative command for 'next'"),
+        ConfigField("prev2", str, description="Alternative command for 'prev'"),
+    )
 
     workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
     last_index = 0
@@ -47,7 +67,7 @@ class Extension(Plugin):
             return
         win_addr = "0x" + windescr.split(",", 1)[0]
 
-        behavior = self.config.get("on_new_client", "focus")
+        behavior = self.get_config_str("on_new_client")
         new_client: ClientInfo | None = None
         clients = await self.get_clients()
         new_client_idx = 0
@@ -64,7 +84,7 @@ class Extension(Plugin):
             self.last_index = new_client_idx
             if behavior == "background":
                 # focus the main client
-                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.focus_window(self.main_window_addr)
             elif behavior == "close":
                 await self._run_toggle()
             else:  # foreground
@@ -79,7 +99,7 @@ class Extension(Plugin):
         Args:
             _: The window address (unused)
         """
-        captive = self.config.get_bool("captive_focus")
+        captive = self.get_config_bool("captive_focus")
         is_not_active = self.state.active_window != self.main_window_addr
         if captive and self.enabled and is_not_active:
             try:
@@ -87,7 +107,7 @@ class Extension(Plugin):
             except StopIteration:
                 pass
             else:
-                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.focus_window(self.main_window_addr)
 
     async def event_closewindow(self, addr: str) -> None:
         """Disable when the main window is closed.
@@ -115,14 +135,14 @@ class Extension(Plugin):
         if fn:
             await fn()
         else:
-            await self.notify_error(f"unknown layout_center command: {what}")
+            await self.backend.notify_error(f"unknown layout_center command: {what}")
 
     async def on_reload(self) -> None:
         """Loads the configuration and apply the tag style."""
-        if not self.config.get("style"):
+        if not self.get_config_list("style"):
             return
         await self.backend.execute("windowrulev2 unset, tag:layout_center", base_command="keyword")
-        commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.config.get("style", [])]
+        commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.get_config_list("style")]
         if commands:
             await self.backend.execute(commands, base_command="keyword")
 
@@ -151,8 +171,8 @@ class Extension(Plugin):
         addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and cli["floating"]:
-                await self.backend.execute(f"togglefloating address:{addr}")
-                if self.config.get("style"):
+                await self.backend.toggle_floating(addr)
+                if self.get_config_list("style"):
                     await self.backend.execute(f"tagwindow -layout_center address:{addr}")
                 break
 
@@ -167,44 +187,48 @@ class Extension(Plugin):
         addr = self.main_window_addr
         for cli in clients:
             if cli["address"] == addr and not cli["floating"]:
-                await self.backend.execute(f"togglefloating address:{addr}")
-                if self.config.get("style"):
+                await self.backend.toggle_floating(addr)
+                if self.get_config_list("style"):
                     await self.backend.execute(f"tagwindow +layout_center address:{addr}")
                 break
 
-        x, y, width, height = await self._calculate_centered_geometry(self.margin, self.offset)
+        geometry = await self._calculate_centered_geometry(self.margin, self.offset)
+        if geometry is None:
+            return
+        x, y, width, height = geometry
 
-        await self.backend.execute(f"resizewindowpixel exact {width} {height},address:{addr}")
-        await self.backend.execute(f"movewindowpixel exact {x} {y},address:{addr}")
+        await self.backend.resize_window(addr, width, height)
+        await self.backend.move_window(addr, x, y)
 
     async def _calculate_centered_geometry(
         self, margin_conf: int | tuple[int, int], offset_conf: tuple[int, int]
-    ) -> tuple[int, int, int, int]:
+    ) -> tuple[int, int, int, int] | None:
         """Calculate the geometry (x, y, width, height) for the centered window.
 
         Args:
             margin_conf: The margin configuration
             offset_conf: The offset configuration
+
+        Returns:
+            Tuple of (x, y, width, height) or None if no focused monitor found.
         """
-        width = 100
-        height = 100
         x, y = offset_conf
-
         margin: tuple[int, int] = (margin_conf, margin_conf) if isinstance(margin_conf, int) else margin_conf
-        scale = 1.0
 
-        for monitor in cast("list[dict[str, Any]]", await self.backend.execute_json("monitors")):
-            scale = monitor["scale"]
-            if monitor["focused"]:
-                width = monitor["width"] - (2 * margin[0])
-                height = monitor["height"] - (2 * margin[1])
-                if is_rotated(cast("MonitorInfo", monitor)):
-                    width, height = height, width
-                x += monitor["x"] + (margin[0] / scale)
-                y += monitor["y"] + (margin[1] / scale)
-                break
+        try:
+            monitor = await self.backend.get_monitor_props()
+        except RuntimeError:
+            self.log.warning("No focused monitor found for centered geometry calculation")
+            return None
 
-        return int(x), int(y), int(width / scale), int(height / scale)
+        scale = monitor["scale"]
+        width = monitor["width"] - (2 * margin[0])
+        height = monitor["height"] - (2 * margin[1])
+        if is_rotated(monitor):
+            width, height = height, width
+        final_x = x + monitor["x"] + (margin[0] / scale)
+        final_y = y + monitor["y"] + (margin[1] / scale)
+        return int(final_x), int(final_y), int(width / scale), int(height / scale)
 
     # Subcommands
 
@@ -215,7 +239,7 @@ class Extension(Plugin):
             clients: The list of clients
         """
         clients = clients or await self.get_clients()
-        if len(clients) < 2:  # noqa: PLR2004
+        if len(clients) < MIN_CLIENTS_FOR_LAYOUT:
             # If < 2 clients, disable the layout & stop
             self.log.info("disabling (clients starvation)")
             await self.unprepare_window()
@@ -244,13 +268,13 @@ class Extension(Plugin):
                 new_client = clients[index]
                 await self.unprepare_window(clients)
                 self.main_window_addr = new_client["address"]
-                await self.backend.execute(f"focuswindow address:{self.main_window_addr}")
+                await self.backend.focus_window(self.main_window_addr)
                 self.last_index = index
                 await self.prepare_window(clients)
         elif default_override:
-            command = self.config.get(default_override)
+            command = self.get_config(default_override)
             if command:
-                await self.backend.execute(command)
+                await self.backend.execute(str(command))
 
     async def _run_toggle(self) -> None:
         """Toggle the center layout."""
@@ -268,16 +292,16 @@ class Extension(Plugin):
     @property
     def offset(self) -> tuple[int, int]:
         """Returns the centered window offset."""
-        offset = self.config.get("offset", (0, 0))
+        offset = self.get_config("offset")
         if isinstance(offset, str):
-            x, y = (int(i) for i in self.config["offset"].split() if i.strip())
+            x, y = (int(i) for i in offset.split() if i.strip())
             return (x, y)
         return cast("tuple[int, int]", offset)
 
     @property
     def margin(self) -> int:
         """Returns the margin of the centered window."""
-        return cast("int", self.config.get("margin", 60))
+        return self.get_config_int("margin")
 
     # enabled
     @property

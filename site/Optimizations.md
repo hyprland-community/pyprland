@@ -20,7 +20,7 @@ pip install -e .
 
 ### Pypr command
 
-In case you want to save some time when interacting with the daemon, the simplest is to use one of the `pypr-client` implementations as mentioned in the [getting started page](./Getting-started.md). If for some reason `pypr-client` isn't made available by the package of your OS and can not compile code,
+In case you want to save some time when interacting with the daemon, the simplest is to use `pypr-client`. See [Commands: pypr-client](./Commands#pypr-client) for details. If `pypr-client` isn't available from your OS package and you cannot compile code,
 you can use `socat` instead (needs to be installed).
 
 Example of a `pypr-cli` command (should be reachable from your environment's `PATH`):
@@ -29,4 +29,4 @@ Example of a `pypr-cli` command (should be reachable from your environment's `PA
 socat - "UNIX-CONNECT:${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.pyprland.sock" <<< $@
 ```
 On slow systems this may make a difference.
-Note that the "help" command will require usage of the standard `pypr` command.
+Note that `validate` and `edit` commands require the standard `pypr` command.

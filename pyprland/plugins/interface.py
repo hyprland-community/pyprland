@@ -1,53 +1,141 @@
 """Common plugin interface."""
 
 import contextlib
+import logging
+from dataclasses import dataclass
 from typing import Any
 
-from ..adapters.backend import EnvironmentBackend
-from ..common import Configuration, SharedState, get_logger
+from ..adapters.proxy import BackendProxy
+from ..common import SharedState, get_logger
+from ..config import Configuration, coerce_to_bool
 from ..models import ClientInfo
+from ..validation import ConfigItems, ConfigValidator
+
+ConfigValue = int | float | str | list[Any] | dict[Any, Any]
+"""Type alias for values returned by get_config."""
+
+
+@dataclass
+class PluginContext:
+    """Context from a plugin, for use by helper classes.
+
+    Groups the commonly needed plugin attributes (log, state, backend)
+    to reduce instance attribute count in helper classes.
+    """
+
+    log: logging.Logger
+    state: SharedState
+    backend: BackendProxy
 
 
 class Plugin:
-    """Base class for any pyprland plugin."""
+    """Base class for any pyprland plugin.
+
+    Configuration Access:
+        Use the typed accessor methods for reading configuration values:
+        - get_config_str(name) - for string values
+        - get_config_int(name) - for integer values
+        - get_config_float(name) - for float values
+        - get_config_bool(name) - for boolean values
+        - get_config_list(name) - for list values
+        - get_config_dict(name) - for dict values
+
+        All config keys must be defined in config_schema for validation and defaults.
+    """
 
     aborted = False
 
     environments: list[str] = []
     " The supported environments for this plugin. Empty list means all environments. "
 
-    backend: EnvironmentBackend
+    backend: BackendProxy
     " The environment backend "
 
-    # Deprecated methods calling backend equivalent
+    config_schema: ConfigItems
+    """Schema defining expected configuration fields. Override in subclasses to enable validation."""
 
-    async def hyprctl_json(self, command: str) -> Any:  # noqa: ANN401
-        """(Deprecated) Execute a hyprctl command and return the JSON result."""
-        return await self.backend.execute_json(command)
+    def get_config(self, name: str) -> ConfigValue:
+        """Get a configuration value by name.
 
-    async def hyprctl(self, command: str | list[str], **kwargs: Any) -> bool:  # noqa: ANN401
-        """(Deprecated) Execute a hyprctl command."""
-        return await self.backend.execute(command, **kwargs)
+        Args:
+            name: Configuration key name (must be defined in config_schema)
 
-    async def nirictl(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
-        """(Deprecated) Execute a nirictl command."""
-        return await self.backend.execute(command, **kwargs)
+        Returns:
+            The configuration value
 
-    async def nirictl_json(self, command: str) -> Any:  # noqa: ANN401
-        """(Deprecated) Execute a nirictl command and return the JSON result."""
-        return await self.backend.execute_json(command)
+        Raises:
+            KeyError: If the key is not defined in config_schema
+        """
+        # Configuration.get() already handles schema defaults via set_schema()
+        value = self.config.get(name)
 
-    async def notify(self, message: str, duration: int = 5000, color: str = "ff1010") -> None:
-        """(Deprecated) Send a notification."""
-        await self.backend.notify(message, duration, color)
+        if value is not None:
+            return value
 
-    async def notify_info(self, message: str, duration: int = 5000) -> None:
-        """(Deprecated) Send an info notification."""
-        await self.backend.notify_info(message, duration)
+        # Value is None - need schema for type-appropriate default
+        schema = self.config_schema.get(name)
+        if not schema:
+            msg = f"Unknown config key '{name}' - not defined in config_schema"
+            raise KeyError(msg)
 
-    async def notify_error(self, message: str, duration: int = 5000) -> None:
-        """(Deprecated) Send an error notification."""
-        await self.backend.notify_error(message, duration)
+        first_type = schema.field_type[0] if isinstance(schema.field_type, (list, tuple)) else schema.field_type
+        return first_type()  # type: ignore[no-any-return]
+
+    def get_config_str(self, name: str) -> str:
+        """Get a string configuration value by name."""
+        return str(self.get_config(name))
+
+    def get_config_int(self, name: str) -> int:
+        """Get an integer configuration value by name.
+
+        Args:
+            name: Configuration key name
+
+        Returns:
+            The integer value, or 0 if conversion fails
+        """
+        value = self.get_config(name)
+        try:
+            return int(value)  # type: ignore[arg-type]
+        except (ValueError, TypeError):
+            self.log.warning("Invalid integer value for %s: %s, using 0", name, value)
+            return 0
+
+    def get_config_float(self, name: str) -> float:
+        """Get a float configuration value by name.
+
+        Args:
+            name: Configuration key name
+
+        Returns:
+            The float value, or 0.0 if conversion fails
+        """
+        value = self.get_config(name)
+        try:
+            return float(value)  # type: ignore[arg-type]
+        except (ValueError, TypeError):
+            self.log.warning("Invalid float value for %s: %s, using 0.0", name, value)
+            return 0.0
+
+    def get_config_bool(self, name: str) -> bool:
+        """Get a boolean configuration value by name.
+
+        Handles loose typing: strings like "false", "no", "off", "0", "disabled"
+        are treated as False.
+        """
+        return coerce_to_bool(self.get_config(name))
+
+    def get_config_list(self, name: str) -> list[Any]:
+        """Get a list configuration value by name."""
+        result = self.get_config(name)
+        assert isinstance(result, list), f"Expected list for {name}, got {type(result)}"
+        return result
+
+    def get_config_dict(self, name: str) -> dict[str, Any]:
+        """Get a dict configuration value by name."""
+        result = self.get_config(name)
+        assert isinstance(result, dict), f"Expected dict for {name}, got {type(result)}"
+        return result
 
     config: Configuration
     " This plugin configuration section as a `dict` object "
@@ -59,19 +147,10 @@ class Plugin:
         """Create a new plugin `name` and the matching logger."""
         self.name = name
         """ the plugin name """
+        if not hasattr(self, "config_schema"):
+            self.config_schema = ConfigItems()
         self.log = get_logger(name)
         """ the logger to use for this plugin """
-        # Deprecated: use self.backend.* instead
-        # ctrl = get_controls(self.log)
-        # (
-        #     self.hyprctl,
-        #     self.hyprctl_json,  # pylint: disable=invalid-name
-        #     self.notify,
-        #     self.notify_info,
-        #     self.notify_error,
-        #     self.nirictl,
-        #     self.nirictl_json,
-        # ) = ctrl
         self.config = Configuration({}, logger=self.log)
 
     # Functions to override
@@ -98,6 +177,46 @@ class Plugin:
         self.config.clear()
         with contextlib.suppress(KeyError):
             self.config.update(config[self.name])
+        # Apply schema for default value lookups
+        if self.config_schema:
+            self.config.set_schema(self.config_schema)
+
+    def validate_config(self) -> list[str]:
+        """Validate the current configuration against the schema.
+
+        Override config_schema in subclasses to define expected fields.
+        Validation runs automatically during plugin loading if schema is defined.
+
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        if not self.config_schema:
+            return []
+
+        validator = ConfigValidator(self.config, self.name, self.log)
+        errors = validator.validate(self.config_schema)
+        validator.warn_unknown_keys(self.config_schema)
+        return errors
+
+    @classmethod
+    def validate_config_static(cls, plugin_name: str, config: dict) -> list[str]:
+        """Validate configuration without instantiating the plugin.
+
+        Override in subclasses for custom validation logic.
+        Called by 'pypr validate' CLI command.
+
+        Args:
+            plugin_name: Name of the plugin (for error messages)
+            config: The plugin's configuration dict
+
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        if not cls.config_schema:
+            return []
+        log = logging.getLogger(f"pyprland.plugins.{plugin_name}")
+        validator = ConfigValidator(config, plugin_name, log)
+        return validator.validate(cls.config_schema)
 
     async def get_clients(
         self,

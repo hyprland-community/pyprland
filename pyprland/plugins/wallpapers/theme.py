@@ -15,8 +15,12 @@ from .imageutils import (
 from .models import MATERIAL_VARIATIONS, ColorVariant, MaterialColors, VariantConfig
 
 
-async def detect_theme() -> str:
-    """Detect the system theme (light/dark)."""
+async def detect_theme(logger: logging.Logger) -> str:
+    """Detect the system theme (light/dark).
+
+    Args:
+        logger: Logger instance for debug messages
+    """
     # Try gsettings (GNOME/GTK)
     try:
         proc = await asyncio.create_subprocess_shell(
@@ -31,8 +35,8 @@ async def detect_theme() -> str:
                 return "light"
             if "prefer-dark" in output or "'dark'" in output:
                 return "dark"
-    except Exception:  # pylint: disable=broad-exception-caught
-        logging.getLogger(__name__).debug("gsettings not available for theme detection")
+    except OSError:
+        logger.debug("gsettings not available for theme detection")
 
     # Try darkman
     try:
@@ -44,8 +48,8 @@ async def detect_theme() -> str:
         stdout, _ = await proc.communicate()
         if proc.returncode == 0:
             return stdout.decode().strip()
-    except Exception:  # pylint: disable=broad-exception-caught
-        logging.getLogger(__name__).debug("darkman not available for theme detection")
+    except OSError:
+        logger.debug("darkman not available for theme detection")
 
     return "dark"
 

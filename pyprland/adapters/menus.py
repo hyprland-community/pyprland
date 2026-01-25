@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 
 from ..common import apply_variables, get_logger
 from ..models import PyprError
+from ..validation import ConfigField, ConfigItems
 
 if TYPE_CHECKING:
-    from ..common import Configuration
+    from ..config import Configuration
 
 __all__ = ["MenuEngine", "MenuMixin"]
 
@@ -80,63 +81,36 @@ class MenuEngine:
         return (await proc.stdout.read()).decode().strip()
 
 
-class TofiMenu(MenuEngine):
-    """A tofi based menu."""
+def _menu(proc: str, params: str) -> type[MenuEngine]:
+    """Create a menu engine class.
 
-    proc_name = "tofi"
-    proc_extra_parameters: str = "--prompt-text '[prompt]'"
+    Args:
+        proc: process name for this engine
+        params: default parameters to pass to the process
 
-
-class RofiMenu(MenuEngine):
-    """A rofi based menu."""
-
-    proc_name = "rofi"
-    proc_extra_parameters = "-dmenu -i -p '[prompt]'"
-
-
-class WofiMenu(MenuEngine):
-    """A wofi based menu."""
-
-    proc_name = "wofi"
-    proc_extra_parameters = "-dmenu -i -p '[prompt]'"
+    Returns:
+        A MenuEngine subclass configured for the specified menu program
+    """
+    return type(
+        f"{proc.title()}Menu",
+        (MenuEngine,),
+        {"proc_name": proc, "proc_extra_parameters": params, "__doc__": f"A {proc} based menu."},
+    )
 
 
-class DmenuMenu(MenuEngine):
-    """A dmenu based menu."""
-
-    proc_name = "dmenu"
-    proc_extra_parameters = "-i"
-
-
-class BemenuMenu(MenuEngine):
-    """A bemenu based menu."""
-
-    proc_name = "bemenu"
-    proc_extra_parameters = "-c"
-
-
-class FuzzelMenu(MenuEngine):
-    """A fuzzel based menu."""
-
-    proc_name = "fuzzel"
-    proc_extra_parameters = "--match-mode=fuzzy -d -p '[prompt]'"
-
-
-class WalkerMenu(MenuEngine):
-    """A walker based menu."""
-
-    proc_name = "walker"
-    proc_extra_parameters = "-d -k -p '[prompt]'"
-
-
-class AnyrunMenu(MenuEngine):
-    """A bemenu based menu."""
-
-    proc_name = "anyrun"
-    proc_extra_parameters = "--plugins libstdin.so --show-results-immediately true"
-
+TofiMenu = _menu("tofi", "--prompt-text '[prompt]'")
+RofiMenu = _menu("rofi", "-dmenu -i -p '[prompt]'")
+WofiMenu = _menu("wofi", "-dmenu -i -p '[prompt]'")
+DmenuMenu = _menu("dmenu", "-i")
+BemenuMenu = _menu("bemenu", "-c")
+FuzzelMenu = _menu("fuzzel", "--match-mode=fuzzy -d -p '[prompt]'")
+WalkerMenu = _menu("walker", "-d -k -p '[prompt]'")
+AnyrunMenu = _menu("anyrun", "--plugins libstdin.so --show-results-immediately true")
 
 every_menu_engine = [FuzzelMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu, WalkerMenu]
+
+MENU_ENGINE_CHOICES: list[str] = [engine.proc_name for engine in every_menu_engine]
+"""List of available menu engine names, derived from every_menu_engine."""
 
 
 async def init(force_engine: str | None = None, extra_parameters: str = "") -> MenuEngine:
@@ -173,6 +147,21 @@ async def init(force_engine: str | None = None, extra_parameters: str = "") -> M
 class MenuMixin:
     """An extension mixin supporting 'engine' and 'parameters' config options to show a menu."""
 
+    menu_config_schema = ConfigItems(
+        ConfigField(
+            "engine",
+            str,
+            description="Menu engine to use",
+            choices=MENU_ENGINE_CHOICES,
+        ),
+        ConfigField(
+            "parameters",
+            str,
+            description="Extra parameters for the menu engine command",
+        ),
+    )
+    """Schema for menu configuration fields. Plugins using MenuMixin should include this in their config_schema."""
+
     _menu_configured = False
     menu: MenuEngine
     """ provided `MenuEngine` """
@@ -185,7 +174,7 @@ class MenuMixin:
     async def ensure_menu_configured(self) -> None:
         """If not configured, init the menu system."""
         if not self._menu_configured:
-            self.menu = await init(self.config.get("engine"), self.config.get("parameters", ""))
+            self.menu = await init(self.config.get_str("engine") or None, self.config.get_str("parameters"))
             self.log.info("Using %s engine", self.menu.proc_name)
             self._menu_configured = True
 

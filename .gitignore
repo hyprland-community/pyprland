@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+site/.vitepress/cache/
+node_modules/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -157,3 +159,6 @@ cython_debug/
 
 # Nix
 result
+
+# Local development files
+OLD/

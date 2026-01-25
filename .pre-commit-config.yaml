@@ -3,17 +3,24 @@ repos:
   - repo: local
     hooks:
       - id: versionMgmt
-        name: versionMgmt
+        name: Increment the version number
         entry: ./scripts/update_version
         language: system
+      - id: wikiDocGen
+        name: Generate wiki docs
+        entry: ./scripts/generate_plugin_docs.py
+        language: system
+      - id: wikiDocCheck
+        name: Check wiki docs coverage
+        entry: python scripts/check_plugin_docs.py
+        language: system
+        pass_filenames: false
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: "v0.14.8"
+    rev: "v0.14.14"
     hooks:
       # Run the linter.
       - id: ruff-check
-        args: [--fix]
-      # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v6.0.0"
@@ -33,8 +40,18 @@ repos:
     hooks:
       - id: beautysh
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.37.1"
+    rev: "v1.38.0"
     hooks:
       - id: yamllint
+
+  - repo: local
+    hooks:
+      - id: runtests
+        name: Run pytest
+        entry: pytest tests
+        pass_filenames: false
+        language: system
+        stages: [pre-push]
+
 #        types: [python]
 #        pass_filenames: false

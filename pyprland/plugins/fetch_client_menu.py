@@ -1,15 +1,25 @@
 """Select a client window and move it to the active workspace."""
 
 from ..adapters.menus import MenuMixin
+from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
 class Extension(MenuMixin, Plugin):
-    """Shows a menu with shortcuts."""
+    """Shows a menu to select and fetch a window to your active workspace."""
 
     environments = ["hyprland"]
 
-    _windows_origins: dict[str, str] = {}
+    config_schema = ConfigItems(
+        *MenuMixin.menu_config_schema,
+        ConfigField("separator", str, default="|", description="Separator between window number and title"),
+    )
+
+    _windows_origins: dict[str, str]
+
+    async def on_reload(self) -> None:
+        """Initialize windows origins dict on reload."""
+        self._windows_origins = {}
 
     # Commands
 
@@ -19,9 +29,9 @@ class Extension(MenuMixin, Plugin):
         try:
             origin = self._windows_origins[addr]
         except KeyError:
-            await self.notify_error("unknown window origin")
+            await self.backend.notify_error("unknown window origin")
         else:
-            await self.backend.execute(f"movetoworkspacesilent {origin},address:{addr}")
+            await self.backend.move_window_to_workspace(addr, origin)
 
     async def run_fetch_client_menu(self) -> None:
         """Select a client window and move it to the active workspace."""
@@ -29,7 +39,7 @@ class Extension(MenuMixin, Plugin):
 
         clients = await self.get_clients(workspace_bl=self.state.active_workspace)
 
-        separator = self.config.get("separator", "|")
+        separator = self.get_config_str("separator")
 
         choice = await self.menu.run([f"{i + 1} {separator} {c['title']}" for i, c in enumerate(clients)])
 
@@ -37,4 +47,4 @@ class Extension(MenuMixin, Plugin):
             num = int(choice.split(None, 1)[0]) - 1
             addr = clients[num]["address"]
             self._windows_origins[addr] = clients[num]["workspace"]["name"]
-            await self.backend.execute(f"movetoworkspace {self.state.active_workspace},address:{addr}")
+            await self.backend.move_window_to_workspace(addr, self.state.active_workspace, silent=False)

@@ -1,201 +1,110 @@
-# Getting started
+# Getting Started
 
-Pypr consists in two things:
+Pypr consists of two things:
 
-- **a tool**: `pypr` which runs the daemon (service), but also allows to interact with it
-  - `pypr-client` is a more limited, faster version, meant to be used in your `hyprland.conf` keyboard bindings **only**
-- **some config file**: `~/.config/hypr/pyprland.toml` (or the path set using `--config`) using the [TOML](https://toml.io/en/) format
-
-The `pypr` tool only have a few built-in commands:
-
-- `help` lists available commands (including plugins commands)
-- `exit` will terminate the service process
-- `edit` edit the configuration using your `$EDITOR` (or `vi`), reloads on exit
-- `dumpjson` shows a JSON representation of the configuration (after other files have been `include`d)
-- `reload` reads the configuration file and apply some changes:
-  - new plugins will be loaded
-  - configuration items will be updated (most plugins will use the new values on the next usage)
-
-Other commands are implemented by adding [plugins](./Plugins).
+- **A tool**: `pypr` which runs the daemon (service) and allows you to interact with it
+- **A config file**: `~/.config/hypr/pyprland.toml` using the [TOML](https://toml.io/en/) format
 
 > [!important]
-> - with no argument it runs the daemon (doesn't fork in the background)
->
-> - if you pass parameters, it will interact with the daemon instead.
+> - With no arguments, `pypr` runs the daemon (doesn't fork to background)
+> - With arguments, it sends commands to the running daemon
 
 > [!tip]
-> Pypr *command* names are documented using underscores (`_`) but you can use dashes (`-`) instead.
-> Eg: `pypr shift_monitors` and `pypr shift-monitors` will run the same command
-
-
-## Configuration file
-
-The configuration file uses a [TOML format](https://toml.io/) with the following as the bare minimum:
-
-```toml
-[pyprland]
-plugins = ["plugin_name", "other_plugin"]
-```
-
-Additionally some plugins require **Configuration** options, using the following format:
-
-```toml
-[plugin_name]
-plugin_option = 42
-
-[plugin_name.another_plugin_option]
-suboption = "config value"
-```
-
-You can also split your configuration into [Multiple configuration files](./MultipleConfigurationFiles).
+> For keybindings, use `pypr-client` instead of `pypr` for faster response (~1ms vs ~50ms). See [Commands: pypr-client](./Commands#pypr-client) for details.
 
 ## Installation
 
-Check your OS package manager first, eg:
+Check your OS package manager first:
 
-- Archlinux: you can find it on AUR, eg with [yay](https://github.com/Jguer/yay): `yay pyprland`
-- NixOS: Instructions in the [Nix](./Nix) page
+- **Arch Linux**: Available on AUR, e.g., with [yay](https://github.com/Jguer/yay): `yay pyprland`
+- **NixOS**: See the [Nix](./Nix) page for instructions
 
-Otherwise, use the python package manager (pip) [inside a virtual environment](InstallVirtualEnvironment)
+Otherwise, install via pip (preferably in a [virtual environment](./InstallVirtualEnvironment)):
 
 ```sh
 pip install pyprland
 ```
 
-## Running
+## Minimal Configuration
+
+Create `~/.config/hypr/pyprland.toml` with:
+
+```toml
+[pyprland]
+plugins = [
+    "scratchpads",
+    "magnify",
+]
+```
+
+This enables two popular plugins. See the [Plugins](./Plugins) page for the full list.
+
+## Running the Daemon
 
 > [!caution]
-> If you messed with something else than your OS packaging system to get `pypr` installed, use the full path to the `pypr` command.
+> If you installed pypr outside your OS package manager (e.g., pip, virtual environment), use the full path to the `pypr` command. Get it with `which pypr` in a working terminal.
 
-Preferably start the process with hyprland, adding to `hyprland.conf`:
+### Option 1: Hyprland exec-once
+
+Add to your `hyprland.conf`:
 
 ```ini
 exec-once = /usr/bin/pypr
 ```
 
-or if you run into troubles (use the first version once your configuration is stable):
+For debugging, use:
 
 ```ini
-exec-once = /usr/bin/pypr --debug /tmp/pypr.log
+exec-once = /usr/bin/pypr --debug $HOME/pypr.log
 ```
 
-> [!warning]
-> To avoid issues (eg: you have a complex setup, maybe using a virtual environment), you may want to set the full path (eg: `/home/bob/venv/bin/pypr`).
-> You can get it from `which pypr` in a working terminal
+### Option 2: Systemd User Service
 
-Once the `pypr` daemon is started (cf `exec-once`), you can list the eventual commands which have been added by the plugins using `pypr -h` or `pypr help`, those commands are generally meant to be use via key bindings, see the `hyprland.conf` part of *Configuring* section below.
+Create `~/.config/systemd/user/pyprland.service`:
 
-## Configuring
+```ini
+[Unit]
+Description=Starts pyprland daemon
+After=graphical-session.target
+Wants=graphical-session.target
+# Optional: wait for other services to start first
+# Wants=hyprpaper.service
+StartLimitIntervalSec=600
+StartLimitBurst=5
 
-Create a configuration file in `~/.config/hypr/pyprland.toml` enabling a list of plugins, each plugin may have its own configuration needs or don't need any configuration at all.
-Most default values should be acceptable for most users, options which hare not mandatory are marked as such.
+[Service]
+Type=simple
+# Optional: only start on specific compositor
+# For Hyprland:
+# ExecStartPre=/bin/sh -c '[ "$XDG_CURRENT_DESKTOP" = "Hyprland" ] || exit 0'
+# For Niri:
+# ExecStartPre=/bin/sh -c '[ "$XDG_CURRENT_DESKTOP" = "niri" ] || exit 0'
+ExecStart=pypr
+Restart=always
 
-> [!important]
-> Provide the values for the configuration options which have no annotation such as "(optional)"
-
-Check the [TOML format](https://toml.io/) for details about the syntax.
-
-Simple example:
-
-```toml
-[pyprland]
-plugins = [
-    "shift_monitors",
-    "workspaces_follow_focus"
-]
+[Install]
+WantedBy=graphical-session.target
 ```
 
-### Global Configuration Options
+Then enable and start the service:
 
-You can add the following options to the `[pyprland]` section:
-
-- **notification_type**: Controls how Pyprland sends notifications.
-  - `"auto"` (default): Adapts to the running environment (Niri uses `notify-send`, Hyprland uses `hyprctl notify`).
-  - `"notify-send"`: Forces use of the `notify-send` command (useful if you want standard desktop notifications on Hyprland).
-  - `"native"`: Forces use of the compositor's native notification system (if available).
-
-<details>
-  <summary>
-More complex example
-  </summary>
-
-```toml
-[pyprland]
-plugins = [
-  "scratchpads",
-  "lost_windows",
-  "monitors",
-  "toggle_dpms",
-  "magnify",
-  "expose",
-  "shift_monitors",
-  "workspaces_follow_focus",
-]
-
-[monitors.placement]
-"Acer".top_center_of = "Sony"
-
-[workspaces_follow_focus]
-max_workspaces = 9
-
-[expose]
-include_special = false
-
-[scratchpads.stb]
-animation = "fromBottom"
-command = "kitty --class kitty-stb sstb"
-class = "kitty-stb"
-lazy = true
-size = "75% 45%"
-
-[scratchpads.stb-logs]
-animation = "fromTop"
-command = "kitty --class kitty-stb-logs stbLog"
-class = "kitty-stb-logs"
-lazy = true
-size = "75% 40%"
-
-[scratchpads.term]
-animation = "fromTop"
-command = "kitty --class kitty-dropterm"
-class = "kitty-dropterm"
-size = "75% 60%"
-
-[scratchpads.volume]
-animation = "fromRight"
-command = "pavucontrol"
-class = "org.pulseaudio.pavucontrol"
-lazy = true
-size = "40% 90%"
-unfocus = "hide"
+```sh
+systemctl enable --user --now pyprland.service
 ```
 
-Some of those plugins may require changes in your `hyprland.conf` to fully operate or to provide a convenient access to a command, eg:
+## Verifying It Works
 
-```bash
+Once the daemon is running, check available commands:
 
-$pypr = uwsm-app -- /usr/local/bin/pypr-client
-
-bind = $mainMod SHIFT,  Z, exec, $pypr zoom
-bind = $mainMod ALT,    P, exec, $pypr toggle_dpms
-bind = $mainMod SHIFT,  O, exec, $pypr shift_monitors +1
-bind = $mainMod,        B, exec, $pypr expose
-bind = $mainMod,        K, exec, $pypr change_workspace +1
-bind = $mainMod,        J, exec, $pypr change_workspace -1
-bind = $mainMod,        L, exec, $pypr toggle_dpms
-bind = $mainMod  SHIFT, M, exec, $pypr toggle stb stb-logs
-bind = $mainMod,        A, exec, $pypr toggle term
-bind = $mainMod,        V, exec, $pypr toggle volume
+```sh
+pypr help
 ```
 
-This example makes use of the faster `pypr-client` which may not be available depending on how you installed,
-in case you want to install it manually, just download [the source code](https://github.com/hyprland-community/pyprland/blob/main/client/) and compile it (eg: `gcc -o pypr-client pypr-client.c`).
-Rust, Go and C versions are available.
+If something isn't working, check the [Troubleshooting](./Troubleshooting) page.
 
+## Next Steps
 
-</details>
-
-> [!tip]
-> Consult or share [configuration files](https://github.com/hyprland-community/pyprland/tree/main/examples)
->
-> You might also be interested in [optimizations](./Optimizations).
+- [Configuration](./Configuration) - Full configuration reference
+- [Commands](./Commands) - CLI commands and shell completions
+- [Plugins](./Plugins) - Browse available plugins
+- [Examples](./Examples) - Complete configuration examples

@@ -10,7 +10,7 @@ def extension():
     ext = Extension("toggle_dpms")
     ext.backend = AsyncMock()
     # Mocking monitor list
-    ext.backend.execute_json = AsyncMock(return_value=[{"name": "DP-1", "dpmsStatus": True}, {"name": "DP-2", "dpmsStatus": True}])
+    ext.backend.get_monitors = AsyncMock(return_value=[{"name": "DP-1", "dpmsStatus": True}, {"name": "DP-2", "dpmsStatus": True}])
     ext.backend.execute = AsyncMock()
     return ext
 
@@ -31,7 +31,7 @@ async def test_run_toggle_dpms_on(extension):
     extension.backend.execute.reset_mock()
 
     # Change state to OFF for the second call
-    extension.backend.execute_json.return_value = [{"name": "DP-1", "dpmsStatus": False}, {"name": "DP-2", "dpmsStatus": False}]
+    extension.backend.get_monitors.return_value = [{"name": "DP-1", "dpmsStatus": False}, {"name": "DP-2", "dpmsStatus": False}]
 
     # Second toggle should turn it on
     await extension.run_toggle_dpms()

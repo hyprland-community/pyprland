@@ -3,15 +3,14 @@
 __all__ = ["Scratch"]
 
 import asyncio
-import os
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from ...aioops import aiexists, aiopen
-from ...common import SharedState
 from ...models import ClientInfo, MonitorInfo, VersionInfo
+from ..interface import PluginContext
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
+from .schema import SCRATCHPAD_SCHEMA
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -29,63 +28,6 @@ if TYPE_CHECKING:
             **kw: Any,  # noqa: ANN401
         ) -> ClientInfo | None:
             pass
-
-
-class WindowRuleSet:
-    """Windowrule set builder."""
-
-    def __init__(self, state: SharedState) -> None:
-        self.state = state
-        self._params: list[tuple[str, str]] = []
-        self._class = ""
-        self._name = "PyprScratchR"
-
-    def set_class(self, value: str) -> None:
-        """Set the windowrule matching class.
-
-        Args:
-            value: The class name
-        """
-        self._class = value
-
-    def set_name(self, value: str) -> None:
-        """Set the windowrule name.
-
-        Args:
-            value: The name
-        """
-        self._name = value
-
-    def set(self, param: str, value: str) -> None:
-        """Set a windowrule property.
-
-        Args:
-            param: The property name
-            value: The property value
-        """
-        self._params.append((param, value))
-
-    def _get_content(self) -> Iterable[str]:
-        """Get the windowrule content."""
-        if self.state.hyprland_version > VersionInfo(0, 47, 2):
-            if self.state.hyprland_version < VersionInfo(0, 53, 0):
-                for p in self._params:
-                    yield f"windowrule {p[0]} {p[1]}, class: {self._class}"
-            elif self._name:
-                yield f"windowrule[{self._name}]:enable true"
-                yield f"windowrule[{self._name}]:match:class {self._class}"
-                for p in self._params:
-                    yield f"windowrule[{self._name}]:{p[0]} {p[1]}"
-            else:
-                for p in self._params:
-                    yield f"windowrule {p[0]} {p[1]}, match:class {self._class}"
-        else:
-            for p in self._params:
-                yield f"windowrule {p[0]} {p[1]}, ^({self._class})$"
-
-    def get_content(self) -> list[str]:
-        """Get the windowrule content."""
-        return list(self._get_content())
 
 
 @dataclass
@@ -110,31 +52,36 @@ class Scratch:  # {{{
     uid = ""
     monitor = ""
     pid = -1
-    excluded_scratches: list[str] = []
-    state: SharedState
+    excluded_scratches: list[str]
 
-    def __init__(self, uid: str, opts: dict[str, Any], plugin: "Extension") -> None:
-        self.log = plugin.log
+    def __init__(self, uid: str, full_config: dict[str, Any], plugin: "Extension") -> None:
+        """Initialize a scratchpad.
+
+        Args:
+            uid: Unique identifier for the scratchpad
+            full_config: The full scratchpads configuration dictionary
+            plugin: The scratchpad extension instance
+        """
+        self.ctx = PluginContext(plugin.log, plugin.state, plugin.backend)
         self.uid = uid
-        self.state = plugin.state
-        self.backend = plugin.backend
-        self.set_config(opts)
+        self.set_config(full_config)
         self.client_info: ClientInfo = {}  # type: ignore
         self.meta = MetaInfo()
         self.extra_addr: set[str] = set()  # additional client addresses
+        self.excluded_scratches: list[str] = []
 
     @property
     def forced_monitor(self) -> str | None:
         """Returns forced monitor if available, else None."""
         forced_monitor = self.conf.get("force_monitor")
-        if forced_monitor in self.state.monitors:
+        if forced_monitor in self.ctx.state.active_monitors:
             return cast("str", forced_monitor)
         return None
 
     @property
     def animation_type(self) -> str:
         """Returns the configured animation (forced lowercase)."""
-        return self.conf.get_str("animation", "").lower()
+        return self.conf.get_str("animation").lower()
 
     def _make_initial_config(self, config: dict) -> dict:
         """Return configuration for the scratchpad.
@@ -154,7 +101,7 @@ class Scratch:  # {{{
                     opts.update(config[source])
                 else:
                     text = f"Scratchpad {self.uid} tried to use {source}, but it doesn't exist"
-                    self.log.exception(text)
+                    self.ctx.log.exception(text)
         opts.update(scratch_config)
         return opts
 
@@ -166,22 +113,22 @@ class Scratch:  # {{{
         """
         opts = self._make_initial_config(full_config)
 
-        # apply the config
-        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}), self.state, self.log)
+        # Create schema-aware config
+        self.conf = DynMonitorConfig(opts, opts.get("monitor", {}), self.ctx.state, log=self.ctx.log, schema=SCRATCHPAD_SCHEMA)
 
-        # apply constraints
+        # Apply constraints using self.conf for reads, writes go to underlying ref
         if self.conf.get_bool("preserve_aspect"):
-            opts["lazy"] = True
+            self.conf["lazy"] = True
         if not self.have_command:
-            opts["match_by"] = "class"
-        if not opts.get("process_tracking", True):
-            opts["lazy"] = True
-            if "match_by" not in opts:
-                opts["match_by"] = "class"
-        if opts.get("close_on_hide", False):
-            opts["lazy"] = True
-        if self.state.hyprland_version < VersionInfo(0, 39, 0):
-            opts["allow_special_workspace"] = False
+            self.conf["match_by"] = "class"
+        if not self.conf.get_bool("process_tracking"):
+            self.conf["lazy"] = True
+            if not self.conf.has_explicit("match_by"):
+                self.conf["match_by"] = "class"
+        if self.conf.get_bool("close_on_hide"):
+            self.conf["lazy"] = True
+        if self.ctx.state.hyprland_version < VersionInfo(0, 39, 0):
+            self.conf["allow_special_workspace"] = False
 
     def have_address(self, addr: str) -> bool:
         """Check if the address is the same as the client.
@@ -208,10 +155,12 @@ class Scratch:  # {{{
             await self.update_client_info()
         else:
             m_client = await self.fetch_matching_client()
-            if m_client:
-                self.client_info = m_client
-            assert self.client_info, "couldn't find a matching client"
-        await ex.hyprctl(f"movetoworkspacesilent {mk_scratch_name(self.uid)},address:{self.full_address}")
+            if not m_client:
+                match_by, match_val = self.get_match_props()
+                msg = f"No window found matching {match_by}='{match_val}' - is the application running?"
+                raise RuntimeError(msg)
+            self.client_info = m_client
+        await ex.backend.execute(f"movetoworkspacesilent {mk_scratch_name(self.uid)},address:{self.full_address}")
         await asyncio.sleep(0.05)  # workaround
         self.meta.initialized = True
 
@@ -219,10 +168,10 @@ class Scratch:  # {{{
         """Is the process running ?."""
         if not self.have_command:
             return True
-        if self.conf.get_bool("process_tracking", True):
+        if self.conf.get_bool("process_tracking"):
             path = f"/proc/{self.pid}"
             if await aiexists(path):
-                async with aiopen(os.path.join(path, "status"), mode="r", encoding="utf-8") as f:
+                async with aiopen(f"{path}/status", mode="r", encoding="utf-8") as f:
                     for line in await f.readlines():
                         if line.startswith("State"):
                             proc_state = line.split()[1]
@@ -241,7 +190,7 @@ class Scratch:  # {{{
             clients: The list of clients
         """
         match_by, match_val = self.get_match_props()
-        return await self.backend.get_client_props(
+        return await self.ctx.backend.get_client_props(
             match_fn=get_match_fn(match_by, match_val),
             clients=clients,
             **{match_by: match_val},
@@ -249,7 +198,7 @@ class Scratch:  # {{{
 
     def get_match_props(self) -> tuple[str, str | float]:
         """Return the match properties for the scratchpad."""
-        match_by = cast("str", self.conf.get("match_by", "pid"))
+        match_by = cast("str", self.conf.get("match_by"))
         if match_by == "pid":
             return match_by, self.pid
         return match_by, cast("str | float", self.conf[match_by])
@@ -288,12 +237,12 @@ class Scratch:  # {{{
         """
         if client_info is None:
             if self.have_command:
-                client_info = await self.backend.get_client_props(addr=self.full_address, clients=clients)
+                client_info = await self.ctx.backend.get_client_props(addr=self.full_address, clients=clients)
             else:
                 client_info = await self.fetch_matching_client(clients=clients)
 
         if client_info is None:
-            self.log.error("The client window %s vanished", self.full_address)
+            self.ctx.log.error("The client window %s vanished", self.full_address)
             msg = f"Client window {self.full_address} not found"
             raise KeyError(msg)
 
@@ -305,12 +254,11 @@ class Scratch:  # {{{
         Args:
             name: The workspace name
         """
-        if self.conf.get("pinned", True):
+        if self.conf.get("pinned"):
             self.meta.space_identifier = name, self.meta.space_identifier[1]
 
     def __str__(self) -> str:
         return f"{self.uid} {self.address} : {self.client_info} / {self.conf}"
 
 
-# }}}
 # }}}

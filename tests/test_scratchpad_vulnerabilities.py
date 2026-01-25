@@ -299,9 +299,7 @@ async def test_zombie_process_recovery(multi_scratchpads, subprocess_shell_mock,
     await t1
 
     # Verify it started
-    from pyprland.command import Pyprland
-
-    manager = Pyprland.instance
+    manager = mocks.pyprland_instance
     plugin = manager.plugins["scratchpads"]
     term_scratch = plugin.scratches.get("term")
     assert term_scratch.pid == 3001

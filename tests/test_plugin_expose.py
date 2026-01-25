@@ -21,8 +21,9 @@ def extension():
     ext.hyprctl = ext.backend.execute
     ext.get_clients = AsyncMock()
     ext.state = SharedState()
-    ext.config = Mock()
-    ext.config.get_bool.return_value = False  # Default include_special=False
+    # Note: expose.py uses self.get_config_bool() which goes through Plugin.get_config()
+    # We mock the plugin method, not config.get_bool
+    ext.get_config_bool = Mock(return_value=False)  # Default include_special=False
     return ext
 
 
@@ -36,7 +37,7 @@ async def test_exposed_clients_filtering(extension, sample_clients):
     assert all(c["workspace"]["id"] > 0 for c in filtered)
 
     # Test include_special=True
-    extension.config.get_bool.return_value = True
+    extension.get_config_bool.return_value = True
     all_clients = extension.exposed_clients
     assert len(all_clients) == 3
 

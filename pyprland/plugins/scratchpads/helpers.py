@@ -16,7 +16,9 @@ from collections.abc import Callable
 from typing import Any
 
 from ...common import SharedState, is_rotated
+from ...config import ConfigValueType, SchemaAwareMixin
 from ...models import MonitorInfo
+from ...validation import ConfigItems
 
 
 def mk_scratch_name(uid: str) -> str:
@@ -82,7 +84,7 @@ async def get_all_space_identifiers(monitors: list[MonitorInfo]) -> list[tuple[s
     return [(monitor["activeWorkspace"]["name"], monitor["name"]) for monitor in monitors]
 
 
-_match_fn_re_cache = {}
+_match_fn_re_cache: dict[str, Callable[[Any, Any], bool]] = {}
 
 
 def get_match_fn(prop_name: str, prop_value: float | bool | str | list) -> Callable[[Any, Any], bool]:
@@ -106,15 +108,17 @@ def get_match_fn(prop_name: str, prop_value: float | bool | str | list) -> Calla
     return lambda value1, value2: value1 == value2
 
 
-class DynMonitorConfig:
-    """A `dict`-like object allowing per-monitor overrides."""
+class DynMonitorConfig(SchemaAwareMixin):
+    """A `dict`-like object allowing per-monitor overrides with schema-aware defaults."""
 
     def __init__(
         self,
-        ref: dict[str, float | bool | list | str],
-        monitor_override: dict[str, dict[str, float | bool | list | str]],
+        ref: dict[str, ConfigValueType],
+        monitor_override: dict[str, dict[str, ConfigValueType]],
         state: SharedState,
+        *,
         log: logging.Logger,
+        schema: ConfigItems | None = None,
     ) -> None:
         """Initialize dynamic configuration.
 
@@ -123,16 +127,20 @@ class DynMonitorConfig:
             monitor_override: Monitor-specific overrides
             state: Shared state
             log: Logger instance
+            schema: Optional schema for default value lookups
         """
+        self.__init_schema__()
         self.ref = ref
         self.mon_override = monitor_override
         self.state = state
         self.log = log
+        if schema:
+            self.set_schema(schema)
 
-    def __setitem__(self, name: str, value: float | bool | str | list) -> None:
+    def __setitem__(self, name: str, value: ConfigValueType) -> None:
         self.ref[name] = value
 
-    def update(self, other: dict[str, float | bool | str | list]) -> None:
+    def update(self, other: dict[str, ConfigValueType]) -> None:
         """Update the configuration with another dictionary.
 
         Args:
@@ -140,90 +148,23 @@ class DynMonitorConfig:
         """
         self.ref.update(other)
 
-    def __getitem__(self, name: str) -> float | bool | str | list:
+    def _get_raw(self, name: str) -> ConfigValueType:
+        """Get raw value from ref or monitor override. Raises KeyError if not found."""
         override = self.mon_override.get(self.state.active_monitor, {})
         if name in override:
             return override[name]
-        return self.ref[name]
+        if name in self.ref:
+            return self.ref[name]
+        raise KeyError(name)
+
+    def __getitem__(self, name: str) -> ConfigValueType:
+        """Get value, checking monitor override first, then ref. Raises KeyError if not found."""
+        return self._get_raw(name)
 
     def __contains__(self, name: object) -> bool:
+        """Check if name is explicitly set (not from schema defaults)."""
         assert isinstance(name, str)
-        try:
-            self[name]  # pylint: disable=pointless-statement
-        except KeyError:
-            return False
-        return True
-
-    def get(self, name: str, default: object = None) -> object | None:
-        """Get the attribute `name`.
-
-        Args:
-            name: Attribute name
-            default: Default value if not found
-        """
-        try:
-            return self[name]
-        except KeyError:
-            return default
-
-    def get_bool(self, name: str, default: bool = False) -> bool:
-        """Get a boolean value, handling loose typing.
-
-        Args:
-            name: Attribute name
-            default: Default value if not found
-        """
-        value = self.get(name)
-        if isinstance(value, str):
-            lv = value.lower().strip()
-            return lv not in {"false", "no", "off", "0"}
-        if value is None:
-            return default
-        return bool(value)
-
-    def get_int(self, name: str, default: int = 0) -> int:
-        """Get an integer value.
-
-        Args:
-            name: Attribute name
-            default: Default value if not found or invalid
-        """
-        value = self.get(name)
-        if value is None:
-            return default
-        try:
-            return int(value)  # type: ignore
-        except (ValueError, TypeError):
-            self.log.warning("Invalid integer value for %s: %s", name, value)
-            return default
-
-    def get_float(self, name: str, default: float = 0.0) -> float:
-        """Get a float value.
-
-        Args:
-            name: Attribute name
-            default: Default value if not found or invalid
-        """
-        value = self.get(name)
-        if value is None:
-            return default
-        try:
-            return float(value)  # type: ignore
-        except (ValueError, TypeError):
-            self.log.warning("Invalid float value for %s: %s", name, value)
-            return default
-
-    def get_str(self, name: str, default: str = "") -> str:
-        """Get a string value.
-
-        Args:
-            name: Attribute name
-            default: Default value if not found
-        """
-        value = self.get(name)
-        if value is None:
-            return default
-        return str(value)
+        return self.has_explicit(name)
 
     def __str__(self) -> str:
         return f"{self.ref} {self.mon_override}"

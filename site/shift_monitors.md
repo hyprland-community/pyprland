@@ -1,7 +1,4 @@
 ---
-commands:
-    - name: shift_monitors <direction>
-      description: Swaps the workspaces of every screen in the given direction.
 ---
 
 # shift_monitors
@@ -17,12 +14,15 @@ Swaps the workspaces of every screen in the given direction.
 
 Example usage in `hyprland.conf`:
 
-```
+```sh
 bind = $mainMod, O, exec, pypr shift_monitors +1
 bind = $mainMod SHIFT, O, exec, pypr shift_monitors -1
 ```
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="shift_monitors" />
 
+## Configuration
+
+This plugin has no configuration options.

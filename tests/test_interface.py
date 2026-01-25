@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.interface import Plugin
-from pyprland.common import Configuration
+from pyprland.config import Configuration
 
 
 class ConcretePlugin(Plugin):

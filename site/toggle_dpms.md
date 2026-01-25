@@ -1,12 +1,12 @@
 ---
-commands:
-    - name: toggle_dpms
-      description: if any screen is powered on, turn them all off, else turn them all on
 ---
 
 # toggle_dpms
 
-## Command
+## Commands
 
-<CommandList :commands="$frontmatter.commands" />
+<PluginCommands plugin="toggle_dpms" />
 
+## Configuration
+
+This plugin has no configuration options.
