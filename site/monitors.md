@@ -69,7 +69,7 @@ Configure monitor settings and relative positioning. Each monitor is identified 
 ```toml
 [monitors.placement."My monitor"]
 # Display settings
-scale = 1.5
+scale = 1.25
 transform = 1
 rate = 144
 resolution = "2560x1440"
@@ -86,14 +86,14 @@ These settings control the display properties of a monitor.
 
 Controls UI element size. Higher values make the UI larger (zoomed in), showing less content.
 
-| UI Size | Scale Value | Content Visible |
-|---------|-------------|-----------------|
-| 80% | `0.666667` | More (zoomed out) |
-| 90% | `0.833333` | More |
-| 100% | `1.0` | Native |
-| 125% | `1.25` | Less |
-| 160% | `1.6` | Less |
-| 200% | `2.0` | 25% (zoomed in) |
+| Scale Value | Content Visible |
+|---------------|-----------------|
+|`0.666667` | More (zoomed out) |
+|`0.833333` | More |
+| `1.0` | Native |
+| `1.25` | Less |
+| `1.6` | Less |
+| `2.0` | 25% (zoomed in) |
 
 > [!tip]
 > For HiDPI displays, use values like `1.5` or `2.0` to make UI elements larger and more readable at the cost of screen real estate.
