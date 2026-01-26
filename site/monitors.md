@@ -64,32 +64,101 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 <ConfigDefault plugin="monitors" option="placement" />
 
-The name of the attribute must contain key words to indicate the placement type:
+Configure monitor settings and relative positioning. Each monitor is identified by a [pattern](#monitor-patterns) (port name or description substring) and can have both display settings and positioning rules.
 
-- `left`
-- `top`
-- `right`
-- `bottom`
+```toml
+[monitors.placement."My monitor"]
+# Display settings
+scale = 1.5
+transform = 1
+rate = 144
+resolution = "2560x1440"
 
-On top of this "base" placement, it can contain "alignment" information in case monitors aren't the same size:
+# Positioning
+leftOf = "eDP-1"
+```
 
-- `start`
-- `middle` | `center`
-- `end`
+#### Monitor Settings
 
-Everything is case insensitive and extra characters will be ignored, so you can have nice to read rules so `is-on-left-end-of`, `leftend` and `LeftEndOf` design the same placement.
+These settings control the display properties of a monitor.
 
-> [!important]
-> If you don't like the screen to align on the start of the given border,
-> you can use `center` (or `middle`) to center it or `end` to stick it to the opposite border.
-> Eg: `topCenterOf`, `leftEndOf`, etc...
+##### `scale` {#placement-scale}
 
-You can separate the terms with `_` to improve readability, as in `top_center_of`.
+Controls UI element size. Higher values make the UI larger (zoomed in), showing less content.
+
+| UI Size | Scale Value | Content Visible |
+|---------|-------------|-----------------|
+| 80% | `0.666667` | More (zoomed out) |
+| 90% | `0.833333` | More |
+| 100% | `1.0` | Native |
+| 125% | `1.25` | Less |
+| 160% | `1.6` | Less |
+| 200% | `2.0` | 25% (zoomed in) |
+
+> [!tip]
+> For HiDPI displays, use values like `1.5` or `2.0` to make UI elements larger and more readable at the cost of screen real estate.
+
+##### `transform` {#placement-transform}
+
+Rotates or flips the monitor. Values 1 and 3 enable portrait mode.
+
+| Value | Rotation | Description |
+|-------|----------|-------------|
+| 0 | Normal | No rotation (landscape) |
+| 1 | 90° | Portrait (rotated right) |
+| 2 | 180° | Upside down |
+| 3 | 270° | Portrait (rotated left) |
+| 4 | Flipped | Mirrored horizontally |
+| 5 | Flipped 90° | Mirrored + 90° |
+| 6 | Flipped 180° | Mirrored + 180° |
+| 7 | Flipped 270° | Mirrored + 270° |
+
+##### `rate` {#placement-rate}
+
+Refresh rate in Hz.
+
+```toml
+rate = 144
+```
+
+> [!tip]
+> Run `hyprctl monitors` to see available refresh rates for each monitor.
+
+##### `resolution` {#placement-resolution}
+
+Display resolution. Can be specified as a string or array.
+
+```toml
+resolution = "2560x1440"
+# or
+resolution = [2560, 1440]
+```
+
+> [!tip]
+> Run `hyprctl monitors` to see available resolutions for each monitor.
+
+#### Positioning Rules
+
+Position monitors relative to each other using directional keywords.
+
+**Directions:**
+
+- `leftOf` / `rightOf` — horizontal placement
+- `topOf` / `bottomOf` — vertical placement
+
+**Alignment modifiers** (for different-sized monitors):
+
+- `start` (default) — align at top/left edge
+- `center` / `middle` — center alignment
+- `end` — align at bottom/right edge
+
+Combine direction + alignment: `topCenterOf`, `leftEndOf`, `right_middle_of`, etc.
+
+Everything is case insensitive; use `_` for readability (e.g., `top_center_of`).
 
 > [!important]
 > At least one monitor must have **no placement rule** to serve as the anchor/reference point.
-> Other monitors are positioned relative to this anchor. If all monitors have placement rules
-> pointing to each other, a circular dependency occurs and the layout cannot be computed.
+> Other monitors are positioned relative to this anchor.
 
 See [Placement Examples](#placement-examples) for visual diagrams.
 
@@ -97,12 +166,10 @@ See [Placement Examples](#placement-examples) for visual diagrams.
 
 Both the monitor being configured and the target monitor can be specified using:
 
-1. **Port name** (exact match) - e.g., `eDP-1`, `HDMI-A-1`, `DP-1`
-2. **Description substring** (partial match) - e.g., `Hisense`, `BenQ`, `DELL P2417H`
+1. **Port name** (exact match) — e.g., `eDP-1`, `HDMI-A-1`, `DP-1`
+2. **Description substring** (partial match) — e.g., `Hisense`, `BenQ`, `DELL P2417H`
 
-The plugin first checks for an exact port name match, then searches monitor descriptions for a substring match. Descriptions typically contain the manufacturer, model, and serial number (as shown by `hyprctl monitors`).
-
-**Examples:**
+The plugin first checks for an exact port name match, then searches monitor descriptions for a substring match. Descriptions typically contain the manufacturer, model, and serial number.
 
 ```toml
 # Target by port name
@@ -120,26 +187,6 @@ right_end_of = "HDMI-A-1"
 
 > [!tip]
 > Run `hyprctl monitors` (or `nirictl outputs` for Niri) to see the full description of each connected monitor.
-
-#### Monitor settings
-
-Not only can you place monitors relatively to each other, but you can also set specific settings for a given monitor.
-
-The following settings are supported:
-
-- `scale`
-- `transform`
-- `rate`
-- `resolution`
-
-```toml
-[monitors.placement."My monitor brand"]
-leftOf = "eDP-1"
-rate = 60
-scale = 1.5
-transform = 1 # 0: normal, 1: 90°, 2: 180°, 3: 270°, 4: flipped, 5: flipped 90°, 6: flipped 180°, 7: flipped 270°
-resolution = "1920x1080"  # can also be expressed as [1920, 1080]
-```
 
 ### `startup_relayout` {#config-startup-relayout}
 
@@ -299,21 +346,6 @@ topCenterOf = "B"  # or topMiddleOf
 [monitors.placement.A]
 topEndOf = "B"
 ```
-
-### Transform (Rotation)
-
-The `transform` setting rotates or flips the monitor. Values 1 and 3 switch the monitor to portrait mode.
-
-| Value | Rotation | Description |
-|-------|----------|-------------|
-| 0 | Normal | No rotation (landscape) |
-| 1 | 90° | Portrait (rotated right) |
-| 2 | 180° | Upside down |
-| 3 | 270° | Portrait (rotated left) |
-| 4 | Flipped | Mirrored horizontally |
-| 5 | Flipped 90° | Mirrored + 90° |
-| 6 | Flipped 180° | Mirrored + 180° |
-| 7 | Flipped 270° | Mirrored + 270° |
 
 ### Common Setups
 
