@@ -18,7 +18,8 @@
       "recommended": false,
       "default": null,
       "description": "Menu entries structure (nested dict of commands)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "engine",
@@ -36,7 +37,8 @@
         "dmenu",
         "anyrun",
         "walker"
-      ]
+      ],
+      "children": null
     },
     {
       "name": "parameters",
@@ -45,7 +47,8 @@
       "recommended": false,
       "default": null,
       "description": "Extra parameters for the menu engine command",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "separator",
@@ -54,7 +57,8 @@
       "recommended": false,
       "default": " | ",
       "description": "Separator for menu display",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "command_start",
@@ -63,7 +67,8 @@
       "recommended": false,
       "default": "",
       "description": "Prefix for command entries",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "command_end",
@@ -72,7 +77,8 @@
       "recommended": false,
       "default": "",
       "description": "Suffix for command entries",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "submenu_start",
@@ -81,7 +87,8 @@
       "recommended": false,
       "default": "",
       "description": "Prefix for submenu entries",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "submenu_end",
@@ -90,7 +97,8 @@
       "recommended": false,
       "default": "\u279c",
       "description": "Suffix for submenu entries",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "skip_single",
@@ -99,7 +107,8 @@
       "recommended": false,
       "default": true,
       "description": "Auto-select when only one option available",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

@@ -47,6 +47,7 @@ class ConfigItem:
     default: Any = None
     description: str = ""
     choices: list[str] | None = None
+    children: list["ConfigItem"] | None = None
 
 
 @dataclass
@@ -86,6 +87,11 @@ def extract_config_from_schema(schema: list) -> list[ConfigItem]:
         if default is not None and not isinstance(default, (str, int, float, bool, list, dict)):
             default = str(default)
 
+        # Extract children if present
+        children_items = None
+        if getattr(field_def, "children", None):
+            children_items = extract_config_from_schema(field_def.children)
+
         config_items.append(
             ConfigItem(
                 name=field_def.name,
@@ -95,6 +101,7 @@ def extract_config_from_schema(schema: list) -> list[ConfigItem]:
                 default=default,
                 description=field_def.description,
                 choices=field_def.choices,
+                children=children_items,
             )
         )
     return config_items

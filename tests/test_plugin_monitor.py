@@ -348,7 +348,7 @@ new_monitor_delay = 0
 
 [monitors.placement]
 "Microstep".topOf = "BenQ"
-"Microstep".disables = "eDP-1"
+"Microstep".disables = ["eDP-1"]
     """
     monkeypatch.setattr("tomllib.load", lambda x: tomllib.loads(config))
     yield

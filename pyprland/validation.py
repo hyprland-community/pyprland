@@ -27,6 +27,11 @@ class ConfigField:
         default: Default value if not provided
         description: Human-readable description for error messages
         choices: List of valid values for enum-like fields
+        validator: Custom validator function returning list of error messages
+        children: Schema for validating dict values (when field_type is dict).
+                  Supports arbitrary nesting depth - children schemas can themselves
+                  have children with their own schemas.
+        children_allow_extra: If True, don't warn about unknown keys in children
     """
 
     name: str
@@ -37,6 +42,8 @@ class ConfigField:
     description: str = ""
     choices: list | None = None
     validator: Callable[[Any], list[str]] | None = None
+    children: "ConfigItems | None" = None
+    children_allow_extra: bool = False
 
     @property
     def type_name(self) -> str:
@@ -283,14 +290,57 @@ class ConfigValidator:
         )
 
     def _check_dict(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
-        """Check dict type."""
-        if isinstance(value, dict):
-            return None
-        return format_config_error(
-            self.plugin_name,
-            field_def.name,
-            f"Expected dict/section, got {type(value).__name__}",
-        )
+        """Check dict type and optionally validate children."""
+        if not isinstance(value, dict):
+            return format_config_error(
+                self.plugin_name,
+                field_def.name,
+                f"Expected dict/section, got {type(value).__name__}",
+            )
+
+        # Validate children schema if defined
+        if field_def.children is not None:
+            child_errors = self._validate_dict_children(field_def, value)
+            if child_errors:
+                return "\n".join(child_errors)
+
+        return None
+
+    def _validate_dict_children(
+        self,
+        field_def: ConfigField,
+        value: dict,
+    ) -> list[str]:
+        """Validate all children in a dict against the children schema.
+
+        Args:
+            field_def: Field definition with children schema
+            value: Dict value to validate
+
+        Returns:
+            List of all validation errors
+        """
+        errors: list[str] = []
+        children_schema = cast("ConfigItems", field_def.children)
+        for key, child_value in value.items():
+            if not isinstance(child_value, dict):
+                errors.append(
+                    format_config_error(
+                        f"{self.plugin_name}.{field_def.name}",
+                        key,
+                        f"Expected dict, got {type(child_value).__name__}",
+                    )
+                )
+                continue
+
+            child_prefix = f"{self.plugin_name}.{field_def.name}.{key}"
+            child_validator = ConfigValidator(child_value, child_prefix, self.log)
+            errors.extend(child_validator.validate(children_schema))
+            # Only warn about unknown keys if not allowing extra keys
+            if not field_def.children_allow_extra:
+                errors.extend(child_validator.warn_unknown_keys(children_schema))
+
+        return errors
 
     def _get_required_suggestion(self, field_def: ConfigField) -> str:
         """Generate suggestion for a missing required field.

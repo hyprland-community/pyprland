@@ -3,7 +3,7 @@
 from typing import Any
 
 from ...models import MonitorInfo
-from .layout import MONITOR_PROPS
+from .schema import MONITOR_PROPS
 
 
 def get_monitor_by_pattern(

@@ -13,7 +13,8 @@
       "recommended": false,
       "default": [],
       "description": "Window classes that should activate Fcitx5",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "active_titles",
@@ -22,7 +23,8 @@
       "recommended": false,
       "default": [],
       "description": "Window titles that should activate Fcitx5",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "inactive_classes",
@@ -31,7 +33,8 @@
       "recommended": false,
       "default": [],
       "description": "Window classes that should deactivate Fcitx5",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "inactive_titles",
@@ -40,7 +43,8 @@
       "recommended": false,
       "default": [],
       "description": "Window titles that should deactivate Fcitx5",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

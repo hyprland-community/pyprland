@@ -20,7 +20,8 @@
       "recommended": false,
       "default": 10,
       "description": "Maximum number of workspaces to manage",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

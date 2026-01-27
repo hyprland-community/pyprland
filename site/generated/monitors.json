@@ -21,7 +21,8 @@
       "recommended": false,
       "default": true,
       "description": "Relayout monitors on startup",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "relayout_on_config_change",
@@ -30,7 +31,8 @@
       "recommended": false,
       "default": true,
       "description": "Relayout when Hyprland config is reloaded",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "new_monitor_delay",
@@ -39,7 +41,8 @@
       "recommended": false,
       "default": 1.0,
       "description": "Delay in seconds before handling new monitor",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "unknown",
@@ -48,7 +51,8 @@
       "recommended": false,
       "default": "",
       "description": "Command to run when an unknown monitor is detected",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "placement",
@@ -57,7 +61,68 @@
       "recommended": false,
       "default": {},
       "description": "Monitor placement rules (pattern -> positioning rules)",
-      "choices": null
+      "choices": null,
+      "children": [
+        {
+          "name": "scale",
+          "type": "float",
+          "required": false,
+          "recommended": false,
+          "default": null,
+          "description": "UI scale factor",
+          "choices": null,
+          "children": null
+        },
+        {
+          "name": "rate",
+          "type": "int or float",
+          "required": false,
+          "recommended": false,
+          "default": null,
+          "description": "Refresh rate in Hz",
+          "choices": null,
+          "children": null
+        },
+        {
+          "name": "resolution",
+          "type": "str or list",
+          "required": false,
+          "recommended": false,
+          "default": null,
+          "description": "Display resolution (e.g., '2560x1440' or [2560, 1440])",
+          "choices": null,
+          "children": null
+        },
+        {
+          "name": "transform",
+          "type": "int",
+          "required": false,
+          "recommended": false,
+          "default": null,
+          "description": "Rotation/flip transform",
+          "choices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "children": null
+        },
+        {
+          "name": "disables",
+          "type": "list",
+          "required": false,
+          "recommended": false,
+          "default": null,
+          "description": "List of monitors to disable when this monitor is connected",
+          "choices": null,
+          "children": null
+        }
+      ]
     },
     {
       "name": "hotplug_commands",
@@ -66,7 +131,8 @@
       "recommended": false,
       "default": {},
       "description": "Commands to run when specific monitors are plugged (pattern -> command)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "hotplug_command",
@@ -75,7 +141,8 @@
       "recommended": false,
       "default": "",
       "description": "Command to run when any monitor is plugged",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

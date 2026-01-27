@@ -21,7 +21,8 @@
       "recommended": false,
       "default": "uwsm app -- ashell",
       "description": "Command to run the bar (supports [monitor] variable)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "monitors",
@@ -30,7 +31,8 @@
       "recommended": false,
       "default": [],
       "description": "Preferred monitors list in order of priority",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

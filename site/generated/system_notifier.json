@@ -11,7 +11,8 @@
       "recommended": true,
       "default": {},
       "description": "This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated.\n            A common option is the system journal output (eg: `journalctl -u nginx`)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "parser",
@@ -20,7 +21,8 @@
       "recommended": false,
       "default": {},
       "description": "Sets the list of rules / parser to be used to extract lines of interest\n            Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "parsers",
@@ -29,7 +31,8 @@
       "recommended": true,
       "default": {},
       "description": "Custom parser definitions (name -> list of rules)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "sources",
@@ -38,7 +41,8 @@
       "recommended": true,
       "default": [],
       "description": "Source definitions with command and parser",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "pattern",
@@ -47,7 +51,8 @@
       "recommended": true,
       "default": "",
       "description": "The pattern is any regular expression that should trigger a match.",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "default_color",
@@ -56,7 +61,8 @@
       "recommended": false,
       "default": "#5555AA",
       "description": "Default notification color",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "use_notify_send",
@@ -65,7 +71,8 @@
       "recommended": false,
       "default": false,
       "description": "Use notify-send instead of Hyprland notifications",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

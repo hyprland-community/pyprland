@@ -16,32 +16,12 @@ from .commands import (
     build_niri_transform_action,
 )
 from .layout import (
-    MONITOR_PROPS,
     build_graph,
     compute_positions,
     find_cycle_path,
 )
 from .resolution import get_monitor_by_pattern, resolve_placement_config
-
-
-def _check_placement_keys(value: dict[str, Any]) -> list[str]:
-    """Validator for placement config keys.
-
-    Args:
-        value: The placement configuration dictionary
-    """
-    errors = []
-    valid_props = MONITOR_PROPS.union({"disables"})
-    valid_keys = {"top", "bottom", "left", "right"}
-    for rules in value.values():
-        for key, val in rules.items():
-            if key in valid_props:
-                continue
-            if not any(key.startswith(vkey.lower()) for vkey in valid_keys):
-                errors.append(f"Invalid placement rule key: {key}")
-            elif not isinstance(val, str) and not all(isinstance(o, str) for o in val):
-                errors.append(f"Invalid placement value: {val}")
-    return errors
+from .schema import MONITOR_PROPS_SCHEMA, validate_placement_keys
 
 
 class Extension(Plugin):
@@ -60,7 +40,9 @@ class Extension(Plugin):
             required=True,
             default={},
             description="Monitor placement rules (pattern -> positioning rules)",
-            validator=_check_placement_keys,
+            children=MONITOR_PROPS_SCHEMA,
+            validator=validate_placement_keys,
+            children_allow_extra=True,  # Allow dynamic placement keys (leftOf, topOf, etc.)
         ),
         ConfigField(
             "hotplug_commands", dict, default={}, description="Commands to run when specific monitors are plugged (pattern -> command)"

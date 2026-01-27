@@ -11,7 +11,8 @@
       "recommended": false,
       "default": null,
       "description": "List of plugins to load",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "include",
@@ -20,7 +21,8 @@
       "recommended": false,
       "default": null,
       "description": "Additional config files or folders to include",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "plugins_paths",
@@ -29,7 +31,8 @@
       "recommended": false,
       "default": [],
       "description": "Additional paths to search for third-party plugins",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "colored_handlers_log",
@@ -38,7 +41,8 @@
       "recommended": false,
       "default": true,
       "description": "Enable colored log output for event handlers (debugging)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "notification_type",
@@ -47,7 +51,8 @@
       "recommended": false,
       "default": "auto",
       "description": "Notification method: 'auto', 'notify-send', or 'native'",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "variables",
@@ -56,7 +61,8 @@
       "recommended": false,
       "default": {},
       "description": "User-defined variables for string substitution (see Variables page)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "hyprland_version",
@@ -65,7 +71,8 @@
       "recommended": false,
       "default": "",
       "description": "Override auto-detected Hyprland version (e.g., '0.40.0')",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "desktop",
@@ -74,7 +81,8 @@
       "recommended": false,
       "default": "",
       "description": "Override auto-detected desktop environment (e.g., 'hyprland', 'niri'). Empty means auto-detect.",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

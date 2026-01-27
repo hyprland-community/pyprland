@@ -20,7 +20,8 @@
       "recommended": false,
       "default": 60,
       "description": "Margin around the centered window in pixels",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "offset",
@@ -32,7 +33,8 @@
         0
       ],
       "description": "Offset of the centered window as 'X Y' or [X, Y]",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "style",
@@ -41,7 +43,8 @@
       "recommended": false,
       "default": [],
       "description": "Window rules to apply to the centered window",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "captive_focus",
@@ -50,7 +53,8 @@
       "recommended": false,
       "default": false,
       "description": "Keep focus on the centered window",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "on_new_client",
@@ -63,7 +67,8 @@
         "focus",
         "background",
         "close"
-      ]
+      ],
+      "children": null
     },
     {
       "name": "next",
@@ -72,7 +77,8 @@
       "recommended": false,
       "default": null,
       "description": "Command to run when 'next' is called and layout is disabled",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "prev",
@@ -81,7 +87,8 @@
       "recommended": false,
       "default": null,
       "description": "Command to run when 'prev' is called and layout is disabled",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "next2",
@@ -90,7 +97,8 @@
       "recommended": false,
       "default": null,
       "description": "Alternative command for 'next'",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "prev2",
@@ -99,7 +107,8 @@
       "recommended": false,
       "default": null,
       "description": "Alternative command for 'prev'",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

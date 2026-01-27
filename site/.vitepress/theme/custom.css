@@ -24,3 +24,239 @@ details {
 .dark .mermaid marker path {
     fill: #ffffff !important;
 }
+
+/* ===========================================
+   Config Table Styles (shared by PluginConfig and ConfigTable)
+   =========================================== */
+
+.config-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.config-table.config-nested {
+  margin: 0 0.5rem 0.5rem 0.5rem;
+  font-size: 0.95em;
+}
+
+.config-table th,
+.config-table td {
+  border: 1px solid var(--vp-c-divider);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.config-table.config-nested th,
+.config-table.config-nested td {
+  padding: 0.4rem 0.6rem;
+}
+
+.config-table th {
+  background-color: var(--vp-c-bg-soft);
+  font-weight: 600;
+}
+
+.config-table.config-nested th {
+  background-color: var(--vp-c-bg);
+  font-size: 0.9em;
+}
+
+.config-table tr:hover {
+  background-color: var(--vp-c-bg-soft);
+}
+
+.config-table.config-nested tr:hover {
+  background-color: var(--vp-c-bg);
+}
+
+.config-table code {
+  font-size: 0.875em;
+}
+
+.config-none {
+  color: var(--vp-c-text-3);
+}
+
+.config-description {
+  font-size: 0.95em;
+}
+
+.config-table.config-nested .config-description {
+  font-size: 0.9em;
+}
+
+.config-description a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+}
+
+.config-description a:hover {
+  text-decoration: underline;
+}
+
+.config-description code {
+  background-color: var(--vp-c-bg-soft);
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
+}
+
+.config-table.config-nested .config-description code {
+  background-color: var(--vp-c-bg);
+}
+
+.config-loading,
+.config-error,
+.config-empty {
+  padding: 1rem;
+  color: var(--vp-c-text-2);
+}
+
+.config-error {
+  color: var(--vp-c-danger-1);
+}
+
+/* Badges */
+.config-badge {
+  font-size: 0.7em;
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  margin-left: 0.5em;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.config-required {
+  background-color: var(--vp-c-danger-soft);
+  color: var(--vp-c-danger-1);
+}
+
+.config-recommended {
+  background-color: var(--vp-c-warning-soft);
+  color: var(--vp-c-warning-1);
+}
+
+/* Link with info icon */
+.config-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.config-link:hover {
+  text-decoration: underline;
+  color: var(--vp-c-brand-1);
+}
+
+.config-link:hover code {
+  color: var(--vp-c-brand-1);
+}
+
+.config-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 0.4em;
+  font-size: 0.75em;
+  font-weight: 600;
+  font-style: italic;
+  font-family: serif;
+  color: var(--vp-c-brand-1);
+  border: 1px solid var(--vp-c-brand-1);
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  vertical-align: middle;
+}
+
+.config-link:hover .config-info-icon {
+  opacity: 1;
+}
+
+/* Children indicator badge */
+.config-has-children {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.3em;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  border: 1px solid var(--vp-c-brand-1);
+  border-radius: 3px;
+  opacity: 0.7;
+  vertical-align: middle;
+}
+
+/* Children row (contains the collapsible details) */
+.config-children-row {
+  background-color: transparent !important;
+}
+
+.config-children-row:hover {
+  background-color: transparent !important;
+}
+
+.config-children-cell {
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Children details/summary */
+.config-children-details {
+  margin: 0.5rem 0.75rem 0.75rem 1.5rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  background-color: var(--vp-c-bg-soft);
+}
+
+.config-table.config-nested .config-children-details {
+  margin: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+.config-children-details summary {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: var(--vp-c-text-2);
+  list-style: none;
+}
+
+.config-children-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.config-children-details summary::before {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 0.5em;
+  border-left: 0.4em solid var(--vp-c-text-2);
+  border-top: 0.25em solid transparent;
+  border-bottom: 0.25em solid transparent;
+  transition: transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.config-children-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.config-children-details summary:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.config-children-details summary:hover::before {
+  border-left-color: var(--vp-c-brand-1);
+}
+
+.config-children-details summary code {
+  background-color: var(--vp-c-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.95em;
+}

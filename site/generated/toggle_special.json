@@ -20,7 +20,8 @@
       "recommended": false,
       "default": "minimized",
       "description": "Default special workspace name",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

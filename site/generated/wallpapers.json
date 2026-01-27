@@ -18,7 +18,8 @@
       "recommended": false,
       "default": null,
       "description": "Path(s) to wallpaper images or directories",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "interval",
@@ -27,7 +28,8 @@
       "recommended": false,
       "default": 10,
       "description": "Minutes between wallpaper changes",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "extensions",
@@ -40,7 +42,8 @@
         "jpg"
       ],
       "description": "File extensions to include (e.g., ['png', 'jpg'])",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "recurse",
@@ -49,7 +52,8 @@
       "recommended": false,
       "default": false,
       "description": "Recursively search subdirectories",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "unique",
@@ -58,7 +62,8 @@
       "recommended": false,
       "default": false,
       "description": "Use different wallpaper per monitor",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "radius",
@@ -67,7 +72,8 @@
       "recommended": false,
       "default": 0,
       "description": "Corner radius for rounded corners",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "command",
@@ -76,7 +82,8 @@
       "recommended": false,
       "default": null,
       "description": "Custom command to set wallpaper ([file] and [output] variables)",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "post_command",
@@ -85,7 +92,8 @@
       "recommended": false,
       "default": null,
       "description": "Command to run after setting wallpaper",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "clear_command",
@@ -94,7 +102,8 @@
       "recommended": false,
       "default": null,
       "description": "Command to run when clearing wallpaper",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "color_scheme",
@@ -112,7 +121,8 @@
         "mellow",
         "neutral",
         "earth"
-      ]
+      ],
+      "children": null
     },
     {
       "name": "variant",
@@ -121,7 +131,8 @@
       "recommended": false,
       "default": null,
       "description": "Color variant type for palette",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "templates",
@@ -130,7 +141,8 @@
       "recommended": false,
       "default": null,
       "description": "Template files for color palette generation",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

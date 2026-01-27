@@ -35,7 +35,8 @@
         "dmenu",
         "anyrun",
         "walker"
-      ]
+      ],
+      "children": null
     },
     {
       "name": "parameters",
@@ -44,7 +45,8 @@
       "recommended": false,
       "default": null,
       "description": "Extra parameters for the menu engine command",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "separator",
@@ -53,7 +55,8 @@
       "recommended": false,
       "default": "|",
       "description": "Separator between window number and title",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

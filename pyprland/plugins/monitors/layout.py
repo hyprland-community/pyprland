@@ -4,8 +4,8 @@ from collections import defaultdict
 from typing import Any
 
 from ...models import MonitorInfo
+from .schema import MONITOR_PROPS
 
-MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 MAX_CYCLE_PATH_LENGTH = 10
 
 

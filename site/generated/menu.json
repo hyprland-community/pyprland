@@ -20,7 +20,8 @@
         "dmenu",
         "anyrun",
         "walker"
-      ]
+      ],
+      "children": null
     },
     {
       "name": "parameters",
@@ -29,7 +30,8 @@
       "recommended": false,
       "default": null,
       "description": "Extra parameters for the menu engine command",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ],
   "engine_defaults": {

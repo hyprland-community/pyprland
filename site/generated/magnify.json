@@ -20,7 +20,8 @@
       "recommended": false,
       "default": 2.0,
       "description": "Zoom factor when toggling",
-      "choices": null
+      "choices": null,
+      "children": null
     },
     {
       "name": "duration",
@@ -29,7 +30,8 @@
       "recommended": false,
       "default": 0,
       "description": "Animation duration in frames (0 to disable)",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

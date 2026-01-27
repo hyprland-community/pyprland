@@ -20,7 +20,8 @@
       "recommended": false,
       "default": false,
       "description": "Include windows from special workspaces",
-      "choices": null
+      "choices": null,
+      "children": null
     }
   ]
 }

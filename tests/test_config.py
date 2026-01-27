@@ -322,3 +322,149 @@ def test_config_validator_union_types(test_logger):
     errors = validator.validate(schema)
     assert len(errors) == 1
     assert "int or str" in errors[0]
+
+
+def test_config_validator_children_schema(test_logger):
+    """Test validation of dict fields with children schema."""
+    from pyprland.validation import ConfigItems
+
+    child_schema = ConfigItems(
+        ConfigField("scale", float),
+        ConfigField("enabled", bool),
+    )
+
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Valid nested config
+    config = {"settings": {"item1": {"scale": 1.5, "enabled": True}}}
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    assert len(errors) == 0
+
+
+def test_config_validator_children_type_errors(test_logger):
+    """Test children schema catches type errors."""
+    from pyprland.validation import ConfigItems
+
+    child_schema = ConfigItems(
+        ConfigField("scale", float),
+    )
+
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Wrong type in nested config
+    config = {"settings": {"item1": {"scale": "not-a-float"}}}
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    assert len(errors) == 1
+    assert "float" in errors[0]
+
+
+def test_config_validator_children_unknown_keys(test_logger):
+    """Test children schema warns about unknown keys."""
+    from pyprland.validation import ConfigItems
+
+    child_schema = ConfigItems(
+        ConfigField("scale", float),
+    )
+
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Unknown key in nested config
+    config = {"settings": {"item1": {"scale": 1.5, "unknown_key": "value"}}}
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    # Unknown keys show up as warnings/errors from children validation
+    assert any("unknown" in str(e).lower() for e in errors)
+
+
+def test_config_validator_children_collects_all_errors(test_logger):
+    """Test that all children errors are collected, not just first."""
+    from pyprland.validation import ConfigItems
+
+    child_schema = ConfigItems(
+        ConfigField("a", int),
+        ConfigField("b", int),
+    )
+
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Multiple errors across multiple children
+    config = {
+        "settings": {
+            "item1": {"a": "wrong", "b": "wrong"},
+            "item2": {"a": "wrong"},
+        }
+    }
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    # All errors are joined into a single string with newlines
+    # Check that all 3 error contexts are present
+    assert len(errors) == 1
+    error_text = errors[0]
+    assert "item1" in error_text
+    assert "item2" in error_text
+    assert error_text.count("Expected int") == 3
+
+
+def test_config_validator_children_non_dict_value(test_logger):
+    """Test children validation handles non-dict values gracefully."""
+    from pyprland.validation import ConfigItems
+
+    child_schema = ConfigItems(
+        ConfigField("scale", float),
+    )
+
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Child value is not a dict
+    config = {"settings": {"item1": "not-a-dict"}}
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    assert len(errors) == 1
+    assert "Expected dict" in errors[0]
+
+
+def test_config_validator_nested_children_schema(test_logger):
+    """Test validation of deeply nested children schemas (recursive)."""
+    from pyprland.validation import ConfigItems
+
+    # Grandchild schema
+    grandchild_schema = ConfigItems(
+        ConfigField("value", int),
+    )
+
+    # Child schema with its own children
+    child_schema = ConfigItems(
+        ConfigField("name", str),
+        ConfigField("nested", dict, children=grandchild_schema),
+    )
+
+    # Parent schema
+    schema = ConfigItems(
+        ConfigField("settings", dict, children=child_schema),
+    )
+
+    # Valid deeply nested config
+    config = {"settings": {"item1": {"name": "test", "nested": {"sub1": {"value": 42}}}}}
+    validator = ConfigValidator(config, "test", test_logger)
+    errors = validator.validate(schema)
+    assert len(errors) == 0
+
+    # Invalid type in grandchild
+    config_invalid = {"settings": {"item1": {"name": "test", "nested": {"sub1": {"value": "not-an-int"}}}}}
+    validator = ConfigValidator(config_invalid, "test", test_logger)
+    errors = validator.validate(schema)
+    assert len(errors) == 1
+    assert "int" in errors[0]
+    assert "sub1" in errors[0]  # Error path includes nested key

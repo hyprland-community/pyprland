@@ -137,6 +137,26 @@ resolution = [2560, 1440]
 > [!tip]
 > Run `hyprctl monitors` to see available resolutions for each monitor.
 
+##### `disables` {#placement-disables}
+
+List of monitors to disable when this monitor is connected. This is useful for automatically turning off a laptop's built-in display when an external monitor is plugged in.
+
+```toml
+[monitors.placement."External Monitor"]
+disables = ["eDP-1"]  # Disable laptop screen when this monitor is connected
+```
+
+You can disable multiple monitors and combine with positioning rules:
+
+```toml
+[monitors.placement."DELL U2722D"]
+leftOf = "DP-2"
+disables = ["eDP-1", "HDMI-A-2"]
+```
+
+> [!note]
+> Monitors specified in `disables` are excluded from layout calculations. They will be re-enabled on the next relayout if the disabling monitor is disconnected.
+
 #### Positioning Rules
 
 Position monitors relative to each other using directional keywords.
