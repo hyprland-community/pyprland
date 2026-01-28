@@ -12,7 +12,7 @@ If you run pyprland as a [systemd user service](./Getting-started#option-2-syste
 journalctl --user -u pyprland -f
 ```
 
-### exec-once (Hyprland/Niri)
+### exec-once (Hyprland)
 
 If you run pyprland via [exec-once](./Getting-started#option-1-hyprland-exec-once), logs go to stderr by default and are typically lost.
 
