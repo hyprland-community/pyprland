@@ -100,7 +100,7 @@ Controls UI element size. Higher values make the UI larger (zoomed in), showing 
 
 ##### `transform` {#placement-transform}
 
-Rotates or flips the monitor. Values 1 and 3 enable portrait mode.
+Rotates and optionally flips the monitor.
 
 | Value | Rotation | Description |
 |-------|----------|-------------|
