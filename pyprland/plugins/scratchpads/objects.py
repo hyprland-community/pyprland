@@ -128,7 +128,7 @@ class Scratch:  # {{{
         if self.conf.get_bool("close_on_hide"):
             self.conf["lazy"] = True
         if self.ctx.state.hyprland_version < VersionInfo(0, 39, 0):
-            self.conf["allow_special_workspace"] = False
+            self.conf["allow_special_workspaces"] = False
 
     def have_address(self, addr: str) -> bool:
         """Check if the address is the same as the client.

@@ -1,2 +1,26 @@
-- Fix missing package entry point
-- Minor fixes
+- Major documentation overhaul
+    - Improved pages structure
+    - More docs extracted from code
+- More specific user feedback on error scenarios
+- New commands: `validate`, `compgen`, `help [command]`
+- Architecture changes: no longer depends on any desktop environment by default
+    - Each plugin declares its own requirements (hyprland, niri, or none)
+    - Alpha Niri support (experimental, untested - for interested maintainers)
+- `monitors` ⚠️ breaking
+    - `monitors_v0` plugin removed - migrate to `monitors`
+    - `trim_offset` and `full_relayout` options removed (behavior now always enabled)
+    - New option: `relayout_on_config_change` (default: true)
+- `scratchpads` ⚠️ defaults changed
+    - `lazy` now defaults to `true` (start on first use)
+    - `hide_delay` now defaults to `0.0`
+    - `size` now defaults to `"80% 80%"`
+- `menubar` ⚠️ breaking
+    - `kill` command renamed to `stop`
+    - New `toggle` command
+    - Default command changed from `gBar bar [monitor]` to `uwsm app -- ashell`
+- `wallpapers`
+    - `pypr wall clear` now automatically kills hyprpaper on Hyprland
+- Extensions API changes (for plugin authors)
+    - IPC methods moved to backend adapter (`self.hyprctl()` → `self.backend.execute()`, etc.)
+    - New `environments` class attribute to declare supported backends
+    - New `config_schema` attribute for validation support

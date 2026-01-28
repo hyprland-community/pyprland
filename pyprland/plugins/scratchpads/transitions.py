@@ -125,7 +125,7 @@ class TransitionsMixin:
             monitor: The monitor info
             was_alive: Whether the scratchpad was already alive
         """
-        forbid_special = not scratch.conf.get_bool("allow_special_workspace")
+        forbid_special = not scratch.conf.get_bool("allow_special_workspaces")
         wrkspc = (
             monitor["activeWorkspace"]["name"]
             if forbid_special

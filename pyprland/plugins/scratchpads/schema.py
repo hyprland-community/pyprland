@@ -67,7 +67,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
     ConfigField("force_monitor", str, default="", description="Always show on specific monitor"),
     ConfigField("alt_toggle", bool, default=False, description="Alternative toggle for multi-monitor"),
     ConfigField(
-        "allow_special_workspace",
+        "allow_special_workspaces",
         bool,
         default=True,
         description="Allow over special workspaces",

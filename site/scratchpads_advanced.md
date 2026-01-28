@@ -7,7 +7,7 @@
 
 Advanced configuration options
 
-<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['use', 'pinned', 'excludes', 'restore_excluded', 'unfocus', 'hysteresis', 'preserve_aspect', 'offset', 'hide_delay', 'force_monitor', 'alt_toggle', 'allow_special_workspace', 'smart_focus', 'close_on_hide', 'monitor']" />
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['use', 'pinned', 'excludes', 'restore_excluded', 'unfocus', 'hysteresis', 'preserve_aspect', 'offset', 'hide_delay', 'force_monitor', 'alt_toggle', 'allow_special_workspaces', 'smart_focus', 'close_on_hide', 'monitor']" />
 
 ### `use` {#config-use}
 
@@ -112,9 +112,9 @@ It applies when the `toggle` command is triggered and the toggled scratchpad is 
 
 Instead of moving the scratchpad to the focused screen, it will hide the scratchpad.
 
-### `allow_special_workspace` {#config-allow-special-workspace}
+### `allow_special_workspaces` {#config-allow-special-workspaces}
 
-<ConfigDefault plugin="scratchpads" option="allow_special_workspace" />
+<ConfigDefault plugin="scratchpads" option="allow_special_workspaces" />
 
 When enabled, you can toggle a scratchpad over a special workspace.
 It will always use the "normal" workspace otherwise.
