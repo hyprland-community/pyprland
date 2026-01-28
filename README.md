@@ -2,9 +2,10 @@
 
 [![Hyprland](https://img.shields.io/badge/Made%20for-Hyprland-blue)](https://github.com/hyprwm/Hyprland)
 [![Discord](https://img.shields.io/discord/1055990214411169892?label=discord)](https://discord.com/channels/1458202721294356522/1458202722892386519)
+
 [![Documentation](https://img.shields.io/badge/Documentation-Read%20Now-brightgreen?style=for-the-badge)](https://hyprland-community.github.io/pyprland)
 
-[Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
+[Discussions](https://github.com/hyprland-community/pyprland/discussions) •  [plugins](https://hyprland-community.github.io/pyprland/Plugins.html) • [my dotfiles](https://github.com/fdev31/dotfiles) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## Power up your desktop
 
@@ -13,15 +14,6 @@ A plugin system that extends your tiling compositor with features like scratchpa
 Think of it as a *Gnome tweak tool* for tiling window managers. With a fully plugin-based architecture, it's lightweight and easy to customize.
 
 Contributions, suggestions, bug reports and comments are welcome.
-
-- Explore our variety of [plugins](https://hyprland-community.github.io/pyprland/Plugins.html)
-- New users, check the [getting started](https://hyprland-community.github.io/pyprland/Getting-started.html) guide
-- Browse [my dotfiles](https://github.com/fdev31/dotfiles) for working examples
-
-# Recent changes
-
-- Almost rewrite of the monitors plugin - hopefully good this time
-- Wallpapers plugin can add rounded corners to each screen and manage a background-derived color scheme (matugen / pywal alike)
 
 <details>
 <summary>
@@ -63,7 +55,6 @@ and if you have coding skills you can also
 Dependencies
 </summary>
 
-- **Hyprland** >= 0.37
 - **Python** >= 3.11
     - **aiofiles** (optional but recommended)
     - **pillow** (optional, required for rounded borders in `wallpapers`)
@@ -75,6 +66,15 @@ Latest major changes
 </summary>
 
 Check the [Releases change log](https://github.com/hyprland-community/pyprland/releases) for more information
+
+### 3.0.0
+
+- Dynamic shell completions
+- Better error handling and configuration validation
+- Removed hard dependency on Hyprland
+- General polish including a couple ofbreaking changes
+  - remove old or broken options
+  - fixes
 
 ### 2.5
 
