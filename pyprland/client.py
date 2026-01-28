@@ -1,12 +1,12 @@
 """Client-side functions for pyprland CLI."""
 
 import asyncio
+import contextlib
 import os
 import sys
 
 from . import constants as pyprland_constants
-from .common import run_interactive_program
-from .manager import Pyprland
+from .common import get_logger, notify_send, run_interactive_program
 from .models import ExitCode, ResponsePrefix
 from .validate_cli import run_validate
 
@@ -15,7 +15,7 @@ __all__ = ["run_client"]
 
 async def run_client() -> None:
     """Run the client (CLI)."""
-    manager = Pyprland()
+    log = get_logger("client")
 
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
@@ -34,11 +34,12 @@ async def run_client() -> None:
     try:
         reader, writer = await asyncio.open_unix_connection(pyprland_constants.CONTROL)
     except (ConnectionRefusedError, FileNotFoundError):
-        manager.log.critical(
+        log.critical(
             "Cannot connect to pyprland daemon at %s.\nIs the daemon running? Start it with: pypr (no arguments)",
             pyprland_constants.CONTROL,
         )
-        await manager.backend.notify_error("Pypr can't connect. Is daemon running?")
+        with contextlib.suppress(Exception):
+            await notify_send("Pypr can't connect. Is daemon running?", icon="dialog-error")
         sys.exit(ExitCode.CONNECTION_ERROR)
 
     args = sys.argv[1:]
