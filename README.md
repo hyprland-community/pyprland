@@ -5,7 +5,7 @@
 
 [![Documentation](https://img.shields.io/badge/Documentation-Read%20Now-brightgreen?style=for-the-badge)](https://hyprland-community.github.io/pyprland)
 
-[Discussions](https://github.com/hyprland-community/pyprland/discussions) •  [plugins](https://hyprland-community.github.io/pyprland/Plugins.html) • [my dotfiles](https://github.com/fdev31/dotfiles) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share Your Setup](https://github.com/hyprland-community/pyprland/discussions/46)
+[Discussions](https://github.com/hyprland-community/pyprland/discussions) • [Plugins](https://hyprland-community.github.io/pyprland/Plugins.html) • [Dotfiles](https://github.com/fdev31/dotfiles) • [Changes History](https://github.com/hyprland-community/pyprland/releases) • [Share](https://github.com/hyprland-community/pyprland/discussions/46)
 
 ## Power up your desktop
 
