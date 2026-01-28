@@ -8,7 +8,7 @@
   "commands": [
     {
       "name": "relayout",
-      "signature": "relayout",
+      "args": [],
       "short_description": "Recompute & apply every monitors's layout.",
       "full_description": "Recompute & apply every monitors's layout."
     }

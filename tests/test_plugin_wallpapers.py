@@ -103,3 +103,99 @@ async def test_material_palette_generation():
         assert "colors.primary.dark" in palette
         assert "colors.secondary.light" in palette
         assert "colors.surface.default.hex" in palette
+
+
+@pytest.mark.asyncio
+async def test_run_palette_terminal(extension, mocker):
+    """Test palette command with terminal output."""
+
+    # Mock detect_theme
+    async def mock_detect_theme(_):
+        return "dark"
+
+    mocker.patch(
+        "pyprland.plugins.wallpapers.detect_theme",
+        side_effect=mock_detect_theme,
+    )
+
+    result = await extension.run_palette("#4285F4")
+
+    assert result is not None
+    assert isinstance(result, str)
+    # Should contain terminal formatting
+    assert "Primary:" in result
+    assert "colors.primary" in result
+    assert "\033[" in result  # ANSI escape codes
+
+
+@pytest.mark.asyncio
+async def test_run_palette_json(extension, mocker):
+    """Test palette command with JSON output."""
+    import json
+
+    # Mock detect_theme
+    async def mock_detect_theme(_):
+        return "dark"
+
+    mocker.patch(
+        "pyprland.plugins.wallpapers.detect_theme",
+        side_effect=mock_detect_theme,
+    )
+
+    result = await extension.run_palette("#FF5500 json")
+
+    assert result is not None
+    # Should be valid JSON
+    parsed = json.loads(result)
+    assert "variables" in parsed
+    assert "categories" in parsed
+    assert "filters" in parsed
+
+
+@pytest.mark.asyncio
+async def test_run_palette_default_color(extension, mocker):
+    """Test palette command with default color when no image is set."""
+
+    # Mock detect_theme
+    async def mock_detect_theme(_):
+        return "dark"
+
+    mocker.patch(
+        "pyprland.plugins.wallpapers.detect_theme",
+        side_effect=mock_detect_theme,
+    )
+
+    # No current image set
+    extension.cur_image = ""
+
+    result = await extension.run_palette("json")
+
+    assert result is not None
+    # Should use default Google blue
+    import json
+
+    parsed = json.loads(result)
+    assert "variables" in parsed
+
+
+@pytest.mark.asyncio
+async def test_run_color(extension, mocker):
+    """Test color command generates templates."""
+    # Mock _generate_templates
+    extension._generate_templates = AsyncMock()
+
+    await extension.run_color("#FF5500")
+
+    extension._generate_templates.assert_called_once_with("color-#FF5500", "#FF5500")
+
+
+@pytest.mark.asyncio
+async def test_run_color_with_scheme(extension, mocker):
+    """Test color command with color scheme."""
+    # Mock _generate_templates
+    extension._generate_templates = AsyncMock()
+
+    await extension.run_color("#FF5500 pastel")
+
+    extension._generate_templates.assert_called_once_with("color-#FF5500", "#FF5500")
+    assert extension.config["color_scheme"] == "pastel"

@@ -7,7 +7,7 @@
   "commands": [
     {
       "name": "expose",
-      "signature": "expose",
+      "args": [],
       "short_description": "Expose every client on the active workspace.",
       "full_description": "Expose every client on the active workspace.\n\nIf expose is active restores everything and move to the focused window"
     }

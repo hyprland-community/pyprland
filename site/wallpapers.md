@@ -64,10 +64,20 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 
 <PluginCommands plugin="wallpapers" />
 
-`color` is the only sub-command that requires parameters, it allows to test the palette from a single color.
+### Using the `color` command
 
-- `pypr wall color "#ff0000"`  Re-generate the templates with the given color
-- `pypr wall color "#ff0000" neutral`  Re-generate the templates with the given color and [color scheme](#config-color-scheme) (color filter)
+The `color` command allows testing the palette with a specific color instead of extracting from the wallpaper:
+
+- `pypr color "#ff0000"` - Re-generate the templates with the given color
+- `pypr color "#ff0000" neutral` - Re-generate the templates with the given color and [color scheme](#config-color-scheme) (color filter)
+
+### Using the `palette` command
+
+The `palette` command shows available color template variables:
+
+- `pypr palette` - Show palette using colors from current wallpaper
+- `pypr palette "#ff0000"` - Show palette for a specific color
+- `pypr palette json` - Output palette in JSON format
 
 ## Configuration
 

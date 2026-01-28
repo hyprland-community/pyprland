@@ -1,6 +1,7 @@
 """Reusable mixins for plugins."""
 
-from typing import Any
+from logging import Logger
+from typing import cast
 
 
 class MonitorListDescriptor:
@@ -15,19 +16,19 @@ class MonitorListDescriptor:
     - Core plugins: use self.state.monitors (SharedState)
     """
 
-    def __get__(self, obj: Any, objtype: type | None = None) -> list[str]:
+    def __get__(self, obj: object, _objtype: type | None = None) -> list[str]:
         """Get the monitor list from the appropriate location."""
         if obj is None:
-            return []  # type: ignore[return-value]
+            return []
         # Check for instance attribute 'monitors' first (not class attribute)
         if "monitors" in obj.__dict__:
-            return obj.__dict__["monitors"]
+            return cast("list[str]", obj.__dict__["monitors"])
         # Fall back to state.monitors for core plugins
         if hasattr(obj, "state") and hasattr(obj.state, "monitors"):
-            return obj.state.monitors
+            return cast("list[str]", obj.state.monitors)
         return []
 
-    def __set__(self, obj: Any, value: list[str]) -> None:
+    def __set__(self, obj: object, value: list[str]) -> None:
         """Set the monitor list in the appropriate location."""
         # If monitors is already an instance attribute, update it
         if "monitors" in obj.__dict__:
@@ -60,7 +61,7 @@ class MonitorTrackingMixin:
     """
 
     # These attributes are provided by the Plugin class
-    log: Any
+    log: Logger
 
     # Descriptor that resolves to the correct monitor list
     _monitors = MonitorListDescriptor()

@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import importlib
+import inspect
 import json
 import os
 import signal
@@ -25,7 +26,6 @@ from .common import (
     get_logger,
     merge,
 )
-from .completions import generate_completions
 from .config import Configuration
 from .constants import (
     CONFIG_FILE,
@@ -34,15 +34,12 @@ from .constants import (
     ERROR_NOTIFICATION_DURATION_MS,
     OLD_CONFIG_FILE,
     PYPR_DEMO,
-    SUPPORTED_SHELLS,
     TASK_TIMEOUT,
 )
-from .help import get_command_help, get_help
 from .ipc import set_notify_method
 from .models import PyprError, ResponsePrefix
 from .plugins.interface import Plugin
 from .plugins.pyprland.schema import PYPRLAND_CONFIG_SCHEMA
-from .version import VERSION
 
 __all__: list[str] = ["Pyprland"]
 
@@ -304,7 +301,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 await self._init_plugin(name)
         if init_pyprland:
             plug = self.plugins["pyprland"]
-            plug.set_commands(reload=self.load_config)  # type: ignore
+            plug.manager = self  # type: ignore
 
     async def load_config(self, init: bool = True) -> None:
         """Load the configuration (new plugins will be added & config updated).
@@ -364,11 +361,17 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             params: Parameters to pass to the handler
 
         Returns:
-            A tuple of (success, error_message). On success, error_message is empty.
+            A tuple of (success, message).
+            On success: message contains handler return value (if string) or empty.
+            On failure: message contains error description.
         """
         self.log_handler(plugin, full_name, params)
         try:
-            await getattr(plugin, full_name)(*params)
+            handler = getattr(plugin, full_name)
+            if inspect.iscoroutinefunction(handler):
+                result = await handler(*params)
+            else:
+                result = handler(*params)
         except AssertionError as e:
             self.log.exception("This could be a bug in Pyprland, if you think so, report on https://github.com/fdev31/pyprland/issues")
             error_msg = f"Integrity check failed on {plugin.name}::{full_name}: {e}"
@@ -382,7 +385,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 raise
             return (False, error_msg)
 
-        return (True, "")
+        return_data = result if isinstance(result, str) else ""
+        return (True, return_data)
 
     async def _run_plugin_handler_with_result(
         self, plugin: Plugin, full_name: str, params: tuple[str, ...], future: asyncio.Future[tuple[bool, str]]
@@ -403,7 +407,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             if not future.done():
                 future.set_result((False, f"{plugin.name}::{full_name}: {e}"))
 
-    async def _dispatch_to_plugin(self, plugin: Plugin, full_name: str, params: tuple[str, ...], wait: bool) -> str:
+    async def _dispatch_to_plugin(self, plugin: Plugin, full_name: str, params: tuple[str, ...], wait: bool) -> tuple[bool, str]:
         """Dispatch a handler call to a non-pyprland plugin.
 
         Args:
@@ -413,7 +417,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             wait: If True, wait for handler completion
 
         Returns:
-            Error message if failed, empty string on success
+            A tuple of (success, message).
+            On success: message contains handler return value (if string) or empty.
+            On failure: message contains error description.
         """
         if wait:
             # Commands: queue and wait for result
@@ -421,21 +427,38 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             cmd_task = partial(self._run_plugin_handler_with_result, plugin, full_name, params, future)
             await self.queues[plugin.name].put(cmd_task)
             try:
-                success, err = await asyncio.wait_for(future, timeout=TASK_TIMEOUT)
-                if not success:
-                    return err
+                success, msg = await asyncio.wait_for(future, timeout=TASK_TIMEOUT)
+                return (success, msg)  # noqa: TRY300
             except TimeoutError:
                 error_msg = f"{plugin.name}::{full_name}: Command timed out"
                 self.log.exception(error_msg)
-                return error_msg
-        else:
-            # Events: queue and continue (fire and forget)
-            event_task = partial(self._run_plugin_handler, plugin, full_name, params)
-            await self.queues[plugin.name].put(event_task)
-        return ""
+                return (False, error_msg)
+        # Events: queue and continue (fire and forget)
+        event_task = partial(self._run_plugin_handler, plugin, full_name, params)
+        await self.queues[plugin.name].put(event_task)
+        return (True, "")
+
+    async def _handle_single_plugin(self, plugin: Plugin, full_name: str, params: tuple[str, ...], wait: bool) -> tuple[bool, str]:
+        """Handle a single plugin's handler invocation.
+
+        Args:
+            plugin: The plugin instance
+            full_name: The full name of the handler
+            params: Parameters to pass to the handler
+            wait: If True, wait for handler completion
+
+        Returns:
+            A tuple of (success, message).
+        """
+        if plugin.name == "pyprland":
+            # pyprland plugin executes directly (built-in commands)
+            return await self._run_plugin_handler(plugin, full_name, params)
+        if not plugin.aborted:
+            return await self._dispatch_to_plugin(plugin, full_name, params, wait)
+        return (True, "")
 
     @remove_duplicate(names=["event_activewindow", "event_activewindowv2"])
-    async def _call_handler(self, full_name: str, *params: str, notify: str = "", wait: bool = False) -> tuple[bool, str]:
+    async def _call_handler(self, full_name: str, *params: str, notify: str = "", wait: bool = False) -> tuple[bool, bool, str]:
         """Call an event handler with params.
 
         Args:
@@ -445,29 +468,31 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             wait: If True, wait for handler completion and return result (for commands)
 
         Returns:
-            A tuple of (handled, error_message).
+            A tuple of (handled, success, message).
             - handled: True if at least one handler was found
-            - error_message: Non-empty if wait=True and handler failed
+            - success: True if all handlers succeeded (only meaningful when handled=True)
+            - message: Error if failed, return data if succeeded (for commands with wait=True)
         """
         handled = False
+        result_msg = ""
         error_msg = ""
         for plugin in self.plugins.values():
             if not hasattr(plugin, full_name):
                 continue
             handled = True
-            if plugin.name == "pyprland":
-                # pyprland plugin executes directly (built-in commands)
-                success, err = await self._run_plugin_handler(plugin, full_name, params)
-                if not success and not error_msg:
-                    error_msg = err
-            elif not plugin.aborted:
-                err = await self._dispatch_to_plugin(plugin, full_name, params, wait)
-                if err and not error_msg:
-                    error_msg = err
+            success, msg = await self._handle_single_plugin(plugin, full_name, params, wait)
+            if success:
+                if msg and not result_msg:
+                    result_msg = msg
+            elif not error_msg:
+                error_msg = msg
         if notify and not handled:
             error_msg = f'Unknown command "{notify}". Try "help" for available commands.'
             await self.backend.notify_info(error_msg)
-        return (handled, error_msg)
+        # Return (handled, success, message)
+        if error_msg:
+            return (handled, False, error_msg)
+        return (handled, True, result_msg)
 
     async def read_events_loop(self) -> None:
         """Consume the event loop and calls corresponding handlers."""
@@ -534,91 +559,27 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         if PYPR_DEMO:
             os.system(f"notify-send -t {DEMO_NOTIFICATION_DURATION_MS} '{data}'")  # noqa: ASYNC221, S605
 
-        handled, error_msg = await self._call_handler(full_name, *args, notify=cmd, wait=True)
+        handled, success, msg = await self._call_handler(full_name, *args, notify=cmd, wait=True)
         if not handled:
             self.log.warning("No such command: %s", cmd)
-            return f"{ResponsePrefix.ERROR}: {error_msg}\n"
-        if error_msg:
-            return f"{ResponsePrefix.ERROR}: {error_msg}\n"
+            return f"{ResponsePrefix.ERROR}: {msg}\n"
+        if not success:
+            return f"{ResponsePrefix.ERROR}: {msg}\n"
+        # Success - msg contains return data (if any)
+        if msg:
+            return f"{ResponsePrefix.OK}\n{msg}"
         return f"{ResponsePrefix.OK}\n"
 
-    def _get_builtin_response(self, data: str) -> str | None:
-        """Get response for a built-in command.
+    async def _handle_exit_cleanup(self, writer: asyncio.StreamWriter) -> None:
+        """Handle exit command cleanup after plugin dispatch.
 
         Args:
-            data: The command string
-
-        Returns:
-            Response string if command is handled, None otherwise
-        """
-        # Exact match commands
-        exact_handlers: dict[str, Callable[[], str]] = {
-            "version": lambda: f"{VERSION}\n",
-            "dumpjson": lambda: json.dumps(self.config, indent=2),
-            "help": lambda: get_help(self),
-            "compgen": lambda: f"{ResponsePrefix.ERROR}: Usage: compgen <{'|'.join(SUPPORTED_SHELLS)}> [output_path]\n",
-        }
-        if data in exact_handlers:
-            return exact_handlers[data]()
-
-        # Prefix match commands
-        if data.startswith("help "):
-            return get_command_help(self, data.split(None, 1)[1])
-        if data.startswith("compgen "):
-            return self._run_compgen(data)
-        return None
-
-    async def _handle_builtin_command(self, data: str, writer: asyncio.StreamWriter) -> bool:
-        """Handle built-in commands (exit, version, help, dumpjson, compgen).
-
-        Args:
-            data: The command string
             writer: The stream writer
-
-        Returns:
-            True if command was handled, False otherwise
         """
-        # Handle exit specially (needs async cleanup)
-        if data == "exit":
-            self.stopped = True
-            writer.write(f"{ResponsePrefix.OK}\n".encode())
-            with contextlib.suppress(BrokenPipeError, ConnectionResetError):
-                await writer.drain()
-            asyncio.create_task(self._abort_plugins(writer))
-            return True
-
-        # Handle other built-in commands
-        response = self._get_builtin_response(data)
-        if response is not None:
-            writer.write(response.encode("utf-8"))
-            return True
-        return False
-
-    def _run_compgen(self, data: str) -> str:
-        """Handle compgen command from daemon.
-
-        Args:
-            data: The full command string (e.g., "compgen bash" or "compgen bash /path")
-
-        Returns:
-            Response string to send to client
-        """
-        # Parse: compgen <shell> [path] -> indices: 0=compgen, 1=shell, 2=path
-        shell_idx, path_idx = 1, 2
-        parts = data.split(None, path_idx)  # Split into: compgen, shell, [path]
-        if len(parts) <= shell_idx:
-            return f"{ResponsePrefix.ERROR}: Usage: compgen <{'|'.join(SUPPORTED_SHELLS)}> [output_path]\n"
-
-        shell = parts[shell_idx]
-        output_path = parts[path_idx] if len(parts) > path_idx else None
-
-        if shell not in SUPPORTED_SHELLS:
-            return f"{ResponsePrefix.ERROR}: Unsupported shell: {shell}. Supported: {', '.join(SUPPORTED_SHELLS)}\n"
-
-        success, message = generate_completions(self, shell, output_path)
-        if success:
-            return f"{ResponsePrefix.OK}: {message}\n"
-        return f"{ResponsePrefix.ERROR}: {message}\n"
+        writer.write(f"{ResponsePrefix.OK}\n".encode())
+        with contextlib.suppress(BrokenPipeError, ConnectionResetError):
+            await writer.drain()
+        asyncio.create_task(self._abort_plugins(writer))
 
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command.
@@ -634,12 +595,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             writer.write(f"{ResponsePrefix.ERROR}: No command provided\n".encode())
         else:
             data = data.strip()
-            if await self._handle_builtin_command(data, writer):
-                if data == "exit":
-                    return  # exit command handles its own cleanup
-            else:
-                response = await self._process_plugin_command(data)
-                writer.write(response.encode())
+            response = await self._process_plugin_command(data)
+            # Check if exit command was processed (sets self.stopped)
+            if self.stopped:
+                await self._handle_exit_cleanup(writer)
+                return
+            writer.write(response.encode())
 
         with contextlib.suppress(BrokenPipeError, ConnectionResetError):
             await writer.drain()

@@ -7,7 +7,7 @@
   "commands": [
     {
       "name": "toggle_dpms",
-      "signature": "toggle_dpms",
+      "args": [],
       "short_description": "Toggle dpms on/off for every monitor.",
       "full_description": "Toggle dpms on/off for every monitor."
     }

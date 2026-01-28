@@ -1,56 +1,66 @@
 {
   "commands": [
     {
-      "name": "help",
-      "short_description": "Show available commands or detailed help for a specific command.",
-      "detail": "Usage:\n  pypr help           List all commands\n  pypr help <command> Show detailed help",
-      "subcommands": []
-    },
-    {
-      "name": "exit",
-      "short_description": "Terminate the pyprland daemon.",
-      "detail": "",
-      "subcommands": []
-    },
-    {
-      "name": "version",
-      "short_description": "Show the pyprland version.",
-      "detail": "",
-      "subcommands": []
-    },
-    {
-      "name": "reload",
-      "short_description": "Reload the configuration file.",
-      "detail": "New plugins will be loaded and configuration options will be updated.\nMost plugins will use the new values on the next command invocation.",
-      "subcommands": []
+      "name": "compgen",
+      "args": [
+        {
+          "value": "shell",
+          "required": true
+        },
+        {
+          "value": "default|path",
+          "required": false
+        }
+      ],
+      "short_description": "Generate shell completions.",
+      "full_description": "<shell> [default|path] Generate shell completions.\n\nUsage:\n  pypr compgen <shell>            Output script to stdout\n  pypr compgen <shell> default    Install to default user path\n  pypr compgen <shell> ~/path     Install to home-relative path\n  pypr compgen <shell> /abs/path  Install to absolute path\n\nExamples:\n  pypr compgen zsh > ~/.zsh/completions/_pypr\n  pypr compgen bash default"
     },
     {
       "name": "dumpjson",
+      "args": [],
       "short_description": "Dump the configuration in JSON format (after includes are processed).",
-      "detail": "",
-      "subcommands": []
+      "full_description": "Dump the configuration in JSON format (after includes are processed)."
+    },
+    {
+      "name": "exit",
+      "args": [],
+      "short_description": "Terminate the pyprland daemon.",
+      "full_description": "Terminate the pyprland daemon."
+    },
+    {
+      "name": "help",
+      "args": [
+        {
+          "value": "command",
+          "required": false
+        }
+      ],
+      "short_description": "Show available commands or detailed help.",
+      "full_description": "[command] Show available commands or detailed help.\n\nUsage:\n  pypr help           List all commands\n  pypr help <command> Show detailed help"
+    },
+    {
+      "name": "reload",
+      "args": [],
+      "short_description": "Reload the configuration file.",
+      "full_description": "Reload the configuration file.\n\nNew plugins will be loaded and configuration options will be updated.\nMost plugins will use the new values on the next command invocation."
+    },
+    {
+      "name": "version",
+      "args": [],
+      "short_description": "Show the pyprland version.",
+      "full_description": "Show the pyprland version."
     },
     {
       "name": "edit",
-      "short_description": "Edit the configuration file using $EDITOR (or vi), then reload.",
-      "detail": "Not available in pypr-client.",
-      "subcommands": []
+      "args": [],
+      "short_description": "Open the configuration file in $EDITOR, then reload.",
+      "full_description": "Open the configuration file in $EDITOR, then reload.\n\nOpens pyprland.toml in your preferred editor (EDITOR or VISUAL env var,\ndefaults to vi). After the editor closes, the configuration is reloaded."
     },
     {
       "name": "validate",
-      "short_description": "Validate the configuration file against plugin schemas.",
-      "detail": "Checks all plugin configurations for errors and warnings.\nWorks without the daemon running.\n\nNote: Not available in pypr-client.",
-      "subcommands": []
-    },
-    {
-      "name": "compgen",
-      "short_description": "Generate shell completions. <bash|zsh|fish> [path]",
-      "detail": "Usage:\n  pypr compgen <shell>        Install to default user path\n  pypr compgen <shell> <path> Install to custom path\n\nCompletions include scratchpad names for toggle/show/hide commands.",
-      "subcommands": [
-        "bash",
-        "zsh",
-        "fish"
-      ]
+      "args": [],
+      "short_description": "Validate the configuration file.",
+      "full_description": "Validate the configuration file.\n\nChecks the configuration file for syntax errors and validates plugin\nconfigurations against their schemas. Does not require the daemon."
     }
   ]
 }

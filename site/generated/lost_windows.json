@@ -7,7 +7,7 @@
   "commands": [
     {
       "name": "attract_lost",
-      "signature": "attract_lost",
+      "args": [],
       "short_description": "Brings lost floating windows to the current workspace.",
       "full_description": "Brings lost floating windows to the current workspace."
     }

@@ -5,7 +5,12 @@
   "commands": [
     {
       "name": "menu",
-      "signature": "menu [name]",
+      "args": [
+        {
+          "value": "name",
+          "required": false
+        }
+      ],
       "short_description": "Shows the menu, if \"name\" is provided, will only show this sub-menu.",
       "full_description": "[name] Shows the menu, if \"name\" is provided, will only show this sub-menu.\n\nArgs:\n    name: The menu name"
     }

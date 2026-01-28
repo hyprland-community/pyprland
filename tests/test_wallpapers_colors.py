@@ -403,3 +403,158 @@ def test_color_scheme_effect_on_saturation(wallpaper_plugin):
 
     # Confirm relative difference - this is the most important check for "greyer vs more saturated"
     assert s_neutral < s_fluo - 0.2, "Neutral scheme should be significantly less saturated than Fluo scheme"
+
+
+# --- Palette Display Tests ---
+
+
+from pyprland.plugins.wallpapers.palette import (
+    hex_to_rgb,
+    generate_sample_palette,
+    palette_to_json,
+    palette_to_terminal,
+    _categorize_palette,
+)
+import json
+
+
+def test_hex_to_rgb():
+    """Test hex color to RGB conversion."""
+    # With hash
+    assert hex_to_rgb("#FF0000") == (255, 0, 0)
+    assert hex_to_rgb("#00FF00") == (0, 255, 0)
+    assert hex_to_rgb("#0000FF") == (0, 0, 255)
+    assert hex_to_rgb("#4285F4") == (66, 133, 244)
+
+    # Without hash
+    assert hex_to_rgb("FF0000") == (255, 0, 0)
+    assert hex_to_rgb("4285F4") == (66, 133, 244)
+
+    # Lowercase
+    assert hex_to_rgb("#ff5500") == (255, 85, 0)
+
+
+def test_generate_sample_palette():
+    """Test sample palette generation."""
+    base_rgb = (66, 133, 244)  # Google blue
+    palette = generate_sample_palette(base_rgb, theme="dark")
+
+    # Check that palette contains expected keys
+    assert "scheme" in palette
+    assert palette["scheme"] == "dark"
+
+    # Check color categories exist
+    assert "colors.primary.dark.hex" in palette
+    assert "colors.primary.light.hex" in palette
+    assert "colors.secondary.dark.hex" in palette
+    assert "colors.surface.dark.hex" in palette
+    assert "colors.error.dark.hex" in palette
+
+    # Check hex format
+    assert palette["colors.primary.dark.hex"].startswith("#")
+    assert len(palette["colors.primary.dark.hex"]) == 7
+
+    # Check other formats exist
+    assert "colors.primary.dark.rgb" in palette
+    assert "colors.primary.dark.rgba" in palette
+    assert "colors.primary.dark.hex_stripped" in palette
+
+    # hex_stripped should not have #
+    assert not palette["colors.primary.dark.hex_stripped"].startswith("#")
+
+
+def test_generate_sample_palette_light_theme():
+    """Test sample palette generation with light theme."""
+    base_rgb = (66, 133, 244)
+    palette = generate_sample_palette(base_rgb, theme="light")
+
+    assert palette["scheme"] == "light"
+    # Default should match light variant
+    assert palette["colors.primary"] == palette["colors.primary.light.hex"]
+
+
+def test_categorize_palette():
+    """Test palette categorization."""
+    # Create a minimal palette for testing
+    palette = {
+        "scheme": "dark",
+        "colors.primary.dark.hex": "#AABBCC",
+        "colors.secondary.dark.hex": "#DDEEFF",
+        "colors.surface.dark.hex": "#112233",
+        "colors.error.dark.hex": "#FF0000",
+        "colors.red.dark.hex": "#FF6666",
+        "colors.background.dark.hex": "#000000",
+    }
+
+    categories = _categorize_palette(palette)
+
+    assert "colors.primary.dark.hex" in categories["primary"]
+    assert "colors.secondary.dark.hex" in categories["secondary"]
+    assert "colors.surface.dark.hex" in categories["surface"]
+    assert "colors.error.dark.hex" in categories["error"]
+    assert "colors.red.dark.hex" in categories["ansi"]
+    assert "colors.background.dark.hex" in categories["utility"]
+
+
+def test_palette_to_json():
+    """Test JSON palette output."""
+    base_rgb = (255, 85, 0)  # Orange
+    palette = generate_sample_palette(base_rgb, theme="dark")
+
+    json_output = palette_to_json(palette)
+
+    # Should be valid JSON
+    parsed = json.loads(json_output)
+
+    # Check structure
+    assert "variables" in parsed
+    assert "categories" in parsed
+    assert "filters" in parsed
+    assert "theme" in parsed
+
+    # Check variables
+    assert "colors.primary.dark.hex" in parsed["variables"]
+
+    # Check categories
+    assert "primary" in parsed["categories"]
+    assert "secondary" in parsed["categories"]
+    assert "ansi" in parsed["categories"]
+
+    # Check filters documentation
+    assert "set_alpha" in parsed["filters"]
+    assert "set_lightness" in parsed["filters"]
+    assert "example" in parsed["filters"]["set_alpha"]
+    assert "description" in parsed["filters"]["set_lightness"]
+
+    # Check theme
+    assert parsed["theme"] == "dark"
+
+
+def test_palette_to_terminal():
+    """Test terminal palette output."""
+    base_rgb = (66, 133, 244)
+    palette = generate_sample_palette(base_rgb, theme="dark")
+
+    terminal_output = palette_to_terminal(palette)
+
+    # Should contain category headers
+    assert "Primary:" in terminal_output
+    assert "Secondary:" in terminal_output
+    assert "Surface:" in terminal_output
+    assert "Error:" in terminal_output
+    assert "ANSI Colors:" in terminal_output
+
+    # Should contain ANSI escape codes (24-bit color)
+    assert "\033[48;2;" in terminal_output
+    assert "\033[0m" in terminal_output
+
+    # Should contain variable names
+    assert "colors.primary.dark.hex" in terminal_output
+
+    # Should contain hex values
+    assert "#" in terminal_output
+
+    # Should contain filter examples
+    assert "Filters:" in terminal_output
+    assert "set_alpha" in terminal_output
+    assert "set_lightness" in terminal_output

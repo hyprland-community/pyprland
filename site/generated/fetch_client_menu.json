@@ -7,13 +7,13 @@
   "commands": [
     {
       "name": "fetch_client_menu",
-      "signature": "fetch_client_menu",
+      "args": [],
       "short_description": "Select a client window and move it to the active workspace.",
       "full_description": "Select a client window and move it to the active workspace."
     },
     {
       "name": "unfetch_client",
-      "signature": "unfetch_client",
+      "args": [],
       "short_description": "Return a window back to its origin.",
       "full_description": "Return a window back to its origin."
     }

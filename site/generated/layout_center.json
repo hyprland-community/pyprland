@@ -7,8 +7,13 @@
   "commands": [
     {
       "name": "layout_center",
-      "signature": "layout_center",
-      "short_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.",
+      "args": [
+        {
+          "value": "toggle|next|prev|next2|prev2",
+          "required": true
+        }
+      ],
+      "short_description": "turn on/off or change the active window.",
       "full_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.\n\nArgs:\n    what: The command to run"
     }
   ],

@@ -16,6 +16,7 @@ def pyprland_app():
         app = Pyprland()
         app.server = AsyncMock()
         app.event_reader = AsyncMock()
+        app.log_handler = Mock()  # Required for _run_plugin_handler
         return app
 
 
@@ -180,10 +181,11 @@ async def test_call_handler_dispatch(pyprland_app):
     p2.run_mycommand = AsyncMock()
 
     with patch("pyprland.manager.partial") as mock_partial:
-        handled, error_msg = await pyprland_app._call_handler("run_mycommand", "arg1")
+        handled, success, msg = await pyprland_app._call_handler("run_mycommand", "arg1")
 
         assert handled is True
-        assert error_msg == ""
+        assert success is True
+        assert msg == ""
         # Verify it was queued for p2
         assert pyprland_app.queues["p2"].qsize() == 1
 
@@ -216,10 +218,11 @@ async def test_call_handler_dispatch_with_wait(pyprland_app):
     processor_task = asyncio.create_task(queue_processor())
 
     try:
-        handled, error_msg = await pyprland_app._call_handler("run_mycommand", "arg1", wait=True)
+        handled, success, msg = await pyprland_app._call_handler("run_mycommand", "arg1", wait=True)
 
         assert handled is True
-        assert error_msg == ""
+        assert success is True
+        assert msg == ""
         p1.run_mycommand.assert_called_once_with("arg1")
     finally:
         # Stop the processor
@@ -233,10 +236,11 @@ async def test_call_handler_unknown_command(pyprland_app):
     pyprland_app.plugins = {}
     pyprland_app.backend.notify_info = AsyncMock()
 
-    handled, error_msg = await pyprland_app._call_handler("run_nonexistent", notify="nonexistent")
+    handled, success, msg = await pyprland_app._call_handler("run_nonexistent", notify="nonexistent")
 
     assert handled is False
-    assert "Unknown command" in error_msg
+    assert success is False
+    assert "Unknown command" in msg
     pyprland_app.backend.notify_info.assert_called()
 
 
@@ -253,8 +257,8 @@ async def test_read_command_socket(pyprland_app):
     reader.readline.return_value = b"reload\n"
 
     with patch.object(pyprland_app, "_call_handler", new_callable=AsyncMock) as mock_call:
-        # Mock returns (handled=True, error_msg="")
-        mock_call.return_value = (True, "")
+        # Mock returns (handled=True, success=True, msg="")
+        mock_call.return_value = (True, True, "")
         await pyprland_app.read_command(reader, writer)
 
         mock_call.assert_called_with("run_reload", notify="reload", wait=True)
@@ -274,8 +278,8 @@ async def test_read_command_socket_error(pyprland_app):
     reader.readline.return_value = b"failing_command\n"
 
     with patch.object(pyprland_app, "_call_handler", new_callable=AsyncMock) as mock_call:
-        # Mock returns (handled=True, error_msg="Something went wrong")
-        mock_call.return_value = (True, "test_plugin::run_failing: Exception occurred")
+        # Mock returns (handled=True, success=False, msg="error message")
+        mock_call.return_value = (True, False, "test_plugin::run_failing: Exception occurred")
         await pyprland_app.read_command(reader, writer)
 
         # Verify ERROR response was sent
@@ -295,8 +299,8 @@ async def test_read_command_socket_unknown(pyprland_app):
     reader.readline.return_value = b"unknown_cmd\n"
 
     with patch.object(pyprland_app, "_call_handler", new_callable=AsyncMock) as mock_call:
-        # Mock returns (handled=False, error_msg="Unknown command")
-        mock_call.return_value = (False, 'Unknown command "unknown_cmd". Try "help" for available commands.')
+        # Mock returns (handled=False, success=False, msg="Unknown command")
+        mock_call.return_value = (False, False, 'Unknown command "unknown_cmd". Try "help" for available commands.')
         await pyprland_app.read_command(reader, writer)
 
         # Verify ERROR response was sent
@@ -315,6 +319,13 @@ async def test_read_command_exit(pyprland_app):
     writer.close = Mock()
 
     reader.readline.return_value = b"exit\n"
+
+    # Set up the pyprland plugin with manager reference so run_exit works
+    from pyprland.plugins.pyprland import Extension
+
+    pyprland_plugin = Extension("pyprland")
+    pyprland_plugin.manager = pyprland_app
+    pyprland_app.plugins["pyprland"] = pyprland_plugin
 
     with patch.object(pyprland_app, "_abort_plugins", new_callable=AsyncMock) as mock_abort:
         await pyprland_app.read_command(reader, writer)

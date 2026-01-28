@@ -7,7 +7,12 @@
   "commands": [
     {
       "name": "shift_monitors",
-      "signature": "shift_monitors <direction>",
+      "args": [
+        {
+          "value": "direction",
+          "required": true
+        }
+      ],
       "short_description": "Swaps monitors' workspaces in the given direction.",
       "full_description": "<direction> Swaps monitors' workspaces in the given direction.\n\nArgs:\n    arg: The direction to shift"
     }

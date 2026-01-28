@@ -40,7 +40,7 @@ class Extension(Plugin):
         await self.backend.execute(batch)
 
     async def run_change_workspace(self, direction: str) -> None:
-        """[direction] Switch workspaces of current monitor, avoiding displayed workspaces.
+        """<direction> Switch workspaces of current monitor, avoiding displayed workspaces.
 
         Args:
             direction: The direction to switch

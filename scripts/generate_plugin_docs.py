@@ -14,7 +14,6 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
-import re
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -23,6 +22,12 @@ from typing import Any
 # Add the project root to the path so we can import pyprland modules
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from pyprland.command_registry import (
+    CommandArg,
+    extract_commands_from_object,
+    get_client_commands,
+)
 
 # Paths
 PLUGINS_DIR = PROJECT_ROOT / "pyprland" / "plugins"
@@ -55,7 +60,7 @@ class CommandItem:
     """A command extracted from a plugin."""
 
     name: str
-    signature: str
+    args: list[CommandArg]  # Structured args for rendering
     short_description: str
     full_description: str
 
@@ -107,52 +112,6 @@ def extract_config_from_schema(schema: list) -> list[ConfigItem]:
     return config_items
 
 
-def parse_command_docstring(docstring: str, method_name: str) -> tuple[str, str, str]:
-    """Parse a command method's docstring to extract signature, short and full descriptions.
-
-    The first line of the docstring often contains the signature like:
-    "<arg> Short description" or "[optional_arg] Short description"
-
-    Args:
-        docstring: The raw docstring
-        method_name: The method name (without run_ prefix)
-
-    Returns:
-        Tuple of (signature, short_description, full_description)
-    """
-    if not docstring:
-        return method_name, "No description available.", ""
-
-    lines = docstring.strip().split("\n")
-    first_line = lines[0].strip()
-
-    # Check if first line starts with argument spec like <arg>, [arg], or is just description
-    # Pattern: optional leading args in <> or [], then the description
-    arg_pattern = r"^((?:\[[\w\s\-]+\]|\<[\w\s\-]+\>)\s*)*(.*)$"
-    match = re.match(arg_pattern, first_line)
-
-    if match:
-        args_part = match.group(1) or ""
-        desc_part = match.group(2) or first_line
-
-        # Build signature from method name and extracted args
-        args_part = args_part.strip()
-        if args_part:
-            signature = f"{method_name} {args_part}"
-        else:
-            signature = method_name
-
-        short_description = desc_part.strip() if desc_part.strip() else first_line
-    else:
-        signature = method_name
-        short_description = first_line
-
-    # Full description is the entire docstring
-    full_description = docstring.strip()
-
-    return signature, short_description, full_description
-
-
 def extract_commands(extension_class: type) -> list[CommandItem]:
     """Extract command documentation from a plugin's Extension class.
 
@@ -162,30 +121,19 @@ def extract_commands(extension_class: type) -> list[CommandItem]:
     Returns:
         List of CommandItem dataclasses
     """
+    # Use the registry to extract commands, then convert to CommandItem
+    from pyprland.command_registry import extract_commands_from_object
+
     commands = []
-
-    for name in dir(extension_class):
-        if not name.startswith("run_"):
-            continue
-
-        method = getattr(extension_class, name)
-        if not callable(method):
-            continue
-
-        command_name = name[4:]  # Remove 'run_' prefix
-        docstring = inspect.getdoc(method) or ""
-
-        signature, short_desc, full_desc = parse_command_docstring(docstring, command_name)
-
+    for cmd_info in extract_commands_from_object(extension_class, source=""):
         commands.append(
             CommandItem(
-                name=command_name,
-                signature=signature,
-                short_description=short_desc,
-                full_description=full_desc,
+                name=cmd_info.name,
+                args=cmd_info.args,
+                short_description=cmd_info.short_description,
+                full_description=cmd_info.full_description,
             )
         )
-
     return commands
 
 
@@ -362,21 +310,34 @@ def generate_menu_json() -> dict:
 
 
 def generate_builtins_json() -> dict:
-    """Generate JSON for built-in commands from builtin_commands.py.
+    """Generate JSON for built-in commands from pyprland plugin and client.
 
     Returns:
         Dict ready for JSON serialization
     """
-    from pyprland.builtin_commands import BUILTIN_COMMANDS
+    from pyprland.plugins.pyprland import Extension
 
     commands = []
-    for name, (short_desc, detail, subcommands) in BUILTIN_COMMANDS.items():
+
+    # Extract commands from pyprland plugin's run_* methods
+    for cmd in extract_commands(Extension):
         commands.append(
             {
-                "name": name,
-                "short_description": short_desc,
-                "detail": detail,
-                "subcommands": subcommands,
+                "name": cmd.name,
+                "args": [asdict(arg) for arg in cmd.args],
+                "short_description": cmd.short_description,
+                "full_description": cmd.full_description,
+            }
+        )
+
+    # Add client-only commands using the registry
+    for cmd_info in get_client_commands():
+        commands.append(
+            {
+                "name": cmd_info.name,
+                "args": [asdict(arg) for arg in cmd_info.args],
+                "short_description": cmd_info.short_description,
+                "full_description": cmd_info.full_description,
             }
         )
 

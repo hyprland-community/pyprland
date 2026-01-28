@@ -8,9 +8,14 @@
   "commands": [
     {
       "name": "bar",
-      "signature": "bar",
-      "short_description": "<restart|stop|toggle> Start (default), restart, stop or toggle the menu bar.",
-      "full_description": "<restart|stop|toggle> Start (default), restart, stop or toggle the menu bar.\n\nArgs:\n    args: The command arguments"
+      "args": [
+        {
+          "value": "restart|stop|toggle",
+          "required": false
+        }
+      ],
+      "short_description": "Start (default), restart, stop or toggle the menu bar.",
+      "full_description": "[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.\n\nArgs:\n    args: The command arguments"
     }
   ],
   "config": [

@@ -4,10 +4,45 @@
   "environments": [],
   "commands": [
     {
+      "name": "color",
+      "args": [
+        {
+          "value": "#RRGGBB",
+          "required": true
+        },
+        {
+          "value": "scheme",
+          "required": false
+        }
+      ],
+      "short_description": "Generate color palette from hex color.",
+      "full_description": "<#RRGGBB> [scheme] Generate color palette from hex color."
+    },
+    {
+      "name": "palette",
+      "args": [
+        {
+          "value": "color",
+          "required": false
+        },
+        {
+          "value": "json",
+          "required": false
+        }
+      ],
+      "short_description": "Show available color template variables.",
+      "full_description": "[color] [json] Show available color template variables."
+    },
+    {
       "name": "wall",
-      "signature": "wall",
-      "short_description": "<next|clear|pause|color> skip, stop, pause or change color of background.",
-      "full_description": "<next|clear|pause|color> skip, stop, pause or change color of background."
+      "args": [
+        {
+          "value": "next|pause|clear",
+          "required": true
+        }
+      ],
+      "short_description": "Control wallpaper cycling.",
+      "full_description": "<next|pause|clear> Control wallpaper cycling."
     }
   ],
   "config": [

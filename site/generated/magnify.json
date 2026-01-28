@@ -7,7 +7,12 @@
   "commands": [
     {
       "name": "zoom",
-      "signature": "zoom [factor]",
+      "args": [
+        {
+          "value": "factor",
+          "required": false
+        }
+      ],
       "short_description": "zooms to \"factor\" or toggles zoom level if factor is omitted.",
       "full_description": "[factor] zooms to \"factor\" or toggles zoom level if factor is omitted.\n\nIf factor is omitted, it toggles between the configured zoom level and no zoom.\nFactor can be relative (e.g. +0.5 or -0.5)."
     }

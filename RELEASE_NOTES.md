@@ -25,3 +25,4 @@
     - IPC methods moved to backend adapter (`self.hyprctl()` → `self.backend.execute()`, etc.)
     - New `environments` class attribute to declare supported backends
     - New `config_schema` attribute for validation support
+    - Many changes on internal APIs

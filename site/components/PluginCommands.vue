@@ -1,10 +1,13 @@
 <template>
   <div v-if="loading">Loading commands...</div>
   <div v-else-if="error">{{ error }}</div>
-  <ul v-else v-for="command in commands" :key="command.name">
-    <li>
-      <code v-html="formatSignature(command.signature)" />&nbsp;
-      <span v-html="renderDescription(command.short_description)" />
+  <ul v-else>
+    <li v-for="command in commands" :key="command.name">
+      <code>{{ command.name }}</code>
+      <template v-for="(arg, idx) in command.args" :key="idx">
+        &nbsp;<code>{{ formatArg(arg) }}</code>
+      </template>
+      &nbsp;<span v-html="renderDescription(command.short_description)" />
     </li>
   </ul>
 </template>
@@ -25,7 +28,7 @@ const { data: commands, loading, error } = usePluginData(async () => {
   return module.commands || []
 })
 
-function formatSignature(sig) {
-  return sig.replace(/[ ]*$/, '').replace(/ +/g, '&ensp;')
+function formatArg(arg) {
+  return arg.required ? arg.value : `[${arg.value}]`
 }
 </script>

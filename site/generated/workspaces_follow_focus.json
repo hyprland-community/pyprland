@@ -7,9 +7,14 @@
   "commands": [
     {
       "name": "change_workspace",
-      "signature": "change_workspace [direction]",
+      "args": [
+        {
+          "value": "direction",
+          "required": true
+        }
+      ],
       "short_description": "Switch workspaces of current monitor, avoiding displayed workspaces.",
-      "full_description": "[direction] Switch workspaces of current monitor, avoiding displayed workspaces.\n\nArgs:\n    direction: The direction to switch"
+      "full_description": "<direction> Switch workspaces of current monitor, avoiding displayed workspaces.\n\nArgs:\n    direction: The direction to switch"
     }
   ],
   "config": [

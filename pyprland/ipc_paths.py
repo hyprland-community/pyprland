@@ -57,7 +57,6 @@ def init_ipc_folder() -> None:
     For Hyprland with shortened paths, creates a symlink.
     For other cases, the folder should already exist or will be created by the daemon.
     """
-    if HYPRLAND_INSTANCE_SIGNATURE and _ORIGINAL_IPC_FOLDER and _ORIGINAL_IPC_FOLDER != IPC_FOLDER:
-        if not os.path.exists(IPC_FOLDER):
-            with contextlib.suppress(OSError):
-                os.symlink(_ORIGINAL_IPC_FOLDER, IPC_FOLDER)
+    if HYPRLAND_INSTANCE_SIGNATURE and _ORIGINAL_IPC_FOLDER and _ORIGINAL_IPC_FOLDER != IPC_FOLDER and not os.path.exists(IPC_FOLDER):
+        with contextlib.suppress(OSError):
+            os.symlink(_ORIGINAL_IPC_FOLDER, IPC_FOLDER)

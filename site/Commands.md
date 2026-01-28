@@ -15,6 +15,9 @@ The `pypr` command operates in two modes:
 | `pypr` | Daemon | Starts the Pyprland daemon (foreground) |
 | `pypr <command>` | Client | Sends a command to the running daemon |
 
+
+There is also an optional `pypr-client` command which is designed for running in keyboard-bindings since it starts faster but doesn't support every built-in command (eg: `validate`, `edit`).
+
 > [!tip]
 > Command names can use dashes or underscores interchangeably.
 > E.g., `pypr shift_monitors` and `pypr shift-monitors` are equivalent.
@@ -27,7 +30,7 @@ These commands are always available, regardless of which plugins are loaded:
 
 ## Plugin Commands
 
-Each plugin can add its own commands. Use `pypr help` to see all available commands for your configuration.
+Each plugin can add its own commands. Use `pypr help` to see the commands made available by the list of plugins you set in your configuration file.
 
 Examples:
 - `scratchpads` plugin adds: `toggle`, `show`, `hide`
@@ -45,16 +48,21 @@ Pyprland can generate shell completions dynamically based on your loaded plugins
 With the daemon running:
 
 ```sh
-pypr compgen bash   # Install bash completions
-pypr compgen zsh    # Install zsh completions
-pypr compgen fish   # Install fish completions
+# Output to stdout (redirect to file)
+pypr compgen zsh > ~/.zsh/completions/_pypr
+
+# Install to default user path
+pypr compgen bash default
+pypr compgen zsh default
+pypr compgen fish default
+
+# Install to custom path (absolute or ~/)
+pypr compgen bash ~/custom/path/pypr
+pypr compgen zsh /etc/zsh/completions/_pypr
 ```
 
-You can also specify a custom path:
-
-```sh
-pypr compgen bash /custom/path/pypr
-```
+> [!warning]
+> Relative paths may not do what you expect. Use `default`, an absolute path, or a `~/` path.
 
 ### Default Installation Paths
 

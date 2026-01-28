@@ -10,7 +10,19 @@ from .common import get_logger, notify_send, run_interactive_program
 from .models import ExitCode, ResponsePrefix
 from .validate_cli import run_validate
 
-__all__ = ["run_client"]
+__all__ = ["run_client", "CLIENT_COMMANDS"]
+
+# Client-only commands with their docstrings (not sent to daemon)
+CLIENT_COMMANDS = {
+    "edit": """Open the configuration file in $EDITOR, then reload.
+
+Opens pyprland.toml in your preferred editor (EDITOR or VISUAL env var,
+defaults to vi). After the editor closes, the configuration is reloaded.""",
+    "validate": """Validate the configuration file.
+
+Checks the configuration file for syntax errors and validates plugin
+configurations against their schemas. Does not require the daemon.""",
+}
 
 
 async def run_client() -> None:
@@ -59,9 +71,16 @@ async def run_client() -> None:
         sys.exit(ExitCode.COMMAND_ERROR)
     elif return_value.startswith(f"{ResponsePrefix.OK}"):
         # Command succeeded, check for additional output after OK
-        remaining = return_value[len(ResponsePrefix.OK) :].strip()
-        if remaining:
-            print(remaining)
+        remaining = return_value[len(ResponsePrefix.OK) :]
+        if remaining.startswith(": "):
+            # Success message format: "OK: message\n"
+            print(remaining[2:].strip())
+        elif remaining.startswith("\n"):
+            # Content format: "OK\n<content>"
+            content = remaining[1:].rstrip("\n")
+            if content:
+                print(content)
+        # "OK\n" with no content: print nothing
         sys.exit(ExitCode.SUCCESS)
     else:
         # Legacy response (version, help, dumpjson) - print as-is

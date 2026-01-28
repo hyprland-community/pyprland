@@ -154,7 +154,7 @@ class Extension(Plugin):
         return self.proc is not None and self.ongoing_task is not None
 
     async def run_bar(self, args: str) -> None:
-        """<restart|stop|toggle> Start (default), restart, stop or toggle the menu bar.
+        """[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.
 
         Args:
             args: The command arguments

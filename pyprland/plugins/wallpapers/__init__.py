@@ -17,8 +17,12 @@ from .imageutils import (
     expand_path,
     get_files_with_ext,
 )
+from .palette import generate_sample_palette, hex_to_rgb, palette_to_json, palette_to_terminal
 from .templates import TemplateEngine
 from .theme import detect_theme, generate_palette, get_color_scheme_props
+
+# Length of a hex color without '#' prefix
+HEX_COLOR_LENGTH = 6
 
 
 async def fetch_monitors(extension: "Extension") -> list[MonitorInfo]:
@@ -260,7 +264,7 @@ class Extension(Plugin):
         self.proc.clear()
 
     async def run_wall(self, arg: str) -> None:
-        """<next|clear|pause|color> skip, stop, pause or change color of background."""
+        """<next|pause|clear> Control wallpaper cycling."""
         if arg.startswith("n"):  # next
             self._paused = False
             self.next_background_event.set()
@@ -276,11 +280,43 @@ class Extension(Plugin):
             if clear_command:
                 clear_proc = await asyncio.create_subprocess_shell(clear_command)
                 await clear_proc.wait()
-        elif arg.startswith("co"):  # color
-            # expect an #rgb color code
-            args = arg.split()
-            color = args[1]
-            with contextlib.suppress(IndexError):
-                self.config["color_scheme"] = args[2]
 
-            await self._generate_templates("color-" + color, color)
+    async def run_color(self, arg: str) -> None:
+        """<#RRGGBB> [scheme] Generate color palette from hex color."""
+        args = arg.split()
+        color = args[0]
+        with contextlib.suppress(IndexError):
+            self.config["color_scheme"] = args[1]
+
+        await self._generate_templates("color-" + color, color)
+
+    async def run_palette(self, arg: str = "") -> str:
+        """[color] [json] Show available color template variables."""
+        args = arg.split()
+        color: str | None = None
+        output_json = False
+
+        # Parse arguments: [color] [json]
+        for a in args:
+            if a.lower() == "json":
+                output_json = True
+            elif a.startswith("#") or (len(a) == HEX_COLOR_LENGTH and all(c in "0123456789abcdefABCDEF" for c in a)):
+                color = a
+
+        # Determine base RGB color
+        if color:
+            base_rgb = hex_to_rgb(color)
+        elif self.cur_image and can_edit_image:
+            # Use colors from current wallpaper
+            dominant_colors = await asyncio.to_thread(get_dominant_colors, img_path=self.cur_image)
+            base_rgb = dominant_colors[0]
+        else:
+            # Default: Google blue #4285F4
+            base_rgb = (66, 133, 244)
+
+        theme = await detect_theme(self.log)
+        palette = generate_sample_palette(base_rgb, theme)
+
+        if output_json:
+            return palette_to_json(palette)
+        return palette_to_terminal(palette)

@@ -7,7 +7,12 @@
   "commands": [
     {
       "name": "toggle_special",
-      "signature": "toggle_special [name]",
+      "args": [
+        {
+          "value": "name",
+          "required": false
+        }
+      ],
       "short_description": "Toggles switching the focused window to the special workspace \"name\" (default: minimized).",
       "full_description": "[name] Toggles switching the focused window to the special workspace \"name\" (default: minimized).\n\nArgs:\n    special_workspace: The special workspace name"
     }
