@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock
 from pyprland.plugins.expose import Extension
-from pyprland.models import ClientInfo
-from pyprland.common import SharedState
+from tests.conftest import make_extension
 
 
 @pytest.fixture
@@ -16,15 +15,9 @@ def sample_clients():
 
 @pytest.fixture
 def extension():
-    ext = Extension("expose")
-    ext.backend = AsyncMock()
-    ext.hyprctl = ext.backend.execute
-    ext.get_clients = AsyncMock()
-    ext.state = SharedState()
     # Note: expose.py uses self.get_config_bool() which goes through Plugin.get_config()
     # We mock the plugin method, not config.get_bool
-    ext.get_config_bool = Mock(return_value=False)  # Default include_special=False
-    return ext
+    return make_extension(Extension, get_config_bool=Mock(return_value=False))
 
 
 @pytest.mark.asyncio

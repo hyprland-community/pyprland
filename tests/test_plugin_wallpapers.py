@@ -1,24 +1,20 @@
 import pytest
-import os
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.wallpapers import Extension
-from pyprland.config import Configuration
-from pyprland.common import SharedState
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension(mocker, test_logger):
-    # Mock global state variables that might be accessed
-
-    ext = Extension("wallpapers")
-    ext.state = SharedState()
-    ext.state.variables = {}
-    ext.config = Configuration({"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "recurse": False}, logger=test_logger)
-    ext.log = Mock()
-    ext.hyprctl_json = AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}])
-    ext.hyprctl = AsyncMock()
-    return ext
+    return make_extension(
+        Extension,
+        logger=test_logger,
+        config={"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "recurse": False},
+        state_variables={},
+        hyprctl_json=AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]),
+        hyprctl=AsyncMock(),
+    )
 
 
 @pytest.mark.asyncio

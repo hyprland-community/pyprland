@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.menubar import get_pid_from_layers_hyprland, is_bar_in_layers_niri, is_bar_alive, Extension
+from tests.conftest import make_extension
 
 
 def test_get_pid_from_layers_hyprland():
@@ -96,15 +97,17 @@ async def test_is_bar_alive_niri():
 
 @pytest.fixture
 def extension():
-    ext = Extension("menubar")
-    ext.backend = AsyncMock()
-    ext.log = Mock()
-    ext.config = {"monitors": ["DP-1", "HDMI-A-1"]}
-    ext.state = Mock()
-    ext.state.monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
-    ext.state.active_monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
-    ext.state.environment = "hyprland"
-    return ext
+    # menubar needs state to be a Mock because it accesses active_monitors
+    # which is a computed property on SharedState
+    state = Mock()
+    state.monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
+    state.active_monitors = ["DP-1", "HDMI-A-1", "eDP-1"]
+    state.environment = "hyprland"
+    return make_extension(
+        Extension,
+        config={"monitors": ["DP-1", "HDMI-A-1"]},
+        state=state,
+    )
 
 
 @pytest.mark.asyncio

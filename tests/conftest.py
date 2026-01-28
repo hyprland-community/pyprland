@@ -14,6 +14,8 @@ import pytest
 import tomllib
 from pytest_asyncio import fixture
 
+from pyprland.common import SharedState
+
 from .testtools import MockReader, MockWriter
 
 if TYPE_CHECKING:
@@ -142,6 +144,88 @@ class GlobalMocks:
 
 
 mocks = GlobalMocks()
+
+
+def make_extension(plugin_class, name: str | None = None, *, logger=None, **overrides):
+    """Factory function for creating mocked plugin extensions.
+
+    Creates a plugin extension with common mocks pre-configured:
+    - backend: AsyncMock with execute, execute_json, get_monitors, etc.
+    - state: SharedState with active_workspace="1" and active_window="0x123"
+    - hyprctl: alias to backend.execute
+    - hyprctl_json: alias to backend.execute_json
+    - get_clients: AsyncMock returning []
+    - log: Mock for logging
+
+    Args:
+        plugin_class: The Extension class to instantiate
+        name: Plugin name (defaults to class module name)
+        logger: Logger instance for Configuration (optional)
+        **overrides: Additional attributes to set on the extension.
+            - state=Mock(): Replace SharedState with a custom state object
+            - config={...}: If plugin has config_schema, creates Configuration with schema
+            - state_* prefix: Sets state attributes (e.g. state_active_workspace="2")
+            - Any other key: Sets as attribute directly (methods, mocks, etc.)
+
+    Returns:
+        Configured plugin extension instance
+
+    Example:
+        ext = make_extension(Extension, config={"margin": 50})
+        ext = make_extension(Extension, state_active_workspace="2")
+        ext = make_extension(Extension, get_config_bool=Mock(return_value=False))
+        ext = make_extension(Extension, menu=AsyncMock(), _menu_configured=True)
+        ext = make_extension(Extension, state=Mock())  # Use a Mock for state
+    """
+    # Default name from module if not provided
+    if name is None:
+        # Extract plugin name from module path like pyprland.plugins.expose
+        module = plugin_class.__module__
+        name = module.split(".")[-1] if "." in module else "test"
+
+    ext = plugin_class(name)
+
+    # Setup common mocks
+    ext.backend = AsyncMock()
+    ext.log = Mock()
+
+    # Handle state: use provided state or create SharedState with defaults
+    if "state" in overrides:
+        ext.state = overrides["state"]
+    else:
+        ext.state = SharedState()
+        ext.state.active_workspace = "1"
+        ext.state.active_window = "0x123"
+
+    # Common aliases used in tests
+    ext.hyprctl = ext.backend.execute
+    ext.hyprctl_json = ext.backend.execute_json
+    ext.get_clients = AsyncMock(return_value=[])
+
+    # Apply overrides
+    for key, value in overrides.items():
+        if key == "state":
+            # Already handled above
+            continue
+        elif key.startswith("state_"):
+            # Handle state_* prefix for setting state attributes
+            state_attr = key[6:]  # Remove "state_" prefix
+            setattr(ext.state, state_attr, value)
+        elif key == "config":
+            # Auto-detect config_schema and use Configuration when present
+            if isinstance(value, dict):
+                if hasattr(ext, "config_schema") and ext.config_schema:
+                    from pyprland.config import Configuration
+
+                    ext.config = Configuration(value, logger=logger, schema=ext.config_schema)
+                else:
+                    ext.config.update(value)
+            else:
+                ext.config = value  # Allow passing Configuration directly
+        else:
+            setattr(ext, key, value)
+
+    return ext
 
 
 async def mocked_unix_server(command_reader, *_):

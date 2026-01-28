@@ -1,25 +1,18 @@
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock
 from pyprland.plugins.fetch_client_menu import Extension
-from pyprland.common import SharedState
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension():
-    ext = Extension("fetch_client_menu")
-    ext.state = SharedState()
-    ext.state.active_workspace = "1"
-    ext.state.active_window = "0x123"
-    ext.backend = AsyncMock()
-    ext.get_clients = AsyncMock()
-    ext.menu = AsyncMock()
-    ext.config.update({"separator": "|"})
-    ext._windows_origins = {}
-
-    # Mock ensure_menu_configured to prevent it from overwriting our mock menu
-    ext.ensure_menu_configured = AsyncMock()
-
-    return ext
+    return make_extension(
+        Extension,
+        config={"separator": "|"},
+        menu=AsyncMock(),
+        _windows_origins={},
+        ensure_menu_configured=AsyncMock(),
+    )
 
 
 @pytest.mark.asyncio

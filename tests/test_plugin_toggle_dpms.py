@@ -1,17 +1,15 @@
 import pytest
-from pytest_asyncio import fixture
 from unittest.mock import AsyncMock
 
 from pyprland.plugins.toggle_dpms import Extension
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension():
-    ext = Extension("toggle_dpms")
-    ext.backend = AsyncMock()
+    ext = make_extension(Extension)
     # Mocking monitor list
     ext.backend.get_monitors = AsyncMock(return_value=[{"name": "DP-1", "dpmsStatus": True}, {"name": "DP-2", "dpmsStatus": True}])
-    ext.backend.execute = AsyncMock()
     return ext
 
 

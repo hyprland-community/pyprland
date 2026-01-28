@@ -7,6 +7,33 @@ It's easy to write your own plugin by making a Python package and then indicatin
 
 [Contributing guidelines](https://github.com/fdev31/pyprland/blob/main/CONTRIBUTING.md)
 
+## Development Setup
+
+### Prerequisites
+
+- Python 3.11+
+- [Poetry](https://python-poetry.org/) for dependency management
+- [pre-commit](https://pre-commit.com/) for Git hooks
+
+### Initial Setup
+
+```sh
+# Clone the repository
+git clone https://github.com/fdev31/pyprland.git
+cd pyprland
+
+# Install dependencies
+poetry install
+
+# Install dev and lint dependencies
+poetry install --with dev,lint
+
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
 ## Quick Start
 
 ### Debugging
@@ -216,6 +243,97 @@ Generate and browse the full API documentation:
 ```sh
 tox run -e doc
 # Then visit http://localhost:8080
+```
+
+## Testing & Quality Assurance
+
+### Running All Checks
+
+Before submitting a PR, run the full test suite:
+
+```sh
+tox
+```
+
+This runs unit tests across Python versions and linting checks.
+
+### Tox Environments
+
+| Environment | Command | Description |
+|-------------|---------|-------------|
+| `py314-unit` | `tox run -e py314-unit` | Unit tests (Python 3.14) |
+| `py311-unit` | `tox run -e py311-unit` | Unit tests (Python 3.11) |
+| `py312-unit` | `tox run -e py312-unit` | Unit tests (Python 3.12) |
+| `py314-linting` | `tox run -e py314-linting` | Full linting suite (mypy, ruff, pylint, flake8) |
+| `py314-wiki` | `tox run -e py314-wiki` | Check plugin documentation coverage |
+| `doc` | `tox run -e doc` | Generate API docs with pdoc |
+| `coverage` | `tox run -e coverage` | Run tests with coverage report |
+| `deadcode` | `tox run -e deadcode` | Detect dead code with vulture |
+
+### Quick Test Commands
+
+```sh
+# Run unit tests only
+tox run -e py314-unit
+
+# Run linting only
+tox run -e py314-linting
+
+# Check documentation coverage
+tox run -e py314-wiki
+
+# Run tests with coverage
+tox run -e coverage
+```
+
+## Pre-commit Hooks
+
+Pre-commit hooks ensure code quality before commits and pushes.
+
+### Installation
+
+```sh
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+### What Runs Automatically
+
+**On every commit:**
+
+| Hook | Purpose |
+|------|---------|
+| `versionMgmt` | Auto-increment version number |
+| `wikiDocGen` | Regenerate plugin documentation JSON |
+| `wikiDocCheck` | Verify documentation coverage |
+| `ruff-check` | Lint Python code |
+| `ruff-format` | Format Python code |
+| `flake8` | Additional Python linting |
+| `check-yaml` | Validate YAML files |
+| `check-json` | Validate JSON files |
+| `pretty-format-json` | Auto-format JSON files |
+| `beautysh` | Format shell scripts |
+| `yamllint` | Lint YAML files |
+
+**On push:**
+
+| Hook | Purpose |
+|------|---------|
+| `runtests` | Run full pytest suite |
+
+### Manual Execution
+
+Run all hooks manually:
+
+```sh
+pre-commit run --all-files
+```
+
+Run a specific hook:
+
+```sh
+pre-commit run ruff-check --all-files
 ```
 
 ## Packaging & Distribution

@@ -1,16 +1,14 @@
 import pytest
-from unittest.mock import Mock, AsyncMock, call
+from unittest.mock import Mock, call
+
 from pyprland.plugins.shift_monitors import Extension
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension():
-    ext = Extension("shift_monitors")
-    ext.backend = AsyncMock()
-    ext.backend.execute = AsyncMock()
-    ext.backend.execute_json = AsyncMock()
+    ext = make_extension(Extension)
     ext.monitors = ["M1", "M2", "M3"]
-    ext.state = Mock()  # Mock the state
     ext.state.environment = "hyprland"  # Default to hyprland for existing tests
     return ext
 

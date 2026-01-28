@@ -1,17 +1,12 @@
 import pytest
-from unittest.mock import Mock, AsyncMock
+
 from pyprland.plugins.toggle_special import Extension
-from pyprland.common import SharedState
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension():
-    ext = Extension("toggle_special")
-    ext.state = SharedState()
-    ext.state.active_workspace = "1"
-
-    ext.backend = AsyncMock()
-    return ext
+    return make_extension(Extension)
 
 
 @pytest.mark.asyncio

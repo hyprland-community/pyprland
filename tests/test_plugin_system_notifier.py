@@ -1,16 +1,17 @@
 import pytest
 import pytest_asyncio
 import asyncio
-from unittest.mock import Mock, AsyncMock, call, patch
+from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.system_notifier import Extension, builtin_parsers
+from tests.conftest import make_extension
 
 
 @pytest_asyncio.fixture
 async def extension():
-    ext = Extension("system_notifier")
-    ext.backend = AsyncMock()
-    ext.log = Mock()
-    ext.config = {"parsers": {}, "sources": [], "default_color": "#000000"}
+    ext = make_extension(
+        Extension,
+        config={"parsers": {}, "sources": [], "default_color": "#000000"},
+    )
     yield ext
     await ext.exit()
 

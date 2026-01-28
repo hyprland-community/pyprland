@@ -1,16 +1,16 @@
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 from pyprland.plugins.shortcuts_menu import Extension
 from pyprland.config import Configuration
-from pyprland.common import SharedState
+from tests.conftest import make_extension
 
 
 @pytest.fixture
 def extension(test_logger):
-    ext = Extension("shortcuts_menu")
-    ext.state = SharedState()
-    ext.config = Configuration(
-        {
+    return make_extension(
+        Extension,
+        logger=test_logger,
+        config={
             "entries": {
                 "Network": {"WiFi": "nm-connection-editor", "Bluetooth": "blueman-manager"},
                 "System": {"Power": {"Shutdown": "poweroff", "Reboot": "reboot"}},
@@ -18,14 +18,9 @@ def extension(test_logger):
             },
             "skip_single": True,
         },
-        logger=test_logger,
-        schema=ext.config_schema,  # Apply schema for default value lookups
+        menu=AsyncMock(),
+        _menu_configured=True,
     )
-    ext.menu = AsyncMock()
-    # Explicitly set configured to avoid real menu initialization
-    ext._menu_configured = True
-    ext.log = MagicMock()
-    return ext
 
 
 @pytest.mark.asyncio
