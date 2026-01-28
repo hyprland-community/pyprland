@@ -1,6 +1,7 @@
 - Major documentation overhaul
     - Improved pages structure
     - More docs extracted from code
+    - Single schema source used by the runtime and the docs
 - More specific user feedback on error scenarios
 - New commands: `validate`, `compgen`, `help [command]`
 - Architecture changes: no longer depends on any desktop environment by default
