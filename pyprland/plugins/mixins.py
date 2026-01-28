@@ -3,23 +3,67 @@
 from typing import Any
 
 
+class MonitorListDescriptor:
+    """Descriptor that resolves monitor list location at runtime.
+
+    Priority order:
+    1. self.monitors (instance attribute) - for regular plugins
+    2. self.state.monitors - for core plugins storing in SharedState
+
+    This allows plugins to choose where to store monitors:
+    - Regular plugins: set self.monitors = [...] in init()
+    - Core plugins: use self.state.monitors (SharedState)
+    """
+
+    def __get__(self, obj: Any, objtype: type | None = None) -> list[str]:
+        """Get the monitor list from the appropriate location."""
+        if obj is None:
+            return []  # type: ignore[return-value]
+        # Check for instance attribute 'monitors' first (not class attribute)
+        if "monitors" in obj.__dict__:
+            return obj.__dict__["monitors"]
+        # Fall back to state.monitors for core plugins
+        if hasattr(obj, "state") and hasattr(obj.state, "monitors"):
+            return obj.state.monitors
+        return []
+
+    def __set__(self, obj: Any, value: list[str]) -> None:
+        """Set the monitor list in the appropriate location."""
+        # If monitors is already an instance attribute, update it
+        if "monitors" in obj.__dict__:
+            obj.__dict__["monitors"] = value
+        # Otherwise, use state.monitors if available
+        elif hasattr(obj, "state") and hasattr(obj.state, "monitors"):
+            obj.state.monitors = value
+        else:
+            obj.__dict__["monitors"] = value
+
+
 class MonitorTrackingMixin:
     """Mixin for plugins that need to track monitor add/remove events.
 
-    Plugins using this mixin should define a `monitors` attribute (list[str])
-    that will be automatically updated when monitors are added/removed.
+    This mixin automatically detects where to store the monitor list:
+    - If self.state.monitors exists (core plugins), uses that
+    - Otherwise uses self.monitors (regular plugins)
 
-    Example usage:
+    Example usage for regular plugins:
         class Extension(MonitorTrackingMixin, Plugin):
             monitors: list[str] = []
 
             async def init(self):
                 self.monitors = [m["name"] for m in await self.backend.get_monitors()]
+
+    Example usage for core plugins (storing in SharedState):
+        class HyprlandStateMixin(MonitorTrackingMixin):
+            # self.state.monitors is used automatically
+            pass
     """
 
     # These attributes are provided by the Plugin class
     log: Any
-    monitors: list[str]
+
+    # Descriptor that resolves to the correct monitor list
+    _monitors = MonitorListDescriptor()
 
     async def event_monitoradded(self, name: str) -> None:
         """Track monitor addition.
@@ -27,7 +71,7 @@ class MonitorTrackingMixin:
         Args:
             name: The monitor name
         """
-        self.monitors.append(name)
+        self._monitors.append(name)
 
     async def event_monitorremoved(self, name: str) -> None:
         """Track monitor removal.
@@ -36,37 +80,10 @@ class MonitorTrackingMixin:
             name: The monitor name
         """
         try:
-            self.monitors.remove(name)
+            self._monitors.remove(name)
         except ValueError:
             self.log.warning("Monitor %s not found in state - can't be removed", name)
 
 
-class StateMonitorTrackingMixin:
-    """Mixin for core plugins that track monitors in SharedState.
-
-    This is used by the pyprland core plugin (HyprlandStateMixin) which
-    stores monitor list in self.state.monitors instead of self.monitors.
-    """
-
-    # These attributes are provided by the Plugin/Mixin class
-    log: Any
-    state: Any
-
-    async def event_monitoradded(self, name: str) -> None:
-        """Track monitor addition in shared state.
-
-        Args:
-            name: The monitor name
-        """
-        self.state.monitors.append(name)
-
-    async def event_monitorremoved(self, name: str) -> None:
-        """Track monitor removal from shared state.
-
-        Args:
-            name: The monitor name
-        """
-        try:
-            self.state.monitors.remove(name)
-        except ValueError:
-            self.log.warning("Monitor %s not found in state - can't be removed", name)
+# Keep backwards compatibility alias
+StateMonitorTrackingMixin = MonitorTrackingMixin
