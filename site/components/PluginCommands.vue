@@ -9,39 +9,23 @@
   </ul>
 </template>
 
-<script>
+<script setup>
 import { renderDescription } from './configHelpers.js'
+import { usePluginData } from './usePluginData.js'
 
-export default {
-  props: {
-    plugin: {
-      type: String,
-      required: true
-    }
-  },
-  data() {
-    return {
-      commands: [],
-      loading: true,
-      error: null
-    }
-  },
-  async mounted() {
-    try {
-      const data = await import(`../generated/${this.plugin}.json`)
-      this.commands = data.commands || []
-    } catch (e) {
-      this.error = `Failed to load commands for plugin: ${this.plugin}`
-      console.error(e)
-    } finally {
-      this.loading = false
-    }
-  },
-  methods: {
-    formatSignature(sig) {
-      return sig.replace(/[ ]*$/, '').replace(/ +/g, '&ensp;')
-    },
-    renderDescription
+const props = defineProps({
+  plugin: {
+    type: String,
+    required: true
   }
+})
+
+const { data: commands, loading, error } = usePluginData(async () => {
+  const module = await import(`../generated/${props.plugin}.json`)
+  return module.commands || []
+})
+
+function formatSignature(sig) {
+  return sig.replace(/[ ]*$/, '').replace(/ +/g, '&ensp;')
 }
 </script>

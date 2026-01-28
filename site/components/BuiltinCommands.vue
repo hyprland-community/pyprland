@@ -23,46 +23,34 @@
   </table>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, nextTick } from 'vue'
 import { renderDescription } from './configHelpers.js'
+import { usePluginData } from './usePluginData.js'
 
-export default {
-  data() {
-    return {
-      commands: [],
-      loading: true,
-      error: null,
-      commandToAnchor: {}
-    }
-  },
-  async mounted() {
-    try {
-      const data = await import('../generated/builtins.json')
-      this.commands = data.commands || []
-    } catch (e) {
-      this.error = 'Failed to load built-in commands'
-      console.error(e)
-    } finally {
-      this.loading = false
-    }
+const { data: commands, loading, error } = usePluginData(async () => {
+  const module = await import('../generated/builtins.json')
+  return module.commands || []
+})
 
-    // Scan page for documented command anchors (e.g., id="command-compgen")
-    this.$nextTick(() => {
-      const anchors = document.querySelectorAll('[id^="command-"]')
-      const mapping = {}
-      anchors.forEach(el => {
-        // Extract command name from anchor: "command-compgen" -> "compgen"
-        const commandName = el.id.replace(/^command-/, '')
-        mapping[commandName] = el.id
-      })
-      this.commandToAnchor = mapping
-    })
-  },
-  methods: {
-    isDocumented(name) {
-      return name in this.commandToAnchor
-    },
-    renderDescription
-  }
+const commandToAnchor = ref({})
+
+onMounted(async () => {
+  // Wait for data to load and render
+  await nextTick()
+
+  // Scan page for documented command anchors (e.g., id="command-compgen")
+  const anchors = document.querySelectorAll('[id^="command-"]')
+  const mapping = {}
+  anchors.forEach(el => {
+    // Extract command name from anchor: "command-compgen" -> "compgen"
+    const commandName = el.id.replace(/^command-/, '')
+    mapping[commandName] = el.id
+  })
+  commandToAnchor.value = mapping
+})
+
+function isDocumented(name) {
+  return name in commandToAnchor.value
 }
 </script>

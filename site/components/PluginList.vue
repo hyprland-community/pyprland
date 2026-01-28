@@ -48,48 +48,22 @@
 </style>
 
 
-<script>
-import pluginIndex from '../generated/index.json'
+<script setup>
+import { computed } from 'vue'
+import { usePluginData } from './usePluginData.js'
 
-export default {
-    computed: {
-        sortedPlugins() {
-            if (!this.plugins.length) return []
-            if (this.sortByStars) {
-                return this.plugins.slice().sort((a, b) => {
-                    if (b.stars === a.stars) {
-                        return a.name.localeCompare(b.name);
-                    }
-                    return b.stars - a.stars;
-                });
-            } else {
-                return this.plugins.slice().sort((a, b) => a.name.localeCompare(b.name));
-            }
-        }
-    },
-    data() {
-        return {
-            sortByStars: false,
-            plugins: [],
-            loading: true,
-            error: null
-        }
-    },
-    mounted() {
-        try {
-            // Filter out internal plugins like 'pyprland'
-            this.plugins = pluginIndex.plugins.filter(p => p.name !== 'pyprland')
-        } catch (e) {
-            this.error = 'Failed to load plugin list'
-            console.error(e)
-        } finally {
-            this.loading = false
-        }
-    },
-    methods: {
-        getStars(count) {
-            return count > 0 ? '&#11088;'.repeat(count) : ''
-        }
-    }
+const { data: plugins, loading, error } = usePluginData(async () => {
+    const module = await import('../generated/index.json')
+    // Filter out internal plugins like 'pyprland'
+    return (module.plugins || []).filter(p => p.name !== 'pyprland')
+})
+
+const sortedPlugins = computed(() => {
+    if (!plugins.value?.length) return []
+    return plugins.value.slice().sort((a, b) => a.name.localeCompare(b.name))
+})
+
+function getStars(count) {
+    return count > 0 ? '&#11088;'.repeat(count) : ''
 }
 </script>

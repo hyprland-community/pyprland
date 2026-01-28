@@ -17,25 +17,11 @@
   </table>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      engineDefaults: {},
-      loading: true,
-      error: null
-    }
-  },
-  async mounted() {
-    try {
-      const data = await import('../generated/menu.json')
-      this.engineDefaults = data.engine_defaults || {}
-    } catch (e) {
-      this.error = 'Failed to load engine defaults'
-      console.error(e)
-    } finally {
-      this.loading = false
-    }
-  }
-}
+<script setup>
+import { usePluginData } from './usePluginData.js'
+
+const { data: engineDefaults, loading, error } = usePluginData(async () => {
+  const module = await import('../generated/menu.json')
+  return module.engine_defaults || {}
+})
 </script>
