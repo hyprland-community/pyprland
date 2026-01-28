@@ -24,9 +24,12 @@ It allows "zapping" current backgrounds, clearing it to go distraction free and 
 > The `command` option is **required** for all environments except Hyprland.
 > On Hyprland, it defaults to using hyprpaper.
 
+
 > [!note]
 > On environments other than Hyprland and Niri, pyprland uses `wlr-randr` (Wayland) or `xrandr` (X11) for monitor detection.
 > This provides full wallpaper functionality but without automatic refresh on monitor hotplug.
+
+To improve performances, a wallpaper cache may be created in  `$HOME/.cache/pyprland/wallapers`
 
 <details>
     <summary>Minimal example using defaults (requires <b>hyprpaper</b>)</summary>
