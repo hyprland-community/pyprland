@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <libgen.h>
 
 // Exit codes matching pyprland/models.py ExitCode
 #define EXIT_SUCCESS_CODE 0
@@ -25,18 +26,42 @@ int main(int argc, char *argv[]) {
         exit(EXIT_USAGE_ERROR);
     }
 
-    // Get the socket path from environment variables
+    // Get environment variables for socket path detection
     const char *runtimeDir = getenv("XDG_RUNTIME_DIR");
     const char *signature = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (runtimeDir == NULL || signature == NULL) {
-        fprintf(stderr, "Environment error: XDG_RUNTIME_DIR or HYPRLAND_INSTANCE_SIGNATURE not set.\n");
-        fprintf(stderr, "Are you running under Hyprland?\n");
-        exit(EXIT_ENV_ERROR);
+    const char *niriSocket = getenv("NIRI_SOCKET");
+    const char *dataHome = getenv("XDG_DATA_HOME");
+    const char *home = getenv("HOME");
+
+    // Construct the socket path based on environment priority: Hyprland > Niri > Standalone
+    char socketPath[256];
+    int pathLen;
+
+    if (signature != NULL && runtimeDir != NULL) {
+        // Hyprland environment
+        pathLen = snprintf(socketPath, sizeof(socketPath), "%s/hypr/%s/.pyprland.sock", runtimeDir, signature);
+    } else if (niriSocket != NULL) {
+        // Niri environment - use dirname of NIRI_SOCKET
+        char *niriSocketCopy = strdup(niriSocket);
+        if (niriSocketCopy == NULL) {
+            fprintf(stderr, "Error: Memory allocation failed.\n");
+            exit(EXIT_ENV_ERROR);
+        }
+        char *niriDir = dirname(niriSocketCopy);
+        pathLen = snprintf(socketPath, sizeof(socketPath), "%s/.pyprland.sock", niriDir);
+        free(niriSocketCopy);
+    } else {
+        // Standalone fallback - use XDG_DATA_HOME or ~/.local/share
+        if (dataHome != NULL) {
+            pathLen = snprintf(socketPath, sizeof(socketPath), "%s/.pyprland.sock", dataHome);
+        } else if (home != NULL) {
+            pathLen = snprintf(socketPath, sizeof(socketPath), "%s/.local/share/.pyprland.sock", home);
+        } else {
+            fprintf(stderr, "Error: Cannot determine socket path. HOME not set.\n");
+            exit(EXIT_ENV_ERROR);
+        }
     }
 
-    // Construct the socket path
-    char socketPath[256];
-    int pathLen = snprintf(socketPath, sizeof(socketPath), "%s/hypr/%s/.pyprland.sock", runtimeDir, signature);
     if (pathLen >= (int)sizeof(socketPath)) {
         fprintf(stderr, "Error: Socket path too long (max %zu characters).\n", sizeof(socketPath) - 1);
         exit(EXIT_ENV_ERROR);

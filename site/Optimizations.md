@@ -24,9 +24,24 @@ In case you want to save some time when interacting with the daemon, the simples
 you can use `socat` instead (needs to be installed).
 
 Example of a `pypr-cli` command (should be reachable from your environment's `PATH`):
+
+#### Hyprland
 ```sh
 #!/bin/sh
 socat - "UNIX-CONNECT:${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.pyprland.sock" <<< $@
 ```
+
+#### Niri
+```sh
+#!/bin/sh
+socat - "UNIX-CONNECT:$(dirname ${NIRI_SOCKET})/.pyprland.sock" <<< $@
+```
+
+#### Standalone (other window manager)
+```sh
+#!/bin/sh
+socat - "UNIX-CONNECT:${XDG_DATA_HOME:-$HOME/.local/share}/.pyprland.sock" <<< $@
+```
+
 On slow systems this may make a difference.
 Note that `validate` and `edit` commands require the standard `pypr` command.

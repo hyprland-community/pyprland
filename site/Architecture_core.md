@@ -222,7 +222,9 @@ Low-level socket communication with the window manager is handled in [`ipc.py`](
 | Hyprland commands | `$XDG_RUNTIME_DIR/hypr/$SIGNATURE/.socket.sock` |
 | Hyprland events | `$XDG_RUNTIME_DIR/hypr/$SIGNATURE/.socket2.sock` |
 | Niri | `$NIRI_SOCKET` |
-| Pyprland | `/tmp/hypr/$SIGNATURE/.pyprland.sock` |
+| Pyprland (Hyprland) | `$XDG_RUNTIME_DIR/hypr/$SIGNATURE/.pyprland.sock` |
+| Pyprland (Niri) | `dirname($NIRI_SOCKET)/.pyprland.sock` |
+| Pyprland (standalone) | `$XDG_DATA_HOME/.pyprland.sock` |
 
 ## Pyprland Socket Protocol
 
@@ -230,13 +232,15 @@ The daemon exposes a Unix domain socket for client-daemon communication. This si
 
 ### Socket Path
 
-The socket is located at:
+The socket location depends on the environment:
 
-```
-$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.pyprland.sock
-```
+| Environment | Socket Path |
+|-------------|-------------|
+| Hyprland | `$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.pyprland.sock` |
+| Niri | `dirname($NIRI_SOCKET)/.pyprland.sock` |
+| Standalone | `$XDG_DATA_HOME/.pyprland.sock` (defaults to `~/.local/share/.pyprland.sock`) |
 
-Or if the path exceeds 107 characters:
+If the Hyprland path exceeds 107 characters, a shortened path is used:
 
 ```
 /tmp/.pypr-$HYPRLAND_INSTANCE_SIGNATURE/.pyprland.sock
