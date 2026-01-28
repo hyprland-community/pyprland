@@ -13,7 +13,7 @@ all:
     tox run -e unit,linting,wiki
 
 # Start the documentation website in dev mode
-website:
+website: gendoc
     npm i
     npm run docs:dev
 
