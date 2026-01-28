@@ -35,7 +35,7 @@
         <tr v-if="hasChildren(item)" class="config-children-row">
           <td colspan="4" class="config-children-cell">
             <details class="config-children-details">
-              <summary>Child options for <code>{{ item.name }}</code></summary>
+              <summary><code>{{ item.name }}</code> options</summary>
               <config-table
                 :items="item.children"
                 :is-nested="true"
