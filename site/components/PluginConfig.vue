@@ -60,15 +60,18 @@ export default {
       this.loading = false
     }
     
-    // Scan page for documented option anchors and build option->anchor mapping
+    // Scan page for documented option anchors (h3, h4, h5) and build option->anchor mapping
     if (this.linkPrefix) {
-      const anchors = document.querySelectorAll(`h3[id^="${this.linkPrefix}"]`)
+      const anchors = document.querySelectorAll('h3[id], h4[id], h5[id]')
       const mapping = {}
-      anchors.forEach(h3 => {
-        // Extract option names from <code> elements in heading
-        const codes = h3.querySelectorAll('code')
+      anchors.forEach(heading => {
+        // Map by anchor ID directly (e.g., "placement-scale" -> "placement-scale")
+        // This allows qualified lookups like "placement.scale" -> "placement-scale"
+        mapping[heading.id] = heading.id
+        // Also extract option names from <code> elements for top-level matching
+        const codes = heading.querySelectorAll('code')
         codes.forEach(code => {
-          mapping[code.textContent] = h3.id
+          mapping[code.textContent] = heading.id
         })
       })
       this.optionToAnchor = mapping

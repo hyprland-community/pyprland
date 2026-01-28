@@ -36,7 +36,12 @@
           <td colspan="4" class="config-children-cell">
             <details class="config-children-details">
               <summary>Child options for <code>{{ item.name }}</code></summary>
-              <config-table :items="item.children" :is-nested="true" />
+              <config-table
+                :items="item.children"
+                :is-nested="true"
+                :option-to-anchor="optionToAnchor"
+                :parent-name="getQualifiedName(item.name)"
+              />
             </details>
           </td>
         </tr>
@@ -62,6 +67,10 @@ export default {
     optionToAnchor: {
       type: Object,
       default: () => ({})
+    },
+    parentName: {
+      type: String,
+      default: ''
     }
   },
   methods: {
@@ -69,14 +78,21 @@ export default {
     hasDefault,
     formatDefault,
     renderDescription,
+    getQualifiedName(name) {
+      const baseName = name.replace(/^\[.*?\]\./, '')
+      return this.parentName ? `${this.parentName}.${baseName}` : baseName
+    },
     isDocumented(name) {
       if (Object.keys(this.optionToAnchor).length === 0) return false
-      const baseName = name.replace(/^\[.*?\]\./, '')
-      return baseName in this.optionToAnchor
+      const qualifiedName = this.getQualifiedName(name)
+      // Try the qualified name with "." replaced by "-" (e.g., "placement.scale" -> "placement-scale")
+      const anchorKey = qualifiedName.replace(/\./g, '-')
+      return anchorKey in this.optionToAnchor || qualifiedName in this.optionToAnchor
     },
     getAnchor(name) {
-      const baseName = name.replace(/^\[.*?\]\./, '')
-      return this.optionToAnchor[baseName] || ''
+      const qualifiedName = this.getQualifiedName(name)
+      const anchorKey = qualifiedName.replace(/\./g, '-')
+      return this.optionToAnchor[anchorKey] || this.optionToAnchor[qualifiedName] || ''
     }
   }
 }
