@@ -2,6 +2,7 @@
 
 import asyncio
 import itertools
+import os
 
 from pyprland.constants import CONTROL
 from pyprland.ipc import get_event_stream
@@ -35,6 +36,15 @@ async def get_event_stream_with_retry(
 async def run_daemon() -> None:
     """Run the server / daemon."""
     manager = Pyprland()
+
+    # Ensure IPC folder exists (needed when no environment is running)
+    ipc_folder = os.path.dirname(CONTROL)
+    try:
+        os.makedirs(ipc_folder, exist_ok=True)
+    except OSError as e:
+        manager.log.critical("Cannot create IPC folder %s: %s", ipc_folder, e)
+        return
+
     manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
 
     result = await get_event_stream_with_retry()
