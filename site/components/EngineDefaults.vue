@@ -1,7 +1,7 @@
 <template>
-  <div v-if="loading" class="engine-loading">Loading engine defaults...</div>
-  <div v-else-if="error" class="engine-error">{{ error }}</div>
-  <table v-else class="engine-table">
+  <div v-if="loading" class="data-loading">Loading engine defaults...</div>
+  <div v-else-if="error" class="data-error">{{ error }}</div>
+  <table v-else class="data-table">
     <thead>
       <tr>
         <th>Engine</th>
@@ -39,41 +39,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.engine-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.engine-table th,
-.engine-table td {
-  border: 1px solid var(--vp-c-divider);
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-}
-
-.engine-table th {
-  background-color: var(--vp-c-bg-soft);
-  font-weight: 600;
-}
-
-.engine-table tr:hover {
-  background-color: var(--vp-c-bg-soft);
-}
-
-.engine-table code {
-  font-size: 0.875em;
-}
-
-.engine-loading,
-.engine-error {
-  padding: 1rem;
-  color: var(--vp-c-text-2);
-}
-
-.engine-error {
-  color: var(--vp-c-danger-1);
-}
-</style>

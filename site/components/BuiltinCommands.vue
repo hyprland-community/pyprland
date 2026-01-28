@@ -1,7 +1,7 @@
 <template>
-  <div v-if="loading">Loading commands...</div>
-  <div v-else-if="error">{{ error }}</div>
-  <table v-else class="commands-table">
+  <div v-if="loading" class="data-loading">Loading commands...</div>
+  <div v-else-if="error" class="data-error">{{ error }}</div>
+  <table v-else class="data-table">
     <thead>
       <tr>
         <th>Command</th>
@@ -11,9 +11,9 @@
     <tbody>
       <tr v-for="command in commands" :key="command.name">
         <td>
-          <a v-if="isDocumented(command.name)" :href="'#' + commandToAnchor[command.name]" class="command-link" title="More details below">
+          <a v-if="isDocumented(command.name)" :href="'#' + commandToAnchor[command.name]" class="config-link" title="More details below">
             <code>{{ command.name }}</code>
-            <span class="command-info-icon">i</span>
+            <span class="config-info-icon">i</span>
           </a>
           <code v-else>{{ command.name }}</code>
         </td>
@@ -66,68 +66,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.commands-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-}
-
-.commands-table th,
-.commands-table td {
-  border: 1px solid var(--vp-c-divider);
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-}
-
-.commands-table th {
-  background-color: var(--vp-c-bg-soft);
-  font-weight: 600;
-}
-
-.commands-table tr:hover {
-  background-color: var(--vp-c-bg-soft);
-}
-
-.commands-table code {
-  font-size: 0.875em;
-}
-
-.command-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.command-link:hover {
-  text-decoration: underline;
-  color: var(--vp-c-brand-1);
-}
-
-.command-link:hover code {
-  color: var(--vp-c-brand-1);
-}
-
-.command-info-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.1em;
-  height: 1.1em;
-  margin-left: 0.4em;
-  font-size: 0.75em;
-  font-weight: 600;
-  font-style: italic;
-  font-family: serif;
-  color: var(--vp-c-brand-1);
-  border: 1px solid var(--vp-c-brand-1);
-  border-radius: 50%;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  vertical-align: middle;
-}
-
-.command-link:hover .command-info-icon {
-  opacity: 1;
-}
-</style>

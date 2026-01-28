@@ -26,6 +26,47 @@ details {
 }
 
 /* ===========================================
+   Data Table Styles (generic table styling)
+   Used by EngineDefaults, BuiltinCommands, etc.
+   =========================================== */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid var(--vp-c-divider);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: var(--vp-c-bg-soft);
+  font-weight: 600;
+}
+
+.data-table tr:hover {
+  background-color: var(--vp-c-bg-soft);
+}
+
+.data-table code {
+  font-size: 0.875em;
+}
+
+.data-loading,
+.data-error {
+  padding: 1rem;
+  color: var(--vp-c-text-2);
+}
+
+.data-error {
+  color: var(--vp-c-danger-1);
+}
+
+/* ===========================================
    Config Table Styles (shared by PluginConfig and ConfigTable)
    =========================================== */
 
