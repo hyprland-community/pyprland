@@ -8,9 +8,7 @@
 </template>
 
 <script>
-import MarkdownIt from 'markdown-it'
-
-const md = new MarkdownIt({ html: true, linkify: true })
+import { renderDescription } from './configHelpers.js'
 
 export default {
   props: {
@@ -20,9 +18,7 @@ export default {
     }
   },
   methods: {
-    renderDescription(text) {
-      return md.renderInline(text)
-    }
+    renderDescription
   }
 }
 </script>

@@ -10,9 +10,7 @@
 </template>
 
 <script>
-import MarkdownIt from 'markdown-it'
-
-const md = new MarkdownIt({ html: true, linkify: true })
+import { renderDescription } from './configHelpers.js'
 
 export default {
   props: {
@@ -43,13 +41,7 @@ export default {
     formatSignature(sig) {
       return sig.replace(/[ ]*$/, '').replace(/ +/g, '&ensp;')
     },
-    renderDescription(text) {
-      // Transform <opt1|opt2|...> patterns to styled inline code blocks
-      text = text.replace(/<([^>|]+(?:\|[^>|]+)+)>/g, (match, choices) => {
-        return choices.split('|').map(c => `\`${c}\``).join(' | ')
-      })
-      return md.renderInline(text)
-    }
+    renderDescription
   }
 }
 </script>
