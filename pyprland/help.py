@@ -21,7 +21,7 @@ def get_commands_help(manager: Pyprland) -> dict[str, str]:
     Returns:
         Dict mapping command name to short description with source suffix
     """
-    return {name: f"{cmd.short_description} [{cmd.source}]" for name, cmd in sorted(get_all_commands(manager).items())}
+    return {name: f"{cmd.short_description} ({cmd.source})" for name, cmd in sorted(get_all_commands(manager).items())}
 
 
 def get_help(manager: Pyprland) -> str:
@@ -56,6 +56,6 @@ def get_command_help(manager: Pyprland, command: str) -> str:
         cmd = commands[command]
         doc = cmd.full_description
         doc_formatted = doc if doc.endswith("\n") else f"{doc}\n"
-        return f"{command} [{cmd.source}]\n\n{doc_formatted}"
+        return f"{command} ({cmd.source})\n\n{doc_formatted}"
 
     return f"Unknown command: {command}\nRun 'pypr help' for available commands.\n"
