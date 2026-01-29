@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import sys
+from typing import Literal, overload
 
 from . import constants as pyprland_constants
 from .client import run_client
@@ -15,6 +16,14 @@ from .models import PyprError
 from .pypr_daemon import run_daemon
 
 __all__: list[str] = ["Pyprland", "main"]
+
+
+@overload
+def use_param(txt: str, optional_value: Literal[False] = ...) -> str: ...
+
+
+@overload
+def use_param(txt: str, optional_value: Literal[True]) -> str | bool: ...
 
 
 def use_param(txt: str, optional_value: bool = False) -> str | bool:

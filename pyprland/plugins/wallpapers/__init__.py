@@ -264,7 +264,14 @@ class Extension(Plugin):
         self.proc.clear()
 
     async def run_wall(self, arg: str) -> None:
-        """<next|pause|clear> Control wallpaper cycling."""
+        """<next|pause|clear> Control wallpaper cycling.
+
+        Args:
+            arg: The action to perform
+                - next: Switch to the next wallpaper immediately
+                - pause: Pause automatic wallpaper cycling
+                - clear: Stop cycling and clear the current wallpaper
+        """
         if arg.startswith("n"):  # next
             self._paused = False
             self.next_background_event.set()
@@ -282,7 +289,16 @@ class Extension(Plugin):
                 await clear_proc.wait()
 
     async def run_color(self, arg: str) -> None:
-        """<#RRGGBB> [scheme] Generate color palette from hex color."""
+        """<#RRGGBB> [scheme] Generate color palette from hex color.
+
+        Args:
+            arg: Hex color and optional scheme name
+
+        Schemes: pastel, fluo, vibrant, mellow, neutral, earth
+
+        Example:
+            pypr color #ff5500 vibrant
+        """
         args = arg.split()
         color = args[0]
         with contextlib.suppress(IndexError):
@@ -291,7 +307,18 @@ class Extension(Plugin):
         await self._generate_templates("color-" + color, color)
 
     async def run_palette(self, arg: str = "") -> str:
-        """[color] [json] Show available color template variables."""
+        """[color] [json] Show available color template variables.
+
+        Args:
+            arg: Optional hex color and/or "json" flag
+                - color: Hex color (#RRGGBB) to use for palette
+                - json: Output in JSON format instead of human-readable
+
+        Example:
+            pypr palette
+            pypr palette #ff5500
+            pypr palette json
+        """
         args = arg.split()
         color: str | None = None
         output_json = False

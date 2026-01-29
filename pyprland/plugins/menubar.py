@@ -157,7 +157,11 @@ class Extension(Plugin):
         """[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.
 
         Args:
-            args: The command arguments
+            args: The action to perform
+                - (empty): Start the bar
+                - restart: Stop and restart the bar
+                - stop: Stop the bar
+                - toggle: Toggle the bar on/off
         """
         if args.startswith("toggle"):
             if self.is_running():

@@ -43,7 +43,7 @@ class Extension(Plugin):
         """<direction> Switch workspaces of current monitor, avoiding displayed workspaces.
 
         Args:
-            direction: The direction to switch
+            direction: Integer offset to move (e.g., +1 for next, -1 for previous)
         """
         increment = int(direction)
         # get focused screen info

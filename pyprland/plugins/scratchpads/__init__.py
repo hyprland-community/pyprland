@@ -279,7 +279,11 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         """<name> toggles visibility of scratchpad "name" (supports multiple names).
 
         Args:
-            uid_or_uids: The scratchpad name(s)
+            uid_or_uids: Space-separated scratchpad name(s)
+
+        Example:
+            pypr toggle term
+            pypr toggle term music
         """
         uids = list(filter(bool, map(str.strip, uid_or_uids.split()))) if " " in uid_or_uids else [uid_or_uids.strip()]
 
@@ -330,7 +334,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         """<name> shows scratchpad "name" (accepts "*").
 
         Args:
-            uid: The scratchpad name
+            uid: The scratchpad name, or "*" to show all hidden scratchpads
         """
         if uid == "*":
             await asyncio.gather(*(self.run_show(s.uid) for s in self.scratches.values() if not s.visible))
@@ -411,8 +415,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         """<name> hides scratchpad "name" (accepts "*").
 
         Args:
-            uid: The scratchpad name
-            flavor: The hide flavor
+            uid: The scratchpad name, or "*" to hide all visible scratchpads
         """
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))

@@ -40,7 +40,7 @@ class Extension(MonitorTrackingMixin, Plugin):
         """<direction> Swaps monitors' workspaces in the given direction.
 
         Args:
-            arg: The direction to shift
+            arg: Integer direction (+1 or -1) to rotate workspaces across monitors
         """
         if self.state.environment == "niri":
             # Niri doesn't support swapping workspaces between monitors easily.

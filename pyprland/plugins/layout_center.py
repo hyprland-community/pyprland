@@ -129,7 +129,10 @@ class Extension(Plugin):
         """<toggle|next|prev|next2|prev2> turn on/off or change the active window.
 
         Args:
-            what: The command to run
+            what: The action to perform
+                - toggle: Enable/disable the centered layout
+                - next/prev: Focus the next/previous window in the stack
+                - next2/prev2: Alternative focus commands (configurable)
         """
         fn = self.command_handlers.get(what)
         if fn:
