@@ -39,10 +39,16 @@ jobs:
         with:
           node-version: 20
           cache: npm # or pnpm / yarn
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Install dependencies
         run: npm ci # or pnpm install / yarn install / bun install
+      - name: Generate plugin documentation JSON
+        run: python scripts/generate_plugin_docs.py
       - name: Build with VitePress
         run: npm run docs:build # or pnpm docs:build / yarn docs:build / bun run docs:build
       - name: Upload artifact

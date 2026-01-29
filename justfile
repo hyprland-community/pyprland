@@ -37,6 +37,11 @@ wiki:
 gendoc:
     python scripts/generate_plugin_docs.py
 
+# Archive documentation for a specific version (creates static snapshot)
+archive-docs version:
+    just gendoc
+    cd site && ./make_version.sh {{version}}
+
 # Create a new release
 release:
     ./scripts/make_release

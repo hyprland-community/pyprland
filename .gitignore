@@ -1,9 +1,13 @@
 # Byte-compiled / optimized / DLL files
 site/.vitepress/cache/
+site/.vitepress/dist/
 node_modules/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Generated documentation JSON (regenerated at build time)
+site/generated/*.json
 
 # stale merges
 *.orig
