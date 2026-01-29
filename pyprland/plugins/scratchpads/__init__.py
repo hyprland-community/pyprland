@@ -249,7 +249,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         if scratch.conf.get("pinned"):
             await self.backend.pin_window(address)
         # If scratchpad is visible, move the attached window to same workspace
-        if scratch.visible and scratch.client_info:
+        if scratch.visible and scratch.client_info is not None:
             workspace = scratch.client_info.get("workspace", {}).get("name", "")
             if workspace:
                 await self.backend.move_window_to_workspace(address, workspace)
@@ -402,7 +402,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         for client in clients:
             if client["address"] == scratch.full_address:
                 continue
-            if match_fn(client[match_by], match_value):  # type: ignore
+            if match_fn(client[match_by], match_value):  # type: ignore[literal-required]
                 address = client["address"]
                 if address not in scratch.extra_addr:
                     scratch.extra_addr.add(address)
@@ -432,7 +432,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         if not await scratch.is_alive():
             return
 
-        if flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
+        if scratch.client_info is not None and flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
             return
 
         active_window = self.state.active_window
@@ -455,8 +455,13 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         """
         clients = await self.backend.execute_json("clients")
         await scratch.update_client_info(clients=clients)
+        # After update_client_info, client_info is guaranteed to be set (or KeyError raised)
+        assert scratch.client_info is not None
         ref_position = scratch.client_info["at"]
         monitor_info = scratch.meta.monitor_info
+        if monitor_info is None:
+            self.log.error("Cannot hide %s: no monitor_info available", scratch.uid)
+            return
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # collects window which have been created by the app
         if scratch.conf.get_bool("multi"):

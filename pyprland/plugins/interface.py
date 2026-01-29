@@ -3,13 +3,16 @@
 import contextlib
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..adapters.proxy import BackendProxy
 from ..common import SharedState, get_logger
 from ..config import Configuration, coerce_to_bool
 from ..models import ClientInfo
 from ..validation import ConfigItems, ConfigValidator
+
+if TYPE_CHECKING:
+    from ..manager import Pyprland
 
 ConfigValue = int | float | str | list[Any] | dict[Any, Any]
 """Type alias for values returned by get_config."""
@@ -50,6 +53,9 @@ class Plugin:
 
     backend: BackendProxy
     " The environment backend "
+
+    manager: "Pyprland | None"
+    " Reference to the plugin manager (set for pyprland plugin only) "
 
     config_schema: ConfigItems
     """Schema defining expected configuration fields. Override in subclasses to enable validation."""
@@ -152,6 +158,7 @@ class Plugin:
         self.log = get_logger(name)
         """ the logger to use for this plugin """
         self.config = Configuration({}, logger=self.log)
+        self.manager = None
 
     # Functions to override
 

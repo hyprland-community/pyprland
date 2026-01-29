@@ -1,7 +1,11 @@
 """Conversion functions for units used in Pyprland & plugins."""
 
+from typing import Literal
+
 from ..common import is_rotated
 from ..models import MonitorInfo
+
+MonitorDimension = Literal["width", "height"]
 
 
 def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorInfo) -> int:
@@ -44,11 +48,6 @@ def convert_coords(coords: str, monitor: MonitorInfo) -> list[int]:
         coords: Coordinates string "X Y"
         monitor: Monitor information
     """
-    return [
-        convert_monitor_dimension(name, monitor[ref], monitor)  # type: ignore
-        for (name, ref) in zip(
-            [coord.strip() for coord in coords.split()],
-            (("height", "width") if is_rotated(monitor) else ("width", "height")),
-            strict=False,
-        )
-    ]
+    coord_list = [coord.strip() for coord in coords.split()]
+    refs: tuple[MonitorDimension, MonitorDimension] = ("height", "width") if is_rotated(monitor) else ("width", "height")
+    return [convert_monitor_dimension(name, monitor[ref], monitor) for (name, ref) in zip(coord_list, refs, strict=False)]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
 if TYPE_CHECKING:
     import logging
@@ -61,6 +61,7 @@ class SchemaAwareMixin:
     """
 
     _schema_defaults: dict[str, ConfigValueType]
+    log: logging.Logger  # Required: implementing class must provide this
 
     def __init_schema__(self) -> None:
         """Initialize schema defaults storage. Call from subclass __init__."""
@@ -142,7 +143,7 @@ class SchemaAwareMixin:
         try:
             return int(value)  # type: ignore[arg-type]
         except (ValueError, TypeError):
-            self.log.warning("Invalid integer value for %s: %s", name, value)  # type: ignore[attr-defined]
+            self.log.warning("Invalid integer value for %s: %s", name, value)
             return default
 
     def get_float(self, name: str, default: float = 0.0) -> float:
@@ -161,7 +162,7 @@ class SchemaAwareMixin:
         try:
             return float(value)  # type: ignore[arg-type]
         except (ValueError, TypeError):
-            self.log.warning("Invalid float value for %s: %s", name, value)  # type: ignore[attr-defined]
+            self.log.warning("Invalid float value for %s: %s", name, value)
             return default
 
     def get_str(self, name: str, default: str = "") -> str:
@@ -225,7 +226,7 @@ class Configuration(SchemaAwareMixin, dict):
     def _get_raw(self, name: str) -> ConfigValueType:
         """Get raw value from dict. Raises KeyError if not found."""
         if name in self:
-            return dict.get(self, name)  # type: ignore[return-value]
+            return cast("ConfigValueType", self[name])
         raise KeyError(name)
 
     def get(self, name: str, default: ConfigValueType | None = None) -> ConfigValueType | None:  # type: ignore[override]

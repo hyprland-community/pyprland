@@ -156,7 +156,7 @@ class LifecycleMixin:
         assert scratch
         self.scratches.set_state(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
-        command = apply_variables(cast("str", scratch.conf["command"]), self.state.variables)
+        command = apply_variables(scratch.conf.get_str("command"), self.state.variables)
         proc = await asyncio.create_subprocess_shell(command)
         self.procs[name] = proc
         pid = proc.pid

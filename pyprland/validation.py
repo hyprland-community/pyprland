@@ -56,7 +56,7 @@ class ConfigField:
 class ConfigItems(list):
     """A list of ConfigField items with cached lookup by name."""
 
-    def __init__(self, *args: ConfigField):
+    def __init__(self, *args: ConfigField) -> None:
         super().__init__(args)
         self._cache: dict[str, ConfigField] = {}
 
@@ -116,7 +116,7 @@ def format_config_error(plugin: str, field: str, message: str, suggestion: str =
 class ConfigValidator:
     """Validates configuration against a schema."""
 
-    def __init__(self, config: dict, plugin_name: str, logger: logging.Logger):
+    def __init__(self, config: dict, plugin_name: str, logger: logging.Logger) -> None:
         """Initialize the validator.
 
         Args:

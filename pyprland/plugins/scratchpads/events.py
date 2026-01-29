@@ -68,7 +68,7 @@ class EventsMixin:
         addr, _onoff = args.split(",")
         onoff = int(_onoff)
         for scratch in self.scratches.values():
-            if scratch.address == addr:
+            if scratch.address == addr and scratch.client_info is not None:
                 scratch.client_info["floating"] = bool(onoff)
 
     async def event_workspace(self, name: str) -> None:
@@ -118,7 +118,7 @@ class EventsMixin:
         """
         full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
         for uid, scratch in self.scratches.items():
-            if len(scratch.client_info) == 0:
+            if scratch.client_info is None:
                 continue
             if scratch.have_address(full_address):
                 if scratch.full_address == full_address:
@@ -170,7 +170,7 @@ class EventsMixin:
             match_by, match_value = pending_scratch.get_match_props()
             match_fn = get_match_fn(match_by, match_value)
             for client in clients:
-                if match_fn(client[match_by], match_value):  # type: ignore
+                if match_fn(client[match_by], match_value):  # type: ignore[literal-required]
                     self.scratches.register(pending_scratch, addr=client["address"][2:])
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.update_client_info(client)

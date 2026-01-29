@@ -7,7 +7,7 @@ import contextlib
 import io
 from collections.abc import AsyncIterator, Callable, Coroutine
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 try:
     import aiofiles.os
@@ -25,7 +25,7 @@ except ImportError:
             file: The file object to wrap
         """
 
-        def __init__(self, file: io.TextIOWrapper):
+        def __init__(self, file: io.TextIOWrapper) -> None:
             self.file = file
 
         async def readlines(self) -> list[str]:
@@ -36,7 +36,7 @@ except ImportError:
             """Read lines."""
             return self.file.read()
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> Self:
             return self
 
         async def __aexit__(
@@ -47,7 +47,7 @@ except ImportError:
         ) -> None:
             self.file.close()
 
-    @contextlib.asynccontextmanager  # type: ignore[no-redef]
+    @contextlib.asynccontextmanager  # type: ignore[no-redef, unused-ignore]
     async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
         """Async > sync wrapper."""
         with open(*args, **kwargs) as f:  # noqa: ASYNC230, pylint: disable=unspecified-encoding
@@ -57,7 +57,7 @@ except ImportError:
         """Async > sync wrapper."""
         return os.path.exists(*args, **kwargs)
 
-    async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef]
+    async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef, unused-ignore]
         """Async > sync wrapper."""
         return os.listdir(*args, **kwargs)
 
@@ -80,7 +80,7 @@ class DebouncedTask:
         await self.backend.execute(cmd, base_command="keyword")
     """
 
-    def __init__(self, ignore_window: float = 3.0):
+    def __init__(self, ignore_window: float = 3.0) -> None:
         """Initialize the debounced task.
 
         Args:

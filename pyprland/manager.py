@@ -301,7 +301,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 await self._init_plugin(name)
         if init_pyprland:
             plug = self.plugins["pyprland"]
-            plug.manager = self  # type: ignore
+            plug.manager = self
 
     async def load_config(self, init: bool = True) -> None:
         """Load the configuration (new plugins will be added & config updated).

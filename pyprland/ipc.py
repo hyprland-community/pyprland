@@ -14,7 +14,7 @@ import os
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from logging import Logger
-from typing import Any
+from typing import Any, cast
 
 from .common import IPC_FOLDER, get_logger
 from .constants import IPC_MAX_RETRIES, IPC_RETRY_DELAY_MULTIPLIER
@@ -148,7 +148,7 @@ async def niri_request(payload: str | dict | list, logger: Logger) -> JSONRespon
         if not response:
             msg = "Empty response from Niri"
             raise PyprError(msg)
-        return json.loads(response)  # type: ignore
+        return cast("JSONResponse", json.loads(response))
 
 
 async def get_response(command: bytes, logger: Logger) -> JSONResponse:
@@ -164,7 +164,7 @@ async def get_response(command: bytes, logger: Logger) -> JSONResponse:
         reader_data = await reader.read()
 
     decoded_data = reader_data.decode("utf-8", errors="replace")
-    return json.loads(decoded_data)  # type: ignore
+    return cast("JSONResponse", json.loads(decoded_data))
 
 
 def init() -> None:

@@ -1,7 +1,7 @@
 """Lookup & update API for Scratch objects."""
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import Any, cast, overload
 
 from .objects import Scratch
@@ -60,7 +60,7 @@ class ScratchDB:  # {{{
     # }}}
 
     # dict-like {{{
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Return all Scratch name."""
         return iter(self._by_name.keys())
 

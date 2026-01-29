@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import is_rotated
@@ -53,6 +53,8 @@ class TransitionsMixin:
             scratch: The scratchpad object
             monitor: The monitor info
         """
+        if scratch.client_info is None:
+            return (0, 0)
         offset = scratch.conf.get("offset")
         if monitor is None:
             monitor = await self.backend.get_monitor_props(name=scratch.forced_monitor)
@@ -60,12 +62,19 @@ class TransitionsMixin:
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
         if offset:
-            return cast("tuple[int, int]", (convert_monitor_dimension(cast("str", offset), ref, monitor) for ref in aspect))
+            offset_str = str(offset)
+            aspect_tuple = tuple(aspect)
+            return (
+                convert_monitor_dimension(offset_str, aspect_tuple[0], monitor),
+                convert_monitor_dimension(offset_str, aspect_tuple[1], monitor),
+            )
 
-        mon_size = [monitor["height"], monitor["width"]] if rotated else [monitor["width"], monitor["height"]]
+        mon_size = (monitor["height"], monitor["width"]) if rotated else (monitor["width"], monitor["height"])
 
-        offsets = [convert_monitor_dimension("100%", dim, monitor) for dim in mon_size]
-        return cast("tuple[int, int]", offsets)
+        return (
+            convert_monitor_dimension("100%", mon_size[0], monitor),
+            convert_monitor_dimension("100%", mon_size[1], monitor),
+        )
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Animate hiding a scratchpad.
@@ -181,7 +190,7 @@ class TransitionsMixin:
             await self._animate_show(scratch, monitor, relative_animation)
         await self.backend.focus_window(scratch.full_address)
 
-        if not scratch.client_info["pinned"]:
+        if scratch.client_info is None or not scratch.client_info["pinned"]:
             await self._pin_scratch(scratch)
 
         scratch.meta.last_shown = time.time()
@@ -237,8 +246,12 @@ class TransitionsMixin:
         if animation_type:
             animation_commands = []
 
-            if "size" not in scratch.client_info:
-                await self.update_scratch_info(scratch)  # type: ignore
+            if scratch.client_info is None or "size" not in scratch.client_info:
+                await self.update_scratch_info(scratch)
+
+            if scratch.client_info is None:
+                self.log.error("Cannot animate show: client_info is None for %s", scratch.uid)
+                return
 
             if relative_animation:
                 main_win_position = apply_offset((monitor["x"], monitor["y"]), scratch.meta.extra_positions[scratch.address])
@@ -267,12 +280,12 @@ class TransitionsMixin:
             scratch: The scratchpad object
             monitor: The monitor info
         """
-        size = scratch.conf.get("size")
+        size = scratch.conf.get_str("size")
         if size:
-            width, height = convert_coords(cast("str", size), monitor)
-            max_size = scratch.conf.get("max_size")
+            width, height = convert_coords(size, monitor)
+            max_size = scratch.conf.get_str("max_size")
             if max_size:
-                max_width, max_height = convert_coords(cast("str", max_size), monitor)
+                max_width, max_height = convert_coords(max_size, monitor)
                 width = min(max_width, width)
                 height = min(max_height, height)
             await self.backend.resize_window(scratch.full_address, width, height)
@@ -284,9 +297,9 @@ class TransitionsMixin:
             scratch: The scratchpad object
             monitor: The monitor info
         """
-        position = scratch.conf.get("position")
+        position = scratch.conf.get_str("position")
         if position:
-            x_pos, y_pos = convert_coords(cast("str", position), monitor)
+            x_pos, y_pos = convert_coords(position, monitor)
             x_pos_abs, y_pos_abs = x_pos + monitor["x"], y_pos + monitor["y"]
             await self.backend.move_window(scratch.full_address, x_pos_abs, y_pos_abs)
             return True

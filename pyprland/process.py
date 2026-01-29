@@ -235,12 +235,13 @@ class SupervisedProcess(ManagedProcess):
 
     async def _supervise(self) -> None:
         """Internal supervision loop."""
+        assert self._command is not None, "_supervise called without command"
         while self._running:
             start_time = asyncio.get_event_loop().time()
 
             # Start the process
             self._proc = await asyncio.create_subprocess_shell(
-                self._command,  # type: ignore[arg-type]
+                self._command,
                 **self._subprocess_kwargs,
             )
 

@@ -93,8 +93,8 @@ class HyprlandBackend(EnvironmentBackend):
             client
             for client in cast("list[ClientInfo]", await self.execute_json("clients", log=log))
             if (not mapped or client["mapped"])
-            and (workspace is None or cast("str", client["workspace"]["name"]) == workspace)
-            and (workspace_bl is None or cast("str", client["workspace"]["name"]) != workspace_bl)
+            and (workspace is None or client["workspace"]["name"] == workspace)
+            and (workspace_bl is None or client["workspace"]["name"] != workspace_bl)
         ]
 
     async def get_monitors(self, *, log: Logger, include_disabled: bool = False) -> list[MonitorInfo]:

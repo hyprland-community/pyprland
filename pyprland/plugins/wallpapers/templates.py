@@ -94,7 +94,7 @@ async def _apply_filters(content: str, replacements: dict[str, str]) -> str:
 class TemplateEngine:
     """Handle template generation."""
 
-    def __init__(self, log: logging.Logger):
+    def __init__(self, log: logging.Logger) -> None:
         """Initialize the template engine.
 
         Args:
