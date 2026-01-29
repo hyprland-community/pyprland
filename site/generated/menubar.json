@@ -15,7 +15,7 @@
         }
       ],
       "short_description": "Start (default), restart, stop or toggle the menu bar.",
-      "full_description": "[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.\n\nArgs:\n    args: The command arguments"
+      "full_description": "[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.\n\nArgs:\n    args: The action to perform\n        - (empty): Start the bar\n        - restart: Stop and restart the bar\n        - stop: Stop the bar\n        - toggle: Toggle the bar on/off"
     }
   ],
   "config": [

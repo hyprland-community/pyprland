@@ -14,7 +14,7 @@
         }
       ],
       "short_description": "turn on/off or change the active window.",
-      "full_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.\n\nArgs:\n    what: The command to run"
+      "full_description": "<toggle|next|prev|next2|prev2> turn on/off or change the active window.\n\nArgs:\n    what: The action to perform\n        - toggle: Enable/disable the centered layout\n        - next/prev: Focus the next/previous window in the stack\n        - next2/prev2: Alternative focus commands (configurable)"
     }
   ],
   "config": [

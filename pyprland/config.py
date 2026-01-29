@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 if TYPE_CHECKING:
     import logging
@@ -80,6 +80,15 @@ class SchemaAwareMixin:
         Override in subclasses to provide the actual lookup mechanism.
         """
         raise NotImplementedError
+
+    @overload
+    def get(self, name: str) -> ConfigValueType | None: ...
+
+    @overload
+    def get(self, name: str, default: None) -> ConfigValueType | None: ...
+
+    @overload
+    def get(self, name: str, default: ConfigValueType) -> ConfigValueType: ...
 
     def get(self, name: str, default: ConfigValueType | None = None) -> ConfigValueType | None:
         """Get a value with schema-aware defaults.

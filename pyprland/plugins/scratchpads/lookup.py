@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any, cast, overload
 
 from .objects import Scratch
 
@@ -104,8 +104,20 @@ class ScratchDB:  # {{{
             del self._by_addr[addr]
         # }}}
 
+    @overload
+    def register(self, scratch: Scratch) -> None: ...
+
+    @overload
+    def register(self, scratch: Scratch, name: str) -> None: ...
+
+    @overload
+    def register(self, scratch: Scratch, *, pid: int) -> None: ...
+
+    @overload
+    def register(self, scratch: Scratch, *, addr: str) -> None: ...
+
     def register(self, scratch: Scratch, name: str | None = None, pid: int | None = None, addr: str | None = None) -> None:
-        """Set the Scratch index by name, pid or address, or update every index of only `scratch` is provided.
+        """Set the Scratch index by name, pid or address, or update every index if only `scratch` is provided.
 
         Args:
             scratch: The scratch object
@@ -134,6 +146,15 @@ class ScratchDB:  # {{{
                 raise ValueError(msg)
             d[v] = scratch
         # }}}
+
+    @overload
+    def get(self, name: str) -> Scratch | None: ...
+
+    @overload
+    def get(self, *, pid: int) -> Scratch | None: ...
+
+    @overload
+    def get(self, *, addr: str) -> Scratch | None: ...
 
     def get(self, name: str | None = None, pid: int | None = None, addr: str | None = None) -> Scratch | None:
         """Return the Scratch matching given name, pid or address.

@@ -14,7 +14,7 @@
         }
       ],
       "short_description": "Switch workspaces of current monitor, avoiding displayed workspaces.",
-      "full_description": "<direction> Switch workspaces of current monitor, avoiding displayed workspaces.\n\nArgs:\n    direction: The direction to switch"
+      "full_description": "<direction> Switch workspaces of current monitor, avoiding displayed workspaces.\n\nArgs:\n    direction: Integer offset to move (e.g., +1 for next, -1 for previous)"
     }
   ],
   "config": [

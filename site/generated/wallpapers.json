@@ -16,7 +16,7 @@
         }
       ],
       "short_description": "Generate color palette from hex color.",
-      "full_description": "<#RRGGBB> [scheme] Generate color palette from hex color."
+      "full_description": "<#RRGGBB> [scheme] Generate color palette from hex color.\n\nArgs:\n    arg: Hex color and optional scheme name\n\nSchemes: pastel, fluo, vibrant, mellow, neutral, earth\n\nExample:\n    pypr color #ff5500 vibrant"
     },
     {
       "name": "palette",
@@ -31,7 +31,7 @@
         }
       ],
       "short_description": "Show available color template variables.",
-      "full_description": "[color] [json] Show available color template variables."
+      "full_description": "[color] [json] Show available color template variables.\n\nArgs:\n    arg: Optional hex color and/or \"json\" flag\n        - color: Hex color (#RRGGBB) to use for palette\n        - json: Output in JSON format instead of human-readable\n\nExample:\n    pypr palette\n    pypr palette #ff5500\n    pypr palette json"
     },
     {
       "name": "wall",
@@ -42,7 +42,7 @@
         }
       ],
       "short_description": "Control wallpaper cycling.",
-      "full_description": "<next|pause|clear> Control wallpaper cycling."
+      "full_description": "<next|pause|clear> Control wallpaper cycling.\n\nArgs:\n    arg: The action to perform\n        - next: Switch to the next wallpaper immediately\n        - pause: Pause automatic wallpaper cycling\n        - clear: Stop cycling and clear the current wallpaper"
     }
   ],
   "config": [

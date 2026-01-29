@@ -416,6 +416,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
 
         Args:
             uid: The scratchpad name, or "*" to hide all visible scratchpads
+            flavor: Internal hide behavior flags (default: NONE)
         """
         if uid == "*":
             await asyncio.gather(*(self.run_hide(s.uid) for s in self.scratches.values() if s.visible))
