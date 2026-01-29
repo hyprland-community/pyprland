@@ -113,26 +113,41 @@ def palette_to_terminal(palette: dict[str, str]) -> str:  # pylint: disable=too-
     categories = _categorize_palette(palette)
 
     # Display in order defined by PALETTE_CATEGORIES
+    lines.append("   variable name prefix              |    dark mode  |  light mode")
+    lines.append("-------------------------------------+---------------+--------------")
     for cat_name, _ in PALETTE_CATEGORIES:
         items = categories.get(cat_name, [])
-        # Only show .hex variants for brevity (skip .rgb, .rgba, .hex_stripped)
-        items = [k for k in items if k.endswith(".hex")]
-        if not items:
+        # Only show .dark.hex variants as base entries (skip .default, .rgb, .rgba, .hex_stripped)
+        dark_items = [k for k in items if k.endswith(".dark.hex")]
+        if not dark_items:
             continue
 
         display_name = CATEGORY_DISPLAY_NAMES.get(cat_name, cat_name.title())
         lines.append(f"\n{display_name}:")
-        for key in items:
-            value = palette[key]
-            r, g, b = hex_to_rgb(value)
-            # ANSI 24-bit true color escape sequence for background
-            swatch = f"\033[48;2;{r};{g};{b}m    \033[0m"
-            lines.append(f"  {swatch} {key:<45} {value}")
+
+        for dark_key in dark_items:
+            # Get dark color
+            dark_value = palette[dark_key]
+            r_dark, g_dark, b_dark = hex_to_rgb(dark_value)
+            dark_swatch = f"\033[48;2;{r_dark};{g_dark};{b_dark}m    \033[0m"
+
+            # Derive light key and get light color
+            light_key = dark_key.replace(".dark.hex", ".light.hex")
+            light_value = palette.get(light_key, "")
+            if light_value:
+                r_light, g_light, b_light = hex_to_rgb(light_value)
+                light_swatch = f"\033[48;2;{r_light};{g_light};{b_light}m    \033[0m"
+                light_part = f"{light_swatch} {light_value}"
+            else:
+                light_part = ""
+
+            # Two-column layout: dark | light
+            lines.append(f"   {dark_key[:-9]:<35} {dark_swatch} {dark_value}  |  {light_part}")
 
     # Add filter examples
     lines.append("\nFilters:")
-    lines.append("  set_alpha     {{ colors.primary.default.hex | set_alpha: 0.5 }}")
-    lines.append("  set_lightness {{ colors.primary.default.hex | set_lightness: -20 }}")
+    lines.append("  set_alpha     {{ colors.primary.dark.hex | set_alpha: 0.5 }}")
+    lines.append("  set_lightness {{ colors.primary.dark.hex | set_lightness: -20 }}")
 
     return "\n".join(lines)
 
