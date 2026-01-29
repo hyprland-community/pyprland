@@ -53,9 +53,7 @@ bind = $mainMod, down, movefocus, d
 
 <PluginConfig plugin="layout_center" linkPrefix="config-" />
 
-### `style` {#config-style}
-
-<ConfigDefault plugin="layout_center" option="style" />
+### `style` <ConfigBadges plugin="layout_center" option="style" /> {#config-style}
 
 Custom Hyprland style rules applied to the centered window. Requires Hyprland > 0.40.0.
 
@@ -63,9 +61,7 @@ Custom Hyprland style rules applied to the centered window. Requires Hyprland > 
 style = ["opacity 1", "bordercolor rgb(FFFF00)"]
 ```
 
-### `on_new_client` {#config-on-new-client}
-
-<ConfigDefault plugin="layout_center" option="on_new_client" />
+### `on_new_client` <ConfigBadges plugin="layout_center" option="on_new_client" /> {#config-on-new-client}
 
 Behavior when a new window opens while layout is active:
 
@@ -73,9 +69,7 @@ Behavior when a new window opens while layout is active:
 - `"background"` - make the new window appear in the background  
 - `"close"` - stop the centered layout when a new window opens
 
-### `next` / `prev` {#config-next}
-
-<ConfigDefault plugin="layout_center" option="next" />
+### `next` / `prev` <ConfigBadges plugin="layout_center" option="next" /> {#config-next}
 
 Hyprland dispatcher command to run when layout_center isn't active:
 
@@ -84,9 +78,7 @@ next = "movefocus r"
 prev = "movefocus l"
 ```
 
-### `next2` / `prev2` {#config-next2}
-
-<ConfigDefault plugin="layout_center" option="next2" />
+### `next2` / `prev2` <ConfigBadges plugin="layout_center" option="next2" /> {#config-next2}
 
 Alternative fallback commands for vertical navigation:
 
@@ -95,9 +87,7 @@ next2 = "movefocus d"
 prev2 = "movefocus u"
 ```
 
-### `offset` {#config-offset}
-
-<ConfigDefault plugin="layout_center" option="offset" />
+### `offset` <ConfigBadges plugin="layout_center" option="offset" /> {#config-offset}
 
 offset in pixels applied to the main window position
 
@@ -107,9 +97,7 @@ offset = [0, 20]
 ```
 
 
-### `margin` {#config-margin}
-
-<ConfigDefault plugin="layout_center" option="margin" />
+### `margin` <ConfigBadges plugin="layout_center" option="margin" /> {#config-margin}
 
 margin (in pixels) used when placing the center window, calculated from the border of the screen.
 

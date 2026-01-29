@@ -53,9 +53,7 @@ filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 
 <PluginConfig plugin="system_notifier" linkPrefix="config-" />
 
-### `sources` {#config-sources}
-
-<ConfigDefault plugin="system_notifier" option="sources" />
+### `sources` <ConfigBadges plugin="system_notifier" option="sources" /> {#config-sources}
 
 List of sources to monitor. Each source must contain a `command` to run and a `parser` to use:
 
@@ -73,9 +71,7 @@ command = "sudo journalctl -fkn"
 parser = ["journal", "custom_parser"]
 ```
 
-### `parsers` {#config-parsers}
-
-<ConfigDefault plugin="system_notifier" option="parsers" />
+### `parsers` <ConfigBadges plugin="system_notifier" option="parsers" /> {#config-parsers}
 
 Named parser configurations. Each parser rule contains:
 - `pattern`: regex to match lines of interest
@@ -95,8 +91,6 @@ duration = 10
 
 A `journal` parser is provided, detecting link up/down, core dumps, and USB plugs.
 
-### `use_notify_send` {#config-use-notify-send}
-
-<ConfigDefault plugin="system_notifier" option="use_notify_send" />
+### `use_notify_send` <ConfigBadges plugin="system_notifier" option="use_notify_send" /> {#config-use-notify-send}
 
 When enabled, forces use of `notify-send` command instead of the compositor's native notification system.

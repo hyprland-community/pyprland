@@ -76,9 +76,7 @@ All the [Menu](./Menu) configuration items are also available.
 
 <PluginConfig plugin="shortcuts_menu" linkPrefix="config-" />
 
-### `entries` {#config-entries}
-
-<ConfigDefault plugin="shortcuts_menu" option="entries" />
+### `entries` <ConfigBadges plugin="shortcuts_menu" option="entries" /> {#config-entries}
 
 **Required.** Defines the menu entries. Supports [Variables](./Variables)
 
@@ -135,23 +133,17 @@ You must define a list of objects, containing:
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start` / `command_end` {#config-command-start}
-
-<ConfigDefault plugin="shortcuts_menu" option="command_start" />
+### `command_start` / `command_end` <ConfigBadges plugin="shortcuts_menu" option="command_start" /> {#config-command-start}
 
 Allow adding some text (eg: icon) before / after a menu entry for final commands.
 
-### `submenu_start` / `submenu_end` {#config-submenu-start}
-
-<ConfigDefault plugin="shortcuts_menu" option="submenu_start" />
+### `submenu_start` / `submenu_end` <ConfigBadges plugin="shortcuts_menu" option="submenu_start" /> {#config-submenu-start}
 
 Allow adding some text (eg: icon) before / after a menu entry leading to another menu.
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-### `skip_single` {#config-skip-single}
-
-<ConfigDefault plugin="shortcuts_menu" option="skip_single" />
+### `skip_single` <ConfigBadges plugin="shortcuts_menu" option="skip_single" /> {#config-skip-single}
 
 When disabled, shows the menu even for single options.
 

@@ -69,34 +69,6 @@ def escape_markdown(text: str) -> str:
     return text
 
 
-def format_default(value) -> str:
-    """Format a default value for display.
-
-    Args:
-        value: Default value (any type)
-
-    Returns:
-        Formatted string for display
-    """
-    if value is None:
-        return "-"
-    if value == "":
-        return "-"
-    if isinstance(value, bool):
-        return "`true`" if value else "`false`"
-    if isinstance(value, str):
-        return f'`"{value}"`'
-    if isinstance(value, list):
-        if len(value) == 0:
-            return "-"
-        return f"`{json.dumps(value)}`"
-    if isinstance(value, dict):
-        if len(value) == 0:
-            return "-"
-        return f"`{json.dumps(value)}`"
-    return f"`{value}`"
-
-
 def render_command_table(commands: list) -> str:
     """Render commands as a markdown table.
 
@@ -132,7 +104,7 @@ def render_command_table(commands: list) -> str:
 
 
 def render_config_table(config: list, filter_names: list[str] | None = None) -> str:
-    """Render config options as a markdown table.
+    """Render config options as a 2-column markdown table.
 
     Args:
         config: List of config item dicts from JSON
@@ -159,8 +131,8 @@ def render_config_table(config: list, filter_names: list[str] | None = None) -> 
         return "*No configuration options.*\n"
 
     lines = [
-        "| Option | Type | Default | Description |",
-        "|--------|------|---------|-------------|",
+        "| Option | Description |",
+        "|--------|-------------|",
     ]
 
     for item in config:
@@ -169,8 +141,38 @@ def render_config_table(config: list, filter_names: list[str] | None = None) -> 
         display_name = re.sub(r"^\[.*?\]\.", "", name)
 
         type_str = item.get("type", "")
-        default = format_default(item.get("default"))
+        default = item.get("default")
         description = escape_markdown(item.get("description", ""))
+
+        # Build option cell: `name` · type · =default · required/recommended
+        option_parts = [f"`{display_name}`"]
+
+        if type_str:
+            option_parts.append(f"*{type_str}*")
+
+        # Format default value
+        if default is not None and default != "":
+            if isinstance(default, bool):
+                default_str = "`true`" if default else "`false`"
+            elif isinstance(default, str):
+                default_str = f'`"{default}"`'
+            elif isinstance(default, (list, dict)):
+                if len(default) > 0:
+                    default_str = f"`{json.dumps(default)}`"
+                else:
+                    default_str = None
+            else:
+                default_str = f"`{default}`"
+            if default_str:
+                option_parts.append(f"={default_str}")
+
+        # Add badges for required/recommended
+        if item.get("required"):
+            option_parts.append("**required**")
+        elif item.get("recommended"):
+            option_parts.append("*recommended*")
+
+        option_cell = " · ".join(option_parts)
 
         # Add choices to description if present
         choices = item.get("choices")
@@ -178,20 +180,13 @@ def render_config_table(config: list, filter_names: list[str] | None = None) -> 
             # Filter out empty strings
             valid_choices = [c for c in choices if c]
             if valid_choices:
-                choices_str = " | ".join(f"`{c}`" for c in valid_choices)
+                choices_str = " \\| ".join(f"`{c}`" for c in valid_choices)
                 if description:
                     description += f" (options: {choices_str})"
                 else:
                     description = f"Options: {choices_str}"
 
-        # Add badges for required/recommended
-        badges = ""
-        if item.get("required"):
-            badges = " **(required)**"
-        elif item.get("recommended"):
-            badges = " *(recommended)*"
-
-        lines.append(f"| `{display_name}`{badges} | `{type_str}` | {default} | {description} |")
+        lines.append(f"| {option_cell} | {description} |")
 
     return "\n".join(lines) + "\n"
 
@@ -347,6 +342,71 @@ def replace_builtin_commands(content: str, json_dir: Path) -> str:
     return re.sub(pattern, replacer, content)
 
 
+def replace_config_badges(content: str, json_dir: Path) -> str:
+    """Replace <ConfigBadges plugin="X" option="Y" /> with static inline badges.
+
+    Args:
+        content: Markdown content
+        json_dir: Directory containing JSON files
+
+    Returns:
+        Modified content
+    """
+    pattern = r'<ConfigBadges\s+plugin=["\']([^"\']+)["\']\s+option=["\']([^"\']+)["\']\s*/>'
+
+    def replacer(match: re.Match) -> str:
+        plugin_name = match.group(1)
+        option_name = match.group(2)
+
+        data = load_json(json_dir, plugin_name)
+        config = data.get("config", [])
+
+        # Find the option - handle both "option" and "[prefix].option" formats
+        item = None
+        for c in config:
+            base_name = re.sub(r"^\[.*?\]\.", "", c.get("name", ""))
+            if base_name == option_name or c.get("name") == option_name:
+                item = c
+                break
+
+        if not item:
+            return f"*option not found*"
+
+        # Build inline badges: *type* · =`"default"` · **required**
+        parts = []
+
+        type_str = item.get("type", "")
+        if type_str:
+            parts.append(f"*{type_str}*")
+
+        # Format default value
+        default = item.get("default")
+        if default is not None and default != "":
+            if isinstance(default, bool):
+                default_str = "`true`" if default else "`false`"
+            elif isinstance(default, str):
+                default_str = f'`"{default}"`'
+            elif isinstance(default, (list, dict)):
+                if len(default) > 0:
+                    default_str = f"`{json.dumps(default)}`"
+                else:
+                    default_str = None
+            else:
+                default_str = f"`{default}`"
+            if default_str:
+                parts.append(f"={default_str}")
+
+        # Add badges for required/recommended
+        if item.get("required"):
+            parts.append("**required**")
+        elif item.get("recommended"):
+            parts.append("*recommended*")
+
+        return " · ".join(parts)
+
+    return re.sub(pattern, replacer, content)
+
+
 def remove_script_setup(content: str) -> str:
     """Remove <script setup>...</script> blocks.
 
@@ -386,6 +446,7 @@ def render_static_docs(version_dir: Path) -> None:
         content = replace_plugin_config(content, json_dir)
         content = replace_plugin_list(content, json_dir)
         content = replace_builtin_commands(content, json_dir)
+        content = replace_config_badges(content, json_dir)
 
         # Only write if content changed
         if content != original_content:

@@ -9,9 +9,7 @@ Options that should only be used for applications that are not behaving in a "st
 
 <PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['match_by', 'initialClass', 'initialTitle', 'title', 'process_tracking', 'skip_windowrules']" />
 
-### `match_by` {#config-match-by}
-
-<ConfigDefault plugin="scratchpads" option="match_by" />
+### `match_by` <ConfigBadges plugin="scratchpads" option="match_by" /> {#config-match-by}
 
 When set to a sensitive client property value (eg: `class`, `initialClass`, `title`, `initialTitle`), will match the client window using the provided property instead of the PID of the process.
 
@@ -47,9 +45,7 @@ title = "re:.*some string.*"
 > match_by = "class"
 > ```
 
-### `process_tracking` {#config-process-tracking}
-
-<ConfigDefault plugin="scratchpads" option="process_tracking" />
+### `process_tracking` <ConfigBadges plugin="scratchpads" option="process_tracking" /> {#config-process-tracking}
 
 Allows disabling the process management. Use only if running a progressive web app (Chrome based apps) or similar.
 
@@ -85,9 +81,7 @@ process_tracking = false
 > the process can not be managed the same way as usual apps and the correlation
 > between the process and the client window isn't as straightforward and can lead to false matches in extreme cases.
 
-### `skip_windowrules` {#config-skip-windowrules}
-
-<ConfigDefault plugin="scratchpads" option="skip_windowrules" />
+### `skip_windowrules` <ConfigBadges plugin="scratchpads" option="skip_windowrules" /> {#config-skip-windowrules}
 
 Allows you to skip the window rules for a specific scratchpad.
 Available rules are:

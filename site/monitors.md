@@ -60,9 +60,7 @@ Try to keep the rules as simple as possible, but relatively complex scenarios ar
 
 <PluginConfig plugin="monitors" linkPrefix="config-" />
 
-### `placement` {#config-placement}
-
-<ConfigDefault plugin="monitors" option="placement" />
+### `placement` <ConfigBadges plugin="monitors" option="placement" /> {#config-placement}
 
 Configure monitor settings and relative positioning. Each monitor is identified by a [pattern](#monitor-patterns) (port name or description substring) and can have both display settings and positioning rules.
 
@@ -208,27 +206,19 @@ right_end_of = "HDMI-A-1"
 > [!tip]
 > Run `hyprctl monitors` (or `nirictl outputs` for Niri) to see the full description of each connected monitor.
 
-### `startup_relayout` {#config-startup-relayout}
-
-<ConfigDefault plugin="monitors" option="startup_relayout" />
+### `startup_relayout` <ConfigBadges plugin="monitors" option="startup_relayout" /> {#config-startup-relayout}
 
 When set to `false`, do not initialize the monitor layout on startup or when configuration is reloaded.
 
-### `relayout_on_config_change` {#config-relayout-on-config-change}
-
-<ConfigDefault plugin="monitors" option="relayout_on_config_change" />
+### `relayout_on_config_change` <ConfigBadges plugin="monitors" option="relayout_on_config_change" /> {#config-relayout-on-config-change}
 
 When set to `false`, do not relayout when Hyprland config is reloaded.
 
-### `new_monitor_delay` {#config-new-monitor-delay}
-
-<ConfigDefault plugin="monitors" option="new_monitor_delay" />
+### `new_monitor_delay` <ConfigBadges plugin="monitors" option="new_monitor_delay" /> {#config-new-monitor-delay}
 
 The layout computation happens after this delay when a new monitor is detected, to let time for things to settle.
 
-### `hotplug_command` {#config-hotplug-command}
-
-<ConfigDefault plugin="monitors" option="hotplug_command" />
+### `hotplug_command` <ConfigBadges plugin="monitors" option="hotplug_command" /> {#config-hotplug-command}
 
 Allows to run a command when any monitor is plugged.
 
@@ -237,9 +227,7 @@ Allows to run a command when any monitor is plugged.
 hotplug_command = "wlrlui -m"
 ```
 
-### `hotplug_commands` {#config-hotplug-commands}
-
-<ConfigDefault plugin="monitors" option="hotplug_commands" />
+### `hotplug_commands` <ConfigBadges plugin="monitors" option="hotplug_commands" /> {#config-hotplug-commands}
 
 Allows to run a command when a specific monitor is plugged.
 
@@ -250,9 +238,7 @@ Example to load a specific profile using [wlr layout ui](https://github.com/fdev
 "DELL P2417H CJFH277Q3HCB" = "wlrlui rotated"
 ```
 
-### `unknown` {#config-unknown}
-
-<ConfigDefault plugin="monitors" option="unknown" />
+### `unknown` <ConfigBadges plugin="monitors" option="unknown" /> {#config-unknown}
 
 Allows to run a command when no monitor layout has been changed (no rule applied).
 

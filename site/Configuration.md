@@ -37,15 +37,11 @@ The main section configures the Pyprland daemon itself.
 
 <PluginConfig plugin="pyprland" linkPrefix="config-" />
 
-### `include` {#config-include}
-
-<ConfigDefault plugin="pyprland" option="include" />
+### `include` <ConfigBadges plugin="pyprland" option="include" /> {#config-include}
 
 List of additional configuration files to include. See [Multiple Configuration Files](./MultipleConfigurationFiles) for details.
 
-### `notification_type` {#config-notification-type}
-
-<ConfigDefault plugin="pyprland" option="notification_type" />
+### `notification_type` <ConfigBadges plugin="pyprland" option="notification_type" /> {#config-notification-type}
 
 Controls how notifications are displayed:
 
@@ -55,9 +51,7 @@ Controls how notifications are displayed:
 | `"notify-send"` | Forces use of `notify-send` command |
 | `"native"` | Forces use of compositor's native notification system |
 
-### `variables` {#config-variables}
-
-<ConfigDefault plugin="pyprland" option="variables" />
+### `variables` <ConfigBadges plugin="pyprland" option="variables" /> {#config-variables}
 
 Custom variables that can be used in plugin configurations. See [Variables](./Variables) for usage details.
 

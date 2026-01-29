@@ -83,9 +83,7 @@ The `palette` command shows available color template variables:
 
 <PluginConfig plugin="wallpapers" linkPrefix="config-" />
 
-### `path` {#config-path}
-
-<ConfigDefault plugin="wallpapers" option="path" />
+### `path` <ConfigBadges plugin="wallpapers" option="path" /> {#config-path}
 
 **Required.** Path to a folder or list of folders that will be searched for wallpaper images.
 
@@ -93,15 +91,11 @@ The `palette` command shows available color template variables:
 path = ["~/Pictures/Portraits/", "~/Pictures/Landscapes/"]
 ```
 
-### `interval` {#config-interval}
-
-<ConfigDefault plugin="wallpapers" option="interval" />
+### `interval` <ConfigBadges plugin="wallpapers" option="interval" /> {#config-interval}
 
 How long (in minutes) a background should stay in place before changing.
 
-### `command` {#config-command}
-
-<ConfigDefault plugin="wallpapers" option="command" />
+### `command` <ConfigBadges plugin="wallpapers" option="command" /> {#config-command}
 
 Overrides the default command to set the background image.
 
@@ -122,9 +116,7 @@ or
 swww img --outputs [output] [file]
 ```
 
-### `clear_command` {#config-clear-command}
-
-<ConfigDefault plugin="wallpapers" option="clear_command" />
+### `clear_command` <ConfigBadges plugin="wallpapers" option="clear_command" /> {#config-clear-command}
 
 Overrides the default behavior which kills the `command` program.
 Use this to provide a command to clear the background:
@@ -133,9 +125,7 @@ Use this to provide a command to clear the background:
 clear_command = "swaybg clear"
 ```
 
-### `post_command` {#config-post-command}
-
-<ConfigDefault plugin="wallpapers" option="post_command" />
+### `post_command` <ConfigBadges plugin="wallpapers" option="post_command" /> {#config-post-command}
 
 Executes a command after a wallpaper change. Can use `[file]`:
 
@@ -143,9 +133,7 @@ Executes a command after a wallpaper change. Can use `[file]`:
 post_command = "matugen image '[file]'"
 ```
 
-### `radius` {#config-radius}
-
-<ConfigDefault plugin="wallpapers" option="radius" />
+### `radius` <ConfigBadges plugin="wallpapers" option="radius" /> {#config-radius}
 
 When set, adds rounded borders to the wallpapers. Expressed in pixels. Disabled by default.
 
@@ -156,21 +144,15 @@ For this feature to work, you must use `[output]` in your `command` to specify t
 radius = 16
 ```
 
-### `extensions` {#config-extensions}
-
-<ConfigDefault plugin="wallpapers" option="extensions" />
+### `extensions` <ConfigBadges plugin="wallpapers" option="extensions" /> {#config-extensions}
 
 List of valid wallpaper image extensions.
 
-### `recurse` {#config-recurse}
-
-<ConfigDefault plugin="wallpapers" option="recurse" />
+### `recurse` <ConfigBadges plugin="wallpapers" option="recurse" /> {#config-recurse}
 
 When enabled, will also search sub-directories recursively.
 
-### `unique` {#config-unique}
-
-<ConfigDefault plugin="wallpapers" option="unique" />
+### `unique` <ConfigBadges plugin="wallpapers" option="unique" /> {#config-unique}
 
 When enabled, will set a different wallpaper for each screen.
 
@@ -182,9 +164,7 @@ If you are not using the default application, ensure you are using `[output]` in
 
 Example for swaybg: `swaybg -o "[output]" -m fill -i "[file]"`
 
-### `templates` {#config-templates}
-
-<ConfigDefault plugin="wallpapers" option="templates" />
+### `templates` <ConfigBadges plugin="wallpapers" option="templates" /> {#config-templates}
 
 Enables automatic theming by generating config files from templates using colors extracted from the wallpaper. See the [Templates](#templates) section for full documentation.
 
@@ -198,9 +178,7 @@ post_hook = "sh /tmp/hyprlandcolors.sh"
 > [!tip]
 > Mostly compatible with *matugen* template syntax.
 
-### `color_scheme` {#config-color-scheme}
-
-<ConfigDefault plugin="wallpapers" option="color_scheme" />
+### `color_scheme` <ConfigBadges plugin="wallpapers" option="color_scheme" /> {#config-color-scheme}
 
 Optional modification of the base color used in the [templates](#config-templates). One of:
 
@@ -211,9 +189,7 @@ Optional modification of the base color used in the [templates](#config-template
 - **vibrant** - for moderate to high saturation
 - **mellow** - for lower saturation
 
-### `variant` {#config-variant}
-
-<ConfigDefault plugin="wallpapers" option="variant" />
+### `variant` <ConfigBadges plugin="wallpapers" option="variant" /> {#config-variant}
 
 Changes the algorithm used to pick the primary, secondary and tertiary colors.
 

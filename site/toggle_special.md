@@ -24,8 +24,6 @@ No other configuration needed, here `MOD+SHIFT+N` will show every window in "sta
 
 <PluginConfig plugin="toggle_special" linkPrefix="config-" />
 
-### `name` {#config-name}
-
-<ConfigDefault plugin="toggle_special" option="name" />
+### `name` <ConfigBadges plugin="toggle_special" option="name" /> {#config-name}
 
 Default special workspace name.

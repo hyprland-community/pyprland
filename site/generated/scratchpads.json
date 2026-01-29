@@ -117,7 +117,7 @@
       "type": "str",
       "required": false,
       "recommended": false,
-      "default": "",
+      "default": "100%",
       "description": "Hide animation distance",
       "choices": null,
       "children": null

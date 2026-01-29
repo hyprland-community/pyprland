@@ -3,15 +3,13 @@
     <thead>
       <tr>
         <th>Option</th>
-        <th>Type</th>
-        <th>Default</th>
         <th>Description</th>
       </tr>
     </thead>
     <tbody>
       <template v-for="item in items" :key="item.name">
         <tr>
-          <td>
+          <td class="config-option-cell">
             <a v-if="isDocumented(item.name)" :href="'#' + getAnchor(item.name)" class="config-link" title="More details below">
               <span v-if="hasChildren(item)" class="config-has-children" title="Has child options">+</span>
               <code>{{ item.name }}</code>
@@ -21,19 +19,16 @@
               <span v-if="hasChildren(item)" class="config-has-children" title="Has child options">+</span>
               <code>{{ item.name }}</code>
             </template>
-            <span v-if="item.required" class="config-badge config-required">required</span>
-            <span v-else-if="item.recommended" class="config-badge config-recommended">recommended</span>
-          </td>
-          <td><code>{{ item.type }}</code></td>
-          <td>
-            <code v-if="hasDefault(item.default)">{{ formatDefault(item.default) }}</code>
-            <span v-else class="config-none">-</span>
+            <Badge type="info">{{ item.type }}</Badge>
+            <Badge v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></Badge>
+            <Badge v-if="item.required" type="danger">required</Badge>
+            <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
           </td>
           <td class="config-description" v-html="renderDescription(item.description)" />
         </tr>
         <!-- Children row (recursive) -->
         <tr v-if="hasChildren(item)" class="config-children-row">
-          <td colspan="4" class="config-children-cell">
+          <td colspan="2" class="config-children-cell">
             <details class="config-children-details">
               <summary><code>{{ item.name }}</code> options</summary>
               <config-table
@@ -56,22 +51,10 @@ import { hasChildren, hasDefault, formatDefault, renderDescription } from './con
 export default {
   name: 'ConfigTable',
   props: {
-    items: {
-      type: Array,
-      required: true
-    },
-    isNested: {
-      type: Boolean,
-      default: false
-    },
-    optionToAnchor: {
-      type: Object,
-      default: () => ({})
-    },
-    parentName: {
-      type: String,
-      default: ''
-    }
+    items: { type: Array, required: true },
+    isNested: { type: Boolean, default: false },
+    optionToAnchor: { type: Object, default: () => ({}) },
+    parentName: { type: String, default: '' }
   },
   methods: {
     hasChildren,
@@ -85,7 +68,6 @@ export default {
     isDocumented(name) {
       if (Object.keys(this.optionToAnchor).length === 0) return false
       const qualifiedName = this.getQualifiedName(name)
-      // Try the qualified name with "." replaced by "-" (e.g., "placement.scale" -> "placement-scale")
       const anchorKey = qualifiedName.replace(/\./g, '-')
       return anchorKey in this.optionToAnchor || qualifiedName in this.optionToAnchor
     },

@@ -30,7 +30,7 @@
       "required": false,
       "recommended": true,
       "default": {},
-      "description": "Custom parser definitions (name -> list of rules)",
+      "description": "Custom parser definitions (name -> list of rules). Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds)",
       "choices": null,
       "children": null
     },

@@ -157,26 +157,6 @@ details {
   color: var(--vp-c-danger-1);
 }
 
-/* Badges */
-.config-badge {
-  font-size: 0.7em;
-  padding: 0.15em 0.4em;
-  border-radius: 3px;
-  margin-left: 0.5em;
-  font-weight: 500;
-  vertical-align: middle;
-}
-
-.config-required {
-  background-color: var(--vp-c-danger-soft);
-  color: var(--vp-c-danger-1);
-}
-
-.config-recommended {
-  background-color: var(--vp-c-warning-soft);
-  color: var(--vp-c-warning-1);
-}
-
 /* Link with info icon */
 .config-link {
   text-decoration: none;
@@ -300,4 +280,9 @@ details {
   padding: 0.15em 0.4em;
   border-radius: 3px;
   font-size: 0.95em;
+}
+
+/* Option cell for 2-column config tables */
+.config-option-cell {
+  white-space: nowrap;
 }

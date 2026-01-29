@@ -31,9 +31,7 @@ monitors = ["DP-1", "HDMI-1", "HDMI-1-A"]
 
 <PluginConfig plugin="menubar" linkPrefix="config-" />
 
-### `command` {#config-command}
-
-<ConfigDefault plugin="menubar" option="command" />
+### `command` <ConfigBadges plugin="menubar" option="command" /> {#config-command}
 
 The command to run the bar. Use `[monitor]` as a placeholder for the monitor name:
 

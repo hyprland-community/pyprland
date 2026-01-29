@@ -59,15 +59,11 @@ It _looks_ more linear changes than using a single + or -.
 
 <PluginConfig plugin="magnify" linkPrefix="config-" />
 
-### `factor` {#config-factor}
-
-<ConfigDefault plugin="magnify" option="factor" />
+### `factor` <ConfigBadges plugin="magnify" option="factor" /> {#config-factor}
 
 The zoom level to use when `pypr zoom` is called without arguments.
 
-### `duration` {#config-duration}
-
-<ConfigDefault plugin="magnify" option="duration" />
+### `duration` <ConfigBadges plugin="magnify" option="duration" /> {#config-duration}
 
 Animation duration in seconds. Not needed with recent Hyprland versions - you can customize the animation in Hyprland config instead:
 

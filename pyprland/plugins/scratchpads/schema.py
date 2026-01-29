@@ -52,7 +52,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
     # Positioning
     ConfigField("position", str, default="", description="Explicit position override"),
     ConfigField("margin", int, default=60, description="Pixels from screen edge"),
-    ConfigField("offset", str, default="", description="Hide animation distance"),
+    ConfigField("offset", str, default="100%", description="Hide animation distance"),
     ConfigField("max_size", str, default="", description="Maximum window size"),
     # Behavior
     ConfigField("lazy", bool, default=True, description="Start on first use"),
