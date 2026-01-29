@@ -141,8 +141,8 @@ class Extension(Plugin):
         """Loads the configuration and apply the tag style."""
         if not self.get_config_list("style"):
             return
-        await self.backend.execute("windowrulev2 unset, tag:layout_center", base_command="keyword")
-        commands = [f"windowrulev2 {rule}, tag:layout_center" for rule in self.get_config_list("style")]
+        await self.backend.execute("windowrule tag -layout_center", base_command="keyword")
+        commands = [f"windowrule {rule}, match:tag layout_center" for rule in self.get_config_list("style")]
         if commands:
             await self.backend.execute(commands, base_command="keyword")
 
