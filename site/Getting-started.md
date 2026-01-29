@@ -55,6 +55,12 @@ exec-once = /usr/bin/pypr
 For debugging, use:
 
 ```ini
+exec-once = /usr/bin/pypr --debug
+```
+
+Or to also save logs to a file:
+
+```ini
 exec-once = /usr/bin/pypr --debug $HOME/pypr.log
 ```
 

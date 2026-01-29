@@ -125,6 +125,12 @@ For technical details about the client-daemon protocol, see [Architecture: Socke
 To run the daemon with debug logging:
 
 ```sh
+pypr --debug
+```
+
+To also save logs to a file:
+
+```sh
 pypr --debug $HOME/pypr.log
 ```
 

@@ -16,7 +16,7 @@ journalctl --user -u pyprland -f
 
 If you run pyprland via [exec-once](./Getting-started#option-1-hyprland-exec-once), logs go to stderr by default and are typically lost.
 
-To enable debug logging, add `--debug <logfile>` to your exec-once command:
+To enable debug logging, add `--debug` to your exec-once command. Optionally specify a file path to also save logs to a file:
 
 ```ini
 exec-once = /usr/bin/pypr --debug $HOME/pypr.log
@@ -36,10 +36,10 @@ tail -f ~/pypr.log
 For quick debugging, run pypr directly in a terminal:
 
 ```sh
-pypr --debug /dev/null
+pypr --debug
 ```
 
-This shows debug output directly in the terminal. Use `/dev/null` as the log path to avoid creating a file while still seeing the output.
+This shows debug output directly in the terminal. Optionally add a file path to also save logs to a file.
 
 ## General Issues
 
@@ -57,7 +57,7 @@ ps aux | grep pypr
 You can try starting it manually from a terminal:
 
 ```sh
-pypr --debug /dev/null
+pypr --debug
 ```
 
 This will show any startup errors directly in the terminal.

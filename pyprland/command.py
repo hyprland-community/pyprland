@@ -17,27 +17,39 @@ from .pypr_daemon import run_daemon
 __all__: list[str] = ["Pyprland", "main"]
 
 
-def use_param(txt: str) -> str:
+def use_param(txt: str, optional_value: bool = False) -> str | bool:
     """Check if parameter `txt` is in sys.argv.
 
-    if found, removes it from sys.argv & returns the argument value
+    If found, removes it from sys.argv & returns the argument value.
+    If optional_value is True, the parameter value is optional.
 
     Args:
         txt: Parameter name to look for
+        optional_value: If True, value after parameter is optional
+
+    Returns:
+        - "" if parameter not present
+        - True if parameter present but no value (only when optional_value=True)
+        - The value string if parameter present with value
     """
-    v = ""
-    if txt in sys.argv:
-        i = sys.argv.index(txt)
-        v = sys.argv[i + 1]
-        del sys.argv[i : i + 2]
+    if txt not in sys.argv:
+        return ""
+    i = sys.argv.index(txt)
+    # Check if there's a next arg and it's not a flag
+    if optional_value and (i + 1 >= len(sys.argv) or sys.argv[i + 1].startswith("-")):
+        del sys.argv[i]
+        return True
+    v = sys.argv[i + 1]
+    del sys.argv[i : i + 2]
     return v
 
 
 def main() -> None:
     """Run the command."""
-    debug_flag = use_param("--debug")
+    debug_flag = use_param("--debug", optional_value=True)
     if debug_flag:
-        init_logger(filename=debug_flag, force_debug=True)
+        filename = debug_flag if isinstance(debug_flag, str) else None
+        init_logger(filename=filename, force_debug=True)
     else:
         init_logger()
     ipc_init()

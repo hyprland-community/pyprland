@@ -528,7 +528,7 @@ For general pyprland issues, see the [Troubleshooting](./Troubleshooting) page.
 - Check pyprland logs:
   - **Systemd**: `journalctl --user -u pyprland -f`
   - **exec-once**: Check your log file (e.g., `tail -f ~/pypr.log`)
-- Enable debug logging with `--debug <logfile>` (see [Getting Started](./Getting-started#running-the-daemon))
+- Enable debug logging with `--debug` or `--debug <logfile>` (see [Getting Started](./Getting-started#running-the-daemon))
 - Ensure the wallpapers plugin is loaded in your config
 
 **Colors look wrong or washed out?**

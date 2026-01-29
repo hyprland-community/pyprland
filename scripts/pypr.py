@@ -31,8 +31,11 @@ def get_parser():
     parser = argparse.ArgumentParser(prog="pypr", description="Pyprland CLI", add_help=False, allow_abbrev=False)
     parser.add_argument(
         "--debug",
-        help="Enable debug mode and log to a file",
+        help="Enable debug mode, optionally logging to a file",
         metavar="filename",
+        nargs="?",
+        const=True,
+        default=None,
     ).complete = shtab.FILE
     parser.add_argument(
         "--config",

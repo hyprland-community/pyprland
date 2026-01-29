@@ -41,10 +41,14 @@ pre-commit install --hook-type pre-push
 To get detailed logs when an error occurs, use:
 
 ```sh
-pypr --debug $HOME/pypr.log
+pypr --debug
 ```
 
-This displays logs in the console and writes them to the specified file.
+This displays logs in the console. To also save logs to a file:
+
+```sh
+pypr --debug $HOME/pypr.log
+```
 
 ### Quick Experimentation
 
@@ -233,7 +237,7 @@ class Extension(CastBoolMixin, Plugin):
 Restart the daemon after making changes:
 
 ```sh
-pypr exit ; pypr --debug $HOME/pypr.log
+pypr exit ; pypr --debug
 ```
 
 ### API Documentation
