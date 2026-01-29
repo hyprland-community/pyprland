@@ -35,7 +35,7 @@ OUTPUT_DIR = PROJECT_ROOT / "site" / "generated"
 METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.json"
 
 # Plugins to skip (not real plugins)
-SKIP_PLUGINS = {"interface", "protocols", "__init__", "experimental"}
+SKIP_PLUGINS = {"interface", "protocols", "__init__", "experimental", "mixins"}
 
 # Plugins that are packages (directories with __init__.py)
 PACKAGE_PLUGINS = {"scratchpads", "monitors", "wallpapers", "pyprland"}
