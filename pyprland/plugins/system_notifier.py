@@ -60,7 +60,8 @@ class Extension(Plugin):
             "parsers",
             dict,
             default={},
-            description="Custom parser definitions (name -> list of rules). Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds)",
+            description="""Custom parser definitions (name -> list of rules).
+            Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds)""",
             recommended=True,
         ),
         ConfigField("sources", list, default=[], description="Source definitions with command and parser", recommended=True),

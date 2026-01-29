@@ -50,7 +50,7 @@ except ImportError:
     @contextlib.asynccontextmanager  # type: ignore[no-redef]
     async def aiopen(*args, **kwargs) -> AsyncIterator[AsyncFile]:
         """Async > sync wrapper."""
-        with open(*args, **kwargs) as f:  # noqa: ASYNC101, ASYNC230, pylint: disable=unspecified-encoding
+        with open(*args, **kwargs) as f:  # noqa: ASYNC230, pylint: disable=unspecified-encoding
             yield AsyncFile(f)
 
     async def aiexists(*args, **kwargs) -> bool:

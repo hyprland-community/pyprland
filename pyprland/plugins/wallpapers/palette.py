@@ -100,7 +100,7 @@ def palette_to_json(palette: dict[str, str]) -> str:
     return json.dumps(output, indent=2)
 
 
-def palette_to_terminal(palette: dict[str, str]) -> str:
+def palette_to_terminal(palette: dict[str, str]) -> str:  # pylint: disable=too-many-locals
     """Convert palette to terminal-formatted output with ANSI color swatches.
 
     Args:
