@@ -45,8 +45,6 @@ async def run_daemon() -> None:
         manager.log.critical("Cannot create IPC folder %s: %s", ipc_folder, e)
         return
 
-    manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
-
     result = await get_event_stream_with_retry()
     if result[0] is None:
         events_reader, events_writer = None, None
@@ -56,6 +54,9 @@ async def run_daemon() -> None:
         manager.event_reader = events_reader
 
     await manager.initialize()
+
+    # Start server after initialization to avoid race conditions with plugin loading
+    manager.server = await asyncio.start_unix_server(manager.read_command, CONTROL)
 
     manager.log.debug("[ initialized ]".center(80, "="))
 
