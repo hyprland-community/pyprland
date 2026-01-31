@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland.plugins.menubar import get_pid_from_layers_hyprland, is_bar_in_layers_niri, is_bar_alive, Extension
@@ -56,18 +58,18 @@ async def test_is_bar_alive_hyprland():
     backend.execute_json = AsyncMock()
 
     # Case 1: Process exists in /proc
-    with patch("os.path.exists", return_value=True):
+    with patch.object(Path, "exists", return_value=True):
         assert await is_bar_alive(1234, backend, "hyprland") == 1234
         backend.execute_json.assert_not_called()
 
     # Case 2: Process not in /proc, but found in layers
-    with patch("os.path.exists", return_value=False):
+    with patch.object(Path, "exists", return_value=False):
         backend.execute_json.return_value = {"DP-1": {"levels": {"0": [{"namespace": "bar-1", "pid": 5678}]}}}
         assert await is_bar_alive(1234, backend, "hyprland") == 5678
         backend.execute_json.assert_called_with("layers")
 
     # Case 3: Process not found anywhere
-    with patch("os.path.exists", return_value=False):
+    with patch.object(Path, "exists", return_value=False):
         backend.execute_json.return_value = {}
         assert await is_bar_alive(1234, backend, "hyprland") is False
 
@@ -78,19 +80,19 @@ async def test_is_bar_alive_niri():
     backend.execute_json = AsyncMock()
 
     # Case 1: Process exists in /proc
-    with patch("os.path.exists", return_value=True):
+    with patch.object(Path, "exists", return_value=True):
         assert await is_bar_alive(1234, backend, "niri") == 1234
         backend.execute_json.assert_not_called()
 
     # Case 2: Process not in /proc, but found in layers (returns True, not PID)
-    with patch("os.path.exists", return_value=False):
+    with patch.object(Path, "exists", return_value=False):
         backend.execute_json.return_value = [{"namespace": "bar-1", "output": "DP-1", "layer": "Top"}]
         result = await is_bar_alive(1234, backend, "niri")
         assert result is True  # Niri can only detect presence, not recover PID
         backend.execute_json.assert_called_with("Layers")
 
     # Case 3: Process not found anywhere
-    with patch("os.path.exists", return_value=False):
+    with patch.object(Path, "exists", return_value=False):
         backend.execute_json.return_value = []
         assert await is_bar_alive(1234, backend, "niri") is False
 
