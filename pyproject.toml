@@ -1,6 +1,6 @@
 [project]
 name = "pyprland"
-version = "2.6.2"
+version = "3.0.0"
 description = "A companion for your desktop UX"
 authors = [
     { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
