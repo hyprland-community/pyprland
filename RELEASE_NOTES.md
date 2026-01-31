@@ -22,9 +22,8 @@
     - Default command changed from `gBar bar [monitor]` to `uwsm app -- ashell`
 - `wallpapers`
     - `pypr wall clear` now automatically kills hyprpaper on Hyprland
-    - Online wallpaper fetching with configurable backends (Unsplash, Wallhaven, Reddit, Picsum, Bing)
-    - New cache options: `cache_days`, `cache_max_mb`, `cache_max_images`
-    - Cached images (rounded corners, online downloads) stored in subfolders within your `path`
+    - Online wallpaper fetching (Unsplash, Wallhaven, Reddit, Picsum, Bing)
+    - User friendly commands such as `palette`
 - Extensions API changes (for plugin authors)
     - IPC methods moved to backend adapter (`self.hyprctl()` → `self.backend.execute()`, etc.)
     - New `environments` class attribute to declare supported backends

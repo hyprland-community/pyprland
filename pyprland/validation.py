@@ -4,7 +4,7 @@ import difflib
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, get_args, get_origin
 
 from .config import BOOL_STRINGS
 
@@ -33,6 +33,7 @@ class ConfigField:  # pylint: disable=too-many-instance-attributes
                   have children with their own schemas.
         children_allow_extra: If True, don't warn about unknown keys in children
         category: UI grouping category for TUI display (e.g., "basic", "positioning", "behavior")
+        is_directory: For Path types, True means directory path, False means file path
     """
 
     name: str
@@ -46,13 +47,25 @@ class ConfigField:  # pylint: disable=too-many-instance-attributes
     children: "ConfigItems | None" = None
     children_allow_extra: bool = False
     category: str = ""  # UI grouping category (e.g., "basic", "positioning", "behavior")
+    is_directory: bool = False  # For Path types: True = directory, False = file
 
     @property
     def type_name(self) -> str:
-        """Return human-readable type name (e.g., 'str', 'int or str')."""
+        """Return human-readable type name (e.g., 'str', 'list[Path]')."""
+
+        def _format_type(t: type) -> str:
+            origin = get_origin(t)
+            if origin is not None:
+                args = get_args(t)
+                if args:
+                    args_str = ", ".join(_format_type(a) for a in args)
+                    return f"{origin.__name__}[{args_str}]"
+                return origin.__name__
+            return t.__name__
+
         if isinstance(self.field_type, tuple):
-            return " or ".join(t.__name__ for t in self.field_type)
-        return self.field_type.__name__
+            return " or ".join(_format_type(t) for t in self.field_type)
+        return _format_type(self.field_type)
 
 
 class ConfigItems(list):

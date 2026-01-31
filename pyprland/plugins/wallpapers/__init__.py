@@ -76,7 +76,7 @@ class Extension(Plugin):
     """Handles random wallpapers at regular intervals, with support for rounded corners and color scheme generation."""
 
     config_schema = ConfigItems(
-        ConfigField("path", (str, list), required=True, description="Path(s) to wallpaper images or directories", category="basic"),
+        ConfigField("path", (Path, list), required=True, description="Path(s) to wallpaper images or directories", category="basic"),
         ConfigField("interval", int, default=10, description="Minutes between wallpaper changes", category="basic"),
         ConfigField(
             "extensions",
@@ -88,19 +88,21 @@ class Extension(Plugin):
         ConfigField("recurse", bool, default=False, description="Recursively search subdirectories", category="basic"),
         ConfigField("unique", bool, default=False, description="Use different wallpaper per monitor", category="basic"),
         ConfigField("radius", int, default=0, description="Corner radius for rounded corners", category="appearance"),
-        ConfigField("command", str, description="Custom command to set wallpaper ([file] and [output] variables)", category="commands"),
-        ConfigField("post_command", str, description="Command to run after setting wallpaper", category="commands"),
-        ConfigField("clear_command", str, description="Command to run when clearing wallpaper", category="commands"),
+        ConfigField(
+            "command", str, description="Custom command to set wallpaper ([file] and [output] variables)", category="external_commands"
+        ),
+        ConfigField("post_command", str, description="Command to run after setting wallpaper", category="external_commands"),
+        ConfigField("clear_command", str, description="Command to run when clearing wallpaper", category="external_commands"),
         ConfigField(
             "color_scheme",
             str,
             default="",
             description="Color scheme for palette generation",
             choices=["", "pastel", "fluo", "fluorescent", "vibrant", "mellow", "neutral", "earth"],
-            category="colors",
+            category="templating",
         ),
-        ConfigField("variant", str, description="Color variant type for palette", category="colors"),
-        ConfigField("templates", dict, description="Template files for color palette generation", category="colors"),
+        ConfigField("variant", str, description="Color variant type for palette", category="templating"),
+        ConfigField("templates", dict, description="Template files for color palette generation", category="templating"),
         # Online wallpaper fetching options
         ConfigField("online_ratio", float, default=0.0, description="Probability of fetching online (0.0-1.0)", category="online"),
         ConfigField(

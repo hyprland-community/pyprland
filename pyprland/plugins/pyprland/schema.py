@@ -4,12 +4,28 @@ This module is separate to allow manager.py to import the schema
 without circular import issues.
 """
 
+from pathlib import Path
+
 from pyprland.validation import ConfigField, ConfigItems
 
 PYPRLAND_CONFIG_SCHEMA = ConfigItems(
     ConfigField("plugins", list, required=True, description="List of plugins to load", category="basic"),
-    ConfigField("include", list, required=False, description="Additional config files or folders to include", category="basic"),
-    ConfigField("plugins_paths", list, default=[], description="Additional paths to search for third-party plugins", category="basic"),
+    ConfigField(
+        "include",
+        list[Path],
+        required=False,
+        description="Additional config files or folders to include",
+        category="basic",
+        is_directory=True,
+    ),
+    ConfigField(
+        "plugins_paths",
+        list[Path],
+        default=[],
+        description="Additional paths to search for third-party plugins",
+        category="basic",
+        is_directory=True,
+    ),
     ConfigField(
         "colored_handlers_log",
         bool,

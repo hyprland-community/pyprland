@@ -31,7 +31,7 @@
                   <span v-if="hasChildren(item)" class="config-has-children" title="Has child options">+</span>
                   <code>{{ item.name }}</code>
                 </template>
-                <Badge type="info">{{ item.type }}</Badge>
+                <Badge type="info">{{ getTypeIcon(item) }}{{ item.type }}</Badge>
                 <Badge v-if="item.required" type="danger">required</Badge>
                 <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
                 <div v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></div>
@@ -109,12 +109,13 @@
 import { hasChildren, hasDefault, formatDefault, renderDescription } from './configHelpers.js'
 
 // Category display order and names
-const CATEGORY_ORDER = ['basic', 'positioning', 'behavior', 'commands', 'placement', 'advanced', 'overrides', '']
+const CATEGORY_ORDER = ['basic', 'positioning', 'behavior', 'external_commands', 'templating', 'placement', 'advanced', 'overrides', '']
 const CATEGORY_NAMES = {
   'basic': 'Basic',
   'positioning': 'Positioning',
   'behavior': 'Behavior',
-  'commands': 'Commands',
+  'external_commands': 'External commands',
+  'templating': 'Templating',
   'placement': 'Placement',
   'advanced': 'Advanced',
   'overrides': 'Overrides',
@@ -166,6 +167,13 @@ export default {
     hasDefault,
     formatDefault,
     renderDescription,
+    getTypeIcon(item) {
+      const type = item.type || ''
+      if (type.includes('Path')) {
+        return item.is_directory ? '\u{1F4C1} ' : '\u{1F4C4} '
+      }
+      return ''
+    },
     getCategoryDisplayName(category) {
       return CATEGORY_NAMES[category] || category.charAt(0).toUpperCase() + category.slice(1)
     },

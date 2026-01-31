@@ -54,6 +54,7 @@ class ConfigItem:
     choices: list[str] | None = None
     children: list["ConfigItem"] | None = None
     category: str = ""
+    is_directory: bool = False  # For Path types: True = directory, False = file
 
 
 @dataclass
@@ -109,6 +110,7 @@ def extract_config_from_schema(schema: list) -> list[ConfigItem]:
                 choices=field_def.choices,
                 children=children_items,
                 category=getattr(field_def, "category", ""),
+                is_directory=getattr(field_def, "is_directory", False),
             )
         )
     return config_items
@@ -258,6 +260,7 @@ def load_plugin(plugin_name: str) -> PluginDoc | None:
                 description=field_def.description,
                 choices=field_def.choices,
                 category=getattr(field_def, "category", ""),
+                is_directory=getattr(field_def, "is_directory", False),
             )
             config_items.append(item)
 

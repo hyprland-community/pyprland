@@ -16,10 +16,12 @@ dependencies = [
     "aiofiles",
     "aiohttp",
     "pillow",
+    "questionary[quickstart]",
 ]
 
 [project.scripts]
 pypr = "pyprland.command:main"
+pypr-quickstart = "pyprland.quickstart:main"
 
 [dependency-groups]
 dev = [

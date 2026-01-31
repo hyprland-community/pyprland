@@ -1,6 +1,6 @@
 <template>
     <span v-if="loaded && item" class="config-badges">
-        <Badge type="info">{{ item.type }}</Badge>
+        <Badge type="info">{{ typeIcon }}{{ item.type }}</Badge>
         <Badge v-if="hasDefault" type="tip">=<code>{{ formattedDefault }}</code></Badge>
         <Badge v-if="item.required" type="danger">required</Badge>
         <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
@@ -41,6 +41,14 @@ export default {
         }
     },
     computed: {
+        typeIcon() {
+            if (!this.item) return ''
+            const type = this.item.type || ''
+            if (type.includes('Path')) {
+                return this.item.is_directory ? '\u{1F4C1} ' : '\u{1F4C4} '
+            }
+            return ''
+        },
         hasDefault() {
             if (!this.item) return false
             const value = this.item.default
