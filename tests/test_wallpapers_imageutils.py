@@ -1,19 +1,21 @@
-import pytest
 import os
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from pyprland.plugins.wallpapers.cache import ImageCache
 from pyprland.plugins.wallpapers.imageutils import (
-    expand_path,
-    get_files_with_ext,
+    IMAGE_FORMAT,
     MonitorInfo,
     RoundedImageManager,
+    expand_path,
+    get_effective_dimensions,
+    get_files_with_ext,
+    get_variant_color,
     to_hex,
     to_rgb,
     to_rgba,
-    get_variant_color,
-    IMAGE_FORMAT,
 )
-from pyprland.plugins.wallpapers.cache import ImageCache
 
 
 def test_expand_path():
@@ -109,6 +111,22 @@ def test_rounded_image_manager_paths(tmp_path):
     path = cache.get_path(key, IMAGE_FORMAT)
     assert str(tmp_path) in str(path)
     assert str(path).endswith(f".{IMAGE_FORMAT}")
+
+
+def test_get_effective_dimensions_no_rotation():
+    """Transforms 0, 2, 4, 6 should NOT swap dimensions."""
+    for transform in [0, 2, 4, 6]:
+        monitor = MonitorInfo(name="DP-1", width=1920, height=1080, transform=transform, scale=1.0)
+        w, h = get_effective_dimensions(monitor)
+        assert (w, h) == (1920, 1080), f"Transform {transform} should not swap dimensions"
+
+
+def test_get_effective_dimensions_rotated():
+    """Transforms 1, 3, 5, 7 (90/270 degree rotations) should swap width and height."""
+    for transform in [1, 3, 5, 7]:
+        monitor = MonitorInfo(name="DP-1", width=1920, height=1080, transform=transform, scale=1.0)
+        w, h = get_effective_dimensions(monitor)
+        assert (w, h) == (1080, 1920), f"Transform {transform} should swap dimensions"
 
 
 def test_rounded_image_manager_processing(tmp_path):

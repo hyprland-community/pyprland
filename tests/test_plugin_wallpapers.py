@@ -1,7 +1,11 @@
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch
-from pyprland.plugins.wallpapers import Extension
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from pyprland.plugins.wallpapers import Extension, OnlineState
+from pyprland.plugins.wallpapers.online import OnlineFetcher
 from tests.conftest import make_extension
 
 
@@ -203,3 +207,130 @@ async def test_run_color_with_scheme(extension, mocker):
 
     extension._generate_templates.assert_called_once_with("color-#FF5500", "#FF5500")
     assert extension.config["color_scheme"] == "pastel"
+
+
+# --- Prefetch Tests ---
+
+
+@pytest.fixture
+def online_extension(mocker, test_logger):
+    """Extension with online fetching enabled."""
+    ext = make_extension(
+        Extension,
+        logger=test_logger,
+        config={"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "online_ratio": 0.5},
+        state_variables={},
+        hyprctl_json=AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]),
+        hyprctl=AsyncMock(),
+    )
+    # Initialize image_list
+    ext.image_list = []
+    # Set up mock online state
+    mock_fetcher = AsyncMock(spec=OnlineFetcher)
+    mock_fetcher.get_image = AsyncMock(return_value=Path("/tmp/wallpapers/online/test.jpg"))
+    ext._online = OnlineState(
+        fetcher=mock_fetcher,
+        folder_path=Path("/tmp/wallpapers/online"),
+        cache=Mock(),
+        rounded_cache=Mock(),
+        prefetched_path=None,
+    )
+    return ext
+
+
+@pytest.mark.asyncio
+async def test_fetch_online_image_uses_prefetched(online_extension, mocker):
+    """_fetch_online_image() uses prefetched path if available."""
+    # Set prefetched path
+    online_extension._online.prefetched_path = "/tmp/wallpapers/online/prefetched.jpg"
+
+    # Mock aiexists to return True (file exists)
+    mocker.patch("pyprland.plugins.wallpapers.aiexists", return_value=True)
+
+    result = await online_extension._fetch_online_image()
+
+    assert result == "/tmp/wallpapers/online/prefetched.jpg"
+    # Prefetched path should be cleared after use
+    assert online_extension._online.prefetched_path is None
+    # Fetcher should NOT be called since we used prefetched
+    online_extension._online.fetcher.get_image.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_fetch_online_image_prefetched_missing(online_extension, mocker):
+    """_fetch_online_image() falls back to fetcher if prefetched file is gone."""
+    # Set prefetched path
+    online_extension._online.prefetched_path = "/tmp/wallpapers/online/deleted.jpg"
+
+    # Mock aiexists to return False (file was deleted)
+    mocker.patch("pyprland.plugins.wallpapers.aiexists", return_value=False)
+
+    # Mock fetch_monitors
+    mocker.patch(
+        "pyprland.plugins.wallpapers.fetch_monitors",
+        return_value=[Mock(width=1920, height=1080, transform=0)],
+    )
+
+    result = await online_extension._fetch_online_image()
+
+    # Should have called fetcher since prefetched file was missing
+    online_extension._online.fetcher.get_image.assert_called_once()
+    assert result == str(Path("/tmp/wallpapers/online/test.jpg"))
+
+
+@pytest.mark.asyncio
+async def test_prefetch_online_image_success(online_extension, mocker):
+    """_prefetch_online_image() downloads and stores path in OnlineState."""
+    # Mock fetch_monitors
+    mocker.patch(
+        "pyprland.plugins.wallpapers.fetch_monitors",
+        return_value=[Mock(width=1920, height=1080, transform=0)],
+    )
+
+    # Ensure no prefetched path initially
+    assert online_extension._online.prefetched_path is None
+
+    await online_extension._prefetch_online_image()
+
+    # Path should be stored
+    assert online_extension._online.prefetched_path == "/tmp/wallpapers/online/test.jpg"
+    # Should be added to image_list
+    assert "/tmp/wallpapers/online/test.jpg" in online_extension.image_list
+
+
+@pytest.mark.asyncio
+async def test_prefetch_online_image_retry(online_extension, mocker):
+    """_prefetch_online_image() retries on failure with exponential backoff."""
+    # Mock fetch_monitors
+    mocker.patch(
+        "pyprland.plugins.wallpapers.fetch_monitors",
+        return_value=[Mock(width=1920, height=1080, transform=0)],
+    )
+
+    # Mock fetcher to fail twice then succeed
+    online_extension._online.fetcher.get_image = AsyncMock(
+        side_effect=[
+            Exception("Network error"),
+            Exception("Timeout"),
+            Path("/tmp/wallpapers/online/retry_success.jpg"),
+        ]
+    )
+
+    # Mock asyncio.sleep to track delays
+    sleep_calls = []
+
+    async def mock_sleep(delay):
+        sleep_calls.append(delay)
+        # Don't actually sleep in tests
+
+    mocker.patch("asyncio.sleep", side_effect=mock_sleep)
+
+    await online_extension._prefetch_online_image()
+
+    # Should have retried with exponential backoff (2s, 4s)
+    assert len(sleep_calls) == 2
+    assert sleep_calls[0] == 2  # First retry: 2 seconds
+    assert sleep_calls[1] == 4  # Second retry: 4 seconds
+
+    # Should have succeeded on third attempt
+    assert online_extension._online.prefetched_path == "/tmp/wallpapers/online/retry_success.jpg"
