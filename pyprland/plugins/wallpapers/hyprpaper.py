@@ -3,7 +3,7 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from ...aioops import ailistdir, aiopen
+from ...aioops import is_process_running
 
 if TYPE_CHECKING:
     import logging
@@ -12,18 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = ["HyprpaperManager"]
 
-
-async def _is_hyprpaper_running() -> bool:
-    """Check if hyprpaper process is running via /proc filesystem."""
-    for pid in await ailistdir("/proc"):
-        if pid.isdigit():
-            try:
-                async with aiopen(f"/proc/{pid}/comm") as f:
-                    if (await f.read()).strip() == "hyprpaper":
-                        return True
-            except OSError:
-                pass  # Process may have exited
-    return False
+HYPRPAPER_PROCESS_NAME = "hyprpaper"
 
 
 class HyprpaperManager:
@@ -43,7 +32,7 @@ class HyprpaperManager:
         Returns:
             True if hyprpaper is available, False if it couldn't be started.
         """
-        if await _is_hyprpaper_running():
+        if await is_process_running(HYPRPAPER_PROCESS_NAME):
             return True
 
         self.log.info("Hyprpaper not running, starting it...")
@@ -56,7 +45,7 @@ class HyprpaperManager:
         # Wait for hyprpaper to start (up to 3 seconds)
         for _ in range(30):
             await asyncio.sleep(0.1)
-            if await _is_hyprpaper_running():
+            if await is_process_running(HYPRPAPER_PROCESS_NAME):
                 self.log.info("Hyprpaper started successfully")
                 return True
 

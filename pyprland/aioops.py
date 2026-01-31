@@ -4,7 +4,18 @@ Provides fallback sync methods if aiofiles is not installed,
 plus async task management utilities.
 """
 
-__all__ = ["DebouncedTask", "TaskManager", "aiexists", "ailistdir", "aiopen", "aioremove", "airmdir", "airmtree", "graceful_cancel_tasks"]
+__all__ = [
+    "DebouncedTask",
+    "TaskManager",
+    "aiexists",
+    "ailistdir",
+    "aiopen",
+    "aioremove",
+    "airmdir",
+    "airmtree",
+    "graceful_cancel_tasks",
+    "is_process_running",
+]
 
 import asyncio
 import contextlib
@@ -98,6 +109,28 @@ async def aioremove(path: str | os.PathLike) -> None:
         path: File to remove.
     """
     await asyncio.to_thread(os.remove, path)
+
+
+async def is_process_running(name: str) -> bool:
+    """Check if a process with the given name is running.
+
+    Uses /proc filesystem to check process names (Linux only).
+
+    Args:
+        name: The process name to search for (matches /proc/<pid>/comm)
+
+    Returns:
+        True if a process with that name is running, False otherwise.
+    """
+    for pid in await ailistdir("/proc"):
+        if pid.isdigit():
+            try:
+                async with aiopen(f"/proc/{pid}/comm") as f:
+                    if (await f.read()).strip() == name:
+                        return True
+            except OSError:
+                pass  # Process may have exited
+    return False
 
 
 async def graceful_cancel_tasks(
