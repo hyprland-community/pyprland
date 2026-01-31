@@ -1,7 +1,7 @@
 # Commands
 
 <script setup>
-import BuiltinCommands from './components/BuiltinCommands.vue'
+import PluginCommands from './components/PluginCommands.vue'
 </script>
 
 This page covers the `pypr` command-line interface and available commands.
@@ -26,7 +26,7 @@ There is also an optional `pypr-client` command which is designed for running in
 
 These commands are always available, regardless of which plugins are loaded:
 
-<BuiltinCommands />
+<PluginCommands plugin="pyprland" />
 
 ## Plugin Commands
 

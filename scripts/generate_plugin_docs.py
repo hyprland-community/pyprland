@@ -228,6 +228,18 @@ def load_plugin(plugin_name: str) -> PluginDoc | None:
     # Extract commands
     commands = extract_commands(extension_class)
 
+    # For pyprland plugin, also include client-only commands (edit, validate)
+    if plugin_name == "pyprland":
+        for cmd_info in get_client_commands():
+            commands.append(
+                CommandItem(
+                    name=cmd_info.name,
+                    args=cmd_info.args,
+                    short_description=cmd_info.short_description,
+                    full_description=cmd_info.full_description,
+                )
+            )
+
     # Extract configuration schema
     config_items = []
 
@@ -277,7 +289,7 @@ def load_plugin(plugin_name: str) -> PluginDoc | None:
 def load_metadata() -> dict[str, dict]:
     """Load the editorial metadata file."""
     if METADATA_FILE.exists():
-        with open(METADATA_FILE, mode='rb') as f:
+        with open(METADATA_FILE, mode="rb") as f:
             return tomllib.load(f)
     return {}
 
@@ -314,41 +326,6 @@ def generate_menu_json() -> dict:
         "config": [asdict(cfg) for cfg in config_items],
         "engine_defaults": engine_defaults,
     }
-
-
-def generate_builtins_json() -> dict:
-    """Generate JSON for built-in commands from pyprland plugin and client.
-
-    Returns:
-        Dict ready for JSON serialization
-    """
-    from pyprland.plugins.pyprland import Extension
-
-    commands = []
-
-    # Extract commands from pyprland plugin's run_* methods
-    for cmd in extract_commands(Extension):
-        commands.append(
-            {
-                "name": cmd.name,
-                "args": [asdict(arg) for arg in cmd.args],
-                "short_description": cmd.short_description,
-                "full_description": cmd.full_description,
-            }
-        )
-
-    # Add client-only commands using the registry
-    for cmd_info in get_client_commands():
-        commands.append(
-            {
-                "name": cmd_info.name,
-                "args": [asdict(arg) for arg in cmd_info.args],
-                "short_description": cmd_info.short_description,
-                "full_description": cmd_info.full_description,
-            }
-        )
-
-    return {"commands": commands}
 
 
 def generate_index_json(plugin_docs: list[PluginDoc], metadata: dict) -> dict:
@@ -424,13 +401,6 @@ def main():
         json.dump(generate_menu_json(), f, indent=2)
         f.write("\n")
     print(f"Generated menu capability: {menu_file.relative_to(PROJECT_ROOT)}")
-
-    # Generate builtins.json for built-in commands
-    builtins_file = OUTPUT_DIR / "builtins.json"
-    with open(builtins_file, "w") as f:
-        json.dump(generate_builtins_json(), f, indent=2)
-        f.write("\n")
-    print(f"Generated builtins: {builtins_file.relative_to(PROJECT_ROOT)}")
 
     print(f"\nDone! Generated documentation for {len(plugin_docs)} plugins.")
 
