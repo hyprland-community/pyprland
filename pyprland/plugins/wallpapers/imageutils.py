@@ -51,6 +51,24 @@ class MonitorInfo:
     scale: float
 
 
+def get_effective_dimensions(monitor: MonitorInfo) -> tuple[int, int]:
+    """Get effective dimensions accounting for rotation.
+
+    Hyprland reports physical panel dimensions regardless of rotation.
+    Transforms 1, 3, 5, 7 are 90°/270° rotations that swap width/height.
+
+    Args:
+        monitor: Monitor info with width, height, and transform.
+
+    Returns:
+        Tuple of (effective_width, effective_height) after applying transform.
+    """
+    w, h = monitor.width, monitor.height
+    if monitor.transform in {1, 3, 5, 7}:
+        return h, w
+    return w, h
+
+
 class RoundedImageManager:
     """Manages rounded and scaled images for monitors."""
 

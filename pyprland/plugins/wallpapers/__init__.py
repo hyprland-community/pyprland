@@ -28,6 +28,7 @@ from .imageutils import (
     MonitorInfo,
     RoundedImageManager,
     expand_path,
+    get_effective_dimensions,
     get_files_with_ext,
 )
 from .online import NoBackendAvailableError, OnlineFetcher
@@ -362,10 +363,11 @@ class Extension(Plugin):
 
         fetcher = self._online.fetcher
 
-        # Get monitor dimensions for size hint
+        # Get monitor dimensions for size hint (accounting for rotation)
         monitors = await fetch_monitors(self)
-        max_width = max((m.width for m in monitors), default=DEFAULT_WALLPAPER_WIDTH)
-        max_height = max((m.height for m in monitors), default=DEFAULT_WALLPAPER_HEIGHT)
+        dimensions = [get_effective_dimensions(m) for m in monitors]
+        max_width = max((w for w, _ in dimensions), default=DEFAULT_WALLPAPER_WIDTH)
+        max_height = max((h for _, h in dimensions), default=DEFAULT_WALLPAPER_HEIGHT)
 
         keywords = self.get_config_list("online_keywords") or None
 
@@ -397,9 +399,11 @@ class Extension(Plugin):
         if not self._online or not self._online.fetcher:
             return
 
+        # Get monitor dimensions for size hint (accounting for rotation)
         monitors = await fetch_monitors(self)
-        max_width = max((m.width for m in monitors), default=DEFAULT_WALLPAPER_WIDTH)
-        max_height = max((m.height for m in monitors), default=DEFAULT_WALLPAPER_HEIGHT)
+        dimensions = [get_effective_dimensions(m) for m in monitors]
+        max_width = max((w for w, _ in dimensions), default=DEFAULT_WALLPAPER_WIDTH)
+        max_height = max((h for _, h in dimensions), default=DEFAULT_WALLPAPER_HEIGHT)
         keywords = self.get_config_list("online_keywords") or None
 
         for attempt in range(PREFETCH_MAX_RETRIES):
