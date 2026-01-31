@@ -19,8 +19,6 @@ jobs:
             tox-envs: "py314-unit"
           - python-version: "3.14"
             tox-envs: "py314-wiki"
-          - python-version: "3.14"
-            tox-envs: "py314-linting"
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}

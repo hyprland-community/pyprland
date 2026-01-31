@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Generate JSON documentation for pyprland plugins.
 
 This script extracts documentation from plugin source code:

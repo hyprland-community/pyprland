@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Check that all plugin config options and commands are documented.
 
 This script verifies that:
