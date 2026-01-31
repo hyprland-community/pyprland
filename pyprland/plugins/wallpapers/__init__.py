@@ -24,6 +24,7 @@ from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .cache import ImageCache
 from .colorutils import can_edit_image, get_dominant_colors, nicify_oklab
+from .hyprpaper import HyprpaperManager
 from .imageutils import (
     MonitorInfo,
     RoundedImageManager,
@@ -136,6 +137,9 @@ class Extension(Plugin):
     _online: OnlineState | None = None
     _online_folders: set[str]
 
+    # Hyprpaper manager (only when using hyprpaper backend)
+    _hyprpaper: HyprpaperManager | None = None
+
     def __init__(self, name: str) -> None:
         """Initialize the plugin."""
         super().__init__(name)
@@ -162,6 +166,12 @@ class Extension(Plugin):
                 self.state.environment,
             )
             return
+
+        # Initialize hyprpaper manager if using default hyprpaper backend
+        if self.state.environment == "hyprland" and not self.get_config("command"):
+            self._hyprpaper = HyprpaperManager(self.log)
+        else:
+            self._hyprpaper = None
 
         cfg_path: str | list[str] = self.get_config("path")  # type: ignore[assignment]
         paths = [expand_path(cfg_path)] if isinstance(cfg_path, str) else [expand_path(p) for p in cfg_path]
@@ -566,14 +576,16 @@ class Extension(Plugin):
                 await self._run_one(cmd_template, variables)
         else:
             # use hyprpaper
+            assert self._hyprpaper is not None  # Guaranteed by on_reload logic
             command_collector = []
             for monitor in monitors:
                 variables = await self.update_vars(variables, monitor, img_path)
                 self.log.debug("Setting wallpaper %s for monitor %s", variables["file"], variables.get("output"))
                 command_collector.append(apply_variables("wallpaper [output], [file]", variables))
 
-            for cmd in command_collector:
-                await self.backend.execute(["execr hyprctl hyprpaper " + cmd])
+            if not await self._hyprpaper.set_wallpaper(command_collector, self.backend):
+                await self.backend.notify_error("Could not start hyprpaper")
+                return
 
         # Generate templates after wallpaper is selected
         await self._generate_templates(img_path)
@@ -643,9 +655,8 @@ class Extension(Plugin):
         elif arg.startswith("cl"):  # clear
             self._paused = True
             await self.terminate()
-            if not self.get_config("command") and self.state.environment == "hyprland":
-                pkill_proc = await asyncio.create_subprocess_shell("pkill hyprpaper")
-                await pkill_proc.wait()
+            if self._hyprpaper:
+                await self._hyprpaper.stop()
             clear_command = self.get_config_str("clear_command")
             if clear_command:
                 clear_proc = await asyncio.create_subprocess_shell(clear_command)

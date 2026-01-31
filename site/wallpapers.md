@@ -16,14 +16,8 @@ It serves few purposes:
 
 It allows "zapping" current backgrounds, clearing it to go distraction free and optionally make them different for each screen.
 
-> [!tip]
-> Uses **hyprpaper** by default on Hyprland, but can be configured to use any other application.
-> You'll need to run hyprpaper separately for now. (eg: `uwsm app -- hyprpaper`)
-
 > [!important]
-> The `command` option is **required** for all environments except Hyprland.
-> On Hyprland, it defaults to using hyprpaper.
-
+> On Hyprland, Pyprland uses **hyprpaper** by default, but you must start hyprpaper separately (e.g. `uwsm app -- hyprpaper`). For other environments, set the `command` option to launch your wallpaper application.
 
 > [!note]
 > On environments other than Hyprland and Niri, pyprland uses `wlr-randr` (Wayland) or `xrandr` (X11) for monitor detection.
