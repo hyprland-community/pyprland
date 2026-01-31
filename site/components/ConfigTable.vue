@@ -132,8 +132,9 @@ export default {
   },
   computed: {
     hasCategories() {
-      // Check if any item has a non-empty category
-      return this.items.some(item => item.category && item.category !== '')
+      // Only group if there are multiple distinct categories
+      const categories = new Set(this.items.map(item => item.category || ''))
+      return categories.size > 1
     },
     groupedItems() {
       // Group items by category

@@ -63,7 +63,14 @@ const plugin_list = {
     { text: "System notifier", link: "./system_notifier" },
     { text: "Toggle dpms", link: "./toggle_dpms" },
     { text: "Toggle special", link: "./toggle_special" },
-    { text: "Wallpapers", link: "./wallpapers" },
+    {
+      text: "Wallpapers",
+      link: "./wallpapers",
+      items: [
+        { text: "Online", link: "./wallpapers_online" },
+        { text: "Templates", link: "./wallpapers_templates" },
+      ],
+    },
     { text: "Workspaces follow focus", link: "./workspaces_follow_focus" },
   ],
 };

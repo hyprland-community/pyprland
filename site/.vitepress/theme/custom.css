@@ -344,3 +344,46 @@ details {
 .command-error {
   color: var(--vp-c-danger-1);
 }
+
+.command-empty {
+  padding: 1rem;
+  color: var(--vp-c-text-3);
+  font-style: italic;
+}
+
+/* Command link with info icon */
+.command-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.command-link:hover {
+  text-decoration: underline;
+}
+
+.command-link:hover .command-name {
+  color: var(--vp-c-brand-1);
+}
+
+.command-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 0.3em;
+  font-size: 0.7em;
+  font-weight: 600;
+  font-style: italic;
+  font-family: serif;
+  color: var(--vp-c-brand-1);
+  border: 1px solid var(--vp-c-brand-1);
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  vertical-align: middle;
+}
+
+.command-link:hover .command-info-icon {
+  opacity: 1;
+}
