@@ -15,6 +15,7 @@ import importlib
 import inspect
 import json
 import sys
+import tomllib
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -32,7 +33,7 @@ from pyprland.command_registry import (
 # Paths
 PLUGINS_DIR = PROJECT_ROOT / "pyprland" / "plugins"
 OUTPUT_DIR = PROJECT_ROOT / "site" / "generated"
-METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.json"
+METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.toml"
 
 # Plugins to skip (not real plugins)
 SKIP_PLUGINS = {"interface", "protocols", "__init__", "experimental", "mixins"}
@@ -276,8 +277,8 @@ def load_plugin(plugin_name: str) -> PluginDoc | None:
 def load_metadata() -> dict[str, dict]:
     """Load the editorial metadata file."""
     if METADATA_FILE.exists():
-        with open(METADATA_FILE) as f:
-            return json.load(f)
+        with open(METADATA_FILE, mode='rb') as f:
+            return tomllib.load(f)
     return {}
 
 

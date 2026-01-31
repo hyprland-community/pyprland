@@ -1,0 +1,58 @@
+
+
+[scratchpads]
+stars = 3
+demoVideoId = "ZOhv59VYqkc"
+
+[magnify]
+stars = 3
+demoVideoId = "yN-mhh9aDuo"
+
+[toggle_special]
+stars = 3
+demoVideoId = "BNZCMqkwTOo"
+
+[shortcuts_menu]
+stars = 3
+demoVideoId = "UCuS417BZK8"
+
+[fetch_client_menu]
+stars = 3
+
+[layout_center]
+stars = 3
+demoVideoId = "vEr9eeSJYDc"
+
+[system_notifier]
+stars = 3
+
+[wallpapers]
+stars = 3
+
+[menubar]
+stars = 3
+
+[expose]
+stars = 2
+demoVideoId = "ce5HQZ3na8M"
+
+[lost_windows]
+stars = 1
+
+[toggle_dpms]
+stars = 0
+
+[workspaces_follow_focus]
+stars = 3
+multimon = true
+
+[shift_monitors]
+stars = 3
+multimon = true
+
+[monitors]
+stars = 3
+
+[fcitx5_switcher]
+stars = 0
+
