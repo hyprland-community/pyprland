@@ -11,14 +11,14 @@ from tests.conftest import make_extension
 
 @pytest.fixture
 def extension(mocker, test_logger):
-    return make_extension(
+    ext = make_extension(
         Extension,
         logger=test_logger,
         config={"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "recurse": False},
-        state_variables={},
-        hyprctl_json=AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]),
-        hyprctl=AsyncMock(),
     )
+    # Configure backend methods with specific return values
+    ext.backend.execute_json.return_value = [{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]
+    return ext
 
 
 @pytest.mark.asyncio
@@ -34,9 +34,9 @@ async def test_on_reload(extension, mocker):
     mocker.patch("pyprland.plugins.wallpapers.get_files_with_ext", side_effect=mock_get_files)
 
     # Mock TaskManager.create to prevent main loop from starting
-    # Also mock main_loop to prevent creating an unawaited coroutine
-    mocker.patch.object(extension._tasks, "create", return_value=Mock())
-    mocker.patch.object(extension, "main_loop", return_value=None)
+    # Use a simple lambda to avoid MagicMock introspection issues with coroutines
+    extension._tasks.create = Mock(return_value=Mock())
+    extension._loop_started = True  # Prevent the create call entirely
 
     await extension.on_reload()
 
@@ -219,10 +219,9 @@ def online_extension(mocker, test_logger):
         Extension,
         logger=test_logger,
         config={"path": "/tmp/wallpapers", "extensions": ["png", "jpg"], "online_ratio": 0.5},
-        state_variables={},
-        hyprctl_json=AsyncMock(return_value=[{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]),
-        hyprctl=AsyncMock(),
     )
+    # Configure backend methods with specific return values
+    ext.backend.execute_json.return_value = [{"name": "DP-1", "width": 1920, "height": 1080, "transform": 0, "scale": 1.0}]
     # Initialize image_list
     ext.image_list = []
     # Set up mock online state

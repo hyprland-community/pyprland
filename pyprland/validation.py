@@ -16,7 +16,7 @@ __all__ = [
 
 
 @dataclass
-class ConfigField:
+class ConfigField:  # pylint: disable=too-many-instance-attributes
     """Describes an expected configuration field for validation.
 
     Attributes:
