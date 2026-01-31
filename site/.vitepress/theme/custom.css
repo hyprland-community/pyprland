@@ -286,3 +286,61 @@ details {
 .config-option-cell {
   white-space: nowrap;
 }
+
+/* ===========================================
+   Command Box Styles (PluginCommands)
+   =========================================== */
+
+.command-box {
+  background-color: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+
+.command-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.command-item {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.command-item:last-child {
+  border-bottom: none;
+}
+
+.command-name {
+  background-color: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.command-arg {
+  background-color: var(--vp-c-bg);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  margin-left: 0.25em;
+  font-size: 0.9em;
+}
+
+.command-desc {
+  margin-left: 0.5em;
+  color: var(--vp-c-text-2);
+}
+
+.command-loading,
+.command-error {
+  padding: 1rem;
+  color: var(--vp-c-text-2);
+}
+
+.command-error {
+  color: var(--vp-c-danger-1);
+}
