@@ -9,14 +9,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: "3.14"
-            tox-envs: "py314-unit,py314-wiki,py314-linting"
-          - python-version: "3.13"
-            tox-envs: "py313-unit"
-          - python-version: "3.12"
-            tox-envs: "py312-unit"
           - python-version: "3.11"
             tox-envs: "py311-unit"
+          - python-version: "3.12"
+            tox-envs: "py312-unit"
+          - python-version: "3.13"
+            tox-envs: "py313-unit"
+          - python-version: "3.14"
+            tox-envs: "py314-unit,py314-wiki,py314-linting"
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
