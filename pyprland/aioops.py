@@ -4,7 +4,7 @@ Provides fallback sync methods if aiofiles is not installed,
 plus async task management utilities.
 """
 
-__all__ = ["DebouncedTask", "TaskManager", "aiexists", "ailistdir", "aiopen", "airmdir", "airmtree", "graceful_cancel_tasks"]
+__all__ = ["DebouncedTask", "TaskManager", "aiexists", "ailistdir", "aiopen", "aioremove", "airmdir", "airmtree", "graceful_cancel_tasks"]
 
 import asyncio
 import contextlib
@@ -87,6 +87,17 @@ async def airmdir(path: str) -> None:
         path: Empty directory to remove.
     """
     await asyncio.to_thread(os.rmdir, path)
+
+
+async def aioremove(path: str | os.PathLike) -> None:
+    """Async wrapper for os.remove.
+
+    Removes a file.
+
+    Args:
+        path: File to remove.
+    """
+    await asyncio.to_thread(os.remove, path)
 
 
 async def graceful_cancel_tasks(

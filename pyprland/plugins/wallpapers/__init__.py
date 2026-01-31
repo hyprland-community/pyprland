@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ...aioops import TaskManager, aiexists, airmdir, airmtree
+from ...aioops import TaskManager, aiexists, aioremove, airmdir, airmtree
 from ...common import apply_variables
 from ...constants import (
     DEFAULT_PALETTE_COLOR_RGB,
@@ -434,6 +434,58 @@ class Extension(Plugin):
 
         self.log.warning("Prefetch failed after %d retries", PREFETCH_MAX_RETRIES)
 
+    async def _remove_current_wallpaper(self) -> None:
+        """Remove the current wallpaper if it's from the online folder, then show next.
+
+        Only removes online wallpapers (files in the online folder).
+        Shows an error notification for local wallpapers.
+        """
+        if not self.cur_image:
+            self.log.warning("No current wallpaper to remove")
+            return
+
+        cur_path = Path(self.cur_image)
+
+        # Check if online wallpapers are configured
+        if not self._online or not self._online.folder_path:
+            await self.backend.notify_error("Online wallpapers not configured")
+            return
+
+        # Check if current image is under the online folder
+        try:
+            cur_path.relative_to(self._online.folder_path)
+        except ValueError:
+            # Not under online folder - it's a local file
+            await self.backend.notify_error("Current wallpaper is not an online image")
+            return
+
+        # Remove from image_list
+        if self.cur_image in self.image_list:
+            self.image_list.remove(self.cur_image)
+
+        # Delete the file
+        try:
+            await aioremove(cur_path)
+            self.log.info("Removed wallpaper: %s", cur_path)
+        except OSError as e:
+            self.log.exception("Failed to remove wallpaper %s", cur_path)
+            await self.backend.notify_error(f"Failed to remove: {e}")
+            return
+
+        # Also remove rounded version if it exists
+        if self._online.rounded_cache:
+            rounded_path = self._online.rounded_cache.cache_dir / cur_path.name
+            if await aiexists(rounded_path):
+                try:
+                    await aioremove(rounded_path)
+                    self.log.debug("Removed rounded version: %s", rounded_path)
+                except OSError:
+                    pass  # Non-critical, just log at debug level
+
+        # Trigger next wallpaper
+        self._paused = False
+        self.next_background_event.set()
+
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
         """Prepare the wallpaper image for the given monitor."""
         if not self.rounded_manager:
@@ -572,13 +624,14 @@ class Extension(Plugin):
         self.proc.clear()
 
     async def run_wall(self, arg: str) -> None:
-        """<next|pause|clear> Control wallpaper cycling.
+        """<next|pause|clear|rm> Control wallpaper cycling.
 
         Args:
             arg: The action to perform
                 - next: Switch to the next wallpaper immediately
                 - pause: Pause automatic wallpaper cycling
                 - clear: Stop cycling and clear the current wallpaper
+                - rm: Remove the current online wallpaper and show next
         """
         if arg.startswith("n"):  # next
             self._paused = False
@@ -595,6 +648,8 @@ class Extension(Plugin):
             if clear_command:
                 clear_proc = await asyncio.create_subprocess_shell(clear_command)
                 await clear_proc.wait()
+        elif arg.startswith("rm"):  # remove current online wallpaper
+            await self._remove_current_wallpaper()
 
     async def run_color(self, arg: str) -> None:
         """<#RRGGBB> [scheme] Generate color palette from hex color.
