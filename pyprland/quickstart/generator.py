@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import tomllib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-# Default config paths
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "pyprland" / "config.toml"
-LEGACY_CONFIG_PATH = Path.home() / ".config" / "hypr" / "pyprland.toml"
+# Default config paths - use XDG_CONFIG_HOME with fallback to ~/.config
+_xdg_config_home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+DEFAULT_CONFIG_PATH = _xdg_config_home / "pypr" / "config.toml"
+LEGACY_CONFIG_PATH = _xdg_config_home / "hypr" / "pyprland.toml"
 
 # Max items for inline dict rendering
 MAX_INLINE_DICT_ITEMS = 3

@@ -4,7 +4,6 @@ import asyncio
 import contextlib
 import os
 import sys
-from pathlib import Path
 
 from . import constants as pyprland_constants
 from .common import get_logger, notify_send, run_interactive_program
@@ -26,13 +25,29 @@ configurations against their schemas. Does not require the daemon.""",
 }
 
 
+def _get_config_file_path() -> str:
+    """Get the config file path, checking new location then legacy fallback.
+
+    Returns:
+        Path to the config file as a string.
+    """
+    config_path = pyprland_constants.CONFIG_FILE
+    legacy_path = pyprland_constants.LEGACY_CONFIG_FILE
+    if config_path.exists():
+        return str(config_path)
+    if legacy_path.exists():
+        return str(legacy_path)
+    # Default to new path (will be created by user)
+    return str(config_path)
+
+
 async def run_client() -> None:
     """Run the client (CLI)."""
     log = get_logger("client")
 
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
-        filename = str(Path(pyprland_constants.CONFIG_FILE).expanduser())
+        filename = _get_config_file_path()
         run_interactive_program(f'{editor} "{filename}"')
         sys.argv[1] = "reload"
 

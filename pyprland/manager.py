@@ -258,6 +258,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.config = await self._config_loader.load()
         assert self.config
 
+        # Send any deferred notifications from config loading (e.g., legacy path warnings)
+        for message, duration in self._config_loader.deferred_notifications:
+            await self.backend.notify_info(message, duration=duration)
+        self._config_loader.deferred_notifications.clear()
+
         # Wrap pyprland section with schema for proper default handling
         self._pyprland_conf = Configuration(
             self.config.get("pyprland", {}),

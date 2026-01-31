@@ -8,6 +8,7 @@
 - Architecture changes: no longer depends on any desktop environment by default
     - Each plugin declares its own requirements (hyprland, niri, or none)
     - Alpha Niri support (experimental, untested - for interested maintainers)
+    - Preferred configuration file path is now "$XDG_CONFIG_HOME/pypr/config.toml"
 - `monitors` ⚠️ breaking
     - `monitors_v0` plugin removed - migrate to `monitors`
     - `trim_offset` and `full_relayout` options removed (behavior now always enabled)

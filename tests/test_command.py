@@ -27,8 +27,8 @@ async def test_load_config_toml(pyprland_app):
     mock_toml = {"pyprland": {"plugins": ["test_plug"]}}
 
     with (
-        patch("os.path.exists", return_value=True),
-        patch("builtins.open", new_callable=MagicMock),
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open", new_callable=MagicMock),
         patch("tomllib.load", return_value=mock_toml),
         patch("pyprland.ipc._state.log", new=Mock()),  # Mock the logger used in ipc module
     ):
@@ -60,8 +60,8 @@ async def test_load_config_toml_with_notify(pyprland_app):
     mock_toml = {"pyprland": {"plugins": ["test_plug"]}}
 
     with (
-        patch("os.path.exists", return_value=True),
-        patch("builtins.open", new_callable=MagicMock),
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open", new_callable=MagicMock),
         patch("tomllib.load", return_value=mock_toml),
     ):
         pyprland_app.backend.notify_info = AsyncMock()
@@ -88,12 +88,13 @@ async def test_load_config_json_fallback(pyprland_app):
     """Test fallback to JSON if TOML doesn't exist."""
     mock_json = {"pyprland": {"plugins": []}}
 
-    # Sequence of exists checks:
-    # 1. __open_config: OLD exists? -> True
-    # 2. __open_config: NEW exists? -> False (Triggers warning)
-    # 3. __load_config_file: NEW exists? -> False
-    # 4. __load_config_file: OLD exists? -> True
-    side_effects = [True, False, False, True]
+    # Sequence of exists checks in new flow:
+    # 1. _open_config: CONFIG_FILE exists? -> False
+    # 2. _open_config: LEGACY_CONFIG_FILE exists? -> False
+    # 3. _open_config: OLD_CONFIG_FILE exists? -> True (triggers warning)
+    # 4. _load_config_file: fname (CONFIG_FILE) exists? -> False
+    # 5. _load_config_file: OLD_CONFIG_FILE exists? -> True
+    side_effects = [False, False, True, False, True]
 
     with (
         patch.object(Path, "exists", side_effect=side_effects),
@@ -353,9 +354,9 @@ def test_load_plugin_module_not_found():
 def test_run_validate_valid_config():
     """Test validate command with a valid config."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        config_dir = os.path.join(tmpdir, ".config", "hypr")
+        config_dir = os.path.join(tmpdir, "hypr")
         os.makedirs(config_dir)
-        config_file = os.path.join(config_dir, "pyprland.toml")
+        config_file = Path(config_dir) / "pyprland.toml"
 
         # Write a valid config
         with open(config_file, "w") as f:
@@ -368,7 +369,12 @@ factor = 2.5
 duration = 10
 """)
 
-        with patch.dict(os.environ, {"HOME": tmpdir}):
+        # Patch the constants to use our temp paths
+        with (
+            patch("pyprland.validate_cli.CONFIG_FILE", Path(tmpdir) / "pypr" / "config.toml"),
+            patch("pyprland.validate_cli.LEGACY_CONFIG_FILE", config_file),
+            patch("pyprland.validate_cli.OLD_CONFIG_FILE", Path(tmpdir) / "hypr" / "pyprland.json"),
+        ):
             with pytest.raises(SystemExit) as exc_info:
                 run_validate()
             assert exc_info.value.code == ExitCode.SUCCESS
@@ -377,9 +383,9 @@ duration = 10
 def test_run_validate_missing_required_field():
     """Test validate command with missing required field."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        config_dir = os.path.join(tmpdir, ".config", "hypr")
+        config_dir = os.path.join(tmpdir, "hypr")
         os.makedirs(config_dir)
-        config_file = os.path.join(config_dir, "pyprland.toml")
+        config_file = Path(config_dir) / "pyprland.toml"
 
         # Write a config with missing required "path" field for wallpapers
         with open(config_file, "w") as f:
@@ -391,7 +397,12 @@ plugins = ["wallpapers"]
 interval = 10
 """)
 
-        with patch.dict(os.environ, {"HOME": tmpdir}):
+        # Patch the constants to use our temp paths
+        with (
+            patch("pyprland.validate_cli.CONFIG_FILE", Path(tmpdir) / "pypr" / "config.toml"),
+            patch("pyprland.validate_cli.LEGACY_CONFIG_FILE", config_file),
+            patch("pyprland.validate_cli.OLD_CONFIG_FILE", Path(tmpdir) / "hypr" / "pyprland.json"),
+        ):
             with pytest.raises(SystemExit) as exc_info:
                 run_validate()
             # Should fail with USAGE_ERROR due to missing required field
@@ -401,7 +412,12 @@ interval = 10
 def test_run_validate_config_not_found():
     """Test validate command when config file doesn't exist."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        with patch.dict(os.environ, {"HOME": tmpdir}):
+        # Patch the constants to use non-existent paths in temp directory
+        with (
+            patch("pyprland.validate_cli.CONFIG_FILE", Path(tmpdir) / "pypr" / "config.toml"),
+            patch("pyprland.validate_cli.LEGACY_CONFIG_FILE", Path(tmpdir) / "hypr" / "pyprland.toml"),
+            patch("pyprland.validate_cli.OLD_CONFIG_FILE", Path(tmpdir) / "hypr" / "pyprland.json"),
+        ):
             with pytest.raises(SystemExit) as exc_info:
                 run_validate()
             assert exc_info.value.code == ExitCode.ENV_ERROR

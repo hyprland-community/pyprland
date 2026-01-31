@@ -66,7 +66,7 @@ def main() -> None:
 
     config_override = use_param("--config")
     if config_override:
-        pyprland_constants.CONFIG_FILE = config_override
+        pyprland_constants.CONFIG_FILE = Path(config_override)
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and Path(CONTROL).exists():

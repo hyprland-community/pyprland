@@ -344,6 +344,10 @@ async def server_fixture(monkeypatch, mocker):
         if run_spi.call_count:
             break
         await asyncio.sleep(0.1)
+
+    # Reset hyprctl call count after server setup (clears any startup notifications like config migration)
+    mocks.hyprctl.reset_mock()
+
     yield  # Run the test
     await mocks.hyprctl("exit")
     server_task.cancel()

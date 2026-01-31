@@ -11,7 +11,7 @@ import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from .constants import CONFIG_FILE, OLD_CONFIG_FILE
+from .constants import CONFIG_FILE, LEGACY_CONFIG_FILE, MIGRATION_NOTIFICATION_DURATION_MS, OLD_CONFIG_FILE
 from .models import PyprError
 from .utils import merge
 
@@ -39,6 +39,7 @@ class ConfigLoader:
         """
         self.log = log
         self._config: dict[str, Any] = {}
+        self.deferred_notifications: list[tuple[str, int]] = []
 
     @property
     def config(self) -> dict[str, Any]:
@@ -75,14 +76,42 @@ class ConfigLoader:
             fname = Path(os.path.expandvars(config_filename)).expanduser()
             if fname.is_dir():
                 return self._load_config_directory(fname)
-            return self._load_config_file(str(fname))
+            return self._load_config_file(fname)
 
-        # No filename specified - use defaults
-        if Path(OLD_CONFIG_FILE).exists() and not Path(CONFIG_FILE).exists():
-            self.log.warning("Consider changing your configuration to TOML format.")
+        # No filename specified - use defaults with legacy fallback
+        config_path = CONFIG_FILE
+        legacy_path = LEGACY_CONFIG_FILE
+        old_json_path = OLD_CONFIG_FILE
 
-        fname_str = str(Path(os.path.expandvars(CONFIG_FILE)).expanduser())
-        config = self._load_config_file(fname_str)
+        if config_path.exists():
+            # New canonical location
+            fname = config_path
+        elif legacy_path.exists():
+            # Legacy TOML location - use it but warn user
+            fname = legacy_path
+            self.log.warning("Using legacy config path: %s", legacy_path)
+            self.log.warning("Please move your config to: %s", config_path)
+            self.deferred_notifications.append(
+                (
+                    f"Config at legacy location.\nMove to: {config_path}",
+                    MIGRATION_NOTIFICATION_DURATION_MS,
+                )
+            )
+        elif old_json_path.exists():
+            # Very old JSON format - will be loaded via fallback in _load_config_file
+            self.log.warning("Using deprecated JSON config: %s", old_json_path)
+            self.log.warning("Please migrate to TOML format at: %s", config_path)
+            self.deferred_notifications.append(
+                (
+                    f"JSON config is deprecated.\nMigrate to: {config_path}",
+                    MIGRATION_NOTIFICATION_DURATION_MS,
+                )
+            )
+            fname = config_path  # Will fall through to JSON loading in _load_config_file
+        else:
+            fname = config_path  # Will error in _load_config_file
+
+        config = self._load_config_file(fname)
 
         # Process includes
         for extra_config in list(config.get("pyprland", {}).get("include", [])):
@@ -103,10 +132,10 @@ class ConfigLoader:
         for toml_file in sorted(f.name for f in directory.iterdir()):
             if not toml_file.endswith(".toml"):
                 continue
-            merge(config, self._load_config_file(str(directory / toml_file)))
+            merge(config, self._load_config_file(directory / toml_file))
         return config
 
-    def _load_config_file(self, fname: str) -> dict[str, Any]:
+    def _load_config_file(self, fname: Path) -> dict[str, Any]:
         """Load a single configuration file.
 
         Supports both TOML (preferred) and legacy JSON formats.
@@ -120,21 +149,19 @@ class ConfigLoader:
         Raises:
             PyprError: If file not found or has syntax errors
         """
-        fname_path = Path(fname)
-        old_config_path = Path(OLD_CONFIG_FILE).expanduser()
-
-        if fname_path.exists():
+        if fname.exists():
             self.log.info("Loading %s", fname)
-            with fname_path.open("rb") as f:
+            with fname.open("rb") as f:
                 try:
                     return tomllib.load(f)
                 except tomllib.TOMLDecodeError as e:
                     self.log.critical("Problem reading %s: %s", fname, e)
                     raise PyprError from e
 
-        if old_config_path.exists():
+        # Fallback to very old JSON config
+        if OLD_CONFIG_FILE.exists():
             self.log.info("Loading %s", OLD_CONFIG_FILE)
-            with old_config_path.open(encoding="utf-8") as f:
+            with OLD_CONFIG_FILE.open(encoding="utf-8") as f:
                 return cast("dict[str, Any]", json.loads(f.read()))
 
         self.log.critical("Config file not found! Please create %s", fname)
