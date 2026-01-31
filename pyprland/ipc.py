@@ -115,7 +115,7 @@ def retry_on_reset(func: Callable) -> Callable:
         func: The function to wrap
     """
 
-    async def wrapper(*args, log: Logger | None = None, logger: Logger | None = None, **kwargs) -> Any:  # noqa: ANN401
+    async def wrapper(*args, log: Logger | None = None, logger: Logger | None = None, **kwargs) -> Any:
         # Support both 'log' and 'logger' parameter names
         effective_log = log or logger
         if effective_log is None and args and hasattr(args[0], "log"):
@@ -128,7 +128,7 @@ def retry_on_reset(func: Callable) -> Callable:
                 if "log" in func.__code__.co_varnames:
                     return await func(*args, **kwargs, log=effective_log)
                 return await func(*args, **kwargs, logger=effective_log)
-            except ConnectionResetError as e:  # noqa: PERF203
+            except ConnectionResetError as e:
                 exc = e
                 effective_log.warning("ipc connection problem, retrying...")
                 await asyncio.sleep(IPC_RETRY_DELAY_MULTIPLIER * count)

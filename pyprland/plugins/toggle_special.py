@@ -1,6 +1,6 @@
 """toggle_special allows having an "expose" like selection of windows in a special group."""
 
-from typing import cast
+from typing import ClassVar, cast
 
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -9,7 +9,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Toggle switching the focused window to a special workspace."""
 
-    environments = ["hyprland"]
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
         ConfigField("name", str, default="minimized", description="Default special workspace name"),

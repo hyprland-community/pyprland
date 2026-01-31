@@ -51,3 +51,14 @@ recommended  # unused variable (pyprland/validation.py:33)
 TypedConfigAccessorMixin  # unused variable (pyprland/config.py:151) - backwards compatibility alias
 _.restart  # unused method (pyprland/process.py:118) - public API for process restart
 _.is_supervised  # unused property (pyprland/process.py:208) - public API to check supervision status
+# httpclient fallback - aiohttp compatibility parameter
+allow_redirects  # unused variable (pyprland/httpclient.py) - aiohttp API compatibility
+# wallpapers/online plugin - public API and dynamically loaded backends
+_.available_backends  # unused property (pyprland/plugins/wallpapers/online/__init__.py) - public API
+extra  # unused variable (pyprland/plugins/wallpapers/online/backends/__init__.py) - backend metadata
+supports_keywords  # unused variable (pyprland/plugins/wallpapers/online/backends) - backend capability flag
+BingBackend  # unused class (pyprland/plugins/wallpapers/online/backends/bing.py) - dynamically loaded
+PicsumBackend  # unused class (pyprland/plugins/wallpapers/online/backends/picsum.py) - dynamically loaded
+RedditBackend  # unused class (pyprland/plugins/wallpapers/online/backends/reddit.py) - dynamically loaded
+UnsplashBackend  # unused class (pyprland/plugins/wallpapers/online/backends/unsplash.py) - dynamically loaded
+WallhavenBackend  # unused class (pyprland/plugins/wallpapers/online/backends/wallhaven.py) - dynamically loaded

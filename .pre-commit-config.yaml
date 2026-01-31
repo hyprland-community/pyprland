@@ -6,10 +6,12 @@ repos:
         name: Increment the version number
         entry: ./scripts/update_version
         language: system
+        pass_filenames: false
       - id: wikiDocGen
         name: Generate wiki docs
         entry: ./scripts/generate_plugin_docs.py
         language: system
+        pass_filenames: false
       - id: wikiDocCheck
         name: Check wiki docs coverage
         entry: python scripts/check_plugin_docs.py

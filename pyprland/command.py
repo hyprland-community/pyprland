@@ -2,8 +2,8 @@
 
 import asyncio
 import json
-import os
 import sys
+from pathlib import Path
 from typing import Literal, overload
 
 from . import constants as pyprland_constants
@@ -69,7 +69,7 @@ def main() -> None:
         pyprland_constants.CONFIG_FILE = config_override
 
     invoke_daemon = len(sys.argv) <= 1
-    if invoke_daemon and os.path.exists(CONTROL):
+    if invoke_daemon and Path(CONTROL).exists():
         log.critical(
             """%s exists,
 is pypr already running ?
@@ -88,8 +88,8 @@ If that's not the case, delete this file and run again.""",
         except Exception:  # pylint: disable=W0718
             log.critical("Unhandled exception:", exc_info=True)
         finally:
-            if invoke_daemon and os.path.exists(CONTROL):
-                os.unlink(CONTROL)
+            if invoke_daemon and Path(CONTROL).exists():
+                Path(CONTROL).unlink()
 
 
 if __name__ == "__main__":

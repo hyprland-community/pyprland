@@ -29,10 +29,10 @@ async def test_on_reload(extension, mocker):
 
     mocker.patch("pyprland.plugins.wallpapers.get_files_with_ext", side_effect=mock_get_files)
 
-    # Mock create_task to prevent main loop from running
-    mocker.patch("asyncio.create_task")
-    # Mock main_loop to avoid creating an orphaned coroutine
-    mocker.patch.object(extension, "main_loop", new_callable=Mock)
+    # Mock TaskManager.create to prevent main loop from starting
+    # Also mock main_loop to prevent creating an unawaited coroutine
+    mocker.patch.object(extension._tasks, "create", return_value=Mock())
+    mocker.patch.object(extension, "main_loop", return_value=None)
 
     await extension.on_reload()
 
@@ -46,9 +46,13 @@ async def test_select_next_image(extension):
     extension.image_list = ["/tmp/wallpapers/wp1.png", "/tmp/wallpapers/wp2.jpg"]
     extension.cur_image = "/tmp/wallpapers/wp1.png"
 
-    # Force random to pick wp2
-    with patch("random.choice", return_value="/tmp/wallpapers/wp2.jpg"):
-        next_img = extension.select_next_image()
+    # Force random.random() to return 1.0 (>= online_ratio of 0.0, so picks local)
+    # Force random.choice to pick wp2
+    with (
+        patch("random.random", return_value=1.0),
+        patch("random.choice", return_value="/tmp/wallpapers/wp2.jpg"),
+    ):
+        next_img = await extension.select_next_image()
         assert next_img == "/tmp/wallpapers/wp2.jpg"
         assert extension.cur_image == "/tmp/wallpapers/wp2.jpg"
 

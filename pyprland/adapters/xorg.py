@@ -1,6 +1,6 @@
 """X11/Xorg backend using xrandr for monitor detection."""
+# pylint: disable=duplicate-code  # make_monitor_info calls share parameter patterns
 
-import asyncio
 import re
 from logging import Logger
 
@@ -43,23 +43,13 @@ class XorgBackend(FallbackBackend):
         Returns:
             List of MonitorInfo dicts
         """
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                "xrandr --query",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, stderr = await proc.communicate()
-
-            if proc.returncode != 0:
-                log.error("xrandr failed: %s", stderr.decode())
-                return []
-
-            return self._parse_xrandr_output(stdout.decode(), include_disabled, log)
-
-        except OSError as e:
-            log.warning("Failed to get monitors from xrandr: %s", e)
-            return []
+        return await self._run_monitor_command(
+            "xrandr --query",
+            "xrandr",
+            self._parse_xrandr_output,
+            include_disabled=include_disabled,
+            log=log,
+        )
 
     def _parse_xrandr_output(  # pylint: disable=too-many-locals
         self, output: str, include_disabled: bool, log: Logger

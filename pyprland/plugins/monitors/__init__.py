@@ -1,7 +1,7 @@
 """The monitors plugin."""
 
 import asyncio
-from typing import Any
+from typing import Any, ClassVar
 
 from ...adapters.niri import niri_output_to_monitor_info
 from ...aioops import DebouncedTask
@@ -27,7 +27,7 @@ from .schema import MONITOR_PROPS_SCHEMA, validate_placement_keys
 class Extension(Plugin):
     """Allows relative placement and configuration of monitors."""
 
-    environments = ["hyprland", "niri"]
+    environments: ClassVar[list[str]] = ["hyprland", "niri"]
 
     config_schema = ConfigItems(
         ConfigField("startup_relayout", bool, default=True, description="Relayout monitors on startup"),
@@ -70,7 +70,7 @@ class Extension(Plugin):
                 await asyncio.sleep(1)
                 await self._run_relayout()
 
-            await asyncio.create_task(_delayed_relayout())
+            await _delayed_relayout()
 
     async def event_configreloaded(self, _: str = "") -> None:
         """Relayout screens after settings has been lost."""

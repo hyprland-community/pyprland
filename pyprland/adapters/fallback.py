@@ -2,6 +2,7 @@
 
 import asyncio
 from abc import abstractmethod
+from collections.abc import Callable
 from logging import Logger
 from typing import Any
 
@@ -82,9 +83,9 @@ class FallbackBackend(EnvironmentBackend):
 
     async def get_clients(
         self,
-        mapped: bool = True,  # noqa: ARG002
-        workspace: str | None = None,  # noqa: ARG002
-        workspace_bl: str | None = None,  # noqa: ARG002
+        mapped: bool = True,
+        workspace: str | None = None,
+        workspace_bl: str | None = None,
         *,
         log: Logger,
     ) -> list[ClientInfo]:
@@ -102,7 +103,7 @@ class FallbackBackend(EnvironmentBackend):
         log.debug("get_clients() not supported in fallback backend")
         return []
 
-    def parse_event(self, raw_data: str, *, log: Logger) -> tuple[str, Any] | None:  # noqa: ARG002
+    def parse_event(self, raw_data: str, *, log: Logger) -> tuple[str, Any] | None:
         """No event support in fallback mode.
 
         Args:
@@ -114,7 +115,7 @@ class FallbackBackend(EnvironmentBackend):
         """
         return None
 
-    async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:  # noqa: ANN401, ARG002
+    async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:
         """Not supported in fallback mode.
 
         Args:
@@ -128,7 +129,7 @@ class FallbackBackend(EnvironmentBackend):
         log.debug("execute() not supported in fallback backend")
         return False
 
-    async def execute_batch(self, commands: list[str], *, log: Logger) -> None:  # noqa: ARG002
+    async def execute_batch(self, commands: list[str], *, log: Logger) -> None:
         """Not supported in fallback mode.
 
         Args:
@@ -137,7 +138,7 @@ class FallbackBackend(EnvironmentBackend):
         """
         log.debug("execute_batch() not supported in fallback backend")
 
-    async def execute_json(self, command: str, *, log: Logger, **kwargs: Any) -> Any:  # noqa: ANN401, ARG002
+    async def execute_json(self, command: str, *, log: Logger, **kwargs: Any) -> Any:
         """Not supported in fallback mode.
 
         Args:
@@ -155,7 +156,7 @@ class FallbackBackend(EnvironmentBackend):
         self,
         message: str,
         duration: int = DEFAULT_NOTIFICATION_DURATION_MS,
-        color: str = "ff0000",  # noqa: ARG002
+        color: str = "ff0000",
         *,
         log: Logger,
     ) -> None:
@@ -210,3 +211,44 @@ class FallbackBackend(EnvironmentBackend):
             return await proc.wait() == 0
         except OSError:
             return False
+
+    async def _run_monitor_command(
+        self,
+        command: str,
+        tool_name: str,
+        parser: Callable[[str, bool, Logger], list[MonitorInfo]],
+        *,
+        include_disabled: bool,
+        log: Logger,
+    ) -> list[MonitorInfo]:
+        """Run a command and parse its output for monitor information.
+
+        This is a shared helper for wayland/xorg backends to reduce duplication.
+
+        Args:
+            command: Shell command to execute
+            tool_name: Name of the tool for error messages
+            parser: Function to parse the command output
+            include_disabled: Whether to include disabled monitors
+            log: Logger instance
+
+        Returns:
+            List of MonitorInfo dicts, empty on failure
+        """
+        try:
+            proc = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+
+            if proc.returncode != 0:
+                log.error("%s failed: %s", tool_name, stderr.decode())
+                return []
+
+            return parser(stdout.decode(), include_disabled, log)
+
+        except OSError as e:
+            log.warning("Failed to get monitors from %s: %s", tool_name, e)
+            return []

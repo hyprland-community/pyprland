@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from .validation import ConfigItems
 
-__all__ = ["Configuration", "SchemaAwareMixin", "coerce_to_bool", "BOOL_TRUE_STRINGS", "BOOL_FALSE_STRINGS", "BOOL_STRINGS"]
+__all__ = ["BOOL_FALSE_STRINGS", "BOOL_STRINGS", "BOOL_TRUE_STRINGS", "Configuration", "SchemaAwareMixin", "coerce_to_bool"]
 
 # Type alias for config values
 ConfigValueType = float | bool | str | list | dict
@@ -204,10 +204,10 @@ class Configuration(SchemaAwareMixin, dict):
 
     def __init__(
         self,
-        *args: Any,  # noqa: ANN401
+        *args: Any,
         logger: logging.Logger,
         schema: ConfigItems | None = None,
-        **kwargs: Any,  # noqa: ANN401
+        **kwargs: Any,
     ):
         """Initialize the configuration object.
 

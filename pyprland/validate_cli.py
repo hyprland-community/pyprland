@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import tomllib
+from pathlib import Path
 from typing import cast
 
 from .common import get_logger, merge
@@ -44,17 +45,17 @@ def _load_validate_config(log: logging.Logger) -> dict:
     Returns:
         Loaded configuration dictionary
     """
-    filename = os.path.expanduser(CONFIG_FILE)
-    old_filename = os.path.expanduser(OLD_CONFIG_FILE)
+    filename = Path(CONFIG_FILE).expanduser()
+    old_filename = Path(OLD_CONFIG_FILE).expanduser()
 
-    if os.path.exists(filename):
-        with open(filename, "rb") as f:
+    if filename.exists():
+        with filename.open("rb") as f:
             config = tomllib.load(f)
         log.info("Loaded config from %s", filename)
         return config
 
-    if os.path.exists(old_filename):
-        with open(old_filename, encoding="utf-8") as f:
+    if old_filename.exists():
+        with old_filename.open(encoding="utf-8") as f:
             config = cast("dict", json.loads(f.read()))
         log.info("Loaded config from %s (consider migrating to TOML)", old_filename)
         return config
@@ -133,12 +134,12 @@ def run_validate() -> None:
 
     extra_include = pyprland_config.get("include", [])
     for extra_config in extra_include:
-        fname = os.path.expanduser(os.path.expandvars(extra_config))
-        if os.path.isdir(fname):
-            extra_include.extend(os.path.join(fname, f) for f in os.listdir(fname) if f.endswith(".toml"))
+        fname = Path(os.path.expandvars(extra_config)).expanduser()
+        if fname.is_dir():
+            extra_include.extend(str(fname / f.name) for f in fname.iterdir() if f.name.endswith(".toml"))
         else:
             doc = {}
-            with open(fname, "rb") as toml_file:
+            with fname.open("rb") as toml_file:
                 doc.update(tomllib.load(toml_file))
             if doc:
                 merge(config, doc)

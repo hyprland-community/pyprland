@@ -23,10 +23,10 @@ if TYPE_CHECKING:
 __all__ = [
     "CommandArg",
     "CommandInfo",
-    "parse_docstring",
     "extract_commands_from_object",
-    "get_client_commands",
     "get_all_commands",
+    "get_client_commands",
+    "parse_docstring",
 ]
 
 

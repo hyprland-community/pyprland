@@ -2,12 +2,12 @@
 
 import colorsys
 import os
-import os.path
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from ...aioops import ailistdir
+from .cache import ImageCache
 from .colorutils import Image, ImageDraw, ImageOps
 
 IMAGE_FORMAT = "jpg"
@@ -19,7 +19,7 @@ def expand_path(path: str) -> str:
     Args:
         path: The path to expand (handles ~ and environment variables)
     """
-    return os.path.expanduser(os.path.expandvars(path))
+    return str(Path(os.path.expandvars(path)).expanduser())
 
 
 async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = True) -> AsyncIterator[str]:
@@ -35,7 +35,7 @@ async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = T
         full_path = f"{path}/{fname}"
         if ext.lower() in extensions:
             yield full_path
-        elif recurse and os.path.isdir(full_path):
+        elif recurse and Path(full_path).is_dir():
             async for v in get_files_with_ext(full_path, extensions, True):
                 yield v
 
@@ -54,16 +54,15 @@ class MonitorInfo:
 class RoundedImageManager:
     """Manages rounded and scaled images for monitors."""
 
-    def __init__(self, radius: int) -> None:
+    def __init__(self, radius: int, cache: ImageCache) -> None:
         """Initialize the manager.
 
         Args:
             radius: Corner radius for rounding
+            cache: ImageCache instance for caching rounded images
         """
         self.radius = radius
-
-        self.tmpdir = Path("~").expanduser() / ".cache" / "pyprland" / "wallpapers"
-        self.tmpdir.mkdir(parents=True, exist_ok=True)
+        self.cache = cache
 
     def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
         """Build the cache key for the image.
@@ -71,16 +70,11 @@ class RoundedImageManager:
         Args:
             monitor: Monitor information
             image_path: Path to the source image
-        """
-        return f"{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
-    def get_path(self, key: str) -> str:
-        """Get the path for a given key.
-
-        Args:
-            key: Cache key
+        Returns:
+            A unique cache key including radius, monitor info, and image path.
         """
-        return str(Path(self.tmpdir) / f"{abs(hash((key, self.radius)))}.{IMAGE_FORMAT}")
+        return f"rounded:{self.radius}:{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor.
@@ -88,26 +82,36 @@ class RoundedImageManager:
         Args:
             src: Source image path
             monitor: Monitor information
+
+        Returns:
+            Path to the cached rounded image.
         """
         key = self._build_key(monitor, src)
-        dest = self.get_path(key)
-        if not os.path.exists(dest):
-            with Image.open(src) as img:
-                is_rotated = monitor.transform % 2
-                width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
-                width = int(width / monitor.scale)
-                height = int(height / monitor.scale)
-                resample = Image.Resampling.LANCZOS
-                resized = ImageOps.fit(img, (width, height), method=resample)
 
-                scale = 4
-                mask = self._create_rounded_mask(resized.width, resized.height, scale, resample)
+        # Check cache for valid entry
+        cached = self.cache.get(key, IMAGE_FORMAT)
+        if cached:
+            return str(cached)
 
-                result = Image.new("RGB", resized.size, "black")
-                result.paste(resized.convert("RGB"), mask=mask)
-                result.convert("RGB").save(dest)
+        # Get path for new cache entry
+        dest = self.cache.get_path(key, IMAGE_FORMAT)
 
-        return dest
+        with Image.open(src) as img:
+            is_rotated = monitor.transform % 2
+            width, height = (monitor.width, monitor.height) if not is_rotated else (monitor.height, monitor.width)
+            width = int(width / monitor.scale)
+            height = int(height / monitor.scale)
+            resample = Image.Resampling.LANCZOS
+            resized = ImageOps.fit(img, (width, height), method=resample)
+
+            scale = 4
+            mask = self._create_rounded_mask(resized.width, resized.height, scale, resample)
+
+            result = Image.new("RGB", resized.size, "black")
+            result.paste(resized.convert("RGB"), mask=mask)
+            result.convert("RGB").save(str(dest))
+
+        return str(dest)
 
     def _create_rounded_mask(self, width: int, height: int, scale: int, resample: Image.Resampling) -> Image.Image:
         """Create a rounded mask.

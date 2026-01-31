@@ -25,7 +25,7 @@ if TYPE_CHECKING:
             self,
             match_fn: Callable = ...,
             clients: list[ClientInfo] | None = None,
-            **kw: Any,  # noqa: ANN401
+            **kw: Any,
         ) -> ClientInfo | None:
             pass
 

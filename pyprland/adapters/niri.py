@@ -134,7 +134,7 @@ class NiriBackend(EnvironmentBackend):
             return f"niri_{type_name.lower()}", data
         return None
 
-    async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:  # noqa: ANN401
+    async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:
         """Execute a command (or list of commands).
 
         Args:
@@ -164,7 +164,7 @@ class NiriBackend(EnvironmentBackend):
             log.error("Niri command failed: %s", ret)
         return False
 
-    async def execute_json(self, command: str, *, log: Logger, **kwargs: Any) -> Any:  # noqa: ANN401, ARG002
+    async def execute_json(self, command: str, *, log: Logger, **kwargs: Any) -> Any:
         """Execute a command and return the JSON result.
 
         Args:
@@ -231,7 +231,7 @@ class NiriBackend(EnvironmentBackend):
             },
         )
 
-    async def get_monitors(self, *, log: Logger, include_disabled: bool = False) -> list[MonitorInfo]:  # noqa: ARG002
+    async def get_monitors(self, *, log: Logger, include_disabled: bool = False) -> list[MonitorInfo]:
         """Return the list of monitors.
 
         Args:
@@ -268,9 +268,9 @@ class NiriBackend(EnvironmentBackend):
         self,
         message: str,
         duration: int = DEFAULT_NOTIFICATION_DURATION_MS,
-        color: str = "ff0000",  # noqa: ARG002
+        color: str = "ff0000",
         *,
-        log: Logger,  # noqa: ARG002
+        log: Logger,
     ) -> None:
         """Send a notification.
 
@@ -301,7 +301,7 @@ class NiriBackend(EnvironmentBackend):
         address: str,
         workspace: str,
         *,
-        silent: bool = True,  # noqa: ARG002
+        silent: bool = True,
         log: Logger,
     ) -> bool:
         """Move a window to a workspace (silent parameter ignored in Niri).
@@ -317,7 +317,7 @@ class NiriBackend(EnvironmentBackend):
             log=log,
         )
 
-    async def pin_window(self, address: str, *, log: Logger) -> bool:  # noqa: ARG002
+    async def pin_window(self, address: str, *, log: Logger) -> bool:
         """Toggle pin state - not available in Niri.
 
         Args:
@@ -336,7 +336,7 @@ class NiriBackend(EnvironmentBackend):
         """
         return await self.execute({"Action": {"CloseWindow": {"id": int(address)}}}, log=log)
 
-    async def resize_window(self, address: str, width: int, height: int, *, log: Logger) -> bool:  # noqa: ARG002
+    async def resize_window(self, address: str, width: int, height: int, *, log: Logger) -> bool:
         """Resize a window - not available in Niri (tiling WM).
 
         Args:
@@ -348,7 +348,7 @@ class NiriBackend(EnvironmentBackend):
         log.debug("resize_window: not available in Niri")
         return False
 
-    async def move_window(self, address: str, x: int, y: int, *, log: Logger) -> bool:  # noqa: ARG002
+    async def move_window(self, address: str, x: int, y: int, *, log: Logger) -> bool:
         """Move a window to exact position - not available in Niri (tiling WM).
 
         Args:
@@ -360,7 +360,7 @@ class NiriBackend(EnvironmentBackend):
         log.debug("move_window: not available in Niri")
         return False
 
-    async def toggle_floating(self, address: str, *, log: Logger) -> bool:  # noqa: ARG002
+    async def toggle_floating(self, address: str, *, log: Logger) -> bool:
         """Toggle floating state - not available in Niri.
 
         Args:
@@ -370,7 +370,7 @@ class NiriBackend(EnvironmentBackend):
         log.debug("toggle_floating: not available in Niri")
         return False
 
-    async def set_keyword(self, keyword_command: str, *, log: Logger) -> bool:  # noqa: ARG002
+    async def set_keyword(self, keyword_command: str, *, log: Logger) -> bool:
         """Execute a keyword command - not available in Niri.
 
         Args:

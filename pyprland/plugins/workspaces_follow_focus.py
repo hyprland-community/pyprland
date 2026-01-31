@@ -1,6 +1,6 @@
 """Force workspaces to follow the focus / mouse."""
 
-from typing import cast
+from typing import ClassVar, cast
 
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -9,7 +9,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Makes non-visible workspaces available on the currently focused screen."""
 
-    environments = ["hyprland"]
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
         ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage"),
@@ -48,10 +48,8 @@ class Extension(Plugin):
         increment = int(direction)
         # get focused screen info
         monitors = await self.backend.get_monitors()
-        try:
-            monitor = await self.backend.get_monitor_props()
-        except RuntimeError:
-            self.log.warning("Cannot find a focused monitor")
+        monitor = await self.get_focused_monitor_or_warn()
+        if monitor is None:
             return
         busy_workspaces = {m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]}
         cur_workspace = monitor["activeWorkspace"]["id"]

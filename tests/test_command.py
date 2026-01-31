@@ -4,6 +4,7 @@ import asyncio
 import sys
 import os
 import tempfile
+from pathlib import Path
 from pyprland.command import Pyprland
 from pyprland.models import ExitCode, PyprError
 from pyprland.validate_cli import run_validate, _load_plugin_module
@@ -95,8 +96,8 @@ async def test_load_config_json_fallback(pyprland_app):
     side_effects = [True, False, False, True]
 
     with (
-        patch("os.path.exists", side_effect=side_effects),
-        patch("builtins.open", new_callable=MagicMock),
+        patch.object(Path, "exists", side_effect=side_effects),
+        patch.object(Path, "open", new_callable=MagicMock),
         patch("json.loads", return_value=mock_json),
     ):
         pyprland_app.backend.notify_info = AsyncMock()
@@ -117,7 +118,7 @@ async def test_load_config_json_fallback(pyprland_app):
 @pytest.mark.asyncio
 async def test_load_config_missing(pyprland_app):
     """Test error raised when no config found."""
-    with patch("os.path.exists", return_value=False):
+    with patch.object(Path, "exists", return_value=False):
         with pytest.raises(PyprError):
             await pyprland_app.load_config()
 

@@ -66,7 +66,7 @@ class ManagedProcess:
     async def start(
         self,
         command: str,
-        **subprocess_kwargs: Any,  # noqa: ANN401
+        **subprocess_kwargs: Any,
     ) -> None:
         """Start the process. Stops existing process first if running.
 
@@ -213,7 +213,7 @@ class SupervisedProcess(ManagedProcess):
     async def start(
         self,
         command: str,
-        **subprocess_kwargs: Any,  # noqa: ANN401
+        **subprocess_kwargs: Any,
     ) -> None:
         """Start the supervised process.
 

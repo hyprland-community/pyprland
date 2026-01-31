@@ -189,7 +189,7 @@ class ConfigValidator:
 
         return errors
 
-    def _check_type(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_type(self, field_def: ConfigField, value: Any) -> str | None:
         """Check if value matches expected type.
 
         Args:
@@ -223,8 +223,8 @@ class ConfigValidator:
     def _check_union_type(
         self,
         field_def: ConfigField,
-        value: Any,  # noqa: ANN401
-        expected_types: tuple,  # noqa: ANN401
+        value: Any,
+        expected_types: tuple,
     ) -> str | None:
         """Check if value matches any of the union types."""
         for single_type in expected_types:
@@ -237,7 +237,7 @@ class ConfigValidator:
             f"Expected {field_def.type_name}, got {type(value).__name__}",
         )
 
-    def _check_bool(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_bool(self, field_def: ConfigField, value: Any) -> str | None:
         """Check bool type (special handling since bool is subclass of int)."""
         if isinstance(value, bool):
             return None
@@ -250,7 +250,7 @@ class ConfigValidator:
             "Use true/false (without quotes)",
         )
 
-    def _check_numeric(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_numeric(self, field_def: ConfigField, value: Any) -> str | None:
         """Check int/float type."""
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             return None
@@ -267,7 +267,7 @@ class ConfigValidator:
 
         return None
 
-    def _check_str(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_str(self, field_def: ConfigField, value: Any) -> str | None:
         """Check str type."""
         if isinstance(value, str):
             return None
@@ -278,7 +278,7 @@ class ConfigValidator:
             f'Use {field_def.name} = "value"',
         )
 
-    def _check_list(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_list(self, field_def: ConfigField, value: Any) -> str | None:
         """Check list type."""
         if isinstance(value, list):
             return None
@@ -289,7 +289,7 @@ class ConfigValidator:
             f'Use {field_def.name} = ["item1", "item2"]',
         )
 
-    def _check_dict(self, field_def: ConfigField, value: Any) -> str | None:  # noqa: ANN401
+    def _check_dict(self, field_def: ConfigField, value: Any) -> str | None:
         """Check dict type and optionally validate children."""
         if not isinstance(value, dict):
             return format_config_error(

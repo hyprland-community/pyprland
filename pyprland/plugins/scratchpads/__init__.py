@@ -3,9 +3,10 @@
 import asyncio
 import contextlib
 from functools import partial
-from typing import cast
+from typing import ClassVar, cast
 
 from ...adapters.units import convert_coords
+from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
 from ...models import ClientInfo, VersionInfo
 from ..interface import Plugin
@@ -29,7 +30,7 @@ from .windowruleset import WindowRuleSet
 class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
     """Makes your applications into dropdowns & togglable popups."""
 
-    environments = ["hyprland"]
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     procs: dict[str, asyncio.subprocess.Process]
     scratches: ScratchDB
@@ -37,7 +38,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
     workspace = ""  # Currently active workspace
     monitor = ""  # Currently active monitor
 
-    _hysteresis_tasks: dict[str, asyncio.Task]  # non-blocking tasks
+    _tasks: TaskManager  # Task manager for hysteresis and other background tasks
     focused_window_tracking: dict[str, FocusTracker]
     previously_focused_window: str = ""
     last_focused: Scratch | None = None
@@ -47,10 +48,13 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
         self.procs = {}
         self.scratches = ScratchDB()
         self.focused_window_tracking = {}
-        self._hysteresis_tasks = {}
+        self._tasks = TaskManager()
+        self._tasks.start()
 
     async def exit(self) -> None:
         """Exit hook."""
+        # Stop all managed tasks (hysteresis, etc.)
+        await self._tasks.stop()
 
         async def die_in_piece(scratch: Scratch) -> None:
             if scratch.uid in self.procs:
@@ -209,19 +213,18 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
             await self.backend.execute(wr.get_content(), base_command="keyword")
 
     def cancel_task(self, uid: str) -> bool:
-        """Cancel a task.
+        """Cancel a hysteresis task.
 
         Args:
             uid: The scratchpad name
+
+        Returns:
+            True if task was cancelled, False if no task existed
         """
-        task = self._hysteresis_tasks.get(uid)
-        if task:
-            task.cancel()
+        cancelled = self._tasks.cancel_keyed(uid)
+        if cancelled:
             self.log.debug("Canceled previous task for %s", uid)
-            if uid in self._hysteresis_tasks:
-                del self._hysteresis_tasks[uid]
-            return True
-        return False
+        return cancelled
 
     async def _detach_window(self, scratch: Scratch, address: str) -> None:
         """Detach a window from a scratchpad.
@@ -411,7 +414,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
                     hit = True
         return hit
 
-    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:  # noqa: C901
+    async def run_hide(self, uid: str, flavor: HideFlavors = HideFlavors.NONE) -> None:
         """<name> hides scratchpad "name" (accepts "*").
 
         Args:

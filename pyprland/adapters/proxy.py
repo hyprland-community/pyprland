@@ -41,7 +41,7 @@ class BackendProxy:
 
     # === Core execution methods ===
 
-    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:  # noqa: ANN401
+    async def execute(self, command: str | list | dict, **kwargs: Any) -> bool:
         """Execute a command (or list of commands).
 
         Args:
@@ -53,7 +53,7 @@ class BackendProxy:
         """
         return await self._backend.execute(command, log=self.log, **kwargs)
 
-    async def execute_json(self, command: str, **kwargs: Any) -> Any:  # noqa: ANN401
+    async def execute_json(self, command: str, **kwargs: Any) -> Any:
         """Execute a command and return the JSON result.
 
         Args:
@@ -124,7 +124,7 @@ class BackendProxy:
         self,
         match_fn: Callable[[Any, Any], bool] | None = None,
         clients: list[ClientInfo] | None = None,
-        **kw: Any,  # noqa: ANN401
+        **kw: Any,
     ) -> ClientInfo | None:
         """Return the properties of a client matching the given criteria.
 

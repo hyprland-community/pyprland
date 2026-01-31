@@ -9,7 +9,7 @@
 from collections import defaultdict
 from collections.abc import Callable
 from functools import partial
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from ..common import is_rotated
 from ..constants import MIN_CLIENTS_FOR_LAYOUT
@@ -21,7 +21,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """A workspace layout where one window is centered and maximized while others are in the background."""
 
-    environments = ["hyprland"]
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
         ConfigField("margin", int, default=60, description="Margin around the centered window in pixels"),
@@ -41,12 +41,13 @@ class Extension(Plugin):
         ConfigField("prev2", str, description="Alternative command for 'prev'"),
     )
 
-    workspace_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"enabled": False, "addr": ""})
+    workspace_info: dict[str, dict[str, Any]]
     last_index = 0
     command_handlers: dict[str, Callable]
 
     async def init(self) -> None:
         """Initialize the plugin."""
+        self.workspace_info = defaultdict(lambda: {"enabled": False, "addr": ""})
         self.command_handlers = {
             "toggle": self._run_toggle,
             "next": partial(self._run_changefocus, 1, default_override="next"),
@@ -218,10 +219,8 @@ class Extension(Plugin):
         x, y = offset_conf
         margin: tuple[int, int] = (margin_conf, margin_conf) if isinstance(margin_conf, int) else margin_conf
 
-        try:
-            monitor = await self.backend.get_monitor_props()
-        except RuntimeError:
-            self.log.warning("No focused monitor found for centered geometry calculation")
+        monitor = await self.get_focused_monitor_or_warn("centered geometry calculation")
+        if monitor is None:
             return None
 
         scale = monitor["scale"]

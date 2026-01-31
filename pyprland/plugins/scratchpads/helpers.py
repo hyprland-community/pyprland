@@ -2,12 +2,12 @@
 
 __all__ = [
     "DynMonitorConfig",
+    "apply_offset",
+    "compute_offset",
     "get_active_space_identifier",
     "get_all_space_identifiers",
     "get_match_fn",
     "get_size",
-    "compute_offset",
-    "apply_offset",
 ]
 
 import logging

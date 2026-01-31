@@ -1,7 +1,5 @@
 """Generic Wayland backend using wlr-randr for monitor detection."""
-# pylint: disable=duplicate-code
 
-import asyncio
 import re
 from logging import Logger
 
@@ -37,23 +35,13 @@ class WaylandBackend(FallbackBackend):
         Returns:
             List of MonitorInfo dicts
         """
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                "wlr-randr",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, stderr = await proc.communicate()
-
-            if proc.returncode != 0:
-                log.error("wlr-randr failed: %s", stderr.decode())
-                return []
-
-            return self._parse_wlr_randr_output(stdout.decode(), include_disabled, log)
-
-        except OSError as e:
-            log.warning("Failed to get monitors from wlr-randr: %s", e)
-            return []
+        return await self._run_monitor_command(
+            "wlr-randr",
+            "wlr-randr",
+            self._parse_wlr_randr_output,
+            include_disabled=include_disabled,
+            log=log,
+        )
 
     def _parse_wlr_randr_output(self, output: str, include_disabled: bool, log: Logger) -> list[MonitorInfo]:
         """Parse wlr-randr output to extract monitor information.

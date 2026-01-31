@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from ...common import MINIMUM_ADDR_LEN
 from .common import HideFlavors
@@ -15,6 +14,7 @@ if TYPE_CHECKING:
     import logging
 
     from ...adapters.proxy import BackendProxy
+    from ...aioops import TaskManager
     from ...models import ClientInfo
     from . import Extension
     from .lookup import ScratchDB
@@ -35,7 +35,7 @@ class EventsMixin:
     log: logging.Logger
     backend: BackendProxy
     scratches: ScratchDB
-    _hysteresis_tasks: dict[str, asyncio.Task[Any]]
+    _tasks: TaskManager
     workspace: str
     previously_focused_window: str
     last_focused: Scratch | None
@@ -151,10 +151,7 @@ class EventsMixin:
                 self.log.debug("hide %s because another client is active", scratch.uid)
                 await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
 
-                with contextlib.suppress(KeyError):
-                    del self._hysteresis_tasks[scratch.uid]
-
-            self._hysteresis_tasks[scratch.uid] = asyncio.create_task(_task(scratch, hysteresis))
+            self._tasks.create(_task(scratch, hysteresis), key=scratch.uid)
         else:
             self.log.debug("hide %s because another client is active", scratch.uid)
             await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)

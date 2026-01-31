@@ -6,7 +6,6 @@ Supports positional argument awareness with type-specific completions.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -72,7 +71,7 @@ def get_default_path(shell: str) -> str:
     Returns:
         Expanded absolute path to the default completion file
     """
-    return os.path.expanduser(DEFAULT_PATHS[shell])
+    return str(Path(DEFAULT_PATHS[shell]).expanduser())
 
 
 def _classify_arg(
@@ -405,7 +404,7 @@ def _get_success_message(shell: str, output_path: str, used_default: bool) -> st
         User-friendly success message
     """
     # Use ~ in display path for readability
-    display_path = output_path.replace(os.path.expanduser("~"), "~")
+    display_path = output_path.replace(str(Path.home()), "~")
 
     if not used_default:
         return f"Completions written to {display_path}"
@@ -476,7 +475,7 @@ def handle_compgen(manager: Pyprland, args: str) -> tuple[bool, str]:
     try:
         commands = get_command_completions(manager)
         content = GENERATORS[shell](commands)
-    except Exception as e:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+    except (KeyError, ValueError, TypeError) as e:
         return (False, f"Failed to generate completions: {e}")
 
     if path_arg is None:
@@ -487,7 +486,7 @@ def handle_compgen(manager: Pyprland, args: str) -> tuple[bool, str]:
         output_path = get_default_path(shell)
         used_default = True
     else:
-        output_path = os.path.expanduser(path_arg)
+        output_path = str(Path(path_arg).expanduser())
         used_default = False
 
     manager.log.debug("Writing completions to: %s", output_path)

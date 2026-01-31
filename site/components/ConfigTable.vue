@@ -20,9 +20,9 @@
               <code>{{ item.name }}</code>
             </template>
             <Badge type="info">{{ item.type }}</Badge>
-            <Badge v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></Badge>
             <Badge v-if="item.required" type="danger">required</Badge>
             <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
+            <div v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></div>
           </td>
           <td class="config-description" v-html="renderDescription(item.description)" />
         </tr>

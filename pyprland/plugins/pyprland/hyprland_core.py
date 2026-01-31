@@ -49,7 +49,7 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
         if version_str:
             try:
                 self._set_hyprland_version(
-                    version_str[1:] if version_str.startswith("v") else version_str,
+                    version_str.removeprefix("v"),
                     auto_increment,
                 )
             except (ValueError, IndexError):

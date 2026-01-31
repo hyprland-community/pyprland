@@ -1,11 +1,11 @@
 """Run a bar."""
 
-import asyncio
 import contextlib
-import os
+from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
+from ..aioops import TaskManager
 from ..common import apply_variables
 from ..process import ManagedProcess
 from ..validation import ConfigField, ConfigItems
@@ -61,7 +61,7 @@ async def is_bar_alive(
         environment: Current environment ("hyprland" or "niri")
     """
     # First check /proc - works for any spawned process
-    is_running = os.path.exists(f"/proc/{pid}")
+    is_running = Path(f"/proc/{pid}").exists()
     if is_running:
         return pid
 
@@ -87,7 +87,7 @@ async def is_bar_alive(
 class Extension(Plugin):
     """Improves multi-monitor handling of the status bar and restarts it on crashes."""
 
-    environments = ["hyprland", "niri"]
+    environments: ClassVar[list[str]] = ["hyprland", "niri"]
 
     config_schema = ConfigItems(
         ConfigField(
@@ -103,8 +103,12 @@ class Extension(Plugin):
     monitors: set[str]
     proc: ManagedProcess | None = None
     cur_monitor: str | None = ""
+    _tasks: TaskManager
 
-    ongoing_task: asyncio.Task | None = None
+    def __init__(self, name: str) -> None:
+        """Initialize the plugin."""
+        super().__init__(name)
+        self._tasks = TaskManager()
 
     async def on_reload(self) -> None:
         """Start the process."""
@@ -113,16 +117,16 @@ class Extension(Plugin):
 
     def _run_program(self) -> None:
         """Create ongoing task restarting gbar in case of crash."""
-        if self.ongoing_task:
-            self.ongoing_task.cancel()
+        self._tasks.start()
 
         async def _run_loop() -> None:
             pid: int | bool = 0
-            while True:
+            while self._tasks.running:
                 if pid:
                     pid = await is_bar_alive(pid if isinstance(pid, int) else 0, self.backend, self.state.environment)
                     if pid:
-                        await asyncio.sleep(IDLE_LOOP_INTERVAL)
+                        if await self._tasks.sleep(IDLE_LOOP_INTERVAL):
+                            break
                         continue
 
                 await self.set_best_monitor()
@@ -145,13 +149,14 @@ class Extension(Plugin):
                 self.log.warning(text)
                 if delay:
                     await self.backend.notify_info(text)
-                await asyncio.sleep(delay or 0.1)
+                if await self._tasks.sleep(delay or 0.1):
+                    break
 
-        self.ongoing_task = asyncio.create_task(_run_loop())
+        self._tasks.create(_run_loop())
 
     def is_running(self) -> bool:
         """Check if the bar is currently running."""
-        return self.proc is not None and self.ongoing_task is not None
+        return self.proc is not None and self._tasks.running
 
     async def run_bar(self, args: str) -> None:
         """[restart|stop|toggle] Start (default), restart, stop or toggle the menu bar.
@@ -250,11 +255,7 @@ class Extension(Plugin):
 
     async def stop(self) -> None:
         """Stop the process and supervision task."""
-        if self.ongoing_task:
-            self.ongoing_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self.ongoing_task
-            self.ongoing_task = None
+        await self._tasks.stop()
         if self.proc:
             await self.proc.stop()
             self.proc = None

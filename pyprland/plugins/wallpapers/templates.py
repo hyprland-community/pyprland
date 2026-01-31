@@ -78,7 +78,7 @@ async def _apply_filters(content: str, replacements: dict[str, str]) -> str:
 
         if filter_name and filter_arg:
             filter_arg = filter_arg.strip()
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(ValueError):
                 if filter_name == "set_alpha":
                     return _set_alpha(value, filter_arg)
                 if filter_name == "set_lightness":

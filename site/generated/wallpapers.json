@@ -178,6 +178,81 @@
       "description": "Template files for color palette generation",
       "choices": null,
       "children": null
+    },
+    {
+      "name": "online_ratio",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 0.0,
+      "description": "Probability of fetching online (0.0-1.0)",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "online_backends",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [
+        "unsplash",
+        "picsum",
+        "wallhaven",
+        "reddit"
+      ],
+      "description": "Enabled online backends",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "online_keywords",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Keywords to filter online images",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "online_folder",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "online",
+      "description": "Subfolder for downloaded online images",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "cache_days",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 0,
+      "description": "Days to keep cached images (0 = forever)",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "cache_max_mb",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 100,
+      "description": "Maximum cache size in MB (0 = unlimited)",
+      "choices": null,
+      "children": null
+    },
+    {
+      "name": "cache_max_images",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 0,
+      "description": "Maximum number of cached images (0 = unlimited)",
+      "choices": null,
+      "children": null
     }
   ]
 }

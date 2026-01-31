@@ -1,6 +1,7 @@
 """Shift workspaces across monitors."""
 
-from ..validation import ConfigItems
+from typing import ClassVar
+
 from .interface import Plugin
 from .mixins import MonitorTrackingMixin
 
@@ -10,9 +11,7 @@ MIN_MONITORS_FOR_SHIFT = 2  # Need at least 2 monitors to shift workspaces
 class Extension(MonitorTrackingMixin, Plugin):
     """Moves workspaces from monitor to monitor (carousel)."""
 
-    environments = ["hyprland"]
-
-    config_schema = ConfigItems()
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     monitors: list[str]
 

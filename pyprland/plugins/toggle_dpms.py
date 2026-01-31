@@ -1,6 +1,6 @@
 """Toggle monitors on or off."""
 
-from pyprland.validation import ConfigItems
+from typing import ClassVar
 
 from .interface import Plugin
 
@@ -8,8 +8,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Toggles the DPMS status of every plugged monitor."""
 
-    environments = ["hyprland"]
-    config_schema = ConfigItems()
+    environments: ClassVar[list[str]] = ["hyprland"]
 
     async def run_toggle_dpms(self) -> None:
         """Toggle dpms on/off for every monitor."""

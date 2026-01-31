@@ -1,6 +1,7 @@
 """Logging setup and utilities."""
 
 import logging
+from typing import ClassVar
 
 from .ansi import LogStyles, make_style, should_colorize
 from .debug import is_debug, set_debug
@@ -15,7 +16,7 @@ __all__ = [
 class LogObjects:
     """Reusable objects for loggers."""
 
-    handlers: list[logging.Handler] = []
+    handlers: ClassVar[list[logging.Handler]] = []
 
 
 def init_logger(filename: str | None = None, force_debug: bool = False) -> None:

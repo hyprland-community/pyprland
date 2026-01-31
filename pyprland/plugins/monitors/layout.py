@@ -286,7 +286,7 @@ def find_cycle_path(config: dict[str, Any], unprocessed: list[str]) -> str:
     if current and current in path:
         # Found the cycle - show it
         cycle_start = path.index(current)
-        cycle = path[cycle_start:] + [current]
+        cycle = [*path[cycle_start:], current]
         return " -> ".join(cycle)
 
     # No clear cycle found, just list unprocessed

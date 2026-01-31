@@ -4,35 +4,30 @@ import asyncio
 import contextlib
 import importlib
 import inspect
-import json
 import os
 import signal
+import subprocess
 import sys
-import tomllib
 from collections.abc import Callable
 from functools import partial
+from pathlib import Path
 from typing import Any, cast
 
-from . import constants as pyprland_constants
 from .adapters.backend import EnvironmentBackend
 from .adapters.hyprland import HyprlandBackend
 from .adapters.niri import NiriBackend
 from .adapters.proxy import BackendProxy
 from .adapters.wayland import WaylandBackend
 from .adapters.xorg import XorgBackend
+from .aioops import graceful_cancel_tasks
 from .ansi import HandlerStyles, colorize
-from .common import (
-    SharedState,
-    get_logger,
-    merge,
-)
+from .common import SharedState, get_logger
 from .config import Configuration
+from .config_loader import ConfigLoader
 from .constants import (
-    CONFIG_FILE,
     CONTROL,
     DEMO_NOTIFICATION_DURATION_MS,
     ERROR_NOTIFICATION_DURATION_MS,
-    OLD_CONFIG_FILE,
     PYPR_DEMO,
     TASK_TIMEOUT,
 )
@@ -76,12 +71,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
     server: asyncio.Server
     event_reader: asyncio.StreamReader | None = None
     stopped = False
-    config: dict[str, dict]
     tasks: list[asyncio.Task]
     tasks_group: None | asyncio.TaskGroup = None
     log_handler: Callable[[Plugin, str, tuple], None]
     dedup_last_call: dict[str, tuple[str, tuple[str, ...]]]
     _pyprland_conf: Configuration
+    _config_loader: ConfigLoader
     _shared_backend: EnvironmentBackend | None
     _backend_selected: bool
     state: SharedState
@@ -89,10 +84,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
     def __init__(self) -> None:
         self.pyprland_mutex_event = asyncio.Event()
         self.pyprland_mutex_event.set()
-        self.config = {}
+        self.config: dict[str, Any] = {}
         self.tasks = []
         self.plugins: dict[str, Plugin] = {}
         self.log = get_logger()
+        self._config_loader = ConfigLoader(self.log)
         self.queues: dict[str, asyncio.Queue] = {}
         self.dedup_last_call = {}
         self.state = SharedState()
@@ -158,58 +154,6 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self._backend_selected = True
         self.backend = BackendProxy(self._shared_backend, self.log)
 
-    async def __open_config(self, config_filename: str = "") -> dict[str, Any]:
-        """Load config file as self.config.
-
-        Args:
-            config_filename: Optional configuration file path
-        """
-        if config_filename:
-            fname = os.path.expanduser(os.path.expandvars(config_filename))
-            if os.path.isdir(fname):
-                config: dict[str, Any] = {}
-                for toml_file in sorted(os.listdir(fname)):
-                    if not toml_file.endswith(".toml"):
-                        continue
-                    merge(config, self.__load_config_file(f"{fname}/{toml_file}"))
-                return config
-        else:
-            if os.path.exists(OLD_CONFIG_FILE) and not os.path.exists(CONFIG_FILE):
-                self.log.warning("Consider changing your configuration to TOML format.")
-            fname = os.path.expanduser(os.path.expandvars(pyprland_constants.CONFIG_FILE))
-
-        config = self.__load_config_file(fname)
-
-        if not config_filename:
-            for extra_config in list(config["pyprland"].get("include", [])):
-                merge(config, await self.__open_config(extra_config))
-            merge(self.config, config, replace=True)
-        return config
-
-    def __load_config_file(self, fname: str) -> dict[str, Any]:
-        """Load a configuration file and returns it as a dictionary.
-
-        Args:
-            fname: Path to the configuration file
-        """
-        config = {}
-        if os.path.exists(fname):
-            self.log.info("Loading %s", fname)
-            with open(fname, "rb") as f:
-                try:
-                    config = tomllib.load(f)
-                except tomllib.TOMLDecodeError as e:
-                    self.log.critical("Problem reading %s: %s", fname, e)
-                    raise PyprError from e
-        elif os.path.exists(os.path.expanduser(OLD_CONFIG_FILE)):
-            self.log.info("Loading %s", OLD_CONFIG_FILE)
-            with open(os.path.expanduser(OLD_CONFIG_FILE), encoding="utf-8") as f:
-                config = json.loads(f.read())
-        else:
-            self.log.critical("Config file not found! Please create %s", fname)
-            raise PyprError
-        return config
-
     async def _load_single_plugin(self, name: str, init: bool) -> bool:
         """Load a single plugin, optionally calling `init`.
 
@@ -243,7 +187,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             self.log.exception("Unable to locate plugin called '%s'", name)
             await self.backend.notify_info(f'Config requires plugin "{name}" but pypr can\'t find it: {e}')
             return False
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             await self.backend.notify_info(f"Error loading plugin {name}: {e}")
             self.log.exception("Error loading plugin %s:", name)
             raise PyprError from e
@@ -266,7 +210,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             await asyncio.wait_for(self.plugins[name].on_reload(), timeout=TASK_TIMEOUT / 2)
         except TimeoutError:
             self.plugins[name].log.info("timed out on reload")
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, RuntimeError, KeyError) as e:
             await self.backend.notify_info(f"Error initializing plugin {name}: {e}")
             self.log.exception("Error initializing plugin %s:", name)
             raise PyprError from e
@@ -311,7 +255,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         Args:
             init: Whether to initialize the plugins
         """
-        await self.__open_config()
+        self.config = await self._config_loader.load()
         assert self.config
 
         # Wrap pyprland section with schema for proper default handling
@@ -403,7 +347,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             result = await self._run_plugin_handler(plugin, full_name, params)
             if not future.done():
                 future.set_result(result)
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # noqa: BLE001  # pylint: disable=broad-exception-caught
             if not future.done():
                 future.set_result((False, f"{plugin.name}::{full_name}: {e}"))
 
@@ -527,9 +471,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             writer: The stream writer to close
         """
         await self.exit_plugins()
-        # cancel the task group
-        for task in self.tasks:
-            task.cancel()
+
+        # Cancel all tasks except ourselves (we're in self.tasks too)
+        current_task = asyncio.current_task()
+        other_tasks = [t for t in self.tasks if t is not current_task]
+        await graceful_cancel_tasks(other_tasks, timeout=1.0)
+
         writer.close()
         await writer.wait_closed()
         for q in self.queues.values():
@@ -537,8 +484,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.server.close()
         # Ensure the process exits
         await asyncio.sleep(1)
-        if os.path.exists(CONTROL):
-            os.unlink(CONTROL)
+        control_path = Path(CONTROL)
+        if control_path.exists():
+            control_path.unlink()
         os._exit(0)
 
     async def _process_plugin_command(self, data: str) -> str:
@@ -557,7 +505,10 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         full_name = f"run_{cmd}"
 
         if PYPR_DEMO:
-            os.system(f"notify-send -t {DEMO_NOTIFICATION_DURATION_MS} '{data}'")  # noqa: ASYNC221, S605
+            subprocess.run(  # noqa: ASYNC221
+                ["notify-send", "-t", str(DEMO_NOTIFICATION_DURATION_MS), data],
+                check=False,
+            )
 
         handled, success, msg = await self._call_handler(full_name, *args, notify=cmd, wait=True)
         if not handled:
@@ -579,7 +530,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         writer.write(f"{ResponsePrefix.OK}\n".encode())
         with contextlib.suppress(BrokenPipeError, ConnectionResetError):
             await writer.drain()
-        asyncio.create_task(self._abort_plugins(writer))
+        self.tasks.append(asyncio.create_task(self._abort_plugins(writer)))
 
     async def read_command(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         """Receive a socket command.

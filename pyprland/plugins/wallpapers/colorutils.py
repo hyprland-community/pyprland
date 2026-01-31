@@ -304,7 +304,7 @@ def nicify_oklab(
         return 12.92 * val if val <= SRGB_R_CUTOFF else 1.055 * pow(val, 1 / 2.4) - 0.055
 
     return (
-        int(round(max(0, min(255, to_srgb(r_out) * 255)))),
-        int(round(max(0, min(255, to_srgb(g_out) * 255)))),
-        int(round(max(0, min(255, to_srgb(b_out) * 255)))),
+        round(max(0, min(255, to_srgb(r_out) * 255))),
+        round(max(0, min(255, to_srgb(g_out) * 255))),
+        round(max(0, min(255, to_srgb(b_out) * 255))),
     )

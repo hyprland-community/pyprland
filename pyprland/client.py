@@ -4,13 +4,14 @@ import asyncio
 import contextlib
 import os
 import sys
+from pathlib import Path
 
 from . import constants as pyprland_constants
 from .common import get_logger, notify_send, run_interactive_program
 from .models import ExitCode, ResponsePrefix
 from .validate_cli import run_validate
 
-__all__ = ["run_client", "CLIENT_COMMANDS"]
+__all__ = ["CLIENT_COMMANDS", "run_client"]
 
 # Client-only commands with their docstrings (not sent to daemon)
 CLIENT_COMMANDS = {
@@ -31,7 +32,7 @@ async def run_client() -> None:
 
     if sys.argv[1] == "edit":
         editor = os.environ.get("EDITOR", os.environ.get("VISUAL", "vi"))
-        filename = os.path.expanduser(pyprland_constants.CONFIG_FILE)
+        filename = str(Path(pyprland_constants.CONFIG_FILE).expanduser())
         run_interactive_program(f'{editor} "{filename}"')
         sys.argv[1] = "reload"
 

@@ -4,7 +4,7 @@ import asyncio
 import subprocess
 from collections.abc import Iterable
 from logging import Logger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from ..common import apply_variables, get_logger
 from ..models import PyprError
@@ -25,7 +25,7 @@ class MenuEngine:
     " process name for this engine "
     proc_extra_parameters: str = ""
     " process parameters to use for this engine "
-    proc_detect_parameters: list[str] = ["--help"]
+    proc_detect_parameters: ClassVar[list[str]] = ["--help"]
     " process parameters used to check if the engine can run "
 
     def __init__(self, extra_parameters: str) -> None:

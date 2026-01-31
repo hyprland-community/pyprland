@@ -3,12 +3,12 @@
 import contextlib
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from ..adapters.proxy import BackendProxy
 from ..common import SharedState, get_logger
 from ..config import Configuration, coerce_to_bool
-from ..models import ClientInfo
+from ..models import ClientInfo, MonitorInfo
 from ..validation import ConfigItems, ConfigValidator
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ class Plugin:
 
     aborted = False
 
-    environments: list[str] = []
+    environments: ClassVar[list[str]] = []
     " The supported environments for this plugin. Empty list means all environments. "
 
     backend: BackendProxy
@@ -239,3 +239,24 @@ class Plugin:
             workspace_bl: Filter to blacklist a specific workspace name
         """
         return await self.backend.get_clients(mapped, workspace, workspace_bl)
+
+    async def get_focused_monitor_or_warn(self, context: str = "") -> MonitorInfo | None:
+        """Get the focused monitor, logging a warning if none found.
+
+        This is a common helper to reduce repeated try/except patterns
+        for RuntimeError when calling get_monitor_props().
+
+        Args:
+            context: Optional context for the warning message (e.g., "centered layout")
+
+        Returns:
+            MonitorInfo if found, None otherwise
+        """
+        try:
+            return await self.backend.get_monitor_props()
+        except RuntimeError:
+            msg = "No focused monitor found"
+            if context:
+                msg = f"{msg} for {context}"
+            self.log.warning(msg)
+            return None

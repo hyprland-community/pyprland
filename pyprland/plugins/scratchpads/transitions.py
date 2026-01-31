@@ -227,7 +227,7 @@ class TransitionsMixin:
                         continue
                     await scratch.update_client_info(clients=clients, client_info=client_info)
                 except KeyError:
-                    pass
+                    self.log.debug("Client info not found for address 0x%s", alt_addr)
                 else:
                     break
             else:
@@ -262,14 +262,14 @@ class TransitionsMixin:
                     scratch.client_info,
                     scratch.conf.get_int("margin"),
                 )
-            animation_commands.append(list(main_win_position) + [scratch.full_address])
+            animation_commands.append([*main_win_position, scratch.full_address])
 
             if multiwin_enabled:
                 for address in scratch.extra_addr:
                     off = scratch.meta.extra_positions.get(address)
                     if off:
                         pos = apply_offset(main_win_position, off)
-                        animation_commands.append(list(pos) + [address])
+                        animation_commands.append([*pos, address])
 
             await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
 

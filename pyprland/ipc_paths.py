@@ -2,6 +2,7 @@
 
 import contextlib
 import os
+from pathlib import Path
 
 __all__ = [
     "HYPRLAND_INSTANCE_SIGNATURE",
@@ -28,7 +29,7 @@ if HYPRLAND_INSTANCE_SIGNATURE:
     try:
         _ORIGINAL_IPC_FOLDER = (
             f"{os.environ['XDG_RUNTIME_DIR']}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"
-            if os.path.exists(f"{os.environ.get('XDG_RUNTIME_DIR', '')}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}")
+            if Path(f"{os.environ.get('XDG_RUNTIME_DIR', '')}/hypr/{HYPRLAND_INSTANCE_SIGNATURE}").exists()
             else f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}"  # noqa: S108
         )
 
@@ -44,11 +45,11 @@ if HYPRLAND_INSTANCE_SIGNATURE:
 
 elif NIRI_SOCKET:
     # Niri environment - use parent directory of NIRI_SOCKET
-    IPC_FOLDER = os.path.dirname(NIRI_SOCKET)
+    IPC_FOLDER = str(Path(NIRI_SOCKET).parent)
 
 else:
     # Standalone fallback - no environment detected
-    IPC_FOLDER = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+    IPC_FOLDER = os.environ.get("XDG_DATA_HOME", str(Path("~/.local/share").expanduser()))
 
 
 def init_ipc_folder() -> None:
@@ -57,6 +58,6 @@ def init_ipc_folder() -> None:
     For Hyprland with shortened paths, creates a symlink.
     For other cases, the folder should already exist or will be created by the daemon.
     """
-    if HYPRLAND_INSTANCE_SIGNATURE and _ORIGINAL_IPC_FOLDER and _ORIGINAL_IPC_FOLDER != IPC_FOLDER and not os.path.exists(IPC_FOLDER):
+    if HYPRLAND_INSTANCE_SIGNATURE and _ORIGINAL_IPC_FOLDER and _ORIGINAL_IPC_FOLDER != IPC_FOLDER and not Path(IPC_FOLDER).exists():
         with contextlib.suppress(OSError):
-            os.symlink(_ORIGINAL_IPC_FOLDER, IPC_FOLDER)
+            Path(IPC_FOLDER).symlink_to(_ORIGINAL_IPC_FOLDER)

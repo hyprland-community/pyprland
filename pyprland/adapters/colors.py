@@ -10,5 +10,5 @@ def convert_color(description: str) -> str:
     if description[0] == "#":
         return description[1:]
     if description.startswith("rgb("):
-        return "".join([hex(int(i))[2:].zfill(2) for i in description[4:-1].split(", ")])
+        return "".join([f"{int(i):02x}" for i in description[4:-1].split(", ")])
     return description

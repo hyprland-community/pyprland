@@ -9,7 +9,7 @@ from .command_registry import get_all_commands
 if TYPE_CHECKING:
     from .manager import Pyprland
 
-__all__ = ["get_commands_help", "get_help", "get_command_help"]
+__all__ = ["get_command_help", "get_commands_help", "get_help"]
 
 
 def get_commands_help(manager: Pyprland) -> dict[str, str]:

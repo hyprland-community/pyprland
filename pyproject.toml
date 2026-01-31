@@ -14,6 +14,7 @@ packages = [
 requires-python = ">=3.11"
 dependencies = [
     "aiofiles >= 23.2.1",
+    "aiohttp >= 3.9.0",
     "pillow[rounded] >= 10.0.0",
 ]
 
@@ -62,6 +63,7 @@ ignore = [
     "ANN002",
     "ANN003",
     "ANN204",
+    "ANN401",
     "D105",
     "D107",
     "E203",
@@ -82,11 +84,10 @@ select = [
     "ARG",
     "ASYNC",
     "B",
-    "B",
+    "BLE",
     "C",
     "C4",
     "C90",
-    "D",
     "D",
     "DTZ",
     "E",
@@ -96,19 +97,25 @@ select = [
     "FA",
     "FIX",
     "FLY",
+    "FURB",
+    "G",
     "I",
     "ICN",
     "INP",
     "INT",
     "ISC",
     "LOG",
+    "N",
     "PERF",
     "PIE",
+    "PL",
     "PT",
+    "PTH",
     "PYI",
     "Q",
     "RET",
     "RSE",
+    "RUF",
     "S",
     "SIM",
     "SLF",
@@ -117,19 +124,22 @@ select = [
     "TCH",
     "TD",
     "TID",
-    "ASYNC1",
+    "TRY",
     "UP",
     "W",
     "YTT",
     "ANN",
-    "N",
-    "G",
-    "PL",
-    "TRY",
+    "ASYNC1",
 ]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Backend adapters have unused args due to interface compliance
+"pyprland/adapters/fallback.py" = ["ARG002"]
+"pyprland/adapters/niri.py" = ["ARG002"]
+"pyprland/adapters/hyprland.py" = ["ARG002"]
 
 [tool.ruff.format]
 indent-style = "space"

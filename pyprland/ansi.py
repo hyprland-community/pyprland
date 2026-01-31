@@ -9,21 +9,17 @@ import sys
 from typing import TextIO
 
 __all__ = [
-    # Detection
-    "should_colorize",
-    # Constants
-    "RESET",
+    "BLACK",
     "BOLD",
     "DIM",
-    "BLACK",
     "RED",
+    "RESET",
     "YELLOW",
-    # Helpers
+    "HandlerStyles",
+    "LogStyles",
     "colorize",
     "make_style",
-    # Style classes
-    "LogStyles",
-    "HandlerStyles",
+    "should_colorize",
 ]
 
 # ANSI escape sequence prefix
