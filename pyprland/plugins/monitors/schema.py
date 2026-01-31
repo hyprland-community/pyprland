@@ -12,23 +12,26 @@ MONITOR_PROPS = {"resolution", "rate", "scale", "transform"}
 
 # Schema for monitor properties within placement config
 MONITOR_PROPS_SCHEMA = ConfigItems(
-    ConfigField("scale", float, description="UI scale factor"),
-    ConfigField("rate", (int, float), description="Refresh rate in Hz"),
+    ConfigField("scale", float, description="UI scale factor", category="display"),
+    ConfigField("rate", (int, float), description="Refresh rate in Hz", category="display"),
     ConfigField(
         "resolution",
         (str, list),
         description="Display resolution (e.g., '2560x1440' or [2560, 1440])",
+        category="display",
     ),
     ConfigField(
         "transform",
         int,
         choices=[0, 1, 2, 3, 4, 5, 6, 7],
         description="Rotation/flip transform",
+        category="display",
     ),
     ConfigField(
         "disables",
         list,
         description="List of monitors to disable when this monitor is connected",
+        category="behavior",
     ),
 )
 

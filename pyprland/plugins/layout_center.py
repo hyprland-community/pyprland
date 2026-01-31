@@ -24,21 +24,24 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("margin", int, default=60, description="Margin around the centered window in pixels"),
-        ConfigField("offset", (str, list, tuple), default=[0, 0], description="Offset of the centered window as 'X Y' or [X, Y]"),
-        ConfigField("style", list, default=[], description="Window rules to apply to the centered window"),
-        ConfigField("captive_focus", bool, default=False, description="Keep focus on the centered window"),
+        ConfigField("margin", int, default=60, description="Margin around the centered window in pixels", category="basic"),
+        ConfigField(
+            "offset", (str, list, tuple), default=[0, 0], description="Offset of the centered window as 'X Y' or [X, Y]", category="basic"
+        ),
+        ConfigField("style", list, default=[], description="Window rules to apply to the centered window", category="basic"),
+        ConfigField("captive_focus", bool, default=False, description="Keep focus on the centered window", category="behavior"),
         ConfigField(
             "on_new_client",
             str,
             default="focus",
             choices=["focus", "background", "close"],
             description="Behavior when a new window opens",
+            category="behavior",
         ),
-        ConfigField("next", str, description="Command to run when 'next' is called and layout is disabled"),
-        ConfigField("prev", str, description="Command to run when 'prev' is called and layout is disabled"),
-        ConfigField("next2", str, description="Alternative command for 'next'"),
-        ConfigField("prev2", str, description="Alternative command for 'prev'"),
+        ConfigField("next", str, description="Command to run when 'next' is called and layout is disabled", category="commands"),
+        ConfigField("prev", str, description="Command to run when 'prev' is called and layout is disabled", category="commands"),
+        ConfigField("next2", str, description="Alternative command for 'next'", category="commands"),
+        ConfigField("prev2", str, description="Alternative command for 'prev'", category="commands"),
     )
 
     workspace_info: dict[str, dict[str, Any]]

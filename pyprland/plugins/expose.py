@@ -13,7 +13,7 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("include_special", bool, default=False, description="Include windows from special workspaces"),
+        ConfigField("include_special", bool, default=False, description="Include windows from special workspaces", category="basic"),
     )
 
     exposed: list[ClientInfo]

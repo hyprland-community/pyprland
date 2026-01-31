@@ -12,10 +12,14 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("active_classes", list, default=[], description="Window classes that should activate Fcitx5"),
-        ConfigField("active_titles", list, default=[], description="Window titles that should activate Fcitx5"),
-        ConfigField("inactive_classes", list, default=[], description="Window classes that should deactivate Fcitx5"),
-        ConfigField("inactive_titles", list, default=[], description="Window titles that should deactivate Fcitx5"),
+        ConfigField("active_classes", list, default=[], description="Window classes that should activate Fcitx5", category="activation"),
+        ConfigField("active_titles", list, default=[], description="Window titles that should activate Fcitx5", category="activation"),
+        ConfigField(
+            "inactive_classes", list, default=[], description="Window classes that should deactivate Fcitx5", category="deactivation"
+        ),
+        ConfigField(
+            "inactive_titles", list, default=[], description="Window titles that should deactivate Fcitx5", category="deactivation"
+        ),
     )
 
     async def event_activewindowv2(self, _addr: str) -> None:

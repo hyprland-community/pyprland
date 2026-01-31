@@ -17,7 +17,7 @@ class Extension(Plugin):
     focus_changes = 0
 
     config_schema = ConfigItems(
-        ConfigField("multiplier", int, default=1, description="Multiplier for focus count"),
+        ConfigField("multiplier", int, default=1, description="Multiplier for focus count", category="basic"),
     )
 
     async def run_counter(self, args: str = "") -> None:

@@ -32,6 +32,7 @@ class ConfigField:
                   Supports arbitrary nesting depth - children schemas can themselves
                   have children with their own schemas.
         children_allow_extra: If True, don't warn about unknown keys in children
+        category: UI grouping category for TUI display (e.g., "basic", "positioning", "behavior")
     """
 
     name: str
@@ -44,6 +45,7 @@ class ConfigField:
     validator: Callable[[Any], list[str]] | None = None
     children: "ConfigItems | None" = None
     children_allow_extra: bool = False
+    category: str = ""  # UI grouping category (e.g., "basic", "positioning", "behavior")
 
     @property
     def type_name(self) -> str:

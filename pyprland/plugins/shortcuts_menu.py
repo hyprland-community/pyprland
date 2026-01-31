@@ -13,14 +13,14 @@ class Extension(MenuMixin, Plugin):
     """A flexible way to make your own shortcuts menus & launchers."""
 
     config_schema = ConfigItems(
-        ConfigField("entries", dict, required=True, description="Menu entries structure (nested dict of commands)"),
+        ConfigField("entries", dict, required=True, description="Menu entries structure (nested dict of commands)", category="basic"),
         *MenuMixin.menu_config_schema,
-        ConfigField("separator", str, default=" | ", description="Separator for menu display"),
-        ConfigField("command_start", str, default="", description="Prefix for command entries"),
-        ConfigField("command_end", str, default="", description="Suffix for command entries"),
-        ConfigField("submenu_start", str, default="", description="Prefix for submenu entries"),
-        ConfigField("submenu_end", str, default="➜", description="Suffix for submenu entries"),
-        ConfigField("skip_single", bool, default=True, description="Auto-select when only one option available"),
+        ConfigField("separator", str, default=" | ", description="Separator for menu display", category="appearance"),
+        ConfigField("command_start", str, default="", description="Prefix for command entries", category="appearance"),
+        ConfigField("command_end", str, default="", description="Suffix for command entries", category="appearance"),
+        ConfigField("submenu_start", str, default="", description="Prefix for submenu entries", category="appearance"),
+        ConfigField("submenu_end", str, default="➜", description="Suffix for submenu entries", category="appearance"),
+        ConfigField("skip_single", bool, default=True, description="Auto-select when only one option available", category="behavior"),
     )
 
     # Commands

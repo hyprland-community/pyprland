@@ -153,11 +153,13 @@ class MenuMixin:
             str,
             description="Menu engine to use",
             choices=MENU_ENGINE_CHOICES,
+            category="menu",
         ),
         ConfigField(
             "parameters",
             str,
             description="Extra parameters for the menu engine command",
+            category="menu",
         ),
     )
     """Schema for menu configuration fields. Plugins using MenuMixin should include this in their config_schema."""

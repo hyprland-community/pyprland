@@ -1,7 +1,7 @@
 [project]
 name = "pyprland"
 version = "2.6.2"
-description = "Hyperland plugin system - batteries included"
+description = "A companion for your desktop UX"
 authors = [
     { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
 ]
@@ -13,9 +13,9 @@ packages = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "aiofiles >= 23.2.1",
-    "aiohttp >= 3.9.0",
-    "pillow[rounded] >= 10.0.0",
+    "aiofiles",
+    "aiohttp",
+    "pillow",
 ]
 
 [project.scripts]
@@ -23,21 +23,21 @@ pypr = "pyprland.command:main"
 
 [dependency-groups]
 dev = [
-    "pytest >=7.4.3",
-    "pytest-asyncio >=0.23.2",
-    "pytest-mock >=3.12.0",
-    "vulture >=2.11",
-    "coverage >=7.4.1",
-    "mypy >=1.8.0",
-    "pdoc >=14.4.0",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "vulture",
+    "coverage",
+    "mypy",
+    "pdoc",
 ]
 lint = [
-    "black >=24.1.1",
-    "flake8 >=7.0.0",
-    "pydantic >=2.6.1",
-    "pylint >=3.0.3",
-    "ruff >=0.4.2",
-    "types-aiofiles >=25.1.0.20251011",
+    "black",
+    "flake8",
+    "pydantic",
+    "pylint",
+    "ruff",
+    "types-aiofiles",
 ]
 
 [tool.ruff]
@@ -136,10 +136,15 @@ select = [
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-# Backend adapters have unused args due to interface compliance
-"pyprland/adapters/fallback.py" = ["ARG002"]
-"pyprland/adapters/niri.py" = ["ARG002"]
-"pyprland/adapters/hyprland.py" = ["ARG002"]
+"pyprland/adapters/fallback.py" = [
+    "ARG002",
+]
+"pyprland/adapters/niri.py" = [
+    "ARG002",
+]
+"pyprland/adapters/hyprland.py" = [
+    "ARG002",
+]
 
 [tool.ruff.format]
 indent-style = "space"

@@ -12,7 +12,7 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("name", str, default="minimized", description="Default special workspace name"),
+        ConfigField("name", str, default="minimized", description="Default special workspace name", category="basic"),
     )
 
     async def run_toggle_special(self, special_workspace: str = "minimized") -> None:

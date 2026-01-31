@@ -15,8 +15,8 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("factor", float, default=2.0, description="Zoom factor when toggling"),
-        ConfigField("duration", int, default=0, description="Animation duration in frames (0 to disable)"),
+        ConfigField("factor", float, default=2.0, description="Zoom factor when toggling", category="basic"),
+        ConfigField("duration", int, default=0, description="Animation duration in frames (0 to disable)", category="basic"),
     )
 
     zoomed = False

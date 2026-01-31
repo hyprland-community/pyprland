@@ -96,8 +96,9 @@ class Extension(Plugin):
             default="uwsm app -- ashell",
             description="Command to run the bar (supports [monitor] variable)",
             required=True,
+            category="basic",
         ),
-        ConfigField("monitors", list, default=[], description="Preferred monitors list in order of priority"),
+        ConfigField("monitors", list, default=[], description="Preferred monitors list in order of priority", category="basic"),
     )
 
     monitors: set[str]

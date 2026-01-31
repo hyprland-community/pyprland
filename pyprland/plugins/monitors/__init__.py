@@ -30,10 +30,16 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland", "niri"]
 
     config_schema = ConfigItems(
-        ConfigField("startup_relayout", bool, default=True, description="Relayout monitors on startup"),
-        ConfigField("relayout_on_config_change", bool, default=True, description="Relayout when Hyprland config is reloaded"),
-        ConfigField("new_monitor_delay", float, default=1.0, description="Delay in seconds before handling new monitor"),
-        ConfigField("unknown", str, default="", description="Command to run when an unknown monitor is detected"),
+        ConfigField("startup_relayout", bool, default=True, description="Relayout monitors on startup", category="behavior"),
+        ConfigField(
+            "relayout_on_config_change", bool, default=True, description="Relayout when Hyprland config is reloaded", category="behavior"
+        ),
+        ConfigField(
+            "new_monitor_delay", float, default=1.0, description="Delay in seconds before handling new monitor", category="behavior"
+        ),
+        ConfigField(
+            "unknown", str, default="", description="Command to run when an unknown monitor is detected", category="external_commands"
+        ),
         ConfigField(
             "placement",
             dict,
@@ -43,11 +49,18 @@ class Extension(Plugin):
             children=MONITOR_PROPS_SCHEMA,
             validator=validate_placement_keys,
             children_allow_extra=True,  # Allow dynamic placement keys (leftOf, topOf, etc.)
+            category="placement",
         ),
         ConfigField(
-            "hotplug_commands", dict, default={}, description="Commands to run when specific monitors are plugged (pattern -> command)"
+            "hotplug_commands",
+            dict,
+            default={},
+            description="Commands to run when specific monitors are plugged (pattern -> command)",
+            category="external_commands",
         ),
-        ConfigField("hotplug_command", str, default="", description="Command to run when any monitor is plugged"),
+        ConfigField(
+            "hotplug_command", str, default="", description="Command to run when any monitor is plugged", category="external_commands"
+        ),
     )
 
     _mon_by_pat_cache: dict[str, MonitorInfo]

@@ -48,6 +48,7 @@ class Extension(Plugin):
             description="""This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated.
             A common option is the system journal output (eg: `journalctl -u nginx`)""",
             recommended=True,
+            category="basic",
         ),
         ConfigField(
             "parser",
@@ -55,6 +56,7 @@ class Extension(Plugin):
             default={},
             description="""Sets the list of rules / parser to be used to extract lines of interest
             Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.""",
+            category="basic",
         ),
         ConfigField(
             "parsers",
@@ -63,17 +65,23 @@ class Extension(Plugin):
             description="""Custom parser definitions (name -> list of rules).
             Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds)""",
             recommended=True,
+            category="parsers",
         ),
-        ConfigField("sources", list, default=[], description="Source definitions with command and parser", recommended=True),
+        ConfigField(
+            "sources", list, default=[], description="Source definitions with command and parser", recommended=True, category="basic"
+        ),
         ConfigField(
             "pattern",
             str,
             default="",
             description="The pattern is any regular expression that should trigger a match.",
             recommended=True,
+            category="basic",
         ),
-        ConfigField("default_color", str, default="#5555AA", description="Default notification color"),
-        ConfigField("use_notify_send", bool, default=False, description="Use notify-send instead of Hyprland notifications"),
+        ConfigField("default_color", str, default="#5555AA", description="Default notification color", category="appearance"),
+        ConfigField(
+            "use_notify_send", bool, default=False, description="Use notify-send instead of Hyprland notifications", category="behavior"
+        ),
     )
 
     _tasks: TaskManager

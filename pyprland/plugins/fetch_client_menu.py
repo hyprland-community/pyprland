@@ -14,7 +14,7 @@ class Extension(MenuMixin, Plugin):
 
     config_schema = ConfigItems(
         *MenuMixin.menu_config_schema,
-        ConfigField("separator", str, default="|", description="Separator between window number and title"),
+        ConfigField("separator", str, default="|", description="Separator between window number and title", category="appearance"),
     )
 
     _windows_origins: dict[str, str]

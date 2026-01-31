@@ -76,38 +76,46 @@ class Extension(Plugin):
     """Handles random wallpapers at regular intervals, with support for rounded corners and color scheme generation."""
 
     config_schema = ConfigItems(
-        ConfigField("path", (str, list), required=True, description="Path(s) to wallpaper images or directories"),
-        ConfigField("interval", int, default=10, description="Minutes between wallpaper changes"),
-        ConfigField("extensions", list, description="File extensions to include (e.g., ['png', 'jpg'])", default=["png", "jpeg", "jpg"]),
-        ConfigField("recurse", bool, default=False, description="Recursively search subdirectories"),
-        ConfigField("unique", bool, default=False, description="Use different wallpaper per monitor"),
-        ConfigField("radius", int, default=0, description="Corner radius for rounded corners"),
-        ConfigField("command", str, description="Custom command to set wallpaper ([file] and [output] variables)"),
-        ConfigField("post_command", str, description="Command to run after setting wallpaper"),
-        ConfigField("clear_command", str, description="Command to run when clearing wallpaper"),
+        ConfigField("path", (str, list), required=True, description="Path(s) to wallpaper images or directories", category="basic"),
+        ConfigField("interval", int, default=10, description="Minutes between wallpaper changes", category="basic"),
+        ConfigField(
+            "extensions",
+            list,
+            description="File extensions to include (e.g., ['png', 'jpg'])",
+            default=["png", "jpeg", "jpg"],
+            category="basic",
+        ),
+        ConfigField("recurse", bool, default=False, description="Recursively search subdirectories", category="basic"),
+        ConfigField("unique", bool, default=False, description="Use different wallpaper per monitor", category="basic"),
+        ConfigField("radius", int, default=0, description="Corner radius for rounded corners", category="appearance"),
+        ConfigField("command", str, description="Custom command to set wallpaper ([file] and [output] variables)", category="commands"),
+        ConfigField("post_command", str, description="Command to run after setting wallpaper", category="commands"),
+        ConfigField("clear_command", str, description="Command to run when clearing wallpaper", category="commands"),
         ConfigField(
             "color_scheme",
             str,
             default="",
             description="Color scheme for palette generation",
             choices=["", "pastel", "fluo", "fluorescent", "vibrant", "mellow", "neutral", "earth"],
+            category="colors",
         ),
-        ConfigField("variant", str, description="Color variant type for palette"),
-        ConfigField("templates", dict, description="Template files for color palette generation"),
+        ConfigField("variant", str, description="Color variant type for palette", category="colors"),
+        ConfigField("templates", dict, description="Template files for color palette generation", category="colors"),
         # Online wallpaper fetching options
-        ConfigField("online_ratio", float, default=0.0, description="Probability of fetching online (0.0-1.0)"),
+        ConfigField("online_ratio", float, default=0.0, description="Probability of fetching online (0.0-1.0)", category="online"),
         ConfigField(
             "online_backends",
             list,
             default=DEFAULT_ONLINE_BACKENDS,
             description="Enabled online backends",
+            category="online",
         ),
-        ConfigField("online_keywords", list, default=[], description="Keywords to filter online images"),
-        ConfigField("online_folder", str, default="online", description="Subfolder for downloaded online images"),
+        ConfigField("online_keywords", list, default=[], description="Keywords to filter online images", category="online"),
+        ConfigField("online_folder", str, default="online", description="Subfolder for downloaded online images", category="online"),
         # Cache options
-        ConfigField("cache_days", int, default=0, description="Days to keep cached images (0 = forever)"),
-        ConfigField("cache_max_mb", int, default=100, description="Maximum cache size in MB (0 = unlimited)"),
-        ConfigField("cache_max_images", int, default=0, description="Maximum number of cached images (0 = unlimited)"),
+        ConfigField("cache_days", int, default=0, description="Days to keep cached images (0 = forever)", category="cache"),
+        ConfigField("cache_max_mb", int, default=100, description="Maximum cache size in MB (0 = unlimited)", category="cache"),
+        ConfigField("cache_max_images", int, default=0, description="Maximum number of cached images (0 = unlimited)", category="cache"),
     )
 
     image_list: list[str]

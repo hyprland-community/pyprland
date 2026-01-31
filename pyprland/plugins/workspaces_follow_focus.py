@@ -12,7 +12,7 @@ class Extension(Plugin):
     environments: ClassVar[list[str]] = ["hyprland"]
 
     config_schema = ConfigItems(
-        ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage"),
+        ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage", category="basic"),
     )
 
     workspace_list: list[int]

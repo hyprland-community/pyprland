@@ -53,6 +53,7 @@ class ConfigItem:
     description: str = ""
     choices: list[str] | None = None
     children: list["ConfigItem"] | None = None
+    category: str = ""
 
 
 @dataclass
@@ -107,6 +108,7 @@ def extract_config_from_schema(schema: list) -> list[ConfigItem]:
                 description=field_def.description,
                 choices=field_def.choices,
                 children=children_items,
+                category=getattr(field_def, "category", ""),
             )
         )
     return config_items
@@ -255,6 +257,7 @@ def load_plugin(plugin_name: str) -> PluginDoc | None:
                 default=field_def.default,
                 description=field_def.description,
                 choices=field_def.choices,
+                category=getattr(field_def, "category", ""),
             )
             config_items.append(item)
 
