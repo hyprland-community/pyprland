@@ -53,18 +53,18 @@ class ConfigField:  # pylint: disable=too-many-instance-attributes
     def type_name(self) -> str:
         """Return human-readable type name (e.g., 'str', 'list[Path]')."""
 
-        def _format_type(t: type) -> str:
-            origin = get_origin(t)
+        def _format_type(typ: type) -> str:
+            origin = get_origin(typ)
             if origin is not None:
-                args = get_args(t)
+                args = get_args(typ)
                 if args:
                     args_str = ", ".join(_format_type(a) for a in args)
                     return f"{origin.__name__}[{args_str}]"
-                return origin.__name__
-            return t.__name__
+                return str(origin.__name__)
+            return str(typ.__name__)
 
         if isinstance(self.field_type, tuple):
-            return " or ".join(_format_type(t) for t in self.field_type)
+            return " or ".join(_format_type(typ) for typ in self.field_type)
         return _format_type(self.field_type)
 
 
