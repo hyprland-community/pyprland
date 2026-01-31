@@ -1,16 +1,13 @@
-pyenv := ".tox/py314-linting"
+lintenv := ".tox/py314-linting"
 testenv := ".tox/py314-unit"
 
+
+quicktest:
+    {{testenv}}/bin/pytest -q tests
+
 # Run pytest with optional parameters
-test *params='tests':
+debug *params='tests':
     {{testenv}}/bin/pytest --pdb -s {{params}}
-
-shorttest:
-    {{testenv}}/bin/pytest -q
-
-# Run all checks: unit tests, linting, and wiki generation
-all:
-    tox run -e unit,linting,wiki
 
 # Start the documentation website in dev mode
 website: gendoc
@@ -49,12 +46,11 @@ release:
 # Generate and open HTML coverage report
 htmlcov:
     tox run -e coverage
-    {{pyenv}}/bin/coverage html
     xdg-open ./htmlcov/index.html
 
 # Run mypy type checks on pyprland
 types:
-    {{pyenv}}/bin/mypy --check-untyped-defs pyprland
+    {{lintenv}}/bin/mypy --check-untyped-defs pyprland
 
 # Build C client - release (~17K)
 compile-c-client:
