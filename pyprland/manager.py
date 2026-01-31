@@ -1,4 +1,12 @@
-"""Pyprland manager - the core daemon class."""
+"""Core daemon orchestrator for Pyprland.
+
+The Pyprland class manages:
+- Plugin lifecycle (loading, initialization, configuration, cleanup)
+- Backend selection (Hyprland, Niri, Wayland, X11 fallbacks)
+- Event dispatching from compositor to plugins
+- Command handling from CLI client via Unix socket
+- Task queuing for sequential plugin command execution
+"""
 
 import asyncio
 import contextlib
@@ -32,7 +40,7 @@ from .constants import (
     TASK_TIMEOUT,
 )
 from .ipc import set_notify_method
-from .models import PyprError, ResponsePrefix
+from .models import PyprError, ReloadReason, ResponsePrefix
 from .plugins.interface import Plugin
 from .plugins.pyprland.schema import PYPRLAND_CONFIG_SCHEMA
 
@@ -207,7 +215,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 self.log.error(error)
             if validation_errors:
                 await self.backend.notify_error(f"Plugin '{name}' has {len(validation_errors)} config error(s). Check logs for details.")
-            await asyncio.wait_for(self.plugins[name].on_reload(), timeout=TASK_TIMEOUT / 2)
+            await asyncio.wait_for(self.plugins[name].on_reload(ReloadReason.INIT), timeout=TASK_TIMEOUT / 2)
         except TimeoutError:
             self.plugins[name].log.info("timed out on reload")
         except (AttributeError, TypeError, ValueError, RuntimeError, KeyError) as e:

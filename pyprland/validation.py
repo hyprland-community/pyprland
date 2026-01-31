@@ -1,4 +1,14 @@
-"""Configuration validation framework."""
+"""Configuration validation framework with schema definitions.
+
+Provides declarative schema definitions (ConfigField, ConfigItems) for
+validating plugin configuration. Supports type checking, required fields,
+choices, nested dict validation, and fuzzy matching for typo detection.
+
+Used by:
+- Plugin.validate_config() for runtime validation
+- 'pypr validate' CLI for static configuration checking
+- TUI editor for configuration field metadata
+"""
 
 import difflib
 import logging

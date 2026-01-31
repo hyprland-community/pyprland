@@ -1,4 +1,15 @@
-"""Interact with hyprland using sockets."""
+"""IPC communication with Hyprland and Niri compositors.
+
+Provides async context managers for socket connections and request/response
+handling. Includes retry logic for transient connection issues and event
+stream support for compositor events.
+
+Key exports:
+- hyprctl_connection: Context manager for Hyprland IPC
+- niri_connection: Context manager for Niri IPC
+- get_response: Send command and receive JSON response
+- get_event_stream: Open persistent event stream connection
+"""
 
 __all__ = [
     "get_response",

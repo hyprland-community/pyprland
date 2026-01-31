@@ -1,4 +1,10 @@
-"""Reusable mixins for plugins."""
+"""Reusable mixins for common plugin functionality.
+
+MonitorTrackingMixin:
+    Automatically tracks monitor add/remove events, maintaining a list
+    of active monitors. Works with both regular plugins (self.monitors)
+    and core plugins (self.state.monitors).
+"""
 
 from logging import Logger
 from typing import cast

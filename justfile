@@ -34,6 +34,10 @@ wiki:
 gendoc:
     python scripts/generate_plugin_docs.py
 
+# Generate codebase overview from module docstrings
+overview:
+    python scripts/generate_codebase_overview.py
+
 # Archive documentation for a specific version (creates static snapshot)
 archive-docs version:
     just gendoc

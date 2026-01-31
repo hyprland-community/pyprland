@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from ..models import ClientInfo
+from ..models import ClientInfo, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -18,8 +18,9 @@ class Extension(Plugin):
 
     exposed: list[ClientInfo]
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Initialize exposed list on reload."""
+        _ = reason  # unused
         self.exposed = []
 
     @property

@@ -19,6 +19,7 @@ from ...constants import (
     PREFETCH_RETRY_MAX_SECONDS,
     SECONDS_PER_DAY,
 )
+from ...models import ReloadReason
 from ...process import ManagedProcess
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
@@ -146,8 +147,9 @@ class Extension(Plugin):
         self._tasks = TaskManager()
         self._online_folders = set()
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Re-build the image list."""
+        _ = reason  # unused
         # Clean up legacy cache folder if it exists
         legacy_cache = Path.home() / ".cache" / "pyprland" / "wallpapers"
         if await aiexists(legacy_cache):

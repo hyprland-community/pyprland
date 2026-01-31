@@ -13,7 +13,7 @@ from typing import Any, ClassVar, cast
 
 from ..common import is_rotated
 from ..constants import MIN_CLIENTS_FOR_LAYOUT
-from ..models import ClientInfo
+from ..models import ClientInfo, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -144,8 +144,9 @@ class Extension(Plugin):
         else:
             await self.backend.notify_error(f"unknown layout_center command: {what}")
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Loads the configuration and apply the tag style."""
+        _ = reason  # unused
         if not self.get_config_list("style"):
             return
         await self.backend.execute("windowrule tag -layout_center", base_command="keyword")

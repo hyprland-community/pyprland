@@ -8,6 +8,7 @@ from typing import Any, cast
 from ..adapters.colors import convert_color
 from ..aioops import TaskManager
 from ..common import apply_filter, notify_send
+from ..models import ReloadReason
 from ..process import ManagedProcess
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -95,8 +96,9 @@ class Extension(Plugin):
         self.sources = {}
         self.parsers = {}
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Reload the plugin."""
+        _ = reason  # unused
         await self.exit()
         self._tasks.start()
         parsers = deepcopy(builtin_parsers)

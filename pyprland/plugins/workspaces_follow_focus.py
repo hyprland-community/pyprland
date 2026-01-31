@@ -2,6 +2,7 @@
 
 from typing import ClassVar, cast
 
+from ..models import ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -17,8 +18,9 @@ class Extension(Plugin):
 
     workspace_list: list[int]
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Rebuild workspaces list."""
+        _ = reason  # unused
         self.workspace_list = list(range(1, self.get_config_int("max_workspaces") + 1))
 
     async def event_focusedmon(self, screenid_name: str) -> None:

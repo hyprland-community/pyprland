@@ -1,4 +1,15 @@
-"""Common plugin interface."""
+"""Base Plugin class and infrastructure for Pyprland plugins.
+
+The Plugin class provides:
+- Typed configuration accessors (get_config_bool, get_config_int, etc.)
+- Schema-based validation via config_schema attribute
+- Lifecycle hooks (init, on_reload, exit)
+- Backend access for compositor operations
+- Shared state access for cross-plugin coordination
+
+Plugin authors should inherit from Plugin and implement event_* and run_*
+methods to handle compositor events and CLI commands respectively.
+"""
 
 import contextlib
 import logging
@@ -8,7 +19,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from ..adapters.proxy import BackendProxy
 from ..common import SharedState, get_logger
 from ..config import Configuration, coerce_to_bool
-from ..models import ClientInfo, MonitorInfo
+from ..models import ClientInfo, MonitorInfo, ReloadReason
 from ..validation import ConfigItems, ConfigValidator
 
 if TYPE_CHECKING:
@@ -168,10 +179,23 @@ class Plugin:
         Note that the `config` attribute isn't ready yet when this is called.
         """
 
-    async def on_reload(self) -> None:
-        """Add the code which requires the `config` attribute here.
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
+        """Apply configuration after it has been loaded.
 
-        This is called on *init* and *reload*
+        Called both during initial plugin setup and when configuration is reloaded.
+
+        Args:
+            reason: Why the reload was triggered
+                - INIT: First load during daemon startup
+                - RELOAD: Config reload via 'pypr reload', 'pypr set', or self-restart
+
+        Example:
+            async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
+                if reason == ReloadReason.INIT:
+                    # Expensive one-time setup
+                    self.monitors = await self.backend.get_monitors()
+                # Always apply config
+                self._apply_config()
         """
 
     async def exit(self) -> None:

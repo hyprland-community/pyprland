@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 
 from ..aioops import TaskManager
 from ..common import apply_variables
+from ..models import ReloadReason
 from ..process import ManagedProcess
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -111,8 +112,9 @@ class Extension(Plugin):
         super().__init__(name)
         self._tasks = TaskManager()
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Start the process."""
+        _ = reason  # unused
         await self.stop()
         self._run_program()
 

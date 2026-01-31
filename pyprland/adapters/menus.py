@@ -7,7 +7,7 @@ from logging import Logger
 from typing import TYPE_CHECKING, ClassVar
 
 from ..common import apply_variables, get_logger
-from ..models import PyprError
+from ..models import PyprError, ReloadReason
 from ..validation import ConfigField, ConfigItems
 
 if TYPE_CHECKING:
@@ -180,6 +180,7 @@ class MenuMixin:
             self.log.info("Using %s engine", self.menu.proc_name)
             self._menu_configured = True
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Reset the configuration status."""
+        _ = reason  # unused
         self._menu_configured = False

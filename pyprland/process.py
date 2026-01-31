@@ -1,4 +1,13 @@
-"""Process lifecycle management utilities."""
+"""Process lifecycle management utilities for spawning subprocesses.
+
+ManagedProcess:
+    Manages a subprocess with proper lifecycle (SIGTERM -> wait -> SIGKILL).
+    Provides start/stop/restart and stdout iteration helpers.
+
+SupervisedProcess:
+    Extends ManagedProcess with automatic restart on crash, cooldown
+    periods to prevent restart loops, and crash event callbacks.
+"""
 
 __all__ = ["ManagedProcess", "SupervisedProcess"]
 

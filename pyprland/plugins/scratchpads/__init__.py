@@ -8,7 +8,7 @@ from typing import ClassVar, cast
 from ...adapters.units import convert_coords
 from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
-from ...models import ClientInfo, VersionInfo
+from ...models import ClientInfo, ReloadReason, VersionInfo
 from ..interface import Plugin
 from .common import FocusTracker, HideFlavors
 from .events import EventsMixin
@@ -99,8 +99,9 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
             errors.extend(validate_scratchpad_config(name, scratch_config))
         return errors
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Config loader."""
+        _ = reason  # unused
         # Sanity checks
         _scratch_classes: dict[str, str] = {}
         for uid, scratch in self.config.items():

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from ...completions import handle_compgen
 from ...config import BOOL_FALSE_STRINGS, BOOL_TRUE_STRINGS
 from ...help import get_command_help, get_help
-from ...models import VersionInfo
+from ...models import ReloadReason, VersionInfo
 from ...validation import ConfigField, ConfigItems
 from ...version import VERSION
 from ..interface import Plugin
@@ -41,8 +41,9 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
         else:
             await self._init_hyprland()
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Reload the plugin."""
+        _ = reason  # unused
         self.state.variables = self.get_config_dict("variables")
         version_override = self.get_config_str("hyprland_version")
         if version_override:

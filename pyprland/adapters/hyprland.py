@@ -1,4 +1,9 @@
-"""Hyprland adapter."""
+"""Hyprland compositor backend implementation.
+
+Primary backend for Hyprland, using its Unix socket IPC protocol.
+Provides full functionality including batched commands, JSON queries,
+native notifications, and Hyprland-specific event parsing.
+"""
 
 from logging import Logger
 from typing import Any, cast

@@ -1,4 +1,11 @@
-"""Shared utilities - re-exports from focused modules for backward compatibility."""
+"""Shared utilities - re-exports from focused modules for backward compatibility.
+
+This module aggregates exports from specialized modules (debug, ipc_paths,
+logging_setup, state, terminal, utils) providing a single import point
+for commonly used functions and classes.
+
+Note: For new code, prefer importing directly from the specific modules.
+"""
 
 # Re-export from focused modules
 from .debug import DEBUG, is_debug, set_debug

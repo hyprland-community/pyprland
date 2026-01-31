@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from ...adapters.niri import niri_output_to_monitor_info
 from ...aioops import DebouncedTask
-from ...models import MonitorInfo
+from ...models import MonitorInfo, ReloadReason
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .commands import (
@@ -66,8 +66,9 @@ class Extension(Plugin):
     _mon_by_pat_cache: dict[str, MonitorInfo]
     _relayout_debouncer: DebouncedTask
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Reload the plugin."""
+        _ = reason  # unused
         self._mon_by_pat_cache = {}
         self._relayout_debouncer = DebouncedTask(ignore_window=3.0)
         self._clear_mon_by_pat_cache()

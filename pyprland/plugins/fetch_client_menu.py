@@ -3,6 +3,7 @@
 from typing import ClassVar
 
 from ..adapters.menus import MenuMixin
+from ..models import ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -19,8 +20,9 @@ class Extension(MenuMixin, Plugin):
 
     _windows_origins: dict[str, str]
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Initialize windows origins dict on reload."""
+        _ = reason  # unused
         self._windows_origins = {}
 
     # Commands

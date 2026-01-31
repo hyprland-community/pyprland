@@ -1,4 +1,13 @@
-"""Shared state management."""
+"""Shared state management for cross-plugin coordination.
+
+SharedState is a dataclass holding commonly-accessed mutable state:
+- Active workspace, monitor, and window
+- Environment type (hyprland, niri, wayland, xorg)
+- Monitor list with disabled monitor tracking
+- Hyprland version info
+
+Passed to all plugins via plugin.state for coordination.
+"""
 
 from dataclasses import dataclass, field
 

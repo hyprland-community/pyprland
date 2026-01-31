@@ -1,7 +1,19 @@
-"""Common types from Hyprland API."""
+"""Type definitions and data models for Pyprland.
+
+Provides TypedDict definitions matching Hyprland's JSON API responses:
+- ClientInfo: Window/client properties
+- MonitorInfo: Monitor/output properties
+- WorkspaceDf: Workspace identifier
+
+Also includes:
+- ResponsePrefix: Protocol constants for daemon-client communication
+- ExitCode: Standard CLI exit codes
+- ReloadReason: Context for plugin on_reload() calls
+- PyprError: Base exception for logged errors
+"""
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum, auto
 from typing import TypedDict
 
 PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
@@ -108,3 +120,15 @@ class ResponsePrefix(StrEnum):
 
     OK = "OK"
     ERROR = "ERROR"
+
+
+class ReloadReason(Enum):
+    """Reason for plugin reload/reconfiguration.
+
+    Allows plugins to optimize behavior based on reload context:
+    - INIT: First load during daemon startup (after init())
+    - RELOAD: Configuration reload (pypr reload, pypr set, or plugin self-restart)
+    """
+
+    INIT = auto()
+    RELOAD = auto()

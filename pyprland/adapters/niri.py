@@ -1,4 +1,9 @@
-"""Niri adapter."""
+"""Niri compositor backend implementation.
+
+Backend for Niri compositor using its JSON-based IPC protocol.
+Maps Niri's window/output data structures to Hyprland-compatible formats.
+Some operations (pin, resize, move) are unavailable due to Niri's tiling nature.
+"""
 
 import json
 from logging import Logger

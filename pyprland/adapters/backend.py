@@ -1,4 +1,14 @@
-"""Backend adapter interface."""
+"""Abstract base class defining the compositor backend interface.
+
+EnvironmentBackend defines the contract for all compositor backends:
+- Window operations (get_clients, focus, move, resize, close)
+- Monitor queries (get_monitors, get_monitor_props)
+- Command execution (execute, execute_batch, execute_json)
+- Notifications (notify, notify_info, notify_error)
+- Event parsing (parse_event)
+
+All methods accept a 'log' parameter for traceability via BackendProxy.
+"""
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable

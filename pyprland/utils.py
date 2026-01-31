@@ -1,4 +1,12 @@
-"""General utility functions."""
+"""General utility functions for Pyprland.
+
+Provides:
+- merge(): Deep dict merging with optional replace mode
+- apply_variables(): Template variable substitution [var_name] -> value
+- apply_filter(): Text filtering with vim-like s/find/replace/ syntax
+- is_rotated(): Check if monitor has 90/270 degree rotation
+- notify_send(): Send desktop notifications via notify-send
+"""
 
 import asyncio
 import contextlib

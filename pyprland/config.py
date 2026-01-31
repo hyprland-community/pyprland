@@ -1,4 +1,13 @@
-"""Configuration wrapper providing typed access and section filtering."""
+"""Configuration wrapper with typed accessors and schema-aware defaults.
+
+The Configuration class extends dict with:
+- Typed getters (get_bool, get_int, get_float, get_str)
+- Schema-based default values via set_schema()
+- Boolean coercion handling loose string values ("true", "yes", "1", etc.)
+
+Used by plugins to access their configuration sections with proper typing
+and automatic defaults from their config_schema definitions.
+"""
 
 from __future__ import annotations
 

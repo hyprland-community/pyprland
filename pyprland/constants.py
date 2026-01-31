@@ -1,4 +1,12 @@
-"""Shared constants for pyprland."""
+"""Shared constants and configuration defaults for Pyprland.
+
+Includes:
+- Config file paths (CONFIG_FILE, LEGACY_CONFIG_FILE)
+- Socket paths (CONTROL)
+- Timing constants (TASK_TIMEOUT, notification durations)
+- Display defaults (refresh rate, wallpaper dimensions)
+- IPC retry settings
+"""
 
 import os
 from pathlib import Path

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import ClassVar
 
-from ..models import VersionInfo
+from ..models import ReloadReason, VersionInfo
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -25,8 +25,9 @@ class Extension(Plugin):
 
     keyword = ""
 
-    async def on_reload(self) -> None:
+    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Initialization code."""
+        _ = reason  # unused
         if self.state.hyprland_version < VersionInfo(0, 40, 1):
             self.keyword = "misc:cursor_zoom_factor"
         else:
