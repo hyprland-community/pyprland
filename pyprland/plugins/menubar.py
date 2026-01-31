@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, ClassVar, cast
 
 from ..aioops import TaskManager
 from ..common import apply_variables
-from ..models import ReloadReason
+from ..models import Environment, ReloadReason
 from ..process import ManagedProcess
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -88,7 +88,7 @@ async def is_bar_alive(
 class Extension(Plugin):
     """Improves multi-monitor handling of the status bar and restarts it on crashes."""
 
-    environments: ClassVar[list[str]] = ["hyprland", "niri"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND, Environment.NIRI]
 
     config_schema = ConfigItems(
         ConfigField(
@@ -196,7 +196,7 @@ class Extension(Plugin):
         """Get best monitor according to preferred list."""
         preferred_monitors = self.get_config_list("monitors")
 
-        if self.state.environment == "niri":
+        if self.state.environment == Environment.NIRI:
             # Niri: outputs is a dict, enabled outputs have current_mode set
             outputs = await self.backend.execute_json("outputs")
             names = [name for name, data in outputs.items() if data.get("current_mode") is not None]

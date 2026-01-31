@@ -5,6 +5,8 @@ from __future__ import annotations
 import shutil
 import subprocess
 
+from ...models import Environment
+
 TERMINALS = ["kitty", "alacritty", "foot", "wezterm", "gnome-terminal", "konsole", "xterm"]
 
 TERMINAL_COMMANDS: dict[str, str] = {
@@ -56,13 +58,13 @@ def get_terminal_command(terminal: str, class_name: str) -> str:
     return template.format(class_name=class_name)
 
 
-def detect_running_environment() -> str | None:
+def detect_running_environment() -> Environment | None:
     """Auto-detect environment from running compositor.
 
     Checks for running Hyprland or Niri by trying their CLI tools.
 
     Returns:
-        "hyprland", "niri", or None if neither detected
+        Environment.HYPRLAND, Environment.NIRI, or None if neither detected
     """
     # Try hyprctl
     try:
@@ -73,7 +75,7 @@ def detect_running_environment() -> str | None:
             check=False,
         )
         if result.returncode == 0:
-            return "hyprland"
+            return Environment.HYPRLAND
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
@@ -86,7 +88,7 @@ def detect_running_environment() -> str | None:
             check=False,
         )
         if result.returncode == 0:
-            return "niri"
+            return Environment.NIRI
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 

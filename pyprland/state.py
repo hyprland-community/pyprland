@@ -11,7 +11,7 @@ Passed to all plugins via plugin.state for coordination.
 
 from dataclasses import dataclass, field
 
-from .models import VersionInfo
+from .models import Environment, VersionInfo
 
 __all__ = [
     "SharedState",
@@ -25,7 +25,7 @@ class SharedState:
     active_workspace: str = ""  # workspace name
     active_monitor: str = ""  # monitor name
     active_window: str = ""  # window address
-    environment: str = "hyprland"
+    environment: Environment = Environment.HYPRLAND
     variables: dict = field(default_factory=dict)
     monitors: list[str] = field(default_factory=list)  # ALL monitors (source of truth)
     _disabled_monitors: set[str] = field(default_factory=set)  # Disabled monitor names

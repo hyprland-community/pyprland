@@ -3,7 +3,7 @@
 from typing import ClassVar
 
 from ..adapters.menus import MenuMixin
-from ..models import ReloadReason
+from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -11,7 +11,7 @@ from .interface import Plugin
 class Extension(MenuMixin, Plugin):
     """Shows a menu to select and fetch a window to your active workspace."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         *MenuMixin.menu_config_schema,

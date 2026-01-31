@@ -12,10 +12,10 @@ from .imageutils import (
     to_rgb,
     to_rgba,
 )
-from .models import MATERIAL_VARIATIONS, ColorVariant, MaterialColors, VariantConfig
+from .models import MATERIAL_VARIATIONS, ColorScheme, ColorVariant, MaterialColors, Theme, VariantConfig
 
 
-async def detect_theme(logger: logging.Logger) -> str:
+async def detect_theme(logger: logging.Logger) -> Theme:
     """Detect the system theme (light/dark).
 
     Args:
@@ -32,9 +32,9 @@ async def detect_theme(logger: logging.Logger) -> str:
         if proc.returncode == 0:
             output = stdout.decode().strip().lower()
             if "prefer-light" in output or "'light'" in output:
-                return "light"
+                return Theme.LIGHT
             if "prefer-dark" in output or "'dark'" in output:
-                return "dark"
+                return Theme.DARK
     except OSError:
         logger.debug("gsettings not available for theme detection")
 
@@ -47,65 +47,78 @@ async def detect_theme(logger: logging.Logger) -> str:
         )
         stdout, _ = await proc.communicate()
         if proc.returncode == 0:
-            return stdout.decode().strip()
+            output = stdout.decode().strip().lower()
+            if output == "light":
+                return Theme.LIGHT
+            if output == "dark":
+                return Theme.DARK
     except OSError:
         logger.debug("darkman not available for theme detection")
 
-    return "dark"
+    return Theme.DARK
 
 
-def get_color_scheme_props(color_scheme: str) -> dict[str, float]:
+def get_color_scheme_props(color_scheme: ColorScheme | str) -> dict[str, float]:
     """Return color scheme properties suitable for nicify_oklab.
 
     Args:
-        color_scheme: The name of the color scheme (e.g. "pastel", "vibrant")
+        color_scheme: The color scheme (ColorScheme enum or string value)
     """
-    oklab_args: dict[str, float] = {}
-    scheme = color_scheme.lower()
+    # Convert string to ColorScheme if needed
+    if isinstance(color_scheme, ColorScheme):
+        scheme = color_scheme
+    else:
+        scheme_lower = color_scheme.lower()
+        # Handle "fluorescent" alias for "fluo"
+        if scheme_lower.startswith("fluo"):
+            scheme = ColorScheme.FLUORESCENT
+        else:
+            try:
+                scheme = ColorScheme(scheme_lower)
+            except ValueError:
+                return {}  # Unknown scheme, return empty dict
 
-    if scheme == "pastel":
-        oklab_args = {
+    # Scheme properties: min_sat, max_sat, min_light, max_light
+    scheme_props: dict[ColorScheme, dict[str, float]] = {
+        ColorScheme.PASTEL: {
             "min_sat": 0.2,
             "max_sat": 0.5,
             "min_light": 0.6,
             "max_light": 0.9,
-        }
-    elif scheme.startswith("fluo"):
-        oklab_args = {
+        },
+        ColorScheme.FLUORESCENT: {
             "min_sat": 0.7,
             "max_sat": 1.0,
             "min_light": 0.4,
             "max_light": 0.85,
-        }
-    elif scheme == "vibrant":
-        oklab_args = {
+        },
+        ColorScheme.VIBRANT: {
             "min_sat": 0.5,
             "max_sat": 0.8,
             "min_light": 0.4,
             "max_light": 0.85,
-        }
-    elif scheme == "mellow":
-        oklab_args = {
+        },
+        ColorScheme.MELLOW: {
             "min_sat": 0.3,
             "max_sat": 0.5,
             "min_light": 0.4,
             "max_light": 0.85,
-        }
-    elif scheme == "neutral":
-        oklab_args = {
+        },
+        ColorScheme.NEUTRAL: {
             "min_sat": 0.05,
             "max_sat": 0.1,
             "min_light": 0.4,
             "max_light": 0.65,
-        }
-    elif scheme == "earth":
-        oklab_args = {
+        },
+        ColorScheme.EARTH: {
             "min_sat": 0.2,
             "max_sat": 0.6,
             "min_light": 0.2,
             "max_light": 0.6,
-        }
-    return oklab_args
+        },
+    }
+
+    return scheme_props.get(scheme, {})
 
 
 def _get_rgb_for_variant(
@@ -158,7 +171,7 @@ def _get_base_hs(
 def _populate_colors(
     colors: dict[str, str],
     name: str,
-    theme: str,
+    theme: Theme,
     variant: ColorVariant,
 ) -> None:
     """Populate the colors dict with dark, light and default variants.
@@ -166,7 +179,7 @@ def _populate_colors(
     Args:
         colors: Dictionary to populate with color values
         name: Name of the color variant
-        theme: Current theme ("dark" or "light")
+        theme: Current theme (Theme.DARK or Theme.LIGHT)
         variant: ColorVariant object containing dark and light RGB values
     """
     r_dark, g_dark, b_dark = variant.dark
@@ -187,7 +200,7 @@ def _populate_colors(
     colors[f"colors.{name}.light.rgba"] = to_rgba(r_light, g_light, b_light)
 
     # Default (chosen)
-    if theme == "dark":
+    if theme == Theme.DARK:
         r_chosen, g_chosen, b_chosen = r_dark, g_dark, b_dark
     else:
         r_chosen, g_chosen, b_chosen = r_light, g_light, b_light
@@ -233,7 +246,7 @@ def _process_material_variant(
 def generate_palette(
     rgb_list: list[tuple[int, int, int]],
     process_color: Callable[[tuple[int, int, int]], tuple[float, float, float]],
-    theme: str = "dark",
+    theme: Theme = Theme.DARK,
     variant_type: str | None = None,
 ) -> dict[str, str]:
     """Generate a material-like palette from a single color.
@@ -241,7 +254,7 @@ def generate_palette(
     Args:
         rgb_list: List of RGB colors to use as base
         process_color: Function to process/nicify colors
-        theme: Target theme ("dark" or "light")
+        theme: Target theme (Theme.DARK or Theme.LIGHT)
         variant_type: Variant type (optional)
     """
     hue, light, sat = process_color(rgb_list[0])
@@ -253,7 +266,7 @@ def generate_palette(
         h_sec, s_sec = hue, sat
         h_tert, s_tert = hue, sat
 
-    colors = {"scheme": theme}
+    colors: dict[str, str] = {"scheme": theme.value}
     mat_colors = MaterialColors(primary=(hue, sat), secondary=(h_sec, s_sec), tertiary=(h_tert, s_tert))
 
     for name, props in MATERIAL_VARIATIONS.items():

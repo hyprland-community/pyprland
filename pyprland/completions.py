@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from .command_registry import get_all_commands
 from .constants import SUPPORTED_SHELLS
+from .plugins.wallpapers.models import ColorScheme
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -30,7 +31,7 @@ SCRATCHPAD_COMMANDS = {"toggle", "show", "hide", "attach"}
 
 # Known static completions for specific arg names
 KNOWN_COMPLETIONS: dict[str, list[str]] = {
-    "scheme": ["pastel", "fluo", "fluorescent", "vibrant", "mellow", "neutral", "earth"],
+    "scheme": [c.value for c in ColorScheme if c.value] + ["fluorescent"],  # Include alias
     "direction": ["1", "-1"],
 }
 

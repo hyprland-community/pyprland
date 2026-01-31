@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from ...completions import handle_compgen
 from ...config import BOOL_FALSE_STRINGS, BOOL_TRUE_STRINGS
 from ...help import get_command_help, get_help
-from ...models import ReloadReason, VersionInfo
+from ...models import Environment, ReloadReason, VersionInfo
 from ...validation import ConfigField, ConfigItems
 from ...version import VERSION
 from ..interface import Plugin
@@ -36,7 +36,7 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
         """Initialize the plugin."""
         self.state.active_window = ""
 
-        if self.state.environment == "niri":
+        if self.state.environment == Environment.NIRI:
             await self._init_niri()
         else:
             await self._init_hyprland()

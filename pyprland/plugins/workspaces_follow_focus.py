@@ -2,7 +2,7 @@
 
 from typing import ClassVar, cast
 
-from ..models import ReloadReason
+from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -10,7 +10,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Makes non-visible workspaces available on the currently focused screen."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage", category="basic"),

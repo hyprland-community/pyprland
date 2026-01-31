@@ -2,6 +2,7 @@
 
 from typing import ClassVar
 
+from ..models import Environment
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -9,7 +10,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """A plugin to auto-switch Fcitx5 input method status by window class/title."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("active_classes", list, default=[], description="Window classes that should activate Fcitx5", category="activation"),

@@ -2,6 +2,7 @@
 
 from typing import ClassVar, cast
 
+from ..models import Environment
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -9,7 +10,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Toggle switching the focused window to a special workspace."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("name", str, default="minimized", description="Default special workspace name", category="basic"),

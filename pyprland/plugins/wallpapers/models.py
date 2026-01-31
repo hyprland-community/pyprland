@@ -1,9 +1,37 @@
 """Models for color variants and configurations."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 HEX_LEN = 6
 HEX_LEN_HASH = 7
+
+
+class Theme(StrEnum):
+    """Light/dark theme for color variant selection.
+
+    Used to determine which color variant (dark or light) to use
+    as the default when generating color palettes from wallpapers.
+    """
+
+    DARK = "dark"
+    LIGHT = "light"
+
+
+class ColorScheme(StrEnum):
+    """Color palette schemes for wallpaper theming.
+
+    Controls saturation and lightness ranges applied to extracted colors.
+    Each scheme produces a distinct mood/aesthetic.
+    """
+
+    DEFAULT = ""  # No color adjustment
+    PASTEL = "pastel"  # Soft, muted colors (high lightness, low saturation)
+    FLUORESCENT = "fluo"  # Bright, vivid colors (high saturation)
+    VIBRANT = "vibrant"  # Rich, saturated colors
+    MELLOW = "mellow"  # Subdued, gentle colors
+    NEUTRAL = "neutral"  # Minimal saturation (near grayscale)
+    EARTH = "earth"  # Natural, earthy tones (lower lightness)
 
 
 @dataclass
@@ -31,7 +59,7 @@ class VariantConfig:
     props: tuple[float | str, float, float | str, float | str]
     mat_colors: MaterialColors
     source_hls: tuple[float, float, float]
-    theme: str
+    theme: Theme
     colors: dict[str, str]
 
 

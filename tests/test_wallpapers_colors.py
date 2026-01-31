@@ -16,6 +16,7 @@ from pyprland.plugins.wallpapers.colorutils import (
 )
 import colorsys
 from pyprland.plugins.wallpapers import Extension
+from pyprland.plugins.wallpapers.models import Theme
 from pyprland.plugins.wallpapers.theme import (
     get_color_scheme_props,
     generate_palette,
@@ -281,7 +282,7 @@ def test_generate_palette_basic(wallpaper_plugin):
     rgb_list = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
     wallpaper_plugin.config = {}
 
-    palette = generate_palette(rgb_list, mock_process_color, theme="dark")
+    palette = generate_palette(rgb_list, mock_process_color, theme=Theme.DARK)
 
     assert palette["scheme"] == "dark"
     # Basic check for existence
@@ -437,7 +438,7 @@ def test_hex_to_rgb():
 def test_generate_sample_palette():
     """Test sample palette generation."""
     base_rgb = (66, 133, 244)  # Google blue
-    palette = generate_sample_palette(base_rgb, theme="dark")
+    palette = generate_sample_palette(base_rgb, theme=Theme.DARK)
 
     # Check that palette contains expected keys
     assert "scheme" in palette
@@ -466,7 +467,7 @@ def test_generate_sample_palette():
 def test_generate_sample_palette_light_theme():
     """Test sample palette generation with light theme."""
     base_rgb = (66, 133, 244)
-    palette = generate_sample_palette(base_rgb, theme="light")
+    palette = generate_sample_palette(base_rgb, theme=Theme.LIGHT)
 
     assert palette["scheme"] == "light"
     # Default should match light variant
@@ -499,7 +500,7 @@ def test_categorize_palette():
 def test_palette_to_json():
     """Test JSON palette output."""
     base_rgb = (255, 85, 0)  # Orange
-    palette = generate_sample_palette(base_rgb, theme="dark")
+    palette = generate_sample_palette(base_rgb, theme=Theme.DARK)
 
     json_output = palette_to_json(palette)
 
@@ -533,7 +534,7 @@ def test_palette_to_json():
 def test_palette_to_terminal():
     """Test terminal palette output."""
     base_rgb = (66, 133, 244)
-    palette = generate_sample_palette(base_rgb, theme="dark")
+    palette = generate_sample_palette(base_rgb, theme=Theme.DARK)
 
     terminal_output = palette_to_terminal(palette)
 

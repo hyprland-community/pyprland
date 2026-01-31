@@ -2,7 +2,7 @@
 
 from typing import ClassVar, cast
 
-from ..models import ClientInfo, MonitorInfo
+from ..models import ClientInfo, Environment, MonitorInfo
 from .interface import Plugin
 
 
@@ -21,7 +21,7 @@ def contains(monitor: MonitorInfo, window: ClientInfo) -> bool:
 class Extension(Plugin):
     """Brings lost floating windows (which are out of reach) to the current workspace."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""

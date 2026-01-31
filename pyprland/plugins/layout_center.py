@@ -13,7 +13,7 @@ from typing import Any, ClassVar, cast
 
 from ..common import is_rotated
 from ..constants import MIN_CLIENTS_FOR_LAYOUT
-from ..models import ClientInfo, ReloadReason
+from ..models import ClientInfo, Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -21,7 +21,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """A workspace layout where one window is centered and maximized while others are in the background."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("margin", int, default=60, description="Margin around the centered window in pixels", category="basic"),

@@ -6,6 +6,7 @@ Provides TypedDict definitions matching Hyprland's JSON API responses:
 - WorkspaceDf: Workspace identifier
 
 Also includes:
+- Environment: Supported compositor/display server types
 - ResponsePrefix: Protocol constants for daemon-client communication
 - ExitCode: Standard CLI exit codes
 - ReloadReason: Context for plugin on_reload() calls
@@ -132,3 +133,18 @@ class ReloadReason(Enum):
 
     INIT = auto()
     RELOAD = auto()
+
+
+class Environment(StrEnum):
+    """Supported compositor/display server environments.
+
+    Used for:
+    - Plugin compatibility filtering (Plugin.environments)
+    - Runtime environment detection (SharedState.environment)
+    - Quickstart wizard environment selection
+    """
+
+    HYPRLAND = "hyprland"
+    NIRI = "niri"
+    WAYLAND = "wayland"  # Generic Wayland (no specific compositor)
+    XORG = "xorg"  # X11/Xorg fallback

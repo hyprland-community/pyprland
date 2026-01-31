@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from ..adapters.proxy import BackendProxy
 from ..common import SharedState, get_logger
 from ..config import Configuration, coerce_to_bool
-from ..models import ClientInfo, MonitorInfo, ReloadReason
+from ..models import ClientInfo, Environment, MonitorInfo, ReloadReason
 from ..validation import ConfigItems, ConfigValidator
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ class Plugin:
 
     aborted = False
 
-    environments: ClassVar[list[str]] = []
+    environments: ClassVar[list[Environment]] = []
     " The supported environments for this plugin. Empty list means all environments. "
 
     backend: BackendProxy

@@ -62,3 +62,5 @@ PicsumBackend  # unused class (pyprland/plugins/wallpapers/online/backends/picsu
 RedditBackend  # unused class (pyprland/plugins/wallpapers/online/backends/reddit.py) - dynamically loaded
 UnsplashBackend  # unused class (pyprland/plugins/wallpapers/online/backends/unsplash.py) - dynamically loaded
 WallhavenBackend  # unused class (pyprland/plugins/wallpapers/online/backends/wallhaven.py) - dynamically loaded
+# wallpapers/models - enum members used dynamically in config/completions
+DEFAULT  # unused variable (pyprland/plugins/wallpapers/models.py) - ColorScheme enum member for no adjustment

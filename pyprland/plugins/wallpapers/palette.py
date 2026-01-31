@@ -3,6 +3,7 @@
 import colorsys
 import json
 
+from .models import Theme
 from .theme import generate_palette
 
 # Category definitions for organizing palette output
@@ -154,13 +155,13 @@ def palette_to_terminal(palette: dict[str, str]) -> str:  # pylint: disable=too-
 
 def generate_sample_palette(
     base_rgb: tuple[int, int, int],
-    theme: str = "dark",
+    theme: Theme = Theme.DARK,
 ) -> dict[str, str]:
     """Generate a sample palette from an RGB color.
 
     Args:
         base_rgb: Base color as RGB tuple (0-255 for each component)
-        theme: Theme to use ("dark" or "light")
+        theme: Theme to use (Theme.DARK or Theme.LIGHT)
 
     Returns:
         Palette dictionary with all color variables

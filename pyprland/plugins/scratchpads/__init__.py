@@ -8,7 +8,7 @@ from typing import ClassVar, cast
 from ...adapters.units import convert_coords
 from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
-from ...models import ClientInfo, ReloadReason, VersionInfo
+from ...models import ClientInfo, Environment, ReloadReason, VersionInfo
 from ..interface import Plugin
 from .common import FocusTracker, HideFlavors
 from .events import EventsMixin
@@ -30,7 +30,7 @@ from .windowruleset import WindowRuleSet
 class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
     """Makes your applications into dropdowns & togglable popups."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     procs: dict[str, asyncio.subprocess.Process]
     scratches: ScratchDB

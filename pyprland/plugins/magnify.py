@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import ClassVar
 
-from ..models import ReloadReason, VersionInfo
+from ..models import Environment, ReloadReason, VersionInfo
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -12,7 +12,7 @@ from .interface import Plugin
 class Extension(Plugin):
     """Toggles zooming of viewport or sets a specific scaling factor."""
 
-    environments: ClassVar[list[str]] = ["hyprland"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("factor", float, default=2.0, description="Zoom factor when toggling", category="basic"),

@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from ...adapters.niri import niri_output_to_monitor_info
 from ...aioops import DebouncedTask
-from ...models import MonitorInfo, ReloadReason
+from ...models import Environment, MonitorInfo, ReloadReason
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .commands import (
@@ -27,7 +27,7 @@ from .schema import MONITOR_PROPS_SCHEMA, validate_placement_keys
 class Extension(Plugin):
     """Allows relative placement and configuration of monitors."""
 
-    environments: ClassVar[list[str]] = ["hyprland", "niri"]
+    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND, Environment.NIRI]
 
     config_schema = ConfigItems(
         ConfigField("startup_relayout", bool, default=True, description="Relayout monitors on startup", category="behavior"),
@@ -134,7 +134,7 @@ class Extension(Plugin):
         Args:
             monitors: Optional list of monitors to use. If not provided, fetches current state.
         """
-        if self.state.environment == "niri":
+        if self.state.environment == Environment.NIRI:
             return await self._run_relayout_niri()
 
         if monitors is None:
@@ -284,7 +284,7 @@ class Extension(Plugin):
         if not positions and not has_disabled:
             return False
 
-        if self.state.environment == "niri":
+        if self.state.environment == Environment.NIRI:
             return await self._apply_niri_layout(positions, monitors_by_name, config)
 
         if positions:

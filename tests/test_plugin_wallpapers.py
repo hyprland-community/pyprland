@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from pyprland.plugins.wallpapers import Extension, OnlineState
+from pyprland.plugins.wallpapers.models import Theme
 from pyprland.plugins.wallpapers.online import OnlineFetcher
 from tests.conftest import make_extension
 
@@ -84,7 +85,7 @@ async def test_detect_theme(mocker, test_logger):
     from pyprland.plugins.wallpapers.theme import detect_theme
 
     theme = await detect_theme(test_logger)
-    assert theme == "dark"
+    assert theme == Theme.DARK
 
 
 @pytest.mark.asyncio
@@ -119,7 +120,7 @@ async def test_run_palette_terminal(extension, mocker):
 
     # Mock detect_theme
     async def mock_detect_theme(_):
-        return "dark"
+        return Theme.DARK
 
     mocker.patch(
         "pyprland.plugins.wallpapers.detect_theme",
@@ -143,7 +144,7 @@ async def test_run_palette_json(extension, mocker):
 
     # Mock detect_theme
     async def mock_detect_theme(_):
-        return "dark"
+        return Theme.DARK
 
     mocker.patch(
         "pyprland.plugins.wallpapers.detect_theme",
@@ -166,7 +167,7 @@ async def test_run_palette_default_color(extension, mocker):
 
     # Mock detect_theme
     async def mock_detect_theme(_):
-        return "dark"
+        return Theme.DARK
 
     mocker.patch(
         "pyprland.plugins.wallpapers.detect_theme",

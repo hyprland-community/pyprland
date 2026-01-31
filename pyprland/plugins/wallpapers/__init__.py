@@ -19,7 +19,7 @@ from ...constants import (
     PREFETCH_RETRY_MAX_SECONDS,
     SECONDS_PER_DAY,
 )
-from ...models import ReloadReason
+from ...models import Environment, ReloadReason
 from ...process import ManagedProcess
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
@@ -33,6 +33,7 @@ from .imageutils import (
     get_effective_dimensions,
     get_files_with_ext,
 )
+from .models import ColorScheme
 from .online import NoBackendAvailableError, OnlineFetcher
 from .palette import generate_sample_palette, hex_to_rgb, palette_to_json, palette_to_terminal
 from .templates import TemplateEngine
@@ -100,7 +101,7 @@ class Extension(Plugin):
             str,
             default="",
             description="Color scheme for palette generation",
-            choices=["", "pastel", "fluo", "fluorescent", "vibrant", "mellow", "neutral", "earth"],
+            choices=[c.value for c in ColorScheme] + ["fluorescent"],
             category="templating",
         ),
         ConfigField("variant", str, description="Color variant type for palette", category="templating"),
@@ -170,7 +171,7 @@ class Extension(Plugin):
             return
 
         # Initialize hyprpaper manager if using default hyprpaper backend
-        if self.state.environment == "hyprland" and not self.get_config("command"):
+        if self.state.environment == Environment.HYPRLAND and not self.get_config("command"):
             self._hyprpaper = HyprpaperManager(self.log)
         else:
             self._hyprpaper = None
@@ -537,7 +538,7 @@ class Extension(Plugin):
         def process_color(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
             # reduce blue level for earth
             color_scheme = self.get_config_str("color_scheme")
-            if color_scheme == "earth":
+            if color_scheme == ColorScheme.EARTH:
                 rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
 
             r, g, b = nicify_oklab(rgb, **get_color_scheme_props(color_scheme))

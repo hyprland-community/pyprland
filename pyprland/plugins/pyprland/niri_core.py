@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ...models import PyprError, VersionInfo
+from ...models import Environment, PyprError, VersionInfo
 
 DEFAULT_VERSION = VersionInfo(9, 9, 9)
 
@@ -46,7 +46,7 @@ class NiriStateMixin:
         Args:
             _data: The event data (unused)
         """
-        if self.state.environment == "niri":
+        if self.state.environment == Environment.NIRI:
             try:
                 outputs = await self.backend.execute_json("outputs")
                 self.state.monitors = list(outputs.keys())

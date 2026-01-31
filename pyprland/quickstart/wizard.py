@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import questionary
 from questionary import Choice
 
+from ..models import Environment
 from .discovery import PluginInfo, discover_plugins, filter_by_environment
 from .generator import (
     backup_config,
@@ -43,8 +44,8 @@ def ask_environment() -> str | None:
     detected = detect_running_environment()
 
     choices = [
-        Choice(title="Hyprland", value="hyprland"),
-        Choice(title="Niri", value="niri"),
+        Choice(title="Hyprland", value=Environment.HYPRLAND),
+        Choice(title="Niri", value=Environment.NIRI),
         Choice(title="Other / Not running", value="other"),
     ]
 
@@ -54,16 +55,16 @@ def ask_environment() -> str | None:
         choices.insert(
             0,
             Choice(
-                title=f"{detected.capitalize()} (detected)",
+                title=f"{str(detected).capitalize()} (detected)",
                 value=detected,
             ),
         )
-        questionary.print(f"Detected: {detected.capitalize()}", style="fg:green")
+        questionary.print(f"Detected: {str(detected).capitalize()}", style="fg:green")
 
     result = questionary.select(
         "Which compositor are you using?",
         choices=choices,
-        default=detected or "hyprland",
+        default=detected or Environment.HYPRLAND,
     ).ask()
     if result is None:
         return None
@@ -321,11 +322,11 @@ def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
 
     questionary.print("\n── Suggested Keybindings ──", style="bold")
 
-    if environment == "hyprland":
+    if environment == Environment.HYPRLAND:
         questionary.print("Add to ~/.config/hypr/hyprland.conf:", style="fg:gray")
         for name in scratchpads_config:
             questionary.print(f"  bind = $mainMod, KEY, exec, pypr toggle {name}", style="fg:cyan")
-    elif environment == "niri":
+    elif environment == Environment.NIRI:
         questionary.print("Add to ~/.config/niri/config.kdl:", style="fg:gray")
         for name in scratchpads_config:
             questionary.print(f'  Mod+KEY {{ spawn "pypr" "toggle" "{name}"; }}', style="fg:cyan")

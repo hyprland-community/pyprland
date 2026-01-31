@@ -40,7 +40,7 @@ from .constants import (
     TASK_TIMEOUT,
 )
 from .ipc import set_notify_method
-from .models import PyprError, ReloadReason, ResponsePrefix
+from .models import Environment, PyprError, ReloadReason, ResponsePrefix
 from .plugins.interface import Plugin
 from .plugins.pyprland.schema import PYPRLAND_CONFIG_SCHEMA
 
@@ -105,11 +105,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
         # Try socket-based detection first (sync)
         if os.environ.get("NIRI_SOCKET"):
-            self.state.environment = "niri"
+            self.state.environment = Environment.NIRI
             self._shared_backend = NiriBackend(self.state)
             self._backend_selected = True
         elif os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-            self.state.environment = "hyprland"
+            self.state.environment = Environment.HYPRLAND
             self._shared_backend = HyprlandBackend(self.state)
             self._backend_selected = True
         else:
@@ -145,12 +145,12 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         """
         # Try generic Wayland (wlr-randr)
         if await WaylandBackend.is_available():
-            self.state.environment = "wayland"
+            self.state.environment = Environment.WAYLAND
             self._shared_backend = WaylandBackend(self.state)
             self.log.info("Using generic Wayland backend (wlr-randr) - degraded mode")
         # Try X11 (xrandr)
         elif await XorgBackend.is_available():
-            self.state.environment = "xorg"
+            self.state.environment = Environment.XORG
             self._shared_backend = XorgBackend(self.state)
             self.log.info("Using X11/Xorg backend (xrandr) - degraded mode")
         else:

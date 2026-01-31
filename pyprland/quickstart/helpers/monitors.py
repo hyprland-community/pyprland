@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 import questionary
 
+from ...models import Environment
+
 # Minimum monitors needed for layout configuration
 MIN_MONITORS_FOR_LAYOUT = 2
 
@@ -97,9 +99,9 @@ def detect_monitors(environment: str) -> list[DetectedMonitor]:
     Returns:
         List of detected monitors
     """
-    if environment == "hyprland":
+    if environment == Environment.HYPRLAND:
         return detect_monitors_hyprland()
-    if environment == "niri":
+    if environment == Environment.NIRI:
         return detect_monitors_niri()
     return []
 
