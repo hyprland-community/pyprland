@@ -134,11 +134,13 @@ class Extension(Plugin):
 
     # Online fetching state
     _online: OnlineState | None = None
+    _online_folders: set[str]
 
     def __init__(self, name: str) -> None:
         """Initialize the plugin."""
         super().__init__(name)
         self._tasks = TaskManager()
+        self._online_folders = set()
 
     async def on_reload(self) -> None:
         """Re-build the image list."""
@@ -166,6 +168,10 @@ class Extension(Plugin):
         extensions = self.get_config_list("extensions")
         radius = self.get_config_int("radius")
         online_ratio = self.get_config_float("online_ratio")
+
+        # Build set of online folder paths (for wall rm command)
+        online_folder_name = self.get_config_str("online_folder") or "online"
+        self._online_folders = {str(Path(p) / online_folder_name) for p in paths}
 
         # Build local image list
         self.image_list = [
@@ -445,18 +451,15 @@ class Extension(Plugin):
             return
 
         cur_path = Path(self.cur_image)
+        online_folder = cur_path.parent
 
-        # Check if online wallpapers are configured
-        if not self._online or not self._online.folder_path:
-            await self.backend.notify_error("Online wallpapers not configured")
-            return
+        # Handle images in "rounded" subfolder
+        if online_folder.name == "rounded":
+            online_folder = online_folder.parent
 
-        # Check if current image is under the online folder
-        try:
-            cur_path.relative_to(self._online.folder_path)
-        except ValueError:
-            # Not under online folder - it's a local file
-            await self.backend.notify_error("Current wallpaper is not an online image")
+        # Check if image is in an online folder
+        if str(online_folder) not in self._online_folders:
+            await self.backend.notify_error("Cannot remove local wallpapers")
             return
 
         # Remove from image_list
@@ -473,14 +476,13 @@ class Extension(Plugin):
             return
 
         # Also remove rounded version if it exists
-        if self._online.rounded_cache:
-            rounded_path = self._online.rounded_cache.cache_dir / cur_path.name
-            if await aiexists(rounded_path):
-                try:
-                    await aioremove(rounded_path)
-                    self.log.debug("Removed rounded version: %s", rounded_path)
-                except OSError:
-                    pass  # Non-critical, just log at debug level
+        rounded_path = online_folder / "rounded" / cur_path.name
+        if await aiexists(rounded_path):
+            try:
+                await aioremove(rounded_path)
+                self.log.debug("Removed rounded version: %s", rounded_path)
+            except OSError:
+                pass  # Non-critical, just log at debug level
 
         # Trigger next wallpaper
         self._paused = False
