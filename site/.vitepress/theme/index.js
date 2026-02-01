@@ -1,6 +1,5 @@
 // .vitepress/theme/index.js
 import DefaultTheme from 'vitepress/theme'
-import { nextTick } from 'vue'
 
 import ConfigBadges from '/components/ConfigBadges.vue'
 import EngineDefaults from '/components/EngineDefaults.vue'
@@ -45,16 +44,12 @@ export default {
         }
 
         // Fallback: if page doesn't exist (404), redirect to version root
-        if (typeof window !== 'undefined') {
-            router.onAfterRouteChanged = (to) => {
-                nextTick(() => {
-                    if (document.querySelector('.NotFound')) {
-                        const versionMatch = to.match(/^\/pyprland\/versions\/([^/]+)\//)
-                        if (versionMatch) {
-                            router.go(`/pyprland/versions/${versionMatch[1]}/`)
-                        }
-                    }
-                })
+        router.onAfterRouteChanged = (to) => {
+            if (router.route.data.isNotFound) {
+                const versionMatch = to.match(/^\/pyprland\/versions\/([^/]+)\//)
+                if (versionMatch) {
+                    router.go(`/pyprland/versions/${versionMatch[1]}/`)
+                }
             }
         }
     }
