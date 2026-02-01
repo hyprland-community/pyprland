@@ -1,5 +1,5 @@
 <script setup>
-import PluginList from '/components/PluginList.vue'
+import PluginList from './components/PluginList.vue'
 </script>
 
 This page lists every plugin provided by Pyprland out of the box, more can be enabled if you install the matching package.

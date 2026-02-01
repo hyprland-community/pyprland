@@ -108,12 +108,12 @@ export default {
                 {
                     name: 'wallpapers',
                     stars: 3,
-                    description: 'handles random wallpapers at regular interval (from a folder)'
+                    description: 'handles random wallpapers at regular interval (from a folder). Supports rounded corners and color scheme generation.'
                 },
                 {
                     name: 'bar',
                     stars: 3,
-                    description: 'improves multi-monitor handling of the status bar - restarts it on crashes too'
+                    description: 'improves multi-monitor handling of the status bar - restarts it on crashes'
                 },
                 {
                     name: 'expose',
