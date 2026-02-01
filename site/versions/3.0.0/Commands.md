@@ -1,5 +1,9 @@
 # Commands
 
+<script setup>
+import PluginCommands from './components/PluginCommands.vue'
+</script>
+
 This page covers the `pypr` command-line interface and available commands.
 
 ## Overview
@@ -9,7 +13,7 @@ The `pypr` command operates in two modes:
 | Usage | Mode | Description |
 |-------|------|-------------|
 | `pypr` | Daemon | Starts the Pyprland daemon (foreground) |
-| `pypr &lt;command&gt;` | Client | Sends a command to the running daemon |
+| `pypr <command>` | Client | Sends a command to the running daemon |
 
 
 There is also an optional `pypr-client` command which is designed for running in keyboard-bindings since it starts faster but doesn't support every built-in command (eg: `validate`, `edit`).
@@ -22,19 +26,7 @@ There is also an optional `pypr-client` command which is designed for running in
 
 These commands are always available, regardless of which plugins are loaded:
 
-| Command | Description |
-|---------|-------------|
-| `compgen &lt;shell&gt; [default|path]` | Generate shell completions. |
-| `dumpjson` | Dump the configuration in JSON format (after includes are processed). |
-| `exit` | Terminate the pyprland daemon. |
-| `get &lt;plugin.key&gt;` | Get a configuration value. |
-| `help [command]` | Show available commands or detailed help. |
-| `reload` | Reload the configuration file. |
-| `set &lt;plugin.key&gt; &lt;value&gt;` | Set a configuration value. |
-| `version` | Show the pyprland version. |
-| `edit` | Open the configuration file in $EDITOR, then reload. |
-| `validate` | Validate the configuration file. |
-
+<PluginCommands plugin="pyprland" />
 
 ## Plugin Commands
 
