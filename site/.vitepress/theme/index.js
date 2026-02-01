@@ -22,13 +22,24 @@ export default {
 
         // Version switcher: preserve current page when changing versions
         router.onBeforeRouteChange = (to) => {
+            // Switching to a specific version
             const versionRootMatch = to.match(/^\/pyprland\/versions\/([^/]+)\/$/)
             if (versionRootMatch) {
                 const currentPage = router.route.path
                     .replace(/^\/pyprland\/versions\/[^/]+\//, '')
                     .replace(/^\/pyprland\//, '')
                 if (currentPage && currentPage !== '' && currentPage !== 'index.html') {
-                    return `/pyprland/versions/${versionRootMatch[1]}/${currentPage}`
+                    router.go(`/pyprland/versions/${versionRootMatch[1]}/${currentPage}`)
+                    return false
+                }
+            }
+
+            // Switching to current version (from a versioned page)
+            if (to === '/pyprland/' || to === '/pyprland/index.html') {
+                const versionedPageMatch = router.route.path.match(/^\/pyprland\/versions\/[^/]+\/(.+)$/)
+                if (versionedPageMatch && versionedPageMatch[1] !== 'index.html') {
+                    router.go(`/pyprland/${versionedPageMatch[1]}`)
+                    return false
                 }
             }
         }
