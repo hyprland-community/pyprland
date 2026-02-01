@@ -1,6 +1,7 @@
 // .vitepress/theme/index.js
 import DefaultTheme from 'vitepress/theme'
 
+import CommandList from '/components/CommandList.vue'
 import ConfigBadges from '/components/ConfigBadges.vue'
 import EngineDefaults from '/components/EngineDefaults.vue'
 import PluginCommands from '/components/PluginCommands.vue'
@@ -13,6 +14,7 @@ export default {
     extends: DefaultTheme,
     enhanceApp({ app, router }) {
         // global components
+        app.component('CommandList', CommandList)
         app.component('ConfigBadges', ConfigBadges)
         app.component('EngineDefaults', EngineDefaults)
         app.component('PluginCommands', PluginCommands)
@@ -23,7 +25,6 @@ export default {
         router.onBeforeRouteChange = (to) => {
             // Don't intercept if we're leaving a 404 page
             if (router.route.data.isNotFound) {
-                console.log('[404] Allowing navigation from 404 to:', to)
                 return
             }
 
@@ -52,7 +53,6 @@ export default {
         // Fallback: if page doesn't exist (404), redirect to version root
         router.onAfterRouteChanged = (to) => {
             if (router.route.data.isNotFound) {
-                console.log('[404] Page not found:', to)
                 const versionMatch = to.match(/^\/pyprland\/versions\/([^/]+)\//)
                 if (versionMatch) {
                     const target = `/pyprland/versions/${versionMatch[1]}/`
