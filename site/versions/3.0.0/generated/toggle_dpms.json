@@ -1,0 +1,16 @@
+{
+  "name": "toggle_dpms",
+  "description": "Toggles the DPMS status of every plugged monitor.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "toggle_dpms",
+      "args": [],
+      "short_description": "Toggle dpms on/off for every monitor.",
+      "full_description": "Toggle dpms on/off for every monitor."
+    }
+  ],
+  "config": []
+}

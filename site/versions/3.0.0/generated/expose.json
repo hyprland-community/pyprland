@@ -1,0 +1,29 @@
+{
+  "name": "expose",
+  "description": "Exposes all windows for a quick 'jump to' feature.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "expose",
+      "args": [],
+      "short_description": "Expose every client on the active workspace.",
+      "full_description": "Expose every client on the active workspace.\n\nIf expose is active restores everything and move to the focused window"
+    }
+  ],
+  "config": [
+    {
+      "name": "include_special",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Include windows from special workspaces",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    }
+  ]
+}

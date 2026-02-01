@@ -25,7 +25,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { renderDescription } from './configHelpers.js'
 import { usePluginData } from './usePluginData.js'
-import { getPluginData } from './jsonLoader.js'
 
 const props = defineProps({
   plugin: {
@@ -39,19 +38,14 @@ const props = defineProps({
   linkPrefix: {
     type: String,
     default: ''
-  },
-  version: {
-    type: String,
-    default: null
   }
 })
 
 const commandToAnchor = ref({})
 
 const { data: commands, loading, error } = usePluginData(async () => {
-  const data = getPluginData(props.plugin, props.version)
-  if (!data) throw new Error(`Plugin data not found: ${props.plugin}`)
-  return data.commands || []
+  const module = await import(`../generated/${props.plugin}.json`)
+  return module.commands || []
 })
 
 const filteredCommands = computed(() => {

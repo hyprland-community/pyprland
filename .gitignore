@@ -166,3 +166,11 @@ result
 
 # Local development files
 OLD/
+
+# AI assistant / editor tool files
+.opencode/
+CODEBASE_OVERVIEW.md
+DEVELOPMENT_GUIDELINES.md
+
+# One-time migration scripts
+site/migration/

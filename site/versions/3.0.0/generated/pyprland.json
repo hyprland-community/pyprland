@@ -1,0 +1,204 @@
+{
+  "name": "pyprland",
+  "description": "Internal built-in plugin allowing caching states and implementing special commands.",
+  "environments": [],
+  "commands": [
+    {
+      "name": "compgen",
+      "args": [
+        {
+          "value": "shell",
+          "required": true
+        },
+        {
+          "value": "default|path",
+          "required": false
+        }
+      ],
+      "short_description": "Generate shell completions.",
+      "full_description": "<shell> [default|path] Generate shell completions.\n\nUsage:\n  pypr compgen <shell>            Output script to stdout\n  pypr compgen <shell> default    Install to default user path\n  pypr compgen <shell> ~/path     Install to home-relative path\n  pypr compgen <shell> /abs/path  Install to absolute path\n\nExamples:\n  pypr compgen zsh > ~/.zsh/completions/_pypr\n  pypr compgen bash default"
+    },
+    {
+      "name": "doc",
+      "args": [
+        {
+          "value": "plugin[.option",
+          "required": false
+        }
+      ],
+      "short_description": "] Show plugin and configuration documentation.",
+      "full_description": "[plugin[.option]] Show plugin and configuration documentation.\n\nUsage:\n  pypr doc                 List all plugins\n  pypr doc <plugin>        Show plugin documentation\n  pypr doc <plugin.option> Show config option details\n  pypr doc <plugin> <opt>  Same as plugin.option\n\nExamples:\n  pypr doc scratchpads\n  pypr doc scratchpads.animation\n  pypr doc wallpapers path"
+    },
+    {
+      "name": "dumpjson",
+      "args": [],
+      "short_description": "Dump the configuration in JSON format (after includes are processed).",
+      "full_description": "Dump the configuration in JSON format (after includes are processed)."
+    },
+    {
+      "name": "exit",
+      "args": [],
+      "short_description": "Terminate the pyprland daemon.",
+      "full_description": "Terminate the pyprland daemon."
+    },
+    {
+      "name": "get",
+      "args": [
+        {
+          "value": "plugin.key",
+          "required": true
+        }
+      ],
+      "short_description": "Get a configuration value.",
+      "full_description": "<plugin.key> Get a configuration value.\n\nArgs:\n    path: Dot-separated path (e.g., 'wallpapers.online_ratio')\n\nExamples:\n    pypr get wallpapers.online_ratio\n    pypr get scratchpads.term.command"
+    },
+    {
+      "name": "help",
+      "args": [
+        {
+          "value": "command",
+          "required": false
+        }
+      ],
+      "short_description": "Show available commands or detailed help.",
+      "full_description": "[command] Show available commands or detailed help.\n\nUsage:\n  pypr help           List all commands\n  pypr help <command> Show detailed help"
+    },
+    {
+      "name": "reload",
+      "args": [],
+      "short_description": "Reload the configuration file.",
+      "full_description": "Reload the configuration file.\n\nNew plugins will be loaded and configuration options will be updated.\nMost plugins will use the new values on the next command invocation."
+    },
+    {
+      "name": "set",
+      "args": [
+        {
+          "value": "plugin.key",
+          "required": true
+        },
+        {
+          "value": "value",
+          "required": true
+        }
+      ],
+      "short_description": "Set a configuration value.",
+      "full_description": "<plugin.key> <value> Set a configuration value.\n\nArgs:\n    args: Path and value (e.g., 'wallpapers.online_ratio 0.5')\n\nUse 'None' to unset a non-required option.\n\nExamples:\n    pypr set wallpapers.online_ratio 0.5\n    pypr set wallpapers.path /new/path\n    pypr set scratchpads.term.lazy true\n    pypr set wallpapers.online_ratio None"
+    },
+    {
+      "name": "version",
+      "args": [],
+      "short_description": "Show the pyprland version.",
+      "full_description": "Show the pyprland version."
+    },
+    {
+      "name": "edit",
+      "args": [],
+      "short_description": "Open the configuration file in $EDITOR, then reload.",
+      "full_description": "Open the configuration file in $EDITOR, then reload.\n\nOpens pyprland.toml in your preferred editor (EDITOR or VISUAL env var,\ndefaults to vi). After the editor closes, the configuration is reloaded."
+    },
+    {
+      "name": "validate",
+      "args": [],
+      "short_description": "Validate the configuration file.",
+      "full_description": "Validate the configuration file.\n\nChecks the configuration file for syntax errors and validates plugin\nconfigurations against their schemas. Does not require the daemon."
+    }
+  ],
+  "config": [
+    {
+      "name": "plugins",
+      "type": "list",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "List of plugins to load",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "include",
+      "type": "list[Path]",
+      "required": false,
+      "recommended": false,
+      "default": null,
+      "description": "Additional config files or folders to include",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": true
+    },
+    {
+      "name": "plugins_paths",
+      "type": "list[Path]",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Additional paths to search for third-party plugins",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": true
+    },
+    {
+      "name": "colored_handlers_log",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Enable colored log output for event handlers (debugging)",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "notification_type",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "auto",
+      "description": "Notification method: 'auto', 'notify-send', or 'native'",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "variables",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "User-defined variables for string substitution (see Variables page)",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "hyprland_version",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Override auto-detected Hyprland version (e.g., '0.40.0')",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "desktop",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Override auto-detected desktop environment (e.g., 'hyprland', 'niri'). Empty means auto-detect.",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    }
+  ]
+}

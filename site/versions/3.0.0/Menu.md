@@ -40,4 +40,14 @@ Extra parameters added to the engine command. Setting this will override the eng
 
 #### Default parameters per engine
 
-<EngineDefaults />
+| Engine | Default Parameters |
+|--------|-------------------|
+| `anyrun` | `--plugins libstdin.so --show-results-immediately true` |
+| `bemenu` | `-c` |
+| `dmenu` | `-i` |
+| `fuzzel` | `--match-mode=fuzzy -d -p '[prompt]'` |
+| `rofi` | `-dmenu -i -p '[prompt]'` |
+| `tofi` | `--prompt-text '[prompt]'` |
+| `walker` | `-d -k -p '[prompt]'` |
+| `wofi` | `-dmenu -i -p '[prompt]'` |
+

@@ -17,7 +17,11 @@ This creates a unified color scheme across your terminal, window borders, GTK ap
 
 ## Commands
 
-<PluginCommands plugin="wallpapers" :filter="['color', 'palette']" linkPrefix="command-" />
+| Command | Description |
+|---------|-------------|
+| `color <#RRGGBB> [scheme]` | Generate color palette from hex color. |
+| `palette [color] [json]` | Show available color template variables. |
+
 
 ### Using the `color` command {#command-color}
 

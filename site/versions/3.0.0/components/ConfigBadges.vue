@@ -8,8 +8,6 @@
 </template>
 
 <script>
-import { getPluginData } from './jsonLoader.js'
-
 export default {
     props: {
         plugin: {
@@ -19,10 +17,6 @@ export default {
         option: {
             type: String,
             required: true
-        },
-        version: {
-            type: String,
-            default: null
         }
     },
     data() {
@@ -31,17 +25,15 @@ export default {
             loaded: false
         }
     },
-    mounted() {
+    async mounted() {
         try {
-            const data = getPluginData(this.plugin, this.version)
-            if (data) {
-                const config = data.config || []
-                // Find the option - handle both "option" and "[prefix].option" formats
-                this.item = config.find(c => {
-                    const baseName = c.name.replace(/^\[.*?\]\./, '')
-                    return baseName === this.option || c.name === this.option
-                })
-            }
+            const data = await import(`../generated/${this.plugin}.json`)
+            const config = data.config || []
+            // Find the option - handle both "option" and "[prefix].option" formats
+            this.item = config.find(c => {
+                const baseName = c.name.replace(/^\[.*?\]\./, '')
+                return baseName === this.option || c.name === this.option
+            })
         } catch (e) {
             console.error(`Failed to load config for plugin: ${this.plugin}`, e)
         } finally {

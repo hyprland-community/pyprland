@@ -1,0 +1,58 @@
+{
+  "name": "fcitx5_switcher",
+  "description": "A plugin to auto-switch Fcitx5 input method status by window class/title.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [],
+  "config": [
+    {
+      "name": "active_classes",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window classes that should activate Fcitx5",
+      "choices": null,
+      "children": null,
+      "category": "activation",
+      "is_directory": false
+    },
+    {
+      "name": "active_titles",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window titles that should activate Fcitx5",
+      "choices": null,
+      "children": null,
+      "category": "activation",
+      "is_directory": false
+    },
+    {
+      "name": "inactive_classes",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window classes that should deactivate Fcitx5",
+      "choices": null,
+      "children": null,
+      "category": "deactivation",
+      "is_directory": false
+    },
+    {
+      "name": "inactive_titles",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window titles that should deactivate Fcitx5",
+      "choices": null,
+      "children": null,
+      "category": "deactivation",
+      "is_directory": false
+    }
+  ]
+}

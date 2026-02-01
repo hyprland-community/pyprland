@@ -11,7 +11,6 @@
 
 <script>
 import ConfigTable from './ConfigTable.vue'
-import { getPluginData } from './jsonLoader.js'
 
 export default {
   components: {
@@ -28,10 +27,6 @@ export default {
     },
     filter: {
       type: Array,
-      default: null
-    },
-    version: {
-      type: String,
       default: null
     }
   },
@@ -54,14 +49,10 @@ export default {
       })
     }
   },
-  mounted() {
+  async mounted() {
     try {
-      const data = getPluginData(this.plugin, this.version)
-      if (!data) {
-        this.error = `Plugin data not found: ${this.plugin}`
-      } else {
-        this.config = data.config || []
-      }
+      const data = await import(`../generated/${this.plugin}.json`)
+      this.config = data.config || []
     } catch (e) {
       this.error = `Failed to load configuration for plugin: ${this.plugin}`
       console.error(e)

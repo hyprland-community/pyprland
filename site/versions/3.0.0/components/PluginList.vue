@@ -51,20 +51,11 @@
 <script setup>
 import { computed } from 'vue'
 import { usePluginData } from './usePluginData.js'
-import { getPluginData } from './jsonLoader.js'
-
-const props = defineProps({
-    version: {
-        type: String,
-        default: null
-    }
-})
 
 const { data: plugins, loading, error } = usePluginData(async () => {
-    const data = getPluginData('index', props.version)
-    if (!data) throw new Error('Plugin index not found')
+    const module = await import('../generated/index.json')
     // Filter out internal plugins like 'pyprland'
-    return (data.plugins || []).filter(p => p.name !== 'pyprland')
+    return (module.plugins || []).filter(p => p.name !== 'pyprland')
 })
 
 const sortedPlugins = computed(() => {

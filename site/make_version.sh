@@ -1,57 +1,68 @@
-#!/bin/sh
+#!/bin/bash
 # Archive documentation for a specific version.
 #
-# This script:
-# 1. Copies current markdown files to versions/<version>/
-# 2. Copies generated JSON files for static rendering
-# 3. Renders Vue components to static markdown tables
-# 4. Removes JSON files (no longer needed after rendering)
-# 5. Updates the version selector in VitePress config
-# 6. Commits all changes
+# Creates a full copy of the site's source files including:
+# - Markdown content
+# - Sidebar configuration (sidebar.json)
+# - Vue components
+# - Generated JSON data
+#
+# The archived version will automatically appear in the version picker
+# since config.mjs dynamically discovers versions.
 
 set -e
+
+cd "$(dirname "$0")"
 
 echo -n "Current is: "
 pypr version
 echo -n "Available: "
 ls versions
 
-if [ -z "$1" ]; then
-    echo -n "Archive current version as: "
-    read version
-else
-    version=$1
+version="${1:-}"
+[ -z "$version" ] && { echo -n "Archive current version as: "; read version; }
+
+dest="versions/$version"
+echo "Archiving version $version to $dest..."
+
+# Create destination
+mkdir -p "$dest"
+
+# Copy markdown files
+cp *.md "$dest/"
+
+# Copy sidebar config
+cp sidebar.json "$dest/"
+
+# Copy components (for historical reference)
+cp -r components "$dest/"
+
+# Copy generated JSON if present
+if ls generated/*.json >/dev/null 2>&1; then
+    mkdir -p "$dest/generated"
+    cp generated/*.json "$dest/generated/"
 fi
 
-echo "Archiving version $version..."
-
-# Create version directory and copy markdown files
-mkdir -p versions/$version
-cp *.md versions/$version/
-
-# Copy generated JSON files for static rendering
-mkdir -p versions/$version/generated
-cp generated/*.json versions/$version/generated/
-
-# Render Vue components to static markdown
-echo "Rendering Vue components to static markdown..."
-python3 ../scripts/render_static_docs.py versions/$version
-
-# Remove JSON files (no longer needed after static rendering)
-rm -rf versions/$version/generated
+# Inject version prop into Vue component tags
+# This ensures components load data from the correct version's JSON files
+echo "Injecting version props into Vue components..."
+for file in "$dest"/*.md; do
+    # Handle tags with existing attributes
+    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges)([^>]*[^/])\s*\/>/<\1\2 version="'"$version"'" \/>/g' "$file"
+    # Handle tags without attributes
+    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges)\s*\/>/<\1 version="'"$version"'" \/>/g' "$file"
+done
 
 # Truncate index.md to remove dynamic content
-sed -i '/## What/,$d' versions/$version/index.md
-echo "## Version $version archive" >> versions/$version/index.md
+sed -i '/## What/,$d' "$dest/index.md"
+echo "## Version $version archive" >> "$dest/index.md"
 
-# Stage markdown files
-git add versions/$version/*.md
+# Stage files
+git add "$dest/"
 
-# Append version to the version selector in VitePress config
-sed -i "/const version_names/s#\[\$#[\n  '${version}',#" .vitepress/config.mjs
-git add .vitepress/config.mjs
+# Commit
+git commit -m "Archive documentation for version $version" --no-verify
 
-# Commit changes
-git commit . -m "Archive documentation for version $version" --no-verify
-
+echo ""
 echo "Done! Version $version archived."
+echo "The version will automatically appear in the version picker."
