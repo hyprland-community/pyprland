@@ -10,8 +10,11 @@ from typing import TextIO
 
 __all__ = [
     "BLACK",
+    "BLUE",
     "BOLD",
+    "CYAN",
     "DIM",
+    "GREEN",
     "RED",
     "RESET",
     "YELLOW",
@@ -35,7 +38,10 @@ DIM = "2"
 # Foreground color codes
 BLACK = "30"
 RED = "31"
+GREEN = "32"
 YELLOW = "33"
+BLUE = "34"
+CYAN = "36"
 
 
 def should_colorize(stream: TextIO | None = None) -> bool:

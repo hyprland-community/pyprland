@@ -190,6 +190,23 @@ def get_command_completions(manager: Pyprland) -> dict[str, CommandCompletion]:
             description=commands["compgen"].description or "Generate shell completions",
         )
 
+    # Override doc command with plugin list completion
+    if "doc" in commands:
+        plugin_names = [p for p in manager.plugins if p != "pyprland"]
+        commands["doc"] = CommandCompletion(
+            name="doc",
+            args=[
+                CompletionArg(
+                    position=1,
+                    completion_type="choices",
+                    values=sorted(plugin_names),
+                    required=False,
+                    description="plugin",
+                )
+            ],
+            description=commands["doc"].description or "Show plugin documentation",
+        )
+
     return commands
 
 

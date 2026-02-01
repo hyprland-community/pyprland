@@ -9,13 +9,16 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ...command_registry import extract_commands_from_object
 from ...completions import handle_compgen
 from ...config import BOOL_FALSE_STRINGS, BOOL_TRUE_STRINGS
+from ...doc import format_config_field_doc, format_plugin_doc, format_plugin_list
 from ...help import get_command_help, get_help
 from ...models import Environment, ReloadReason, VersionInfo
 from ...validation import ConfigField, ConfigItems
 from ...version import VERSION
 from ..interface import Plugin
+from ..scratchpads.schema import SCRATCHPAD_SCHEMA
 from .hyprland_core import HyprlandStateMixin
 from .niri_core import NiriStateMixin
 from .schema import PYPRLAND_CONFIG_SCHEMA
@@ -65,6 +68,93 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
           pypr help <command> Show detailed help
         """
         return get_command_help(self.manager, command) if command else get_help(self.manager)
+
+    def run_doc(self, args: str = "") -> str:
+        """[plugin[.option]] Show plugin and configuration documentation.
+
+        Usage:
+          pypr doc                 List all plugins
+          pypr doc <plugin>        Show plugin documentation
+          pypr doc <plugin.option> Show config option details
+          pypr doc <plugin> <opt>  Same as plugin.option
+
+        Examples:
+          pypr doc scratchpads
+          pypr doc scratchpads.animation
+          pypr doc wallpapers path
+        """
+        if not args:
+            return format_plugin_list(self.manager.plugins)
+
+        # Parse plugin.option or plugin option syntax
+        parts = args.split()
+        if len(parts) == 1 and "." in parts[0]:
+            # plugin.option format
+            parts = parts[0].split(".", 1)
+
+        plugin_name = parts[0]
+        option_name = parts[1] if len(parts) > 1 else None
+
+        if plugin_name not in self.manager.plugins:
+            # List available plugins
+            available = [p for p in self.manager.plugins if p != "pyprland"]
+            msg = f"Unknown plugin: {plugin_name}\nAvailable: {', '.join(sorted(available))}"
+            raise ValueError(msg)
+
+        plugin = self.manager.plugins[plugin_name]
+
+        if option_name:
+            return self._get_option_doc(plugin_name, plugin, option_name)
+
+        # Show full plugin doc
+        commands = list(extract_commands_from_object(plugin, source=plugin_name))
+
+        # Special case: scratchpads uses per-item schema
+        if plugin_name == "scratchpads":
+            return format_plugin_doc(plugin, commands, schema_override=SCRATCHPAD_SCHEMA, config_prefix="[name].")
+
+        return format_plugin_doc(plugin, commands)
+
+    def _get_option_doc(self, plugin_name: str, plugin: Plugin, option_name: str) -> str:
+        """Get documentation for a specific config option.
+
+        Args:
+            plugin_name: Name of the plugin
+            plugin: The plugin instance
+            option_name: Name of the config option
+
+        Returns:
+            Formatted documentation string
+
+        Raises:
+            ValueError: If option not found
+        """
+        # Special case: scratchpads has per-item schema instead of top-level
+        if plugin_name == "scratchpads":
+            field = SCRATCHPAD_SCHEMA.get(option_name)
+            if field:
+                return format_config_field_doc(f"{plugin_name}.[name]", field)
+            # Option not found in scratchpads schema
+            available_opts = [f.name for f in SCRATCHPAD_SCHEMA]
+            msg = f"Unknown option '{option_name}' in {plugin_name}\n"
+            msg += f"Available: {', '.join(sorted(available_opts))}"
+            raise ValueError(msg)
+
+        # Normal plugins with top-level schema
+        schema: ConfigItems | None = getattr(plugin, "config_schema", None)
+        if not schema:
+            msg = f"Plugin '{plugin_name}' has no configuration schema"
+            raise ValueError(msg)
+
+        field = schema.get(option_name)
+        if not field:
+            # List available options
+            available_opts = [f.name for f in schema]
+            msg = f"Unknown option '{option_name}' in {plugin_name}\n"
+            msg += f"Available: {', '.join(sorted(available_opts))}"
+            raise ValueError(msg)
+
+        return format_config_field_doc(plugin_name, field)
 
     async def run_reload(self) -> None:
         """Reload the configuration file.
