@@ -1,6 +1,5 @@
 // .vitepress/theme/index.js
 import DefaultTheme from 'vitepress/theme'
-import { nextTick } from 'vue'
 
 import ConfigBadges from '/components/ConfigBadges.vue'
 import EngineDefaults from '/components/EngineDefaults.vue'
@@ -22,6 +21,12 @@ export default {
 
         // Version switcher: preserve current page when changing versions
         router.onBeforeRouteChange = (to) => {
+            // Don't intercept if we're leaving a 404 page
+            if (router.route.data.isNotFound) {
+                console.log('[404] Allowing navigation from 404 to:', to)
+                return
+            }
+
             // Switching to a specific version
             const versionRootMatch = to.match(/^\/pyprland\/versions\/([^/]+)\/$/)
             if (versionRootMatch) {
