@@ -25,6 +25,10 @@ version="${1:-}"
 dest="versions/$version"
 echo "Archiving version $version to $dest..."
 
+# Regenerate JSON to ensure it matches current code
+echo "Regenerating plugin documentation..."
+python ../scripts/generate_plugin_docs.py
+
 # Create destination
 mkdir -p "$dest"
 
