@@ -55,7 +55,10 @@ export default {
                 console.log('[404] Page not found:', to)
                 const versionMatch = to.match(/^\/pyprland\/versions\/([^/]+)\//)
                 if (versionMatch) {
-                    router.go(`/pyprland/versions/${versionMatch[1]}/`)
+                    const target = `/pyprland/versions/${versionMatch[1]}/`
+                    // Replace current history entry so back button skips the 404
+                    history.replaceState(null, '', target)
+                    router.go(target)
                 }
             }
         }
