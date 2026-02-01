@@ -38,9 +38,6 @@ METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.toml"
 # Plugins to skip (not real plugins)
 SKIP_PLUGINS = {"interface", "protocols", "__init__", "experimental", "mixins"}
 
-# Plugins that are packages (directories with __init__.py)
-PACKAGE_PLUGINS = {"scratchpads", "monitors", "wallpapers", "pyprland"}
-
 
 @dataclass
 class ConfigItem:

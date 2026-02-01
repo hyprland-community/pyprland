@@ -52,9 +52,9 @@ fi
 echo "Injecting version props into Vue components..."
 for file in "$dest"/*.md; do
     # Handle tags with existing attributes
-    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges)([^>]*[^/])\s*\/>/<\1\2 version="'"$version"'" \/>/g' "$file"
+    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges|EngineDefaults)([^>]*[^/])\s*\/>/<\1\2 version="'"$version"'" \/>/g' "$file"
     # Handle tags without attributes
-    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges)\s*\/>/<\1 version="'"$version"'" \/>/g' "$file"
+    sed -i -E 's/<(PluginCommands|PluginConfig|PluginList|ConfigBadges|EngineDefaults)\s*\/>/<\1 version="'"$version"'" \/>/g' "$file"
 done
 
 # Truncate index.md to remove dynamic content

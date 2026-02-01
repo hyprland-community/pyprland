@@ -1,7 +1,6 @@
 <template>
-  <div v-if="loading" class="data-loading">Loading engine defaults...</div>
-  <div v-else-if="error" class="data-error">{{ error }}</div>
-  <table v-else class="data-table">
+  <div v-if="error" class="data-error">{{ error }}</div>
+  <table v-else-if="engineDefaults" class="data-table">
     <thead>
       <tr>
         <th>Engine</th>
@@ -18,10 +17,25 @@
 </template>
 
 <script setup>
-import { usePluginData } from './usePluginData.js'
+import { computed } from 'vue'
+import { getPluginData } from './jsonLoader.js'
 
-const { data: engineDefaults, loading, error } = usePluginData(async () => {
-  const module = await import('../generated/menu.json')
-  return module.engine_defaults || {}
+const props = defineProps({
+  version: {
+    type: String,
+    default: null
+  }
 })
+
+const data = computed(() => {
+  try {
+    return getPluginData('menu', props.version)
+  } catch (e) {
+    console.error('Failed to load menu data:', e)
+    return null
+  }
+})
+
+const engineDefaults = computed(() => data.value?.engine_defaults || null)
+const error = computed(() => data.value === null ? 'Failed to load engine defaults' : null)
 </script>
