@@ -103,14 +103,13 @@ export default withMermaid(defineConfig({
     search: {
       provider: 'local',
       options: {
-        miniSearch: {
-          searchOptions: {
-            processTerm: (text) => {
-              // Exclude versioned pages from search results
-              if (text.includes('/versions/')) return null
-              return text
-            }
-          }
+        _render(src, env, md) {
+          const html = md.render(src, env)
+          // Exclude versioned pages from search index
+          if (env.relativePath.startsWith('versions/')) return ''
+          // Also respect frontmatter search: false
+          if (env.frontmatter?.search === false) return ''
+          return html
         }
       }
     },
