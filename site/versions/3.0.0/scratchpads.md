@@ -56,13 +56,7 @@ bind = $mainMod,Y,exec,pypr attach
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `attach` | Attach the focused window to the last focused scratchpad. |
-| `hide <name>` | hides scratchpad "name" (accepts "*"). |
-| `show <name>` | shows scratchpad "name" (accepts "*"). |
-| `toggle <name>` | toggles visibility of scratchpad "name" (supports multiple names). |
-
+<PluginCommands plugin="scratchpads" />
 
 > [!tip]
 > You can use `"*"` as a _scratchpad name_ to target every scratchpad when using `show` or `hide`.
@@ -70,34 +64,23 @@ bind = $mainMod,Y,exec,pypr attach
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `command` · *str* · **required** | Command to run (omit for unmanaged scratchpads) |
-| `class` · *str* · *recommended* | Window class for matching |
-| `animation` · *str* · =`"fromTop"` | Animation type (options: `fromTop` \| `fromBottom` \| `fromLeft` \| `fromRight`) |
-| `size` · *str* · =`"80% 80%"` · *recommended* | Window size (e.g. '80% 80%') |
-| `position` · *str* | Explicit position override |
-| `margin` · *int* · =`60` | Pixels from screen edge |
-| `max_size` · *str* | Maximum window size |
-| `lazy` · *bool* · =`true` | Start on first use |
-| `multi` · *bool* · =`true` | Allow multiple windows |
-
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['command', 'class', 'animation', 'size', 'position', 'margin', 'max_size', 'multi', 'lazy']" />
 
 > [!tip]
 > Looking for more options? See:
 > - [Advanced Configuration](./scratchpads_advanced) - unfocus, excludes, monitor overrides, and more
 > - [Troubleshooting](./scratchpads_nonstandard) - PWAs, emacsclient, custom window matching
 
-### `command` *str* · **required** {#config-command}
+### `command` <ConfigBadges plugin="scratchpads" option="command" /> {#config-command}
 
 This is the command you wish to run in the scratchpad. It supports [variables](./Variables).
 
-### `class` *str* · *recommended* {#config-class}
+### `class` <ConfigBadges plugin="scratchpads" option="class" /> {#config-class}
 
 Allows _Pyprland_ prepare the window for a correct animation and initial positioning.
 Check your window's class with: `hyprctl clients | grep class`
 
-### `animation` *str* · =`"fromTop"` {#config-animation}
+### `animation` <ConfigBadges plugin="scratchpads" option="animation" /> {#config-animation}
 
 Type of animation to use:
 
@@ -107,7 +90,7 @@ Type of animation to use:
 - `fromLeft` (stays close to left screen border)
 - `fromRight` (stays close to right screen border)
 
-### `size` *str* · =`"80% 80%"` · *recommended* {#config-size}
+### `size` <ConfigBadges plugin="scratchpads" option="size" /> {#config-size}
 
 Each time scratchpad is shown, window will be resized according to the provided values.
 
@@ -122,7 +105,7 @@ regardless of which monitor it was first launched on.
 > - **pixels** for absolute values (`px` suffix), eg: `800px 600px`
 > - a mix is possible, eg: `800px 40%`
 
-### `position` *str* {#config-position}
+### `position` <ConfigBadges plugin="scratchpads" option="position" /> {#config-position}
 
 Overrides the automatic margin-based position.
 Sets the scratchpad client window position relative to the top-left corner.
@@ -142,21 +125,21 @@ class = "term_quake"
 > [!note]
 > If `position` is not provided, the window is placed according to `margin` on one axis and centered on the other.
 
-### `margin` *int* · =`60` {#config-margin}
+### `margin` <ConfigBadges plugin="scratchpads" option="margin" /> {#config-margin}
 
 Pixels from the screen edge when using animations. Used to position the window along the animation axis.
 
-### `max_size` *str* {#config-max-size}
+### `max_size` <ConfigBadges plugin="scratchpads" option="max_size" /> {#config-max-size}
 
 Maximum window size. Same format as `size`. Useful to prevent scratchpads from growing too large on big monitors.
 
-### `multi` *bool* · =`true` {#config-multi}
+### `multi` <ConfigBadges plugin="scratchpads" option="multi" /> {#config-multi}
 
 When set to `false`, only one client window is supported for this scratchpad.
 Otherwise other matching windows will be **attach**ed to the scratchpad.
 Allows the `attach` command on the scratchpad.
 
-### `lazy` *bool* · =`true` {#config-lazy}
+### `lazy` <ConfigBadges plugin="scratchpads" option="lazy" /> {#config-lazy}
 
 When `true`, the scratchpad command is only started on first use instead of at startup.
 

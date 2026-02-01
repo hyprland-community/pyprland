@@ -7,10 +7,7 @@ Bring windows which are not reachable in the currently focused workspace.
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `attract_lost` | Brings lost floating windows to the current workspace. |
-
+<PluginCommands plugin="lost_windows" />
 
 ## Configuration
 

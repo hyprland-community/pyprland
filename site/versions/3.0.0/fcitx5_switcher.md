@@ -28,16 +28,9 @@ In this example, if the window class is "wechat" or "QQ" or "zoom", the input me
 
 ## Commands
 
-*No commands available.*
-
+<PluginCommands plugin="fcitx5_switcher" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `active_classes` · *list* | Window classes that should activate Fcitx5 |
-| `active_titles` · *list* | Window titles that should activate Fcitx5 |
-| `inactive_classes` · *list* | Window classes that should deactivate Fcitx5 |
-| `inactive_titles` · *list* | Window titles that should deactivate Fcitx5 |
-
+<PluginConfig plugin="fcitx5_switcher" linkPrefix="config-" />
 

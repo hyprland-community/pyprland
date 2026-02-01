@@ -47,23 +47,13 @@ filter = "s/.*usb \d+-[0-9.]+: Product: (.*)/USB plugged: \1/"
 
 ## Commands
 
-*No commands available.*
-
+<PluginCommands plugin="system_notifier" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `command` · *dict* · *recommended* | This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated.             A common option is the system journal output (eg: `journalctl -u nginx`) |
-| `parser` · *dict* | Sets the list of rules / parser to be used to extract lines of interest             Must match a list of rules defined as `system_notifier.parsers.<parser_name>`. |
-| `parsers` · *dict* · *recommended* | Custom parser definitions (name -> list of rules).             Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds) |
-| `sources` · *list* · *recommended* | Source definitions with command and parser |
-| `pattern` · *str* · *recommended* | The pattern is any regular expression that should trigger a match. |
-| `default_color` · *str* · =`"#5555AA"` | Default notification color |
-| `use_notify_send` · *bool* · =`false` | Use notify-send instead of Hyprland notifications |
+<PluginConfig plugin="system_notifier" linkPrefix="config-" />
 
-
-### `sources` *list* · *recommended* {#config-sources}
+### `sources` <ConfigBadges plugin="system_notifier" option="sources" /> {#config-sources}
 
 List of sources to monitor. Each source must contain a `command` to run and a `parser` to use:
 
@@ -81,7 +71,7 @@ command = "sudo journalctl -fkn"
 parser = ["journal", "custom_parser"]
 ```
 
-### `parsers` *dict* · *recommended* {#config-parsers}
+### `parsers` <ConfigBadges plugin="system_notifier" option="parsers" /> {#config-parsers}
 
 Named parser configurations. Each parser rule contains:
 - `pattern`: regex to match lines of interest
@@ -101,6 +91,6 @@ duration = 10
 
 A `journal` parser is provided, detecting link up/down, core dumps, and USB plugs.
 
-### `use_notify_send` *bool* · =`false` {#config-use-notify-send}
+### `use_notify_send` <ConfigBadges plugin="system_notifier" option="use_notify_send" /> {#config-use-notify-send}
 
 When enabled, forces use of `notify-send` command instead of the compositor's native notification system.

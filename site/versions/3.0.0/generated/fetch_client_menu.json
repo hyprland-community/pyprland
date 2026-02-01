@@ -63,30 +63,6 @@
       "children": null,
       "category": "appearance",
       "is_directory": false
-    },
-    {
-      "name": "center_on_fetch",
-      "type": "bool",
-      "required": false,
-      "recommended": false,
-      "default": true,
-      "description": "Center the fetched window on the focused monitor",
-      "choices": null,
-      "children": null,
-      "category": "behavior",
-      "is_directory": false
-    },
-    {
-      "name": "margin",
-      "type": "int",
-      "required": false,
-      "recommended": false,
-      "default": 60,
-      "description": "Margin from monitor edges in pixels when centering/resizing",
-      "choices": null,
-      "children": null,
-      "category": "behavior",
-      "is_directory": false
     }
   ]
 }

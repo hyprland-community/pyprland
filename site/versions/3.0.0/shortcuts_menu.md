@@ -59,10 +59,7 @@ annotate = [
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `menu [name]` | Shows the menu, if "name" is provided, will only show this sub-menu. |
-
+<PluginCommands plugin="shortcuts_menu" />
 
 > [!tip]
 > - If "name" is provided it will show the given sub-menu.
@@ -77,20 +74,9 @@ annotate = [
 
 All the [Menu](./Menu) configuration items are also available.
 
-| Option | Description |
-|--------|-------------|
-| `entries` · *dict* · **required** | Menu entries structure (nested dict of commands) |
-| `engine` · *str* | Menu engine to use (options: `fuzzel` \| `tofi` \| `rofi` \| `wofi` \| `bemenu` \| `dmenu` \| `anyrun` \| `walker`) |
-| `parameters` · *str* | Extra parameters for the menu engine command |
-| `separator` · *str* · =`" | "` | Separator for menu display |
-| `command_start` · *str* | Prefix for command entries |
-| `command_end` · *str* | Suffix for command entries |
-| `submenu_start` · *str* | Prefix for submenu entries |
-| `submenu_end` · *str* · =`"➜"` | Suffix for submenu entries |
-| `skip_single` · *bool* · =`true` | Auto-select when only one option available |
+<PluginConfig plugin="shortcuts_menu" linkPrefix="config-" />
 
-
-### `entries` *dict* · **required** {#config-entries}
+### `entries` <ConfigBadges plugin="shortcuts_menu" option="entries" /> {#config-entries}
 
 **Required.** Defines the menu entries. Supports [Variables](./Variables)
 
@@ -147,17 +133,17 @@ You must define a list of objects, containing:
 
 The last item of the list must be a string which is the command to run. Variables can be used enclosed in `[]`.
 
-### `command_start` / `command_end` *str* {#config-command-start}
+### `command_start` / `command_end` <ConfigBadges plugin="shortcuts_menu" option="command_start" /> {#config-command-start}
 
 Allow adding some text (eg: icon) before / after a menu entry for final commands.
 
-### `submenu_start` / `submenu_end` *str* {#config-submenu-start}
+### `submenu_start` / `submenu_end` <ConfigBadges plugin="shortcuts_menu" option="submenu_start" /> {#config-submenu-start}
 
 Allow adding some text (eg: icon) before / after a menu entry leading to another menu.
 
 By default `submenu_end` is set to a right arrow sign, while other attributes are not set.
 
-### `skip_single` *bool* · =`true` {#config-skip-single}
+### `skip_single` <ConfigBadges plugin="shortcuts_menu" option="skip_single" /> {#config-skip-single}
 
 When disabled, shows the menu even for single options.
 

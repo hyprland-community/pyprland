@@ -2,13 +2,9 @@
 
 Menu based plugins have the following configuration options:
 
-| Option | Description |
-|--------|-------------|
-| `engine` · *str* | Menu engine to use (options: `fuzzel` \| `tofi` \| `rofi` \| `wofi` \| `bemenu` \| `dmenu` \| `anyrun` \| `walker`) |
-| `parameters` · *str* | Extra parameters for the menu engine command |
+<PluginConfig plugin="menu" linkPrefix="config-" />
 
-
-### `engine` *str* {#config-engine}
+### `engine` <ConfigBadges plugin="menu" option="engine" /> {#config-engine}
 
 Auto-detects the available menu engine if not set.
 
@@ -28,7 +24,7 @@ Supported engines (tested in order):
 >
 > In case the engine isn't recognized, `engine` + `parameters` configuration options will be used to start the process, it requires a dmenu-like behavior.
 
-### `parameters` *str* {#config-parameters}
+### `parameters` <ConfigBadges plugin="menu" option="parameters" /> {#config-parameters}
 
 Extra parameters added to the engine command. Setting this will override the engine's default value.
 
@@ -40,14 +36,4 @@ Extra parameters added to the engine command. Setting this will override the eng
 
 #### Default parameters per engine
 
-| Engine | Default Parameters |
-|--------|-------------------|
-| `anyrun` | `--plugins libstdin.so --show-results-immediately true` |
-| `bemenu` | `-c` |
-| `dmenu` | `-i` |
-| `fuzzel` | `--match-mode=fuzzy -d -p '[prompt]'` |
-| `rofi` | `-dmenu -i -p '[prompt]'` |
-| `tofi` | `--prompt-text '[prompt]'` |
-| `walker` | `-d -k -p '[prompt]'` |
-| `wofi` | `-dmenu -i -p '[prompt]'` |
-
+<EngineDefaults />

@@ -25,20 +25,13 @@ monitors = ["DP-1", "HDMI-1", "HDMI-1-A"]
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `bar [restart|stop|toggle]` | Start (default), restart, stop or toggle the menu bar. |
-
+<PluginCommands plugin="menubar" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `command` · *str* · =`"uwsm app -- ashell"` · **required** | Command to run the bar (supports [monitor] variable) |
-| `monitors` · *list* | Preferred monitors list in order of priority |
+<PluginConfig plugin="menubar" linkPrefix="config-" />
 
-
-### `command` *str* · =`"uwsm app -- ashell"` · **required** {#config-command}
+### `command` <ConfigBadges plugin="menubar" option="command" /> {#config-command}
 
 The command to run the bar. Use `[monitor]` as a placeholder for the monitor name:
 

@@ -12,15 +12,9 @@ Downloaded images are stored in the `online_folder` subfolder and become part of
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `online_ratio` · *float* · =`0.0` | Probability of fetching online (0.0-1.0) |
-| `online_backends` · *list* · =`["unsplash", "picsum", "wallhaven", "reddit"]` | Enabled online backends |
-| `online_keywords` · *list* | Keywords to filter online images |
-| `online_folder` · *str* · =`"online"` | Subfolder for downloaded online images |
+<PluginConfig plugin="wallpapers" linkPrefix="config-" :filter="['online_ratio', 'online_backends', 'online_keywords', 'online_folder']" />
 
-
-### `online_ratio` *float* · =`0.0` {#config-online-ratio}
+### `online_ratio` <ConfigBadges plugin="wallpapers" option="online_ratio" /> {#config-online-ratio}
 
 Probability (0.0 to 1.0) of fetching a wallpaper from online sources instead of local files. Set to `0.0` to disable online fetching or `1.0` to always fetch online.
 
@@ -28,7 +22,7 @@ Probability (0.0 to 1.0) of fetching a wallpaper from online sources instead of 
 online_ratio = 0.3  # 30% chance of fetching online
 ```
 
-### `online_backends` *list* · =`["unsplash", "picsum", "wallhaven", "reddit"]` {#config-online-backends}
+### `online_backends` <ConfigBadges plugin="wallpapers" option="online_backends" /> {#config-online-backends}
 
 List of online backends to use. Defaults to all available backends. Set to an empty list to disable online fetching. See [Available Backends](#available-backends) for details.
 
@@ -36,7 +30,7 @@ List of online backends to use. Defaults to all available backends. Set to an em
 online_backends = ["unsplash", "wallhaven"]  # Use only these two
 ```
 
-### `online_keywords` *list* {#config-online-keywords}
+### `online_keywords` <ConfigBadges plugin="wallpapers" option="online_keywords" /> {#config-online-keywords}
 
 Keywords to filter online wallpaper searches. Not all backends support keywords.
 
@@ -44,7 +38,7 @@ Keywords to filter online wallpaper searches. Not all backends support keywords.
 online_keywords = ["nature", "landscape", "mountains"]
 ```
 
-### `online_folder` *str* · =`"online"` {#config-online-folder}
+### `online_folder` <ConfigBadges plugin="wallpapers" option="online_folder" /> {#config-online-folder}
 
 Subfolder name within `path` where downloaded online images are stored. These images persist and become part of your local collection.
 
@@ -54,14 +48,9 @@ online_folder = "online"  # Stores in {path}/online/
 
 ## Cache Management
 
-| Option | Description |
-|--------|-------------|
-| `cache_days` · *int* · =`0` | Days to keep cached images (0 = forever) |
-| `cache_max_mb` · *int* · =`100` | Maximum cache size in MB (0 = unlimited) |
-| `cache_max_images` · *int* · =`0` | Maximum number of cached images (0 = unlimited) |
+<PluginConfig plugin="wallpapers" linkPrefix="config-" :filter="['cache_days', 'cache_max_mb', 'cache_max_images']" />
 
-
-### `cache_days` *int* · =`0` {#config-cache-days}
+### `cache_days` <ConfigBadges plugin="wallpapers" option="cache_days" /> {#config-cache-days}
 
 Days to keep cached images before automatic cleanup. Set to `0` to keep images forever.
 
@@ -69,7 +58,7 @@ Days to keep cached images before automatic cleanup. Set to `0` to keep images f
 cache_days = 30  # Remove cached images older than 30 days
 ```
 
-### `cache_max_mb` *int* · =`100` {#config-cache-max-mb}
+### `cache_max_mb` <ConfigBadges plugin="wallpapers" option="cache_max_mb" /> {#config-cache-max-mb}
 
 Maximum cache size in megabytes. When exceeded, oldest files are removed first. Set to `0` for unlimited.
 
@@ -77,7 +66,7 @@ Maximum cache size in megabytes. When exceeded, oldest files are removed first. 
 cache_max_mb = 500  # Limit cache to 500 MB
 ```
 
-### `cache_max_images` *int* · =`0` {#config-cache-max-images}
+### `cache_max_images` <ConfigBadges plugin="wallpapers" option="cache_max_images" /> {#config-cache-max-images}
 
 Maximum number of cached images. When exceeded, oldest files are removed first. Set to `0` for unlimited.
 

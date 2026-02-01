@@ -5,10 +5,7 @@
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `toggle_dpms` | Toggle dpms on/off for every monitor. |
-
+<PluginCommands plugin="toggle_dpms" />
 
 ## Configuration
 

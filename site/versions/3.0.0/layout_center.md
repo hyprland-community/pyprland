@@ -47,27 +47,13 @@ bind = $mainMod, down, movefocus, d
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `layout_center <toggle|next|prev|next2|prev2>` | turn on/off or change the active window. |
-
+<PluginCommands plugin="layout_center" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `margin` · *int* · =`60` | Margin around the centered window in pixels |
-| `offset` · *str or list or tuple* · =`[0, 0]` | Offset of the centered window as 'X Y' or [X, Y] |
-| `style` · *list* | Window rules to apply to the centered window |
-| `captive_focus` · *bool* · =`false` | Keep focus on the centered window |
-| `on_new_client` · *str* · =`"focus"` | Behavior when a new window opens (options: `focus` \| `background` \| `close`) |
-| `next` · *str* | Command to run when 'next' is called and layout is disabled |
-| `prev` · *str* | Command to run when 'prev' is called and layout is disabled |
-| `next2` · *str* | Alternative command for 'next' |
-| `prev2` · *str* | Alternative command for 'prev' |
+<PluginConfig plugin="layout_center" linkPrefix="config-" />
 
-
-### `style` *list* {#config-style}
+### `style` <ConfigBadges plugin="layout_center" option="style" /> {#config-style}
 
 Custom Hyprland style rules applied to the centered window. Requires Hyprland > 0.40.0.
 
@@ -75,7 +61,7 @@ Custom Hyprland style rules applied to the centered window. Requires Hyprland > 
 style = ["opacity 1", "bordercolor rgb(FFFF00)"]
 ```
 
-### `on_new_client` *str* · =`"focus"` {#config-on-new-client}
+### `on_new_client` <ConfigBadges plugin="layout_center" option="on_new_client" /> {#config-on-new-client}
 
 Behavior when a new window opens while layout is active:
 
@@ -83,7 +69,7 @@ Behavior when a new window opens while layout is active:
 - `"background"` - make the new window appear in the background  
 - `"close"` - stop the centered layout when a new window opens
 
-### `next` / `prev` *str* {#config-next}
+### `next` / `prev` <ConfigBadges plugin="layout_center" option="next" /> {#config-next}
 
 Hyprland dispatcher command to run when layout_center isn't active:
 
@@ -92,7 +78,7 @@ next = "movefocus r"
 prev = "movefocus l"
 ```
 
-### `next2` / `prev2` *str* {#config-next2}
+### `next2` / `prev2` <ConfigBadges plugin="layout_center" option="next2" /> {#config-next2}
 
 Alternative fallback commands for vertical navigation:
 
@@ -101,7 +87,7 @@ next2 = "movefocus d"
 prev2 = "movefocus u"
 ```
 
-### `offset` *str or list or tuple* · =`[0, 0]` {#config-offset}
+### `offset` <ConfigBadges plugin="layout_center" option="offset" /> {#config-offset}
 
 offset in pixels applied to the main window position
 
@@ -111,7 +97,7 @@ offset = [0, 20]
 ```
 
 
-### `margin` *int* · =`60` {#config-margin}
+### `margin` <ConfigBadges plugin="layout_center" option="margin" /> {#config-margin}
 
 margin (in pixels) used when placing the center window, calculated from the border of the screen.
 

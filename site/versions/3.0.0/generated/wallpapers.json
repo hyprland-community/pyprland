@@ -169,11 +169,11 @@
         "",
         "pastel",
         "fluo",
+        "fluorescent",
         "vibrant",
         "mellow",
         "neutral",
-        "earth",
-        "fluorescent"
+        "earth"
       ],
       "children": null,
       "category": "templating",

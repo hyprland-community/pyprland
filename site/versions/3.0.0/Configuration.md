@@ -35,23 +35,13 @@ suboption = 42
 
 The main section configures the Pyprland daemon itself.
 
-| Option | Description |
-|--------|-------------|
-| `plugins` · *list* · **required** | List of plugins to load |
-| `include` · *list[Path]* | Additional config files or folders to include |
-| `plugins_paths` · *list[Path]* | Additional paths to search for third-party plugins |
-| `colored_handlers_log` · *bool* · =`true` | Enable colored log output for event handlers (debugging) |
-| `notification_type` · *str* · =`"auto"` | Notification method: 'auto', 'notify-send', or 'native' |
-| `variables` · *dict* | User-defined variables for string substitution (see Variables page) |
-| `hyprland_version` · *str* | Override auto-detected Hyprland version (e.g., '0.40.0') |
-| `desktop` · *str* | Override auto-detected desktop environment (e.g., 'hyprland', 'niri'). Empty means auto-detect. |
+<PluginConfig plugin="pyprland" linkPrefix="config-" />
 
-
-### `include` *list[Path]* {#config-include}
+### `include` <ConfigBadges plugin="pyprland" option="include" /> {#config-include}
 
 List of additional configuration files to include. See [Multiple Configuration Files](./MultipleConfigurationFiles) for details.
 
-### `notification_type` *str* · =`"auto"` {#config-notification-type}
+### `notification_type` <ConfigBadges plugin="pyprland" option="notification_type" /> {#config-notification-type}
 
 Controls how notifications are displayed:
 
@@ -61,7 +51,7 @@ Controls how notifications are displayed:
 | `"notify-send"` | Forces use of `notify-send` command |
 | `"native"` | Forces use of compositor's native notification system |
 
-### `variables` *dict* {#config-variables}
+### `variables` <ConfigBadges plugin="pyprland" option="variables" /> {#config-variables}
 
 Custom variables that can be used in plugin configurations. See [Variables](./Variables) for usage details.
 

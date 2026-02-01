@@ -26,10 +26,7 @@ bind = $mainMod SHIFT, Z, exec, pypr zoom
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `zoom [factor]` | zooms to "factor" or toggles zoom level if factor is omitted. |
-
+<PluginCommands plugin="magnify" />
 
 ### `zoom [factor]`
 
@@ -60,17 +57,13 @@ It _looks_ more linear changes than using a single + or -.
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `factor` · *float* · =`2.0` | Zoom factor when toggling |
-| `duration` · *int* · =`0` | Animation duration in frames (0 to disable) |
+<PluginConfig plugin="magnify" linkPrefix="config-" />
 
-
-### `factor` *float* · =`2.0` {#config-factor}
+### `factor` <ConfigBadges plugin="magnify" option="factor" /> {#config-factor}
 
 The zoom level to use when `pypr zoom` is called without arguments.
 
-### `duration` *int* · =`0` {#config-duration}
+### `duration` <ConfigBadges plugin="magnify" option="duration" /> {#config-duration}
 
 Animation duration in seconds. Not needed with recent Hyprland versions - you can customize the animation in Hyprland config instead:
 

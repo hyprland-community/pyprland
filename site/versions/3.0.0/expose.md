@@ -27,15 +27,9 @@ Check [workspace rules](https://wiki.hyprland.org/Configuring/Workspace-Rules/#r
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `expose` | Expose every client on the active workspace. |
-
+<PluginCommands plugin="expose" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `include_special` · *bool* · =`false` | Include windows from special workspaces |
-
+<PluginConfig plugin="expose" linkPrefix="config-" />
 

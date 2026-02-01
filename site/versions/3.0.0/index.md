@@ -41,4 +41,3 @@ To understand the potential of Pyprland, you can check the [plugins](./Plugins) 
 - Major rewrite of the [Monitors plugin](/monitors) delivers improved stability and functionality.
 - The [Wallpapers plugin](/wallpapers) now applies [rounded corners](/wallpapers#radius) per display and derives cohesive [color schemes from the background](/wallpapers#templates) (Matugen/Pywal-inspired).
 
-## Version 3.0.0 archive

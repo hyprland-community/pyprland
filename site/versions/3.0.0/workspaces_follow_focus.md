@@ -20,15 +20,9 @@ bind = $mainMod, J, exec, pypr change_workspace -1
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `change_workspace <direction>` | Switch workspaces of current monitor, avoiding displayed workspaces. |
-
+<PluginCommands plugin="workspaces_follow_focus" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `max_workspaces` · *int* · =`10` | Maximum number of workspaces to manage |
-
+<PluginConfig plugin="workspaces_follow_focus" linkPrefix="config-" />
 

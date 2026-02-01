@@ -17,11 +17,7 @@ This creates a unified color scheme across your terminal, window borders, GTK ap
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `color <#RRGGBB> [scheme]` | Generate color palette from hex color. |
-| `palette [color] [json]` | Show available color template variables. |
-
+<PluginCommands plugin="wallpapers" :filter="['color', 'palette']" linkPrefix="command-" />
 
 ### Using the `color` command {#command-color}
 
@@ -40,14 +36,9 @@ The `palette` command shows available color template variables:
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `color_scheme` · *str* | Color scheme for palette generation (options: `pastel` \| `fluo` \| `vibrant` \| `mellow` \| `neutral` \| `earth` \| `fluorescent`) |
-| `variant` · *str* | Color variant type for palette |
-| `templates` · *dict* | Template files for color palette generation |
+<PluginConfig plugin="wallpapers" linkPrefix="config-" :filter="['templates', 'color_scheme', 'variant']" />
 
-
-### `templates` *dict* {#config-templates}
+### `templates` <ConfigBadges plugin="wallpapers" option="templates" /> {#config-templates}
 
 Enables automatic theming by generating config files from templates using colors extracted from the wallpaper.
 
@@ -61,7 +52,7 @@ post_hook = "sh /tmp/hyprlandcolors.sh"
 > [!tip]
 > Mostly compatible with *matugen* template syntax.
 
-### `color_scheme` *str* {#config-color-scheme}
+### `color_scheme` <ConfigBadges plugin="wallpapers" option="color_scheme" /> {#config-color-scheme}
 
 Optional modification of the base color used in the templates. One of:
 
@@ -72,7 +63,7 @@ Optional modification of the base color used in the templates. One of:
 - **vibrant** - for moderate to high saturation
 - **mellow** - for lower saturation
 
-### `variant` *str* {#config-variant}
+### `variant` <ConfigBadges plugin="wallpapers" option="variant" /> {#config-variant}
 
 Changes the algorithm used to pick the primary, secondary and tertiary colors.
 

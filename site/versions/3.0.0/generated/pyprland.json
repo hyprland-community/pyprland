@@ -19,17 +19,6 @@
       "full_description": "<shell> [default|path] Generate shell completions.\n\nUsage:\n  pypr compgen <shell>            Output script to stdout\n  pypr compgen <shell> default    Install to default user path\n  pypr compgen <shell> ~/path     Install to home-relative path\n  pypr compgen <shell> /abs/path  Install to absolute path\n\nExamples:\n  pypr compgen zsh > ~/.zsh/completions/_pypr\n  pypr compgen bash default"
     },
     {
-      "name": "doc",
-      "args": [
-        {
-          "value": "plugin[.option",
-          "required": false
-        }
-      ],
-      "short_description": "] Show plugin and configuration documentation.",
-      "full_description": "[plugin[.option]] Show plugin and configuration documentation.\n\nUsage:\n  pypr doc                 List all plugins\n  pypr doc <plugin>        Show plugin documentation\n  pypr doc <plugin.option> Show config option details\n  pypr doc <plugin> <opt>  Same as plugin.option\n\nExamples:\n  pypr doc scratchpads\n  pypr doc scratchpads.animation\n  pypr doc wallpapers path"
-    },
-    {
       "name": "dumpjson",
       "args": [],
       "short_description": "Dump the configuration in JSON format (after includes are processed).",
@@ -40,17 +29,6 @@
       "args": [],
       "short_description": "Terminate the pyprland daemon.",
       "full_description": "Terminate the pyprland daemon."
-    },
-    {
-      "name": "get",
-      "args": [
-        {
-          "value": "plugin.key",
-          "required": true
-        }
-      ],
-      "short_description": "Get a configuration value.",
-      "full_description": "<plugin.key> Get a configuration value.\n\nArgs:\n    path: Dot-separated path (e.g., 'wallpapers.online_ratio')\n\nExamples:\n    pypr get wallpapers.online_ratio\n    pypr get scratchpads.term.command"
     },
     {
       "name": "help",
@@ -68,21 +46,6 @@
       "args": [],
       "short_description": "Reload the configuration file.",
       "full_description": "Reload the configuration file.\n\nNew plugins will be loaded and configuration options will be updated.\nMost plugins will use the new values on the next command invocation."
-    },
-    {
-      "name": "set",
-      "args": [
-        {
-          "value": "plugin.key",
-          "required": true
-        },
-        {
-          "value": "value",
-          "required": true
-        }
-      ],
-      "short_description": "Set a configuration value.",
-      "full_description": "<plugin.key> <value> Set a configuration value.\n\nArgs:\n    args: Path and value (e.g., 'wallpapers.online_ratio 0.5')\n\nUse 'None' to unset a non-required option.\n\nExamples:\n    pypr set wallpapers.online_ratio 0.5\n    pypr set wallpapers.path /new/path\n    pypr set scratchpads.term.lazy true\n    pypr set wallpapers.online_ratio None"
     },
     {
       "name": "version",

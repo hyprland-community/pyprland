@@ -18,18 +18,12 @@ No other configuration needed, here `MOD+SHIFT+N` will show every window in "sta
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `toggle_special [name]` | Toggles switching the focused window to the special workspace "name" (default: minimized). |
-
+<PluginCommands plugin="toggle_special" />
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `name` · *str* · =`"minimized"` | Default special workspace name |
+<PluginConfig plugin="toggle_special" linkPrefix="config-" />
 
-
-### `name` *str* · =`"minimized"` {#config-name}
+### `name` <ConfigBadges plugin="toggle_special" option="name" /> {#config-name}
 
 Default special workspace name.

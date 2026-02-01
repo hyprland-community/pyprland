@@ -56,32 +56,16 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `color <#RRGGBB> [scheme]` | Generate color palette from hex color. |
-| `palette [color] [json]` | Show available color template variables. |
-| `wall <next|pause|clear|rm>` | Control wallpaper cycling. |
-
+<PluginCommands plugin="wallpapers" />
 
 > [!tip]
 > The `color` and `palette` commands are used for templating. See [Templates](./wallpapers_templates#commands) for details.
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
-| `path` · *Path or list* · **required** | Path(s) to wallpaper images or directories |
-| `interval` · *int* · =`10` | Minutes between wallpaper changes |
-| `extensions` · *list* · =`["png", "jpeg", "jpg"]` | File extensions to include (e.g., ['png', 'jpg']) |
-| `recurse` · *bool* · =`false` | Recursively search subdirectories |
-| `unique` · *bool* · =`false` | Use different wallpaper per monitor |
-| `radius` · *int* · =`0` | Corner radius for rounded corners |
-| `command` · *str* | Custom command to set wallpaper ([file] and [output] variables) |
-| `post_command` · *str* | Command to run after setting wallpaper |
-| `clear_command` · *str* | Command to run when clearing wallpaper |
+<PluginConfig plugin="wallpapers" linkPrefix="config-" :filter="['path', 'interval', 'command', 'clear_command', 'post_command', 'radius', 'extensions', 'recurse', 'unique']" />
 
-
-### `path` *Path or list* · **required** {#config-path}
+### `path` <ConfigBadges plugin="wallpapers" option="path" /> {#config-path}
 
 **Required.** Path to a folder or list of folders that will be searched for wallpaper images.
 
@@ -89,11 +73,11 @@ Note that for applications like `swww`, you'll need to start a daemon separately
 path = ["~/Pictures/Portraits/", "~/Pictures/Landscapes/"]
 ```
 
-### `interval` *int* · =`10` {#config-interval}
+### `interval` <ConfigBadges plugin="wallpapers" option="interval" /> {#config-interval}
 
 How long (in minutes) a background should stay in place before changing.
 
-### `command` *str* {#config-command}
+### `command` <ConfigBadges plugin="wallpapers" option="command" /> {#config-command}
 
 Overrides the default command to set the background image.
 
@@ -114,7 +98,7 @@ or
 swww img --outputs [output] [file]
 ```
 
-### `clear_command` *str* {#config-clear-command}
+### `clear_command` <ConfigBadges plugin="wallpapers" option="clear_command" /> {#config-clear-command}
 
 Overrides the default behavior which kills the `command` program.
 Use this to provide a command to clear the background:
@@ -123,7 +107,7 @@ Use this to provide a command to clear the background:
 clear_command = "swaybg clear"
 ```
 
-### `post_command` *str* {#config-post-command}
+### `post_command` <ConfigBadges plugin="wallpapers" option="post_command" /> {#config-post-command}
 
 Executes a command after a wallpaper change. Can use `[file]`:
 
@@ -131,7 +115,7 @@ Executes a command after a wallpaper change. Can use `[file]`:
 post_command = "matugen image '[file]'"
 ```
 
-### `radius` *int* · =`0` {#config-radius}
+### `radius` <ConfigBadges plugin="wallpapers" option="radius" /> {#config-radius}
 
 When set, adds rounded borders to the wallpapers. Expressed in pixels. Disabled by default.
 
@@ -142,15 +126,15 @@ For this feature to work, you must use `[output]` in your `command` to specify t
 radius = 16
 ```
 
-### `extensions` *list* · =`["png", "jpeg", "jpg"]` {#config-extensions}
+### `extensions` <ConfigBadges plugin="wallpapers" option="extensions" /> {#config-extensions}
 
 List of valid wallpaper image extensions.
 
-### `recurse` *bool* · =`false` {#config-recurse}
+### `recurse` <ConfigBadges plugin="wallpapers" option="recurse" /> {#config-recurse}
 
 When enabled, will also search sub-directories recursively.
 
-### `unique` *bool* · =`false` {#config-unique}
+### `unique` <ConfigBadges plugin="wallpapers" option="unique" /> {#config-unique}
 
 When enabled, will set a different wallpaper for each screen.
 

@@ -21,10 +21,7 @@ bind = $mainMod SHIFT, O, exec, pypr shift_monitors -1
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `shift_monitors <direction>` | Swaps monitors' workspaces in the given direction. |
-
+<PluginCommands plugin="shift_monitors" />
 
 ## Configuration
 
