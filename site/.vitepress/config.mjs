@@ -3,6 +3,7 @@ import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
 
 const version_names = [
+  '3.0.0',
   "2.3.5",
   "2.3.6,7",
   "2.3.8",
