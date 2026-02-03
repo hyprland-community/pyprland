@@ -82,7 +82,7 @@ class RoundedImageManager:
         self.radius = radius
         self.cache = cache
 
-    def _build_key(self, monitor: MonitorInfo, image_path: str) -> str:
+    def build_key(self, monitor: MonitorInfo, image_path: str) -> str:
         """Build the cache key for the image.
 
         Args:
@@ -104,7 +104,7 @@ class RoundedImageManager:
         Returns:
             Path to the cached rounded image.
         """
-        key = self._build_key(monitor, src)
+        key = self.build_key(monitor, src)
 
         # Check cache for valid entry
         cached = self.cache.get(key, IMAGE_FORMAT)
