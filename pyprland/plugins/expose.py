@@ -1,16 +1,12 @@
 """expose Brings every client window to screen for selection."""
 
-from typing import ClassVar
-
 from ..models import ClientInfo, Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Exposes all windows for a quick 'jump to' feature."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("include_special", bool, default=False, description="Include windows from special workspaces", category="basic"),

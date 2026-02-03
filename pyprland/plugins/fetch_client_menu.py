@@ -1,7 +1,5 @@
 """Select a client window and move it to the active workspace."""
 
-from typing import ClassVar
-
 from ..adapters.menus import MenuMixin
 from ..common import is_rotated
 from ..models import Environment, ReloadReason
@@ -9,10 +7,8 @@ from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
-class Extension(MenuMixin, Plugin):
+class Extension(MenuMixin, Plugin, environments=[Environment.HYPRLAND]):
     """Shows a menu to select and fetch a window to your active workspace."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         *MenuMixin.menu_config_schema,

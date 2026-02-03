@@ -1,6 +1,6 @@
 """Moves unreachable client windows to the currently focused workspace."""
 
-from typing import ClassVar, cast
+from typing import cast
 
 from ..models import ClientInfo, Environment, MonitorInfo
 from .interface import Plugin
@@ -18,10 +18,8 @@ def contains(monitor: MonitorInfo, window: ClientInfo) -> bool:
     return bool(window["at"][1] >= monitor["y"] and window["at"][1] < monitor["y"] + monitor["height"])
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Brings lost floating windows (which are out of reach) to the current workspace."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""

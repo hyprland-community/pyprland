@@ -1,7 +1,7 @@
 """The monitors plugin."""
 
 import asyncio
-from typing import Any, ClassVar
+from typing import Any
 
 from ...adapters.niri import niri_output_to_monitor_info
 from ...aioops import DebouncedTask
@@ -24,10 +24,8 @@ from .resolution import get_monitor_by_pattern, resolve_placement_config
 from .schema import MONITOR_PROPS_SCHEMA, validate_placement_keys
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
     """Allows relative placement and configuration of monitors."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND, Environment.NIRI]
 
     config_schema = ConfigItems(
         ConfigField("startup_relayout", bool, default=True, description="Relayout monitors on startup", category="behavior"),
