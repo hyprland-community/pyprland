@@ -1,12 +1,8 @@
 """Plugin template."""
 
-from typing import ClassVar
-
 from ..models import Environment
 from .interface import Plugin
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Sample plugin template."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]

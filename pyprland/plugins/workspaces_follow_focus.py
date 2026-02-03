@@ -1,16 +1,14 @@
 """Force workspaces to follow the focus / mouse."""
 
-from typing import ClassVar, cast
+from typing import cast
 
 from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Makes non-visible workspaces available on the currently focused screen."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage", category="basic"),

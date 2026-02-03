@@ -14,7 +14,7 @@ methods to handle compositor events and CLI commands respectively.
 import contextlib
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeAlias
 
 from ..adapters.proxy import BackendProxy
 from ..common import SharedState, get_logger
@@ -27,6 +27,9 @@ if TYPE_CHECKING:
 
 ConfigValue = int | float | str | list[Any] | dict[Any, Any]
 """Type alias for values returned by get_config."""
+
+Environments: TypeAlias = list[Environment]
+"""Type alias for the Plugin.environments class variable."""
 
 
 @dataclass
@@ -55,11 +58,16 @@ class Plugin:
         - get_config_dict(name) - for dict values
 
         All config keys must be defined in config_schema for validation and defaults.
+
+    Subclass Usage:
+        Specify supported environments via class parameter:
+        >>> class Extension(Plugin, environments=[Environment.HYPRLAND]):
+        ...     pass
     """
 
     aborted = False
 
-    environments: ClassVar[list[Environment]] = []
+    environments: ClassVar[Environments] = []
     " The supported environments for this plugin. Empty list means all environments. "
 
     backend: BackendProxy
@@ -70,6 +78,17 @@ class Plugin:
 
     config_schema: ConfigItems
     """Schema defining expected configuration fields. Override in subclasses to enable validation."""
+
+    def __init_subclass__(cls, environments: Environments | None = None, **kwargs: Any) -> None:
+        """Set plugin environments via class parameter.
+
+        Args:
+            environments: List of supported environments for this plugin
+            **kwargs: Additional keyword arguments for super().__init_subclass__
+        """
+        super().__init_subclass__(**kwargs)
+        if environments is not None:
+            cls.environments = environments
 
     def get_config(self, name: str) -> ConfigValue:
         """Get a configuration value by name.

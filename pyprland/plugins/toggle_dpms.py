@@ -1,15 +1,11 @@
 """Toggle monitors on or off."""
 
-from typing import ClassVar
-
 from ..models import Environment
 from .interface import Plugin
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Toggles the DPMS status of every plugged monitor."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     async def run_toggle_dpms(self) -> None:
         """Toggle dpms on/off for every monitor."""

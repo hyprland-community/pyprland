@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 from functools import partial
-from typing import ClassVar, cast
+from typing import cast
 
 from ...adapters.units import convert_coords
 from ...aioops import TaskManager
@@ -27,10 +27,8 @@ from .transitions import TransitionsMixin
 from .windowruleset import WindowRuleSet
 
 
-class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin):
+class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environments=[Environment.HYPRLAND]):
     """Makes your applications into dropdowns & togglable popups."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     procs: dict[str, asyncio.subprocess.Process]
     scratches: ScratchDB

@@ -6,7 +6,6 @@ and rounding for maximum performance.
 """
 
 import fnmatch
-from typing import ClassVar
 
 from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
@@ -17,7 +16,7 @@ from .interface import Plugin
 _MIN_OPENWINDOW_PARTS = 3
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Toggle game mode for improved performance.
 
     When enabled, disables animations, blur, shadows, gaps, and rounding
@@ -27,8 +26,6 @@ class Extension(Plugin):
     Supports automatic detection of game windows based on window class
     patterns (e.g., Steam games with class "steam_app_*").
     """
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND]
 
     config_schema = ConfigItems(
         ConfigField("border_size", int, default=1, description="Border size when game mode is enabled", category="basic"),

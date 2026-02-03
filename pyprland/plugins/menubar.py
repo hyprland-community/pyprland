@@ -3,7 +3,7 @@
 import contextlib
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, cast
 
 from ..aioops import TaskManager
 from ..common import apply_variables
@@ -85,10 +85,8 @@ async def is_bar_alive(
     return False
 
 
-class Extension(Plugin):
+class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
     """Improves multi-monitor handling of the status bar and restarts it on crashes."""
-
-    environments: ClassVar[list[Environment]] = [Environment.HYPRLAND, Environment.NIRI]
 
     config_schema = ConfigItems(
         ConfigField(
