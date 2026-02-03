@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .command_registry import get_all_commands
+from .command_registry import CommandInfo, build_command_tree, get_all_commands
 from .constants import SUPPORTED_SHELLS
 from .plugins.wallpapers.models import ColorScheme
 
@@ -61,6 +61,7 @@ class CommandCompletion:
     name: str
     args: list[CompletionArg] = field(default_factory=list)
     description: str = ""
+    subcommands: dict[str, CommandCompletion] = field(default_factory=dict)  # For hierarchical commands
 
 
 def get_default_path(shell: str) -> str:
@@ -121,17 +122,19 @@ def get_command_completions(manager: Pyprland) -> dict[str, CommandCompletion]:
         manager: The Pyprland manager instance with loaded plugins
 
     Returns:
-        Dict mapping command name -> CommandCompletion
+        Dict mapping command name -> CommandCompletion (with subcommands for hierarchical commands)
     """
     # Get scratchpad names from config for dynamic completion
     scratchpad_names: list[str] = list(manager.config.get("scratchpads", {}).keys())
 
-    commands: dict[str, CommandCompletion] = {}
+    all_commands = get_all_commands(manager)
+    command_tree = build_command_tree(all_commands)
 
-    # Use registry to get all commands (plugins + client)
-    for cmd_name, cmd_info in get_all_commands(manager).items():
+    def build_completion_args(cmd_name: str, cmd_info: CommandInfo | None) -> list[CompletionArg]:
+        """Build completion args from a CommandInfo."""
+        if cmd_info is None:
+            return []
         completion_args: list[CompletionArg] = []
-
         for pos, arg in enumerate(cmd_info.args, start=1):
             comp_type, values = _classify_arg(arg.value, cmd_name, scratchpad_names)
             completion_args.append(
@@ -143,15 +146,56 @@ def get_command_completions(manager: Pyprland) -> dict[str, CommandCompletion]:
                     description=arg.value,
                 )
             )
+        return completion_args
 
-        commands[cmd_name] = CommandCompletion(
-            name=cmd_name,
-            args=completion_args,
-            description=cmd_info.short_description,
+    commands: dict[str, CommandCompletion] = {}
+
+    for root_name, node in command_tree.items():
+        # Build subcommands dict
+        subcommands: dict[str, CommandCompletion] = {}
+        for child_name, child_node in node.children.items():
+            if child_node.info:
+                subcommands[child_name] = CommandCompletion(
+                    name=child_name,
+                    args=build_completion_args(child_node.full_name, child_node.info),
+                    description=child_node.info.short_description,
+                )
+
+        # Build root command completion
+        root_args: list[CompletionArg] = []
+        root_desc = ""
+        if node.info:
+            root_args = build_completion_args(root_name, node.info)
+            root_desc = node.info.short_description
+
+        commands[root_name] = CommandCompletion(
+            name=root_name,
+            args=root_args,
+            description=root_desc,
+            subcommands=subcommands,
         )
 
     # Override help command with dynamic command list completion
+    # Build list of all completable command paths (including subcommands)
     all_cmd_names = sorted(commands.keys())
+    # Also build subcommand completions for help
+    help_subcommands: dict[str, CommandCompletion] = {}
+    for cmd_name, cmd in commands.items():
+        if cmd.subcommands:
+            help_subcommands[cmd_name] = CommandCompletion(
+                name=cmd_name,
+                args=[
+                    CompletionArg(
+                        position=1,
+                        completion_type="choices",
+                        values=sorted(cmd.subcommands.keys()),
+                        required=False,
+                        description="subcommand",
+                    )
+                ],
+                description=f"Subcommands of {cmd_name}",
+            )
+
     if "help" in commands:
         commands["help"] = CommandCompletion(
             name="help",
@@ -165,6 +209,7 @@ def get_command_completions(manager: Pyprland) -> dict[str, CommandCompletion]:
                 )
             ],
             description=commands["help"].description or "Show available commands or detailed help",
+            subcommands=help_subcommands,
         )
 
     # Override compgen with shell type completion
@@ -224,22 +269,44 @@ def _generate_bash_content(commands: dict[str, CommandCompletion]) -> str:
     # Build case statements for each command
     case_statements: list[str] = []
     for cmd_name, cmd in sorted(commands.items()):
-        if not cmd.args:
-            continue
+        # Handle commands with subcommands
+        if cmd.subcommands:
+            subcmd_list = " ".join(sorted(cmd.subcommands.keys()))
+            # Position 1 is subcommand selection
+            subcmd_cases: list[str] = [f'                1) COMPREPLY=($(compgen -W "{subcmd_list}" -- "$cur"));;']
 
-        # Build position-based completions
-        pos_cases: list[str] = []
-        for arg in cmd.args:
-            if arg.completion_type in ("choices", "dynamic", "literal"):
-                values_str = " ".join(arg.values)
-                pos_cases.append(f'                {arg.position}) COMPREPLY=($(compgen -W "{values_str}" -- "$cur"));;')
-            elif arg.completion_type == "file":
-                pos_cases.append(f'                {arg.position}) COMPREPLY=($(compgen -f -- "$cur"));;')
-            # hint and none types: no completion
+            # Build per-subcommand argument completions at position 2+
+            for subcmd_name, subcmd in sorted(cmd.subcommands.items()):
+                for arg in subcmd.args:
+                    if arg.completion_type in ("choices", "dynamic", "literal"):
+                        values_str = " ".join(arg.values)
+                        # Subcommand args start at position 2 (pos 1 is the subcommand itself)
+                        subcmd_cases.append(
+                            f'                *) [[ "${{COMP_WORDS[2]}}" == "{subcmd_name}" ]] && '
+                            f"[[ $pos -eq {arg.position + 1} ]] && "
+                            f'COMPREPLY=($(compgen -W "{values_str}" -- "$cur"));;'
+                        )
 
-        if pos_cases:
-            pos_block = "\n".join(pos_cases)
+            pos_block = "\n".join(subcmd_cases)
             case_statements.append(f"""            {cmd_name})
+                case $pos in
+{pos_block}
+                esac
+                ;;""")
+        elif cmd.args:
+            # Regular command with args
+            pos_cases: list[str] = []
+            for arg in cmd.args:
+                if arg.completion_type in ("choices", "dynamic", "literal"):
+                    values_str = " ".join(arg.values)
+                    pos_cases.append(f'                {arg.position}) COMPREPLY=($(compgen -W "{values_str}" -- "$cur"));;')
+                elif arg.completion_type == "file":
+                    pos_cases.append(f'                {arg.position}) COMPREPLY=($(compgen -f -- "$cur"));;')
+                # hint and none types: no completion
+
+            if pos_cases:
+                pos_block = "\n".join(pos_cases)
+                case_statements.append(f"""            {cmd_name})
                 case $pos in
 {pos_block}
                 esac
@@ -282,34 +349,51 @@ def _generate_zsh_content(commands: dict[str, CommandCompletion]) -> str:
     cmd_descs: list[str] = []
     for cmd_name, cmd in sorted(commands.items()):
         desc = cmd.description.replace("'", "'\\''") if cmd.description else cmd_name
+        # Add subcommand hint if applicable
+        if cmd.subcommands and not cmd.args:
+            subcmds = "|".join(sorted(cmd.subcommands.keys()))
+            desc = f"<{subcmds}> {desc}" if desc else f"<{subcmds}>"
         cmd_descs.append(f"        '{cmd_name}:{desc}'")
     cmd_desc_block = "\n".join(cmd_descs)
 
     # Build case statements for each command
     case_statements: list[str] = []
     for cmd_name, cmd in sorted(commands.items()):
-        if not cmd.args:
-            continue
+        # Handle commands with subcommands
+        if cmd.subcommands:
+            # Build subcommand descriptions
+            subcmd_descs: list[str] = []
+            for subcmd_name, subcmd in sorted(cmd.subcommands.items()):
+                subdesc = subcmd.description.replace("'", "'\\''") if subcmd.description else subcmd_name
+                subcmd_descs.append(f"'{subcmd_name}:{subdesc}'")
+            subcmd_desc_str = " ".join(subcmd_descs)
 
-        # Build _arguments specs
-        arg_specs: list[str] = []
-        for arg in cmd.args:
-            pos = arg.position
-            desc = arg.description.replace("'", "'\\''")
-
-            if arg.completion_type in ("choices", "dynamic", "literal"):
-                values_str = " ".join(arg.values)
-                arg_specs.append(f"'{pos}:{desc}:({values_str})'")
-            elif arg.completion_type == "file":
-                arg_specs.append(f"'{pos}:{desc}:_files'")
-            elif arg.completion_type == "hint":
-                # Show description but no actual completions
-                hint = arg.values[0] if arg.values else desc
-                arg_specs.append(f"'{pos}:{hint}:'")
-
-        if arg_specs:
-            args_line = " \\\n                        ".join(arg_specs)
             case_statements.append(f"""                {cmd_name})
+                    local -a subcmds=({subcmd_desc_str})
+                    if [[ $CURRENT -eq 2 ]]; then
+                        _describe 'subcommand' subcmds
+                    fi
+                    ;;""")
+        elif cmd.args:
+            # Regular command with args
+            arg_specs: list[str] = []
+            for arg in cmd.args:
+                pos = arg.position
+                desc = arg.description.replace("'", "'\\''")
+
+                if arg.completion_type in ("choices", "dynamic", "literal"):
+                    values_str = " ".join(arg.values)
+                    arg_specs.append(f"'{pos}:{desc}:({values_str})'")
+                elif arg.completion_type == "file":
+                    arg_specs.append(f"'{pos}:{desc}:_files'")
+                elif arg.completion_type == "hint":
+                    # Show description but no actual completions
+                    hint = arg.values[0] if arg.values else desc
+                    arg_specs.append(f"'{pos}:{hint}:'")
+
+            if arg_specs:
+                args_line = " \\\n                        ".join(arg_specs)
+                case_statements.append(f"""                {cmd_name})
                     _arguments \\
                         {args_line}
                     ;;""")
@@ -373,32 +457,48 @@ def _generate_fish_content(commands: dict[str, CommandCompletion]) -> str:
     # Add main command completions
     for cmd_name, cmd in sorted(commands.items()):
         desc = cmd.description.replace('"', '\\"') if cmd.description else ""
+        # Add subcommand hint if applicable
+        if cmd.subcommands and not cmd.args and not desc:
+            subcmds = "|".join(sorted(cmd.subcommands.keys()))
+            desc = f"<{subcmds}>"
         if desc:
             lines.append(f'complete -c pypr -n "__fish_use_subcommand" -a "{cmd_name}" -d "{desc}"')
         else:
             lines.append(f'complete -c pypr -n "__fish_use_subcommand" -a "{cmd_name}"')
 
     lines.append("")
-    lines.append("# Positional argument completions")
+    lines.append("# Subcommand and positional argument completions")
 
-    # Group commands by their completion patterns to reduce duplication
     for cmd_name, cmd in sorted(commands.items()):
-        if not cmd.args:
-            continue
-
-        for arg in cmd.args:
-            if arg.completion_type in ("choices", "dynamic", "literal"):
-                values_str = " ".join(arg.values)
-                lines.append(
-                    f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; '
-                    f'and test (__pypr_arg_count) -eq {arg.position}" -a "{values_str}"'
-                )
-            elif arg.completion_type == "file":
-                # Enable file completion for this position
-                lines.append(
-                    f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; and test (__pypr_arg_count) -eq {arg.position}" -F'
-                )
-            # hint type: no completion added
+        # Handle commands with subcommands
+        if cmd.subcommands:
+            for subcmd_name, subcmd in sorted(cmd.subcommands.items()):
+                subdesc = subcmd.description.replace('"', '\\"') if subcmd.description else ""
+                if subdesc:
+                    lines.append(
+                        f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; '
+                        f'and test (__pypr_arg_count) -eq 1" -a "{subcmd_name}" -d "{subdesc}"'
+                    )
+                else:
+                    lines.append(
+                        f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; '
+                        f'and test (__pypr_arg_count) -eq 1" -a "{subcmd_name}"'
+                    )
+        elif cmd.args:
+            # Regular command with args
+            for arg in cmd.args:
+                if arg.completion_type in ("choices", "dynamic", "literal"):
+                    values_str = " ".join(arg.values)
+                    lines.append(
+                        f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; '
+                        f'and test (__pypr_arg_count) -eq {arg.position}" -a "{values_str}"'
+                    )
+                elif arg.completion_type == "file":
+                    # Enable file completion for this position
+                    lines.append(
+                        f'complete -c pypr -n "__fish_seen_subcommand_from {cmd_name}; and test (__pypr_arg_count) -eq {arg.position}" -F'
+                    )
+                # hint type: no completion added
 
     return "\n".join(lines) + "\n"
 
