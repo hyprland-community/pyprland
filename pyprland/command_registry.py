@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import inspect
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .client import CLIENT_COMMANDS
@@ -23,6 +23,8 @@ if TYPE_CHECKING:
 __all__ = [
     "CommandArg",
     "CommandInfo",
+    "CommandNode",
+    "build_command_tree",
     "extract_commands_from_object",
     "get_all_commands",
     "get_client_commands",
@@ -47,6 +49,20 @@ class CommandInfo:
     short_description: str
     full_description: str
     source: str  # "built-in", plugin name, or "client"
+
+
+@dataclass
+class CommandNode:
+    """A node in the command hierarchy.
+
+    Used to represent commands with subcommands (e.g., "wall next", "wall pause").
+    A node can have both its own handler (info) and children subcommands.
+    """
+
+    name: str  # The segment name (e.g., "wall" or "next")
+    full_name: str  # Full command name (e.g., "wall" or "wall_next")
+    info: CommandInfo | None = None  # Command info if this node is callable
+    children: dict[str, CommandNode] = field(default_factory=dict)
 
 
 # Regex pattern to match args: <required> or [optional]
@@ -192,3 +208,71 @@ def get_all_commands(manager: Pyprland) -> dict[str, CommandInfo]:
         commands[cmd.name] = cmd
 
     return commands
+
+
+def build_command_tree(commands: dict[str, CommandInfo]) -> dict[str, CommandNode]:
+    """Build hierarchical command tree from flat command names.
+
+    Groups commands with shared prefixes into a tree structure.
+    For example, wall_next, wall_pause, wall_clear become children of "wall".
+
+    Only creates hierarchy when multiple commands share a prefix:
+    - wall_next + wall_pause -> wall: {next, pause}
+    - layout_center (alone) -> layout_center (no split)
+
+    Args:
+        commands: Dict mapping command name to CommandInfo
+
+    Returns:
+        Dict mapping root command names to CommandNode trees
+    """
+    # Count how many commands share each prefix
+    prefix_counts: dict[str, int] = {}
+    for name in commands:
+        parts = name.split("_")
+        for i in range(1, len(parts)):
+            prefix = "_".join(parts[:i])
+            prefix_counts[prefix] = prefix_counts.get(prefix, 0) + 1
+
+    # Identify prefixes that should become parent nodes (>1 command shares them)
+    parent_prefixes = {prefix for prefix, count in prefix_counts.items() if count > 1}
+
+    # Build the tree
+    roots: dict[str, CommandNode] = {}
+
+    for name, info in sorted(commands.items()):
+        parts = name.split("_")
+
+        # Find the longest parent prefix for this command
+        parent_depth = 0
+        for i in range(1, len(parts)):
+            prefix = "_".join(parts[:i])
+            if prefix in parent_prefixes:
+                parent_depth = i
+
+        if parent_depth == 0:
+            # No parent prefix - this is a root command
+            if name not in roots:
+                roots[name] = CommandNode(name=name, full_name=name, info=info)
+            else:
+                roots[name].info = info
+        else:
+            # Has a parent prefix - add to tree
+            root_name = "_".join(parts[:parent_depth])
+
+            # Ensure root node exists
+            if root_name not in roots:
+                # Check if root itself is a command
+                root_info = commands.get(root_name)
+                roots[root_name] = CommandNode(name=root_name, full_name=root_name, info=root_info)
+
+            # Add this command as a child
+            if name != root_name:
+                child_name = "_".join(parts[parent_depth:])
+                roots[root_name].children[child_name] = CommandNode(
+                    name=child_name,
+                    full_name=name,
+                    info=info,
+                )
+
+    return roots

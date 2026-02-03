@@ -67,7 +67,7 @@ async def test_run_wall_next(extension):
     extension.next_background_event = asyncio.Event()
     extension._paused = True
 
-    await extension.run_wall("next")
+    await extension.run_wall_next()
 
     assert extension._paused is False
     assert extension.next_background_event.is_set()

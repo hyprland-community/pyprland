@@ -502,6 +502,41 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             control_path.unlink()
         os._exit(0)
 
+    def _has_handler(self, handler_name: str) -> bool:
+        """Check if any plugin has the given handler.
+
+        Args:
+            handler_name: The full handler name (e.g., "run_wall_next")
+
+        Returns:
+            True if at least one plugin has this handler
+        """
+        return any(hasattr(plugin, handler_name) for plugin in self.plugins.values())
+
+    def _resolve_handler(self, tokens: list[str]) -> tuple[str, list[str]]:
+        """Resolve command tokens to a handler name using cascading lookup.
+
+        Tries progressively more specific handler names, e.g., for ["wall", "next", "foo"]:
+        1. Try run_wall_next_foo
+        2. Try run_wall_next (found) -> remaining args: ["foo"]
+        3. Try run_wall -> remaining args: ["next", "foo"]
+
+        Args:
+            tokens: Command tokens from input (e.g., ["wall", "next", "foo"])
+
+        Returns:
+            Tuple of (handler_name, remaining_args).
+            If no handler found, returns (run_<first_token>, remaining_tokens).
+        """
+        for i in range(len(tokens), 0, -1):
+            candidate = "_".join(tokens[:i])
+            handler_name = f"run_{candidate}"
+            if self._has_handler(handler_name):
+                return (handler_name, tokens[i:])
+
+        # No handler found - return first token as command for error handling
+        return (f"run_{tokens[0]}", tokens[1:])
+
     async def _process_plugin_command(self, data: str) -> str:
         """Process a plugin command and return the response.
 
@@ -511,11 +546,18 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         Returns:
             Response string to send to client
         """
-        args = data.split(None, 1)
-        cmd = args[0]
-        args = args[1:] if len(args) > 1 else []
+        tokens = data.split()
+        if not tokens:
+            return f"{ResponsePrefix.ERROR}: Empty command\n"
 
-        full_name = f"run_{cmd}"
+        # Cascading lookup: try most specific handler first
+        full_name, remaining = self._resolve_handler(tokens)
+
+        # Join remaining tokens as single arg string (preserves current behavior)
+        args = (" ".join(remaining),) if remaining else ()
+
+        # Extract command name for notification (without run_ prefix)
+        cmd = full_name[4:]
 
         if PYPR_DEMO:
             subprocess.run(  # noqa: ASYNC221

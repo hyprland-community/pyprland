@@ -455,8 +455,8 @@ class Extension(Plugin):
 
         self.log.warning("Prefetch failed after %d retries", PREFETCH_MAX_RETRIES)
 
-    async def _remove_current_wallpaper(self) -> None:
-        """Remove the current wallpaper if it's from the online folder, then show next.
+    async def run_wall_rm(self) -> None:
+        """Remove the current online wallpaper and show next.
 
         Only removes online wallpapers (files in the online folder).
         Shows an error notification for local wallpapers.
@@ -506,6 +506,20 @@ class Extension(Plugin):
         # Trigger next wallpaper
         self._paused = False
         self.next_background_event.set()
+
+    async def run_wall_cleanup(self) -> None:
+        """Clean up old rounded images cache."""
+        if not self.rounded_manager:
+            self.log.info("Rounded corners not enabled, nothing to clean")
+            return
+
+        max_age = 30 * SECONDS_PER_DAY
+        removed, atime_used = self.rounded_manager.cache.cleanup_by_atime(max_age)
+
+        if atime_used:
+            self.log.info("Cleaned %d old rounded images (atime-based)", removed)
+        else:
+            self.log.info("Cleared all %d rounded images (no atime available)", removed)
 
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
         """Prepare the wallpaper image for the given monitor."""
@@ -646,32 +660,25 @@ class Extension(Plugin):
             await proc.stop()
         self.proc.clear()
 
-    async def run_wall(self, arg: str) -> None:
-        """<next|pause|clear|rm> Control wallpaper cycling.
+    async def run_wall_next(self) -> None:
+        """Switch to the next wallpaper immediately."""
+        self._paused = False
+        self.next_background_event.set()
 
-        Args:
-            arg: The action to perform
-                - next: Switch to the next wallpaper immediately
-                - pause: Pause automatic wallpaper cycling
-                - clear: Stop cycling and clear the current wallpaper
-                - rm: Remove the current online wallpaper and show next
-        """
-        if arg.startswith("n"):  # next
-            self._paused = False
-            self.next_background_event.set()
-        elif arg.startswith("p"):  # pause
-            self._paused = True
-        elif arg.startswith("cl"):  # clear
-            self._paused = True
-            await self.terminate()
-            if self._hyprpaper:
-                await self._hyprpaper.stop()
-            clear_command = self.get_config_str("clear_command")
-            if clear_command:
-                clear_proc = await asyncio.create_subprocess_shell(clear_command)
-                await clear_proc.wait()
-        elif arg.startswith("rm"):  # remove current online wallpaper
-            await self._remove_current_wallpaper()
+    async def run_wall_pause(self) -> None:
+        """Pause automatic wallpaper cycling."""
+        self._paused = True
+
+    async def run_wall_clear(self) -> None:
+        """Stop cycling and clear the current wallpaper."""
+        self._paused = True
+        await self.terminate()
+        if self._hyprpaper:
+            await self._hyprpaper.stop()
+        clear_command = self.get_config_str("clear_command")
+        if clear_command:
+            clear_proc = await asyncio.create_subprocess_shell(clear_command)
+            await clear_proc.wait()
 
     async def run_color(self, arg: str) -> None:
         """<#RRGGBB> [scheme] Generate color palette from hex color.
