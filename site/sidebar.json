@@ -61,6 +61,10 @@
         "link": "./fetch_client_menu"
       },
       {
+        "text": "Gamemode",
+        "link": "./gamemode"
+      },
+      {
         "text": "Menubar",
         "link": "./menubar"
       },
