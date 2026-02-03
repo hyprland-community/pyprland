@@ -103,7 +103,7 @@ def test_rounded_image_manager_paths(tmp_path):
     manager = RoundedImageManager(radius=10, cache=cache)
     monitor = MonitorInfo(name="DP-1", width=1920, height=1080, transform=0, scale=1.0)
 
-    key = manager._build_key(monitor, "/path/to/img.jpg")
+    key = manager.build_key(monitor, "/path/to/img.jpg")
     # Key now includes radius prefix
     assert key == "rounded:10:0:1.0x1920x1080:/path/to/img.jpg"
 

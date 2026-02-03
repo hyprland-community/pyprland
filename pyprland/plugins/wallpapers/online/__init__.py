@@ -216,6 +216,7 @@ class OnlineFetcher:
         # Store in cache
         cached_path = await self.cache.store(cache_key, image_data, info.extension)
         self._log.info("Downloaded from %s: %s", backend_name, cached_path)
+        self._log.debug("Cache directory: %s", self.cache.cache_dir)
         return cached_path
 
     async def get_image(

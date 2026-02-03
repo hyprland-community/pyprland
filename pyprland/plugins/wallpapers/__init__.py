@@ -261,6 +261,7 @@ class Extension(Plugin):
         online_folder_name = self.get_config_str("online_folder") or "online"
         folder_path = Path(first_path) / online_folder_name
         folder_path.mkdir(parents=True, exist_ok=True)
+        self.log.debug("Online cache folder: %s", folder_path)
 
         # Create online cache
         online_cache = self._create_cache(folder_path)
@@ -364,6 +365,7 @@ class Extension(Plugin):
                 choice = random.choice(self.image_list)
 
         self.cur_image = choice
+        self.log.debug("Selected image: %s (online=%s)", choice, use_online)
         return choice
 
     async def _fetch_online_image(self) -> str:
@@ -488,14 +490,18 @@ class Extension(Plugin):
             await self.backend.notify_error(f"Failed to remove: {e}")
             return
 
-        # Also remove rounded version if it exists
-        rounded_path = online_folder / "rounded" / cur_path.name
-        if await aiexists(rounded_path):
-            try:
-                await aioremove(rounded_path)
-                self.log.debug("Removed rounded version: %s", rounded_path)
-            except OSError:
-                pass  # Non-critical, just log at debug level
+        # Also remove rounded versions for all monitors
+        if self.rounded_manager:
+            monitors = await fetch_monitors(self)
+            for monitor in monitors:
+                key = self.rounded_manager.build_key(monitor, str(cur_path))
+                rounded_path = self.rounded_manager.cache.get_path(key, "jpg")
+                if await aiexists(rounded_path):
+                    try:
+                        await aioremove(rounded_path)
+                        self.log.debug("Removed rounded version: %s", rounded_path)
+                    except OSError:
+                        pass  # Non-critical
 
         # Trigger next wallpaper
         self._paused = False
