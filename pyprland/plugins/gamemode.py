@@ -11,10 +11,6 @@ from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
-# Minimum number of parts expected in openwindow event params
-# Format: "address,workspace,class,title" - we need at least address, workspace, class
-_MIN_OPENWINDOW_PARTS = 3
-
 
 class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Toggle game mode for improved performance.
@@ -147,9 +143,6 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
 
         # Parse params: "address,workspace,class,title"
         parts = params.split(",", 3)
-        if len(parts) < _MIN_OPENWINDOW_PARTS:
-            return
-
         addr, _, window_class = parts[0], parts[1], parts[2]
 
         if self._matches_pattern(window_class):
