@@ -1,9 +1,10 @@
 // .vitepress/theme/index.js
 import DefaultTheme from 'vitepress/theme'
 
-import CommandList from '/components/CommandList.vue'
-import ConfigBadges from '/components/ConfigBadges.vue'
-import EngineDefaults from '/components/EngineDefaults.vue'
+import CommandList from "/components/CommandList.vue";
+import ConfigBadges from "/components/ConfigBadges.vue";
+import EngineDefaults from "/components/EngineDefaults.vue";
+import EngineList from "/components/EngineList.vue";
 import PluginCommands from '/components/PluginCommands.vue'
 import PluginConfig from '/components/PluginConfig.vue'
 import PluginList from '/components/PluginList.vue'
@@ -15,11 +16,12 @@ export default {
     enhanceApp({ app, router }) {
         // global components
         app.component('CommandList', CommandList)
-        app.component('ConfigBadges', ConfigBadges)
-        app.component('EngineDefaults', EngineDefaults)
         app.component('PluginCommands', PluginCommands)
-        app.component('PluginConfig', PluginConfig)
-        app.component('PluginList', PluginList)
+        app.component("PluginConfig", PluginConfig);
+        app.component("PluginList", PluginList);
+        app.component("ConfigBadges", ConfigBadges);
+        app.component("EngineDefaults", EngineDefaults);
+        app.component("EngineList", EngineList);
 
         // Version switcher: preserve current page when changing versions
         router.onBeforeRouteChange = (to) => {
