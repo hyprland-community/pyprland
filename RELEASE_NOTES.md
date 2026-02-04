@@ -1,5 +1,12 @@
-- New pluging: `gamemode`
+- New plugin: `gamemode`
 - General CLI improvements and better shell completions (`compgen`)
+- New menu engine: `vicinae`
 - [wallpapers] now hyprpaper auto-starts if missing
   - cache improvements
+  - new `wall info` command (supports JSON output)
+  - new `wall cleanup` / `wall cleanup all` commands
+  - `wall rm` now also removes rounded cache
+- [fetch_client_menu] fetched windows are now auto-centered
+  - new `center_on_fetch` option (default: true)
+  - new `margin` option (default: 60)
 - Misc fixes
