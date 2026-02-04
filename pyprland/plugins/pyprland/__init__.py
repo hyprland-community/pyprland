@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ...command_registry import extract_commands_from_object
+from ...commands.discovery import extract_commands_from_object
 from ...completions import handle_compgen
 from ...config import BOOL_FALSE_STRINGS, BOOL_TRUE_STRINGS
 from ...doc import format_config_field_doc, format_plugin_doc, format_plugin_list

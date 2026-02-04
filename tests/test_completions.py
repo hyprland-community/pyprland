@@ -13,7 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from pyprland.command_registry import CommandArg, CommandInfo, build_command_tree
+from pyprland.commands.models import CommandArg, CommandInfo
+from pyprland.commands.tree import build_command_tree
 from pyprland.completions.discovery import _build_command_from_node, _classify_arg
 from pyprland.completions.generators.bash import generate_bash
 from pyprland.completions.generators.fish import generate_fish

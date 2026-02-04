@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from .ansi import BOLD, CYAN, DIM, GREEN, colorize, should_colorize
 
 if TYPE_CHECKING:
-    from .command_registry import CommandInfo
+    from .commands.models import CommandInfo
     from .plugins.interface import Plugin
     from .validation import ConfigField, ConfigItems
 
