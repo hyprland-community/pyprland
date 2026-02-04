@@ -177,7 +177,6 @@ class LifecycleMixin:
         """
         pid = orig_scratch.pid if orig_scratch else None
         for client in await self.backend.execute_json("clients"):
-            assert isinstance(client, dict)
             if pid and pid != client["pid"]:
                 continue
             # if no address registered, register it
