@@ -10,6 +10,7 @@
       <summary class="config-category-header">
         {{ getCategoryDisplayName(group.category) }}
         <span class="config-category-count">({{ group.items.length }})</span>
+        <a v-if="group.category === 'menu'" href="./Menu" class="config-category-link">See full documentation</a>
       </summary>
       <table class="config-table">
         <thead>
@@ -109,9 +110,11 @@
 import { hasChildren, hasDefault, formatDefault, renderDescription } from './configHelpers.js'
 
 // Category display order and names
-const CATEGORY_ORDER = ['basic', 'positioning', 'behavior', 'external_commands', 'templating', 'placement', 'advanced', 'overrides', '']
+const CATEGORY_ORDER = ['basic', 'menu', 'appearance', 'positioning', 'behavior', 'external_commands', 'templating', 'placement', 'advanced', 'overrides', '']
 const CATEGORY_NAMES = {
   'basic': 'Basic',
+  'menu': 'Menu',
+  'appearance': 'Appearance',
   'positioning': 'Positioning',
   'behavior': 'Behavior',
   'external_commands': 'External commands',
@@ -233,6 +236,18 @@ export default {
   font-weight: 400;
   color: var(--vp-c-text-2);
   font-size: 0.875em;
+}
+
+.config-category-link {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 0.875em;
+  color: var(--vp-c-brand);
+  text-decoration: none;
+}
+
+.config-category-link:hover {
+  text-decoration: underline;
 }
 
 .config-category .config-table {

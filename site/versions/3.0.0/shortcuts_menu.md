@@ -72,8 +72,6 @@ annotate = [
 
 ## Configuration
 
-All the [Menu](./Menu) configuration items are also available.
-
 <PluginConfig plugin="shortcuts_menu" linkPrefix="config-" />
 
 ### `entries` <ConfigBadges plugin="shortcuts_menu" option="entries" /> {#config-entries}
