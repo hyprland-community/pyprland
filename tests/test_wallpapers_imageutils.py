@@ -104,8 +104,17 @@ def test_rounded_image_manager_paths(tmp_path):
     monitor = MonitorInfo(name="DP-1", width=1920, height=1080, transform=0, scale=1.0)
 
     key = manager.build_key(monitor, "/path/to/img.jpg")
-    # Key now includes radius prefix
-    assert key == "rounded:10:0:1.0x1920x1080:/path/to/img.jpg"
+    # Key uses dual-hash format: {source_hash}_{settings_hash}
+    # Each hash is 16 chars, separated by underscore
+    assert "_" in key
+    parts = key.split("_")
+    assert len(parts) == 2
+    assert len(parts[0]) == 16  # source hash
+    assert len(parts[1]) == 16  # settings hash
+
+    # Verify hash_source is consistent
+    source_hash = manager.hash_source("/path/to/img.jpg")
+    assert key.startswith(source_hash)
 
     # Path is obtained through cache.get_path()
     path = cache.get_path(key, IMAGE_FORMAT)

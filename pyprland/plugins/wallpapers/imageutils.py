@@ -1,6 +1,7 @@
 """Image utilities for the wallpapers plugin."""
 
 import colorsys
+import hashlib
 import os
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -22,21 +23,28 @@ def expand_path(path: str) -> str:
     return str(Path(os.path.expandvars(path)).expanduser())
 
 
-async def get_files_with_ext(path: str, extensions: list[str], recurse: bool = True) -> AsyncIterator[str]:
+async def get_files_with_ext(
+    path: str,
+    extensions: list[str],
+    recurse: bool = True,
+    exclude_dirs: set[str] | None = None,
+) -> AsyncIterator[str]:
     """Return files matching `extension` in given `path`. Can optionally `recurse` subfolders..
 
     Args:
         path: Directory to search in
         extensions: List of file extensions to include
         recurse: Whether to search recursively in subdirectories
+        exclude_dirs: Set of directory names to skip when recursing
     """
+    exclude = exclude_dirs or set()
     for fname in await ailistdir(path):
         ext = fname.rsplit(".", 1)[-1]
         full_path = f"{path}/{fname}"
         if ext.lower() in extensions:
             yield full_path
-        elif recurse and Path(full_path).is_dir():
-            async for v in get_files_with_ext(full_path, extensions, True):
+        elif recurse and Path(full_path).is_dir() and fname not in exclude:
+            async for v in get_files_with_ext(full_path, extensions, True, exclude_dirs):
                 yield v
 
 
@@ -82,17 +90,45 @@ class RoundedImageManager:
         self.radius = radius
         self.cache = cache
 
+    def hash_source(self, image_path: str) -> str:
+        """Generate a hash of the source image path.
+
+        Args:
+            image_path: Path to the source image.
+
+        Returns:
+            First 16 characters of SHA256 hash.
+        """
+        return hashlib.sha256(image_path.encode()).hexdigest()[:16]
+
+    def _hash_settings(self, monitor: MonitorInfo) -> str:
+        """Generate a hash of the monitor/radius settings.
+
+        Args:
+            monitor: Monitor information.
+
+        Returns:
+            First 16 characters of SHA256 hash.
+        """
+        settings = f"{self.radius}:{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}"
+        return hashlib.sha256(settings.encode()).hexdigest()[:16]
+
     def build_key(self, monitor: MonitorInfo, image_path: str) -> str:
         """Build the cache key for the image.
+
+        Uses dual-hash format: {source_hash}_{settings_hash}
+        This allows identifying orphaned cache files by source hash.
 
         Args:
             monitor: Monitor information
             image_path: Path to the source image
 
         Returns:
-            A unique cache key including radius, monitor info, and image path.
+            Cache key in format: {source_hash}_{settings_hash}
         """
-        return f"rounded:{self.radius}:{monitor.transform}:{monitor.scale}x{monitor.width}x{monitor.height}:{image_path}"
+        source_hash = self.hash_source(image_path)
+        settings_hash = self._hash_settings(monitor)
+        return f"{source_hash}_{settings_hash}"
 
     def scale_and_round(self, src: str, monitor: MonitorInfo) -> str:
         """Scale and round the image for the given monitor.
