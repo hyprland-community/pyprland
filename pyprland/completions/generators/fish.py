@@ -57,6 +57,31 @@ def _build_subcommand_completions(cmd_name: str, cmd: CommandCompletion) -> list
     return lines
 
 
+def _build_help_completions(cmd: CommandCompletion, all_commands: list[str]) -> list[str]:
+    """Build fish completions for help command with hierarchical completion.
+
+    Position 1: complete with all commands
+    Position 2+: complete subcommands based on the command at position 1
+    """
+    lines: list[str] = []
+
+    # Position 1: complete with all command names
+    all_cmds_str = " ".join(all_commands)
+    lines.append(f'complete -c pypr -n "__fish_seen_subcommand_from help; and test (__pypr_arg_count) -eq 1" -a "{all_cmds_str}"')
+
+    # Position 2+: complete subcommands for each parent command
+    for parent_name, parent_cmd in sorted(cmd.subcommands.items()):
+        if parent_cmd.args:
+            subcmds_str = " ".join(parent_cmd.args[0].values)
+            lines.append(
+                f'complete -c pypr -n "__fish_seen_subcommand_from help; '
+                f"and contains {parent_name} (commandline -opc); "
+                f'and test (__pypr_arg_count) -eq 2" -a "{subcmds_str}"'
+            )
+
+    return lines
+
+
 def _build_args_completions(cmd_name: str, cmd: CommandCompletion) -> list[str]:
     """Build fish completions for a command's positional args."""
     lines: list[str] = []
@@ -88,8 +113,11 @@ def generate_fish(commands: dict[str, CommandCompletion]) -> str:
     lines.append("")
     lines.append("# Subcommand and positional argument completions")
 
+    all_cmd_names = sorted(commands.keys())
     for cmd_name, cmd in sorted(commands.items()):
-        if cmd.subcommands:
+        if cmd_name == "help":
+            lines.extend(_build_help_completions(cmd, all_cmd_names))
+        elif cmd.subcommands:
             lines.extend(_build_subcommand_completions(cmd_name, cmd))
         elif cmd.args:
             lines.extend(_build_args_completions(cmd_name, cmd))

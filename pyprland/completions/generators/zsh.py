@@ -39,6 +39,35 @@ def _build_subcommand_case(cmd_name: str, cmd: CommandCompletion) -> str:
                     ;;"""
 
 
+def _build_help_case(cmd: CommandCompletion) -> str:
+    """Build zsh case for help command with hierarchical completion.
+
+    Position 1: complete with all commands (reuses the commands array)
+    Position 2+: complete subcommands based on the command at position 1
+    """
+    # Build case statements for commands that have subcommands
+    subcmd_cases: list[str] = []
+    for parent_name, parent_cmd in sorted(cmd.subcommands.items()):
+        if parent_cmd.args:
+            # Build subcommand descriptions for this parent
+            subcmds_str = " ".join(f"'{val}'" for val in parent_cmd.args[0].values)
+            subcmd_cases.append(f"                            {parent_name}) compadd {subcmds_str} ;;")
+
+    subcmd_block = "\n".join(subcmd_cases) if subcmd_cases else "                            *) ;;"
+
+    return f"""                help)
+                    if [[ $CURRENT -eq 2 ]]; then
+                        # Position 1: complete with all commands
+                        _describe 'command' commands
+                    else
+                        # Position 2+: complete subcommands based on previous word
+                        case $words[2] in
+{subcmd_block}
+                        esac
+                    fi
+                    ;;"""
+
+
 def _build_args_case(cmd_name: str, cmd: CommandCompletion) -> str | None:
     """Build zsh case statement for a command with positional args."""
     arg_specs: list[str] = []
@@ -80,7 +109,9 @@ def generate_zsh(commands: dict[str, CommandCompletion]) -> str:
     # Build case statements for each command
     case_statements: list[str] = []
     for cmd_name, cmd in sorted(commands.items()):
-        if cmd.subcommands:
+        if cmd_name == "help":
+            case_statements.append(_build_help_case(cmd))
+        elif cmd.subcommands:
             case_statements.append(_build_subcommand_case(cmd_name, cmd))
         elif cmd.args:
             case_stmt = _build_args_case(cmd_name, cmd)
