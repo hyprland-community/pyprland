@@ -36,6 +36,34 @@ def _build_subcommand_case(cmd_name: str, cmd: CommandCompletion) -> str:
                 ;;"""
 
 
+def _build_help_case(cmd: CommandCompletion, all_commands: str) -> str:
+    """Build bash case for help command with hierarchical completion.
+
+    Position 1: complete with all commands
+    Position 2+: complete subcommands based on the command at position 1
+    """
+    # Build case statements for commands that have subcommands
+    subcmd_cases: list[str] = []
+    for parent_name, parent_cmd in sorted(cmd.subcommands.items()):
+        if parent_cmd.args:
+            subcmds_str = " ".join(parent_cmd.args[0].values)
+            subcmd_cases.append(f'                    {parent_name}) COMPREPLY=($(compgen -W "{subcmds_str}" -- "$cur"));;')
+
+    subcmd_block = "\n".join(subcmd_cases) if subcmd_cases else "                    *) ;;"
+
+    return f"""            help)
+                if [[ $pos -eq 1 ]]; then
+                    # Position 1: complete with all commands
+                    COMPREPLY=($(compgen -W "{all_commands}" -- "$cur"))
+                else
+                    # Position 2+: complete subcommands based on COMP_WORDS[2]
+                    case "${{COMP_WORDS[2]}}" in
+{subcmd_block}
+                    esac
+                fi
+                ;;"""
+
+
 def _build_args_case(cmd_name: str, cmd: CommandCompletion) -> str | None:
     """Build bash case statement for a command with positional args."""
     pos_cases: list[str] = []
@@ -72,7 +100,9 @@ def generate_bash(commands: dict[str, CommandCompletion]) -> str:
     # Build case statements for each command
     case_statements: list[str] = []
     for cmd_name, cmd in sorted(commands.items()):
-        if cmd.subcommands:
+        if cmd_name == "help":
+            case_statements.append(_build_help_case(cmd, cmd_list))
+        elif cmd.subcommands:
             case_statements.append(_build_subcommand_case(cmd_name, cmd))
         elif cmd.args:
             case_stmt = _build_args_case(cmd_name, cmd)
