@@ -109,9 +109,11 @@
 import { hasChildren, hasDefault, formatDefault, renderDescription } from './configHelpers.js'
 
 // Category display order and names
-const CATEGORY_ORDER = ['basic', 'positioning', 'behavior', 'external_commands', 'templating', 'placement', 'advanced', 'overrides', '']
+const CATEGORY_ORDER = ['basic', 'menu', 'appearance', 'positioning', 'behavior', 'external_commands', 'templating', 'placement', 'advanced', 'overrides', '']
 const CATEGORY_NAMES = {
   'basic': 'Basic',
+  'menu': 'Menu',
+  'appearance': 'Appearance',
   'positioning': 'Positioning',
   'behavior': 'Behavior',
   'external_commands': 'External commands',

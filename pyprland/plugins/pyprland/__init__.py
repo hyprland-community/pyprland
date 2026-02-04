@@ -70,7 +70,7 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
         return get_command_help(self.manager, command) if command else get_help(self.manager)
 
     def run_doc(self, args: str = "") -> str:
-        """[plugin[.option]] Show plugin and configuration documentation.
+        """[plugin.option] Show plugin and configuration documentation.
 
         Usage:
           pypr doc                 List all plugins

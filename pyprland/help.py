@@ -12,22 +12,22 @@ if TYPE_CHECKING:
 __all__ = ["get_command_help", "get_commands_help", "get_help"]
 
 
-def get_commands_help(manager: Pyprland) -> dict[str, str]:
+def get_commands_help(manager: Pyprland) -> dict[str, tuple[str, str]]:
     """Get the available commands and their short documentation.
 
     Uses command tree to show parent commands with their subcommands.
-    Example: "wall <next|pause|clear|rm|cleanup> (wallpapers)"
+    Example: "wall" -> ("<next|pause|clear|rm|cleanup>", "wallpapers")
 
     Args:
         manager: The Pyprland manager instance
 
     Returns:
-        Dict mapping command name to short description with source suffix
+        Dict mapping command name to (short_description, source) tuple
     """
     all_commands = get_all_commands(manager)
     command_tree = build_command_tree(all_commands)
 
-    result: dict[str, str] = {}
+    result: dict[str, tuple[str, str]] = {}
 
     for root_name, node in sorted(command_tree.items()):
         if node.children:
@@ -42,16 +42,19 @@ def get_commands_help(manager: Pyprland) -> dict[str, str]:
             if not source and node.info:
                 source = node.info.source
             desc = node.info.short_description if node.info else ""
-            result[root_name] = f"<{subcmds}> {desc} ({source})".strip()
+            result[root_name] = (f"<{subcmds}> {desc}".strip(), source)
         elif node.info:
             # Regular command
-            result[root_name] = f"{node.info.short_description} ({node.info.source})"
+            result[root_name] = (node.info.short_description, node.info.source)
 
     return result
 
 
 def get_help(manager: Pyprland) -> str:
     """Get the help documentation for all commands.
+
+    Commands are grouped by plugin, with built-in commands listed first.
+    Client-only commands (pypr only, not pypr-client) are marked with *.
 
     Args:
         manager: The Pyprland manager instance
@@ -62,7 +65,34 @@ If the command is omitted, runs the daemon which will start every configured plu
 
 Available commands:
 """
-    return intro + "\n".join(f" {name:20s} {doc}" for name, doc in get_commands_help(manager).items())
+    commands_help = get_commands_help(manager)
+
+    # Group by source (plugin), merging "client" into "built-in"
+    by_source: dict[str, list[tuple[str, str, bool]]] = {}
+    for name, (desc, source) in commands_help.items():
+        # Mark client commands and merge into built-in
+        is_pypr_only = source == "client"
+        group = "built-in" if source in ("built-in", "client") else source
+        by_source.setdefault(group, []).append((name, desc, is_pypr_only))
+
+    # Build output grouped by source, built-in first
+    lines: list[str] = []
+    sources = sorted(by_source.keys(), key=lambda s: (s != "built-in", s))
+
+    for source in sources:
+        # Header with pypr-only note for built-in
+        if source == "built-in":
+            lines.append(f"\n{source} (* = pypr only):")
+        else:
+            lines.append(f"\n{source}:")
+
+        # Sort commands: regular first, then pypr-only
+        cmds = sorted(by_source[source], key=lambda x: (x[2], x[0]))
+        for name, desc, is_pypr_only in cmds:
+            prefix = "* " if is_pypr_only else "  "
+            lines.append(f"{prefix}{name:20s} {desc}")
+
+    return intro + "\n".join(lines)
 
 
 def get_command_help(manager: Pyprland, command: str) -> str:
