@@ -15,6 +15,4 @@ It brings the window to the current workspace, while [expose](./expose) moves th
 
 ## Configuration
 
-All the [Menu](./Menu) configuration items are also available.
-
 <PluginConfig plugin="fetch_client_menu" linkPrefix="config-" />
