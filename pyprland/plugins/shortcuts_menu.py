@@ -93,7 +93,7 @@ class Extension(MenuMixin, Plugin):
                     choices.extend([apply_variables(line, variables).strip() for line in option_array if line.strip()])
                 elif option.get("options"):
                     choices.extend(apply_variables(txt, variables) for txt in option["options"])
-                if len(choices) == 0:
+                if not choices:
                     await self.backend.notify_info("command didn't return anything")
                     return
 

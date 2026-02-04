@@ -292,7 +292,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         for uid in uids:
             self.cancel_task(uid)
 
-        assert len(uids) > 0
+        assert uids
         first_scratch = self.scratches.get(uids[0])
         if not first_scratch:
             self.log.warning("%s doesn't exist, can't toggle.", uids[0])

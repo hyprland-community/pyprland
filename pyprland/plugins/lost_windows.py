@@ -1,7 +1,5 @@
 """Moves unreachable client windows to the currently focused workspace."""
 
-from typing import cast
-
 from ..models import ClientInfo, Environment, MonitorInfo
 from .interface import Plugin
 
@@ -24,7 +22,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
     async def run_attract_lost(self) -> None:
         """Brings lost floating windows to the current workspace."""
         monitors = await self.backend.get_monitors()
-        windows = cast("list", await self.get_clients())
+        windows = await self.get_clients()
         lost = [win for win in windows if win["floating"] and not any(contains(mon, win) for mon in monitors)]
         focused = await self.get_focused_monitor_or_warn()
         if focused is None:
