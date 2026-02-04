@@ -106,8 +106,9 @@ BemenuMenu = _menu("bemenu", "-c")
 FuzzelMenu = _menu("fuzzel", "--match-mode=fuzzy -d -p '[prompt]'")
 WalkerMenu = _menu("walker", "-d -k -p '[prompt]'")
 AnyrunMenu = _menu("anyrun", "--plugins libstdin.so --show-results-immediately true")
+VicinaeMenu = _menu("vicinae", "dmenu --no-quick-look")
 
-every_menu_engine = [FuzzelMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu, WalkerMenu]
+every_menu_engine = [FuzzelMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu, WalkerMenu, VicinaeMenu]
 
 MENU_ENGINE_CHOICES: list[str] = [engine.proc_name for engine in every_menu_engine]
 """List of available menu engine names, derived from every_menu_engine."""
