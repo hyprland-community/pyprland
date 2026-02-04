@@ -10,14 +10,7 @@ Auto-detects the available menu engine if not set.
 
 Supported engines (tested in order):
 
-- fuzzel
-- tofi
-- rofi
-- wofi
-- bemenu
-- dmenu
-- anyrun
-- walker
+<EngineList />
 
 > [!note]
 > If your menu system isn't supported, you can open a [feature request](https://github.com/hyprland-community/pyprland/issues/new?assignees=fdev31&labels=bug&projects=&template=feature_request.md&title=%5BFEAT%5D+Description+of+the+feature)
