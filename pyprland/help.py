@@ -95,7 +95,14 @@ def get_command_help(manager: Pyprland, command: str) -> str:
         node = command_tree[command]
         if node.children:
             # Show subcommands
-            lines = [f"{command} ({node.info.source if node.info else 'unknown'})", ""]
+            # Get source from parent info, or first child with info
+            source = node.info.source if node.info else ""
+            if not source:
+                for child in node.children.values():
+                    if child.info:
+                        source = child.info.source
+                        break
+            lines = [f"{command} ({source or 'unknown'})", ""]
 
             if node.info and node.info.full_description:
                 lines.append(node.info.full_description)
