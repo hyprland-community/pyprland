@@ -3,6 +3,7 @@
 import asyncio
 import colorsys
 import contextlib
+import json
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -130,6 +131,7 @@ class Extension(Plugin):
 
     next_background_event = asyncio.Event()
     cur_image = ""
+    cur_display_image = ""  # The actual path sent to hyprpaper (may be rounded)
     _paused = False
 
     rounded_manager: RoundedImageManager | None
@@ -186,9 +188,12 @@ class Extension(Plugin):
         online_folder_name = self.get_config_str("online_folder") or "online"
         self._online_folders = {str(Path(p) / online_folder_name) for p in paths}
 
-        # Build local image list
+        # Build local image list, excluding cache folders (rounded, online)
+        exclude_dirs = {"rounded", online_folder_name}
         self.image_list = [
-            full_path for path in paths async for full_path in get_files_with_ext(path, extensions, recurse=self.get_config_bool("recurse"))
+            full_path
+            for path in paths
+            async for full_path in get_files_with_ext(path, extensions, recurse=self.get_config_bool("recurse"), exclude_dirs=exclude_dirs)
         ]
 
         # Set up online fetching and get rounded cache
@@ -313,6 +318,17 @@ class Extension(Plugin):
             total_removed = sum(r for r in results if isinstance(r, int))
             if total_removed > 0:
                 self.log.info("Cache cleanup: removed %d expired files", total_removed)
+
+    def _get_local_paths(self) -> list[Path]:
+        """Get configured local wallpaper paths.
+
+        Returns:
+            List of Path objects for configured wallpaper directories.
+        """
+        cfg_path: str | list[str] = self.get_config("path")  # type: ignore[assignment]
+        if isinstance(cfg_path, str):
+            return [Path(expand_path(cfg_path))]
+        return [Path(expand_path(p)) for p in cfg_path]
 
     async def _warn_no_images(self) -> None:
         """Warn user when no local images are available."""
@@ -507,19 +523,170 @@ class Extension(Plugin):
         self._paused = False
         self.next_background_event.set()
 
-    async def run_wall_cleanup(self) -> None:
-        """Clean up old rounded images cache."""
+    async def run_wall_cleanup(self, arg: str = "") -> str:
+        """[all] Clean up rounded images cache.
+
+        Without arguments: removes orphaned files (source no longer exists).
+        With 'all': removes ALL rounded cache files.
+
+        Example:
+            pypr wall cleanup
+            pypr wall cleanup all
+        """
         if not self.rounded_manager:
-            self.log.info("Rounded corners not enabled, nothing to clean")
-            return
+            return "Rounded corners not enabled, nothing to clean"
 
-        max_age = 30 * SECONDS_PER_DAY
-        removed, atime_used = self.rounded_manager.cache.cleanup_by_atime(max_age)
+        if arg.strip().lower() == "all":
+            removed = await self._clear_rounded_cache()
+            return f"Cleared {removed} rounded images"
 
-        if atime_used:
-            self.log.info("Cleaned %d old rounded images (atime-based)", removed)
-        else:
-            self.log.info("Cleared all %d rounded images (no atime available)", removed)
+        # Orphan cleanup: find rounded files whose sources no longer exist
+        removed_orphans, removed_old = await self._cleanup_orphaned_rounded()
+
+        parts = []
+        if removed_orphans:
+            parts.append(f"{removed_orphans} orphaned")
+        if removed_old:
+            parts.append(f"{removed_old} old-format")
+
+        if parts:
+            return f"Removed {' + '.join(parts)} rounded images"
+        return "No orphaned rounded images found"
+
+    async def _clear_rounded_cache(self) -> int:
+        """Clear all files from rounded cache with throttled deletion.
+
+        Returns:
+            Number of files removed.
+        """
+        if not self.rounded_manager:
+            return 0
+
+        removed = 0
+        for cached_file in self.rounded_manager.cache.cache_dir.iterdir():
+            if cached_file.is_file():
+                await aioremove(cached_file)
+                removed += 1
+                await asyncio.sleep(0.01)  # 10ms throttle to avoid IO saturation
+        return removed
+
+    async def _cleanup_orphaned_rounded(self) -> tuple[int, int]:
+        """Remove rounded files whose source images no longer exist.
+
+        Returns:
+            Tuple of (orphaned_removed, old_format_removed).
+        """
+        if not self.rounded_manager:
+            return (0, 0)
+
+        cache_dir = self.rounded_manager.cache.cache_dir
+
+        # Build set of source hashes for current image pool
+        valid_source_hashes = set()
+        for image_path in self.image_list:
+            source_hash = self.rounded_manager.hash_source(image_path)
+            valid_source_hashes.add(source_hash)
+
+        # Find and remove orphaned/old-format files
+        removed_orphans = 0
+        removed_old = 0
+
+        for cached_file in cache_dir.iterdir():
+            if not cached_file.is_file():
+                continue
+
+            if "_" not in cached_file.stem:
+                # Old format file (single hash), remove it
+                await aioremove(cached_file)
+                removed_old += 1
+                await asyncio.sleep(0.01)  # 10ms throttle
+                continue
+
+            source_hash = cached_file.stem.split("_")[0]
+            if source_hash not in valid_source_hashes:
+                await aioremove(cached_file)
+                removed_orphans += 1
+                await asyncio.sleep(0.01)  # 10ms throttle
+
+        return (removed_orphans, removed_old)
+
+    async def run_wall_info(self, arg: str = "") -> str:
+        """[json] Show current wallpaper information.
+
+        Args:
+            arg: Optional "json" flag for JSON output
+
+        Example:
+            pypr wall info
+            pypr wall info json
+        """
+        output_json = arg.strip().lower() == "json"
+
+        # Gather information
+        source_image = self.cur_image or ""
+        display_image = self.cur_display_image or source_image
+        source_exists = Path(source_image).exists() if source_image else False
+        display_exists = Path(display_image).exists() if display_image else False
+
+        # Determine location
+        location = "unknown"
+        if source_image:
+            cur_path = Path(source_image)
+            parent_str = str(cur_path.parent)
+            if self._online and self._online.folder_path and str(self._online.folder_path) == parent_str:
+                location = "online"
+            else:
+                for local_path in self._get_local_paths():
+                    if parent_str == str(local_path) or str(local_path) in parent_str:
+                        location = "local"
+                        break
+
+        is_rounded = display_image != source_image
+        online_enabled = self._online is not None and self._online.fetcher is not None
+        online_ratio = self.get_config_float("online_ratio")
+        online_folder = str(self._online.folder_path) if self._online and self._online.folder_path else None
+        image_count = len(self.image_list)
+
+        if output_json:
+            data = {
+                "source_image": source_image or None,
+                "display_image": display_image or None,
+                "source_exists": source_exists,
+                "display_exists": display_exists,
+                "location": location,
+                "is_rounded": is_rounded,
+                "is_paused": self._paused,
+                "online_enabled": online_enabled,
+                "online_ratio": online_ratio,
+                "online_folder": online_folder,
+                "image_count": image_count,
+            }
+            return json.dumps(data, indent=2)
+
+        # Human-readable output
+        lines = [
+            f"Source: {source_image or '(none)'}",
+            f"  exists: {'yes' if source_exists else 'no'}",
+        ]
+        if is_rounded:
+            lines.extend(
+                [
+                    f"Display: {display_image}",
+                    f"  exists: {'yes' if display_exists else 'no'}",
+                ]
+            )
+        lines.extend(
+            [
+                f"Location: {location}",
+                f"Paused: {'yes' if self._paused else 'no'}",
+                f"Online: {'enabled' if online_enabled else 'disabled'} (ratio: {online_ratio})",
+            ]
+        )
+        if online_folder:
+            lines.append(f"Online folder: {online_folder}")
+        lines.append(f"Image pool: {image_count} images")
+
+        return "\n".join(lines)
 
     async def _prepare_wallpaper(self, monitor: MonitorInfo, img_path: str) -> str:
         """Prepare the wallpaper image for the given monitor."""
@@ -609,6 +776,9 @@ class Extension(Plugin):
             if not await self._hyprpaper.set_wallpaper(command_collector, self.backend):
                 await self.backend.notify_error("Could not start hyprpaper")
                 return
+
+        # Track the display path (may be rounded version of source)
+        self.cur_display_image = variables.get("file", self.cur_image)
 
         # Generate templates after wallpaper is selected
         await self._generate_templates(img_path)

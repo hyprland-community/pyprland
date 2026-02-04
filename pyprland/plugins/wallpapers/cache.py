@@ -6,6 +6,11 @@ from pathlib import Path
 
 from ...aioops import aiopen
 
+# Dual-hash key format: {16-char source hash}_{16-char settings hash}
+# Total length: 16 + 1 (underscore) + 16 = 33
+DUAL_HASH_KEY_LENGTH = 33
+DUAL_HASH_SEPARATOR_POS = 16
+
 
 class ImageCache:
     """File-based image cache with configurable TTL and cleanup.
@@ -41,12 +46,18 @@ class ImageCache:
     def _hash_key(self, key: str) -> str:
         """Generate a hash from the cache key.
 
+        If the key is already in dual-hash format ({16chars}_{16chars}),
+        returns it as-is to preserve the source hash for orphan detection.
+
         Args:
             key: The cache key to hash.
 
         Returns:
-            A hex digest of the key.
+            A hex digest of the key, or the key itself if already hashed.
         """
+        # Check if key is already in dual-hash format: exactly 33 chars with underscore at position 16
+        if len(key) == DUAL_HASH_KEY_LENGTH and key[DUAL_HASH_SEPARATOR_POS] == "_":
+            return key
         return hashlib.sha256(key.encode()).hexdigest()[:32]
 
     def get_path(self, key: str, extension: str = "jpg") -> Path:
@@ -216,35 +227,3 @@ class ImageCache:
                 file.unlink()
                 removed += 1
         return removed
-
-    def cleanup_by_atime(self, max_age: int) -> tuple[int, bool]:
-        """Clean up files not accessed within max_age seconds.
-
-        If atime tracking is not available (all files have atime == mtime),
-        falls back to clearing all files.
-
-        Args:
-            max_age: Maximum age in seconds since last access.
-
-        Returns:
-            Tuple of (files_removed, atime_available).
-        """
-        files = [f for f in self.cache_dir.iterdir() if f.is_file()]
-        if not files:
-            return (0, True)
-
-        # Check if atime is usable: at least one file has atime > mtime
-        atime_available = any(f.stat().st_atime > f.stat().st_mtime for f in files)
-
-        if not atime_available:
-            return (self.clear(), False)
-
-        # Remove files not accessed within max_age
-        removed = 0
-        now = time.time()
-        for file in files:
-            if now - file.stat().st_atime > max_age:
-                file.unlink()
-                removed += 1
-
-        return (removed, True)
