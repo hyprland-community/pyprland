@@ -48,7 +48,6 @@ _.has_state  # unused method (pyprland/plugins/scratchpads/lookup.py:33)
 _scratchpads_extension_m  # unused import (pyprland/plugins/scratchpads/objects.py:19)
 ClientPropGetter  # unused class (pyprland/plugins/scratchpads/objects.py:22)
 recommended  # unused variable (pyprland/validation.py:33)
-TypedConfigAccessorMixin  # unused variable (pyprland/config.py:151) - backwards compatibility alias
 _.restart  # unused method (pyprland/process.py:118) - public API for process restart
 _.is_supervised  # unused property (pyprland/process.py:208) - public API to check supervision status
 # httpclient fallback - aiohttp compatibility parameter
