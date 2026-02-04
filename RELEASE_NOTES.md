@@ -1,1 +1,5 @@
+- New pluging: `gamemode`
+- General CLI improvements and better shell completions (`compgen`)
 - [wallpapers] now hyprpaper auto-starts if missing
+  - cache improvements
+- Misc fixes
