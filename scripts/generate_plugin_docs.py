@@ -24,11 +24,9 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from pyprland.command_registry import (
-    CommandArg,
-    extract_commands_from_object,
-    get_client_commands,
-)
+from pyprland.commands.discovery import extract_commands_from_object, get_client_commands
+from pyprland.commands.models import CommandArg
+from pyprland.commands.tree import get_display_name, get_parent_prefixes
 
 # Paths
 PLUGINS_DIR = PROJECT_ROOT / "pyprland" / "plugins"
@@ -123,9 +121,6 @@ def extract_commands(extension_class: type) -> list[CommandItem]:
     Returns:
         List of CommandItem dataclasses
     """
-    # Use the registry to extract commands, then convert to CommandItem
-    from pyprland.command_registry import extract_commands_from_object
-
     commands = []
     for cmd_info in extract_commands_from_object(extension_class, source=""):
         commands.append(
@@ -370,7 +365,7 @@ def main():
     metadata = load_metadata()
     print(f"Loaded metadata for {len(metadata)} plugins")
 
-    # Process each plugin
+    # Process each plugin (collect docs first, don't write yet)
     plugin_docs = []
     for plugin_name in plugin_names:
         print(f"Processing {plugin_name}...")
@@ -378,12 +373,25 @@ def main():
         if doc:
             plugin_docs.append(doc)
 
-            # Write individual plugin JSON
-            output_file = OUTPUT_DIR / f"{plugin_name}.json"
-            with open(output_file, "w") as f:
-                json.dump(generate_plugin_json(doc), f, indent=2)
-                f.write("\n")
-            print(f"  -> {output_file.relative_to(PROJECT_ROOT)}")
+    # Compute parent prefixes from ALL commands across ALL plugins
+    # Only group commands from the SAME plugin (source) into hierarchies
+    # e.g., wall_rm -> "wall rm" (same plugin as wall_next, wall_pause)
+    # but toggle_special stays as-is (different plugin than toggle_dpms)
+    all_commands_with_source = {cmd.name: doc.name for doc in plugin_docs for cmd in doc.commands}
+    parent_prefixes = get_parent_prefixes(all_commands_with_source)
+
+    # Transform command names to display format
+    for doc in plugin_docs:
+        for cmd in doc.commands:
+            cmd.name = get_display_name(cmd.name, parent_prefixes)
+
+    # Write individual plugin JSON files
+    for doc in plugin_docs:
+        output_file = OUTPUT_DIR / f"{doc.name}.json"
+        with open(output_file, "w") as f:
+            json.dump(generate_plugin_json(doc), f, indent=2)
+            f.write("\n")
+        print(f"  -> {output_file.relative_to(PROJECT_ROOT)}")
 
     # Generate index.json
     index_file = OUTPUT_DIR / "index.json"

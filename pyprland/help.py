@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .command_registry import build_command_tree, get_all_commands
+from .commands.discovery import get_all_commands
+from .commands.parsing import normalize_command_name
+from .commands.tree import build_command_tree, get_display_name, get_parent_prefixes
 
 if TYPE_CHECKING:
     from .manager import Pyprland
@@ -109,16 +111,18 @@ def get_command_help(manager: Pyprland, command: str) -> str:
         Full docstring with source indicator, or error message if not found
     """
     # Handle space-separated subcommands: "wall next" -> "wall_next"
-    command = command.replace("-", "_").replace(" ", "_")
+    command = normalize_command_name(command)
     all_commands = get_all_commands(manager)
     command_tree = build_command_tree(all_commands)
+    parent_prefixes = get_parent_prefixes(all_commands.keys())
 
     # Try direct lookup first (e.g., "wall_next" or "toggle")
     if command in all_commands:
         cmd = all_commands[command]
         doc = cmd.full_description
         doc_formatted = doc if doc.endswith("\n") else f"{doc}\n"
-        return f"{command.replace('_', ' ')} ({cmd.source})\n\n{doc_formatted}"
+        display_name = get_display_name(command, parent_prefixes)
+        return f"{display_name} ({cmd.source})\n\n{doc_formatted}"
 
     # Check if this is a parent command with subcommands
     if command in command_tree:

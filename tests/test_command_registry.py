@@ -2,13 +2,9 @@
 
 import pytest
 
-from pyprland.command_registry import (
-    CommandArg,
-    CommandInfo,
-    extract_commands_from_object,
-    get_client_commands,
-    parse_docstring,
-)
+from pyprland.commands.discovery import extract_commands_from_object, get_client_commands
+from pyprland.commands.models import CommandArg, CommandInfo
+from pyprland.commands.parsing import parse_docstring
 
 
 class TestParseDocstring:

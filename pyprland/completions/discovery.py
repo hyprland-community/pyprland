@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..command_registry import CommandInfo, CommandNode, build_command_tree, get_all_commands
+from ..commands.discovery import get_all_commands
+from ..commands.tree import build_command_tree
 from ..constants import SUPPORTED_SHELLS
 from .models import (
     HINT_ARGS,
@@ -18,6 +19,7 @@ from .models import (
 )
 
 if TYPE_CHECKING:
+    from ..commands.models import CommandInfo, CommandNode
     from ..manager import Pyprland
 
 __all__ = ["get_command_completions"]

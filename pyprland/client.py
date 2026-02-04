@@ -6,23 +6,12 @@ import os
 import sys
 
 from . import constants as pyprland_constants
+from .commands.parsing import normalize_command_name
 from .common import get_logger, notify_send, run_interactive_program
 from .models import ExitCode, ResponsePrefix
 from .validate_cli import run_validate
 
-__all__ = ["CLIENT_COMMANDS", "run_client"]
-
-# Client-only commands with their docstrings (not sent to daemon)
-CLIENT_COMMANDS = {
-    "edit": """Open the configuration file in $EDITOR, then reload.
-
-Opens pyprland.toml in your preferred editor (EDITOR or VISUAL env var,
-defaults to vi). After the editor closes, the configuration is reloaded.""",
-    "validate": """Validate the configuration file.
-
-Checks the configuration file for syntax errors and validates plugin
-configurations against their schemas. Does not require the daemon.""",
-}
+__all__ = ["run_client"]
 
 
 def _get_config_file_path() -> str:
@@ -71,7 +60,7 @@ async def run_client() -> None:
         sys.exit(ExitCode.CONNECTION_ERROR)
 
     args = sys.argv[1:]
-    args[0] = args[0].replace("-", "_")
+    args[0] = normalize_command_name(args[0])
     writer.write((" ".join(args) + "\n").encode())
     writer.write_eof()
     await writer.drain()
