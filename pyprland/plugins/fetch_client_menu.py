@@ -14,7 +14,11 @@ class Extension(MenuMixin, Plugin, environments=[Environment.HYPRLAND]):
         *MenuMixin.menu_config_schema,
         ConfigField("separator", str, default="|", description="Separator between window number and title", category="appearance"),
         ConfigField(
-            "center_on_fetch", bool, default=True, description="Center the fetched window on the focused monitor", category="behavior"
+            "center_on_fetch",
+            bool,
+            default=True,
+            description="Center the fetched window on the focused monitor (floating)",
+            category="behavior",
         ),
         ConfigField(
             "margin", int, default=60, description="Margin from monitor edges in pixels when centering/resizing", category="behavior"
