@@ -9,4 +9,5 @@
 - [fetch_client_menu] fetched windows are now auto-centered
   - new `center_on_fetch` option (default: true)
   - new `margin` option (default: 60)
+- Menus get Vicinae support (#205)
 - Misc fixes
