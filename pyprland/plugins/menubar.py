@@ -15,7 +15,9 @@ from .interface import Plugin
 if TYPE_CHECKING:
     from ..adapters.proxy import BackendProxy
 
-COOLDOWN_TIME = 60
+CRASH_COOLDOWN = 120  # seconds - crashes within this trigger backoff
+MAX_BACKOFF_DELAY = 60  # cap at 60 seconds
+BASE_DELAY = 2  # base for exponential calculation
 IDLE_LOOP_INTERVAL = 10
 
 
@@ -104,6 +106,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
     proc: ManagedProcess | None = None
     cur_monitor: str | None = ""
     _tasks: TaskManager
+    _consecutive_quick_crashes: int = 0
 
     def __init__(self, name: str) -> None:
         """Initialize the plugin."""
@@ -114,6 +117,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
         """Start the process."""
         _ = reason  # unused
         await self.stop()
+        self._consecutive_quick_crashes = 0
         self._run_program()
 
     def _run_program(self) -> None:
@@ -143,9 +147,21 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
                 await self.proc.wait()
 
                 now = time()
-
                 elapsed_time = now - start_time
-                delay = 0 if elapsed_time >= COOLDOWN_TIME else int((COOLDOWN_TIME - elapsed_time) / 2)
+
+                if elapsed_time >= CRASH_COOLDOWN:
+                    # Stable run (2+ min) - reset counter, restart immediately
+                    self._consecutive_quick_crashes = 0
+                    delay = 0
+                else:
+                    # Crash within 2 min - apply backoff
+                    self._consecutive_quick_crashes += 1
+                    if self._consecutive_quick_crashes == 1:
+                        delay = 0  # first crash: immediate
+                    else:
+                        # 2nd: 2s, 3rd: 4s, 4th: 8s, 5th: 16s, 6th: 32s, 7th+: 60s
+                        delay = min(BASE_DELAY * (2 ** (self._consecutive_quick_crashes - 2)), MAX_BACKOFF_DELAY)
+
                 text = f"Menu Bar crashed, restarting in {delay}s." if delay > 0 else "Menu Bar crashed, restarting immediately."
                 self.log.warning(text)
                 if delay:
