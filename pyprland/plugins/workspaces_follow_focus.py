@@ -37,7 +37,8 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             if n in busy_workspaces or n == workspace_name:
                 continue
             batch.append(f"moveworkspacetomonitor name:{n} {monitor_id}")
-        await self.backend.execute(batch)
+        if batch:
+            await self.backend.execute(batch)
 
     async def run_change_workspace(self, direction: str) -> None:
         """<direction> Switch workspaces of current monitor, avoiding displayed workspaces.
