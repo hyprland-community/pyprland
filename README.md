@@ -9,9 +9,9 @@
 
 ## Power up your desktop
 
-A plugin system that extends your tiling compositor with features like scratchpads, dynamic popup nested menus, custom notifications, easy monitor settings and more.
+A plugin system that extends your graphical environment with features like scratchpads, dynamic popup nested menus, custom notifications, easy monitor settings and more.
 
-Think of it as a *Gnome tweak tool* for tiling window managers. With a fully plugin-based architecture, it's lightweight and easy to customize.
+Think of it as a *Gnome tweak tool* for Hyprland, with options that can run on any desktop. With a fully plugin-based architecture, it's lightweight and easy to customize.
 
 Contributions, suggestions, bug reports and comments are welcome.
 
