@@ -1,5 +1,6 @@
 """Force workspaces to follow the focus / mouse."""
 
+import asyncio
 from typing import cast
 
 from ..models import Environment, ReloadReason
@@ -28,6 +29,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             screenid_name: The screen ID and name
         """
         monitor_id, workspace_name = screenid_name.split(",")
+        await asyncio.sleep(0.1)
         # move every free workspace to the currently focused desktop
         busy_workspaces = {mon["activeWorkspace"]["name"] for mon in await self.backend.get_monitors() if mon["name"] != monitor_id}
         workspaces = [w["name"] for w in cast("list[dict]", await self.backend.execute_json("workspaces")) if w["id"] > 0]
