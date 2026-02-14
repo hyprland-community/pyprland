@@ -7,7 +7,7 @@ This page covers the configuration file format and available options.
 The default configuration file is:
 
 ```
-~/.config/hypr/pyprland.toml
+~/.config/pypr/config.toml
 ```
 
 You can specify a different path using the `--config` flag:
@@ -92,8 +92,8 @@ You can split your configuration across multiple files using `include`:
 ```toml
 [pyprland]
 include = [
-    "~/.config/hypr/scratchpads.toml",
-    "~/.config/hypr/monitors.toml",
+    "~/.config/pypr/scratchpads.toml",
+    "~/.config/pypr/monitors.toml",
 ]
 plugins = ["scratchpads", "monitors"]
 ```

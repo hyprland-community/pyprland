@@ -3,7 +3,7 @@
 Pypr consists of two things:
 
 - **A tool**: `pypr` which runs the daemon (service) and allows you to interact with it
-- **A config file**: `~/.config/hypr/pyprland.toml` using the [TOML](https://toml.io/en/) format
+- **A config file**: `~/.config/pypr/config.toml` using the [TOML](https://toml.io/en/) format
 
 > [!important]
 > - With no arguments, `pypr` runs the daemon (doesn't fork to background)
@@ -27,7 +27,7 @@ pip install pyprland
 
 ## Minimal Configuration
 
-Create `~/.config/hypr/pyprland.toml` with:
+Create `~/.config/pypr/config.toml` with:
 
 ```toml
 [pyprland]

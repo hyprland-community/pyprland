@@ -337,7 +337,7 @@ gcc -O2 -o pypr-client pypr-client.c
 
 ## Configuration System
 
-Configuration is stored in TOML format at `~/.config/hypr/pyprland.toml`:
+Configuration is stored in TOML format at `~/.config/pypr/config.toml`:
 
 ```toml
 [pyprland]
