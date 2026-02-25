@@ -47,7 +47,6 @@
           pyprland = python.pkgs.buildPythonPackage (
             attrs
             // {
-              env.HATCH_METADATA_CLASSIFIERS_NO_VERIFY = "1";
               nativeBuildInputs = (attrs.nativeBuildInputs or [ ]) ++ [
                 python.pkgs.hatchling
               ];
