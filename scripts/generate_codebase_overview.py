@@ -20,7 +20,7 @@ from pathlib import Path
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
-PYPRLAND_DIR = PROJECT_ROOT / "pyprland"
+PYPRLAND_DIR = PROJECT_ROOT / "src" / "pyprland"
 OUTPUT_FILE = PROJECT_ROOT / "CODEBASE_OVERVIEW.md"
 
 # Minimum docstring length to be considered "good"

@@ -22,7 +22,7 @@ from typing import Any
 
 # Add the project root to the path so we can import pyprland modules
 PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "src") )
 
 from pyprland.commands.discovery import extract_commands_from_object, get_client_commands
 from pyprland.commands.models import CommandArg

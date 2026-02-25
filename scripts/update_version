@@ -15,8 +15,8 @@ echo '"""Package version."""' > ${T}
 echo '' >> ${T}
 echo "VERSION = \"${V}\"" >> ${T}
 
-cmp "$T" pyprland/version.py  > /dev/null || {
-    cp "$T" pyprland/version.py
+cmp "$T" src/pyprland/version.py >/dev/null || {
+    cp "$T" src/pyprland/version.py
     echo "Version updated to ${V}"
 }
 
