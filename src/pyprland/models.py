@@ -35,30 +35,33 @@ class WorkspaceDf(TypedDict):
     name: str
 
 
-class ClientInfo(TypedDict):
-    """Client information as returned by Hyprland."""
-
-    address: str
-    mapped: bool
-    hidden: bool
-    at: tuple[int, int]
-    size: tuple[int, int]
-    workspace: WorkspaceDf
-    floating: bool
-    monitor: int
-    class_: str
-    title: str
-    initialClass: str
-    initialTitle: str
-    pid: int
-    xwayland: bool
-    pinned: bool
-    fullscreen: bool
-    fullscreenMode: int
-    fakeFullscreen: bool
-    grouped: list[str]
-    swallowing: str
-    focusHistoryID: int
+ClientInfo = TypedDict(
+    "ClientInfo",
+    {
+        "address": str,
+        "mapped": bool,
+        "hidden": bool,
+        "at": tuple[int, int],
+        "size": tuple[int, int],
+        "workspace": WorkspaceDf,
+        "floating": bool,
+        "monitor": int,
+        "class": str,
+        "title": str,
+        "initialClass": str,
+        "initialTitle": str,
+        "pid": int,
+        "xwayland": bool,
+        "pinned": bool,
+        "fullscreen": bool,
+        "fullscreenMode": int,
+        "fakeFullscreen": bool,
+        "grouped": list[str],
+        "swallowing": str,
+        "focusHistoryID": int,
+    },
+)
+"""Client information as returned by Hyprland."""
 
 
 class MonitorInfo(TypedDict):
