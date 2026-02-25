@@ -35,7 +35,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         clients = await self.get_clients()
         for client in clients:
             if client["address"] == _addr:
-                if client["class_"] in active_classes or client["title"] in active_titles:
+                if client["class"] in active_classes or client["title"] in active_titles:
                     await self.backend.execute(["execr fcitx5-remote -o"])
-                if client["class_"] in inactive_classes or client["title"] in inactive_titles:
+                if client["class"] in inactive_classes or client["title"] in inactive_titles:
                     await self.backend.execute(["execr fcitx5-remote -c"])
