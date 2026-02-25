@@ -3,7 +3,7 @@ name = "pyprland"
 version = "3.1.0"
 description = "A companion for your desktop UX"
 authors = [
-    { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
+    { name = "Fabien Devaux", email = "fdev31@gmail.com" },
 ]
 requires-python = ">=3.11"
 readme = "README.md"
@@ -20,10 +20,9 @@ dependencies = [
     "aiohttp",
     "pillow",
 ]
-homepage = "https://github.com/hyprland-community/pyprland/"
-packages = [
-    { include = "pyprland" },
-]
+
+[project.urls]
+Homepage = "https://github.com/hyprland-community/pyprland/"
 
 [project.scripts]
 pypr = "pyprland.command:main"
@@ -172,7 +171,12 @@ exclude = [
 
 [build-system]
 requires = [
-    "uv_build>=0.10.5,<0.11.0",
+    "hatchling",
 ]
-build-backend = "uv_build"
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "pyprland",
+]
 

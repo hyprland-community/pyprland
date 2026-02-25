@@ -22,14 +22,14 @@ from typing import Any
 
 # Add the project root to the path so we can import pyprland modules
 PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "src") )
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from pyprland.commands.discovery import extract_commands_from_object, get_client_commands
 from pyprland.commands.models import CommandArg
 from pyprland.commands.tree import get_display_name, get_parent_prefixes
 
 # Paths
-PLUGINS_DIR = PROJECT_ROOT / "src" / "pyprland" / "plugins"
+PLUGINS_DIR = PROJECT_ROOT / "pyprland" / "plugins"
 OUTPUT_DIR = PROJECT_ROOT / "site" / "generated"
 METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.toml"
 

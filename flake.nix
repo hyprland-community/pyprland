@@ -47,14 +47,6 @@
           pyprland = python.pkgs.buildPythonPackage (
             attrs
             // {
-              postPatch = ''
-                                  ${pkgs.lib.getExe' pkgs.gnused "sed"} -i 's/email = "fdev31 <fdev31@gmail.com>"/email = "fdev31@gmail.com"/' pyproject.toml
-                                  ${pkgs.lib.getExe' pkgs.gnused "sed"} -i '/^\[build-system\]/,/^build-backend.*$/c\
-                [build-system]\
-                requires = ["hatchling"]\
-                build-backend = "hatchling.build"' pyproject.toml
-              '';
-
               nativeBuildInputs = (attrs.nativeBuildInputs or [ ]) ++ [
                 python.pkgs.hatchling
               ];
@@ -69,20 +61,15 @@
           pkgs = pkgsFor.${system};
           python = pkgs.python3;
 
-          devDeps = builtins.attrNames (project.pyproject.tool.poetry.group.dev.dependencies or { });
           getDependencies = project.renderers.withPackages { inherit python; };
-          pythonWithPackages = python.withPackages (
-            pythonPackages:
-            (getDependencies pythonPackages)
-            ++ (builtins.filter (x: x != null) (map (name: pythonPackages.${name} or null) devDeps))
-          );
+          pythonWithPackages = python.withPackages getDependencies;
         in
         {
           default = self.devShells.${system}.pyprland;
           pyprland = pkgs.mkShell {
             packages = [
               pythonWithPackages
-              pkgs.poetry
+              pkgs.uv
             ];
 
           };
