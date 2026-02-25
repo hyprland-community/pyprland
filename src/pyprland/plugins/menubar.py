@@ -138,7 +138,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
                 command = self.get_config_str("command")
                 cmd = apply_variables(
                     command,
-                    {"monitor": self.cur_monitor if self.cur_monitor else ""},
+                    {"monitor": self.cur_monitor or ""},
                 )
                 start_time = time()
                 self.proc = ManagedProcess()

@@ -143,7 +143,7 @@ def _ask_text(question: str, default: Any) -> str | None:
     """Ask for text input."""
     default_str = str(default) if default is not None else ""
     result = questionary.text(question, default=default_str).ask()
-    return result if result else None
+    return result or None
 
 
 def _ask_list(question: str, default: Any) -> list | None:
@@ -173,7 +173,7 @@ def _ask_path(question: str, default: Any, only_directories: bool = False) -> st
         default=default_str,
         only_directories=only_directories,
     ).ask()
-    return result if result else None
+    return result or None
 
 
 def _ask_path_list(question: str, default: Any, only_directories: bool = False) -> list[str] | None:
@@ -210,7 +210,7 @@ def _ask_path_list(question: str, default: Any, only_directories: bool = False) 
     if not paths and isinstance(default, list):
         return [str(p) for p in default]
 
-    return paths if paths else []
+    return paths or []
 
 
 def ask_plugin_options(  # noqa: C901

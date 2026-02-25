@@ -29,7 +29,7 @@ from pyprland.commands.models import CommandArg
 from pyprland.commands.tree import get_display_name, get_parent_prefixes
 
 # Paths
-PLUGINS_DIR = PROJECT_ROOT / "pyprland" / "plugins"
+PLUGINS_DIR = PROJECT_ROOT / "src" / "pyprland" / "plugins"
 OUTPUT_DIR = PROJECT_ROOT / "site" / "generated"
 METADATA_FILE = PROJECT_ROOT / "scripts" / "plugin_metadata.toml"
 

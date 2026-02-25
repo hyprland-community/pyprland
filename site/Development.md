@@ -12,7 +12,7 @@ It's easy to write your own plugin by making a Python package and then indicatin
 ### Prerequisites
 
 - Python 3.11+
-- [Poetry](https://python-poetry.org/) for dependency management
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management
 - [pre-commit](https://pre-commit.com/) for Git hooks
 
 ### Initial Setup
@@ -22,16 +22,12 @@ It's easy to write your own plugin by making a Python package and then indicatin
 git clone https://github.com/fdev31/pyprland.git
 cd pyprland
 
-# Install dependencies
-poetry install
-
 # Install dev and lint dependencies
-poetry install --with dev,lint
+uv sync --all-groups
 
 # Install pre-commit hooks
-pip install pre-commit
-pre-commit install
-pre-commit install --hook-type pre-push
+uv run pre-commit install
+uv run pre-commit install --hook-type pre-push
 ```
 
 ## Quick Start
@@ -363,7 +359,7 @@ pip install -e .
 When ready to distribute:
 
 ```sh
-poetry publish
+uv publish
 ```
 
 Don't forget to update the details in your `pyproject.toml` file first.

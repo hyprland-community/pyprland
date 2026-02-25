@@ -251,7 +251,7 @@ def format_config_field_doc(plugin_name: str, field: ConfigField) -> str:
 
     # Description
     lines.append("")
-    lines.append(field.description if field.description else "(No description available)")
+    lines.append(field.description or "(No description available)")
 
     # Choices and children
     lines.extend(_format_field_choices(field))

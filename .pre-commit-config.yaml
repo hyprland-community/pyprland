@@ -50,7 +50,7 @@ repos:
     hooks:
       - id: runtests
         name: Run pytest
-        entry: pytest tests
+        entry: uv run pytest tests
         pass_filenames: false
         language: system
         stages: [pre-push]

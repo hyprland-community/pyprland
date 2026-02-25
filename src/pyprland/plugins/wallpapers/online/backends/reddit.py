@@ -124,7 +124,7 @@ class RedditBackend(Backend):
                 # Try the keyword as a subreddit name
                 subreddits.append(keyword)
 
-        return subreddits if subreddits else DEFAULT_SUBREDDITS
+        return subreddits or DEFAULT_SUBREDDITS
 
     def _filter_posts(
         self,

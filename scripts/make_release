@@ -31,7 +31,7 @@ git commit -m "Version $version"  --no-verify
 git tag $version
 git push
 
-poetry publish --build -u $PYPI_USERNAME -p $PYPI_PASSWORD
+uv publish -u $PYPI_USERNAME -p $PYPI_PASSWORD
 # }}}
 
 # Make the release

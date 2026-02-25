@@ -45,9 +45,8 @@ archive-docs version:
 
 # Create a new release
 release:
-    uv lock
-    poetry lock
-    git add poetry.lock uv.lock
+    uv lock --upgrade
+    git add uv.lock
     ./scripts/make_release
 
 # Generate and open HTML coverage report

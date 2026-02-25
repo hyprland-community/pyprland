@@ -5,18 +5,24 @@ description = "A companion for your desktop UX"
 authors = [
     { name = "Fabien Devaux", email = "fdev31 <fdev31@gmail.com>" },
 ]
-license = "MIT"
-readme = "README.md"
-homepage = "https://github.com/hyprland-community/pyprland/"
-packages = [
-    { include = "pyprland" },
-]
 requires-python = ">=3.11"
+readme = "README.md"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 dependencies = [
     "aiofiles",
     "aiohttp",
     "pillow",
-    "questionary[quickstart]",
+]
+homepage = "https://github.com/hyprland-community/pyprland/"
+packages = [
+    { include = "pyprland" },
 ]
 
 [project.scripts]
@@ -25,21 +31,23 @@ pypr-quickstart = "pyprland.quickstart:main"
 
 [dependency-groups]
 dev = [
+    "black",
+    "coverage",
+    "flake8",
+    "mypy",
+    "pdoc",
+    "pre-commit>=4.5.1",
+    "pydantic",
+    "pylint",
     "pytest",
     "pytest-asyncio",
     "pytest-mock",
-    "vulture",
-    "coverage",
-    "mypy",
-    "pdoc",
-]
-lint = [
-    "black",
-    "flake8",
-    "pydantic",
-    "pylint",
     "ruff",
     "types-aiofiles",
+    "vulture",
+]
+quickstart = [
+    "questionary>=2.1.1",
 ]
 
 [tool.ruff]
@@ -164,7 +172,7 @@ exclude = [
 
 [build-system]
 requires = [
-    "poetry-core",
+    "uv_build>=0.10.5,<0.11.0",
 ]
-build-backend = "poetry.core.masonry.api"
+build-backend = "uv_build"
 
