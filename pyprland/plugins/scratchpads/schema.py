@@ -65,6 +65,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
     ConfigField("restore_excluded", bool, default=False, description="Restore excluded on hide", category="behavior"),
     ConfigField("preserve_aspect", bool, default=False, description="Keep size/position across shows", category="behavior"),
     ConfigField("hide_delay", float, default=0.0, description="Delay before hide animation", category="behavior"),
+    ConfigField("show_delay", float, default=0.2, description="Delay before show animation on first display", category="behavior"),
     ConfigField("force_monitor", str, default="", description="Always show on specific monitor", category="behavior"),
     ConfigField("alt_toggle", bool, default=False, description="Alternative toggle for multi-monitor", category="behavior"),
     ConfigField(

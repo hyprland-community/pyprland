@@ -176,7 +176,7 @@ class TransitionsMixin:
                     scratch.conf.get_int("margin"),
                 )
                 await self.backend.execute(f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}")
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(scratch.conf.get_float("show_delay"))
 
         # move
         move_commands: list[str] = []
