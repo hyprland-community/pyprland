@@ -477,20 +477,21 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", scratch.uid)
         await self._pin_scratch(scratch)
-        await self._hide_transition(scratch, monitor_info)
 
         if not scratch.conf.get_bool("close_on_hide"):
-            await self.backend.move_window_to_workspace(scratch.full_address, mk_scratch_name(scratch.uid))
+            await self.backend.move_window_to_workspace(scratch.full_address, mk_scratch_name(scratch.uid), silent=True)
 
             for addr in scratch.extra_addr:
-                await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid))
+                await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
                 await asyncio.sleep(0.01)
         else:
-            await self.backend.close_window(scratch.full_address)
+            await self.backend.close_window(scratch.full_address, silent=True)
 
             for addr in scratch.extra_addr:
                 await self.backend.close_window(addr)
                 await asyncio.sleep(0.01)
+
+        await self._hide_transition(scratch, monitor_info)
 
         for e_uid in scratch.excluded_scratches:
             await self.run_show(e_uid)

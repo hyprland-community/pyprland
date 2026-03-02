@@ -116,11 +116,14 @@ class TransitionsMixin:
             addresses.append(scratch.full_address)
         off_x, off_y = offset
 
+        x = scratch.client_info["at"][0]
+        y = scratch.client_info["at"][1]
+
         animation_actions = {
-            "fromright": f"movewindowpixel {off_x} 0",
-            "fromleft": f"movewindowpixel {-off_x} 0",
-            "frombottom": f"movewindowpixel 0 {off_y}",
-            "fromtop": f"movewindowpixel 0 {-off_y}",
+            "fromright": f"movewindowpixel exact {x + off_x} {y}",
+            "fromleft": f"movewindowpixel exact {x - off_x} {y}",
+            "frombottom": f"movewindowpixel exact {x} {y + off_y}",
+            "fromtop": f"movewindowpixel exact {x} {y - off_y}",
         }
         await self.backend.execute(
             [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]
