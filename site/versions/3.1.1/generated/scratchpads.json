@@ -1,0 +1,416 @@
+{
+  "name": "scratchpads",
+  "description": "Makes your applications into dropdowns & togglable popups.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "attach",
+      "args": [],
+      "short_description": "Attach the focused window to the last focused scratchpad.",
+      "full_description": "Attach the focused window to the last focused scratchpad."
+    },
+    {
+      "name": "hide",
+      "args": [
+        {
+          "value": "name",
+          "required": true
+        }
+      ],
+      "short_description": "hides scratchpad \"name\" (accepts \"*\").",
+      "full_description": "<name> hides scratchpad \"name\" (accepts \"*\").\n\nArgs:\n    uid: The scratchpad name, or \"*\" to hide all visible scratchpads\n    flavor: Internal hide behavior flags (default: NONE)"
+    },
+    {
+      "name": "show",
+      "args": [
+        {
+          "value": "name",
+          "required": true
+        }
+      ],
+      "short_description": "shows scratchpad \"name\" (accepts \"*\").",
+      "full_description": "<name> shows scratchpad \"name\" (accepts \"*\").\n\nArgs:\n    uid: The scratchpad name, or \"*\" to show all hidden scratchpads"
+    },
+    {
+      "name": "toggle",
+      "args": [
+        {
+          "value": "name",
+          "required": true
+        }
+      ],
+      "short_description": "toggles visibility of scratchpad \"name\" (supports multiple names).",
+      "full_description": "<name> toggles visibility of scratchpad \"name\" (supports multiple names).\n\nArgs:\n    uid_or_uids: Space-separated scratchpad name(s)\n\nExample:\n    pypr toggle term\n    pypr toggle term music"
+    }
+  ],
+  "config": [
+    {
+      "name": "[scratchpad].command",
+      "type": "str",
+      "required": true,
+      "recommended": false,
+      "default": null,
+      "description": "Command to run (omit for unmanaged scratchpads)",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].class",
+      "type": "str",
+      "required": false,
+      "recommended": true,
+      "default": "",
+      "description": "Window class for matching",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].animation",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "fromTop",
+      "description": "Animation type",
+      "choices": [
+        "",
+        "fromTop",
+        "fromBottom",
+        "fromLeft",
+        "fromRight"
+      ],
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].size",
+      "type": "str",
+      "required": false,
+      "recommended": true,
+      "default": "80% 80%",
+      "description": "Window size (e.g. '80% 80%')",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].position",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Explicit position override",
+      "choices": null,
+      "children": null,
+      "category": "positioning",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].margin",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 60,
+      "description": "Pixels from screen edge",
+      "choices": null,
+      "children": null,
+      "category": "positioning",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].offset",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "100%",
+      "description": "Hide animation distance",
+      "choices": null,
+      "children": null,
+      "category": "positioning",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].max_size",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Maximum window size",
+      "choices": null,
+      "children": null,
+      "category": "positioning",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].lazy",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Start on first use",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].pinned",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Sticky to monitor",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].multi",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Allow multiple windows",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].unfocus",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Action on unfocus ('hide' or empty)",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].hysteresis",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 0.4,
+      "description": "Delay before unfocus hide",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].excludes",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Scratches to hide when shown",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].restore_excluded",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Restore excluded on hide",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].preserve_aspect",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Keep size/position across shows",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].hide_delay",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 0.0,
+      "description": "Delay before hide animation",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].force_monitor",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Always show on specific monitor",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].alt_toggle",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Alternative toggle for multi-monitor",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].allow_special_workspaces",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Allow over special workspaces",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].smart_focus",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Restore focus on hide",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].close_on_hide",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Close instead of hide",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].match_by",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "pid",
+      "description": "Match method: pid, class, initialClass, title, initialTitle",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].initialClass",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='initialClass'",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].initialTitle",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='initialTitle'",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].title",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Match value when match_by='title'",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].process_tracking",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Enable process management",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].skip_windowrules",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Rules to skip: aspect, float, workspace",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].use",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "",
+      "description": "Inherit from another scratchpad definition",
+      "choices": null,
+      "children": null,
+      "category": "advanced",
+      "is_directory": false
+    },
+    {
+      "name": "[scratchpad].monitor",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "Per-monitor config overrides",
+      "choices": null,
+      "children": null,
+      "category": "overrides",
+      "is_directory": false
+    }
+  ]
+}

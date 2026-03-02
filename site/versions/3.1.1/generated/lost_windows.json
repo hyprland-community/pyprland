@@ -1,0 +1,16 @@
+{
+  "name": "lost_windows",
+  "description": "Brings lost floating windows (which are out of reach) to the current workspace.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "attract_lost",
+      "args": [],
+      "short_description": "Brings lost floating windows to the current workspace.",
+      "full_description": "Brings lost floating windows to the current workspace."
+    }
+  ],
+  "config": []
+}
