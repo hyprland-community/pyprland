@@ -1,0 +1,4 @@
+- [scratchpads](https://hyprland-community.github.io/pyprland/scratchpads): supports Hyprland 0.54
+- fix fcitx5_switcher
+- minor fixes
+- use hatchling for building (simplifies nix flake)
