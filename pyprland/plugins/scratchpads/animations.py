@@ -34,6 +34,33 @@ class Placement:  # {{{
         """
         return cast("tuple[int, int]", getattr(Placement, animation_type)(monitor, client, margin))
 
+    @staticmethod
+    def get_offscreen(animation_type: str, monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:
+        """Get off-screen position for the given animation type.
+
+        Computes the final on-screen position via `get()`, then pushes the
+        window far off-screen along the animation axis.  An extra monitor
+        dimension is subtracted/added so the window doesn't appear on an
+        adjacent monitor in multi-monitor setups.
+
+        Args:
+            animation_type: Type of animation (fromtop, frombottom, etc.)
+            monitor: Monitor information
+            client: Client window information
+            margin: Margin to apply
+        """
+        fx, fy = Placement.get(animation_type, monitor, client, margin)
+        mon_x, mon_y = monitor["x"], monitor["y"]
+        mon_w, mon_h = get_size(monitor)
+        client_w, client_h = client["size"]
+        offscreen_map = {
+            "fromtop": (fx, mon_y - client_h - mon_h),
+            "frombottom": (fx, mon_y + mon_h + mon_h),
+            "fromleft": (mon_x - client_w - mon_w, fy),
+            "fromright": (mon_x + mon_w + mon_w, fy),
+        }
+        return offscreen_map[animation_type]
+
     # animation types
     @staticmethod
     def fromtop(monitor: MonitorInfo, client: ClientInfo, margin: int) -> tuple[int, int]:

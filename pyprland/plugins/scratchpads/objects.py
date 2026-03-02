@@ -217,6 +217,7 @@ class Scratch:  # {{{
         self.visible = False
         self.client_info = None
         self.meta.initialized = False
+        self.meta.extra_positions.clear()
 
     @property
     def address(self) -> str:

@@ -153,11 +153,31 @@ class TransitionsMixin:
         should_set_aspect = (
             not (preserve_aspect and was_alive) or scratch.monitor != self.state.active_monitor
         )  # Not aspect preserving or it's newly spawned
+        animation_type = scratch.animation_type
+        is_first_show = animation_type and not scratch.meta.extra_positions
+        monitor_changed = was_alive and scratch.monitor and scratch.monitor != monitor["name"]
+        needs_offscreen_preposition = is_first_show or monitor_changed
+
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
 
         clients = await self.backend.execute_json("clients")
         await self._handle_multiwindow(scratch, clients)
+
+        # FIX: initial animation
+        if needs_offscreen_preposition:
+            await self._update_infos(scratch, clients)
+
+            if scratch.client_info is not None and "size" in scratch.client_info:
+                off_x, off_y = Placement.get_offscreen(
+                    animation_type,
+                    monitor,
+                    scratch.client_info,
+                    scratch.conf.get_int("margin"),
+                )
+                await self.backend.execute(f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}")
+                await asyncio.sleep(0.2)
+
         # move
         move_commands: list[str] = []
 
