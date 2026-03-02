@@ -33,11 +33,12 @@ Create `~/.config/pypr/config.toml` with:
 [pyprland]
 plugins = [
     "scratchpads",
+    "gamemode",
     "magnify",
 ]
 ```
 
-This enables two popular plugins. See the [Plugins](./Plugins) page for the full list.
+This enables only few plugins. See the [Plugins](./Plugins) page for the full list.
 
 ## Running the Daemon
 
