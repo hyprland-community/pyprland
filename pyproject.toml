@@ -149,6 +149,9 @@ convention = "google"
 "pyprland/adapters/hyprland.py" = [
     "ARG002",
 ]
+"pyprland/adapters/backend.py" = [
+    "ARG002",
+]
 
 [tool.ruff.format]
 indent-style = "space"

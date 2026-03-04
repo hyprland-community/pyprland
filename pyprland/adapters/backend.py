@@ -252,11 +252,12 @@ class EnvironmentBackend(ABC):
         """
         return await self.execute(f"pin address:{address}", log=log)
 
-    async def close_window(self, address: str, *, log: Logger) -> bool:
+    async def close_window(self, address: str, *, silent: bool = True, log: Logger) -> bool:
         """Close a window.
 
         Args:
             address: Window address (without 'address:' prefix)
+            silent: Accepted for API consistency (currently unused for close)
             log: Logger to use for this operation
 
         Returns:

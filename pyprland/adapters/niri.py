@@ -332,11 +332,12 @@ class NiriBackend(EnvironmentBackend):
         log.debug("pin_window: not available in Niri")
         return False
 
-    async def close_window(self, address: str, *, log: Logger) -> bool:
+    async def close_window(self, address: str, *, silent: bool = True, log: Logger) -> bool:
         """Close a window by ID.
 
         Args:
             address: Window ID
+            silent: Accepted for API consistency (currently unused for close)
             log: Logger to use for this operation
         """
         return await self.execute({"Action": {"CloseWindow": {"id": int(address)}}}, log=log)

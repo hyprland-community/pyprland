@@ -211,16 +211,17 @@ class BackendProxy:
         """
         return await self._backend.pin_window(address, log=self.log)
 
-    async def close_window(self, address: str) -> bool:
+    async def close_window(self, address: str, silent: bool = True) -> bool:
         """Close a window.
 
         Args:
             address: Window address (without 'address:' prefix)
+            silent: If True, don't shift focus (default: True)
 
         Returns:
             True if command succeeded
         """
-        return await self._backend.close_window(address, log=self.log)
+        return await self._backend.close_window(address, silent=silent, log=self.log)
 
     async def resize_window(self, address: str, width: int, height: int) -> bool:
         """Resize a window to exact pixel dimensions.
