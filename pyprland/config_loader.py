@@ -22,6 +22,18 @@ if TYPE_CHECKING:
 __all__ = ["ConfigLoader"]
 
 
+def _resolve_config_path(config_filename: str) -> Path:
+    """Resolve a config filename with variable and user expansion.
+
+    Args:
+        config_filename: Raw config file path (may contain $VARS or ~)
+
+    Returns:
+        Resolved Path object
+    """
+    return Path(os.path.expandvars(config_filename)).expanduser()
+
+
 class ConfigLoader:
     """Handles loading and merging configuration files.
 
@@ -74,8 +86,8 @@ class ConfigLoader:
             The loaded configuration dictionary
         """
         if config_filename:
-            fname = Path(os.path.expandvars(config_filename)).expanduser()
-            if await aiisdir(fname):
+            fname = _resolve_config_path(config_filename)
+            if await aiisdir(str(fname)):
                 return self._load_config_directory(fname)
             return self._load_config_file(fname)
 

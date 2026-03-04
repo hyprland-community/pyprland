@@ -65,6 +65,7 @@ fixable = [
 ignore = [
     "ANN002",
     "ANN003",
+    "RUF100",
     "ANN204",
     "ANN401",
     "D105",

@@ -75,11 +75,11 @@ except ImportError:
 
     async def aiexists(*args, **kwargs) -> bool:
         """Async > sync wrapper."""
-        return os.path.exists(*args, **kwargs)
+        return os.path.exists(*args, **kwargs)  # noqa: ASYNC240
 
     async def aiisdir(*args, **kwargs) -> bool:
         """Async > sync wrapper."""
-        return os.path.isdir(*args, **kwargs)
+        return os.path.isdir(*args, **kwargs)  # noqa: ASYNC240
 
     async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef, unused-ignore]
         """Async > sync wrapper."""
