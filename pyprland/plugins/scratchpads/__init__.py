@@ -78,12 +78,25 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         """Validate scratchpads configuration."""
         errors: list[str] = []
 
+        # Collect template names: sections referenced via 'use'
+        template_names: set[str] = set()
+        for name, scratch_config in self.config.iter_subsections():
+            if "." in name:
+                continue
+            use = scratch_config.get("use")
+            if use:
+                if isinstance(use, str):
+                    template_names.add(use)
+                elif isinstance(use, list):
+                    template_names.update(use)
+
         for name, scratch_config in self.config.iter_subsections():
             # Skip per-monitor subsections (e.g. "term.monitor.DP-1") - validated within schema
             if "." in name:
                 continue
 
-            errors.extend(validate_scratchpad_config(name, scratch_config))
+            is_template = name in template_names and not scratch_config.get("command")
+            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_template))
 
         return errors
 
@@ -91,10 +104,24 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
     def validate_config_static(cls, _plugin_name: str, config: dict) -> list[str]:
         """Validate scratchpads configuration without instantiation."""
         errors: list[str] = []
+
+        # Collect template names: sections referenced via 'use' but not used as scratchpads
+        template_names: set[str] = set()
         for name, scratch_config in config.items():
             if not isinstance(scratch_config, dict) or "." in name:
                 continue
-            errors.extend(validate_scratchpad_config(name, scratch_config))
+            use = scratch_config.get("use")
+            if use:
+                if isinstance(use, str):
+                    template_names.add(use)
+                elif isinstance(use, list):
+                    template_names.update(use)
+
+        for name, scratch_config in config.items():
+            if not isinstance(scratch_config, dict) or "." in name:
+                continue
+            is_template = name in template_names and not scratch_config.get("command")
+            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_template))
         return errors
 
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:

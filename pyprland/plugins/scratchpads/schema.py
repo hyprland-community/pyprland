@@ -113,6 +113,12 @@ SCRATCHPAD_SCHEMA = ConfigItems(
     ConfigField("monitor", dict, default={}, description="Per-monitor config overrides", category="overrides"),
 )
 
+# Schema for template sections (like [scratchpads.common]) - same fields but 'command' is not required
+_TEMPLATE_SCHEMA = ConfigItems(
+    *(f for f in SCRATCHPAD_SCHEMA if f.name != "command"),
+    ConfigField("command", str, default="", description="Command to run", category="basic"),
+)
+
 # Schema for monitor overrides (excludes non-overridable fields)
 _MONITOR_OVERRIDE_SCHEMA = ConfigItems(*(f for f in SCRATCHPAD_SCHEMA if f.name not in {"command", "use", "monitor"}))
 
@@ -132,12 +138,14 @@ def _validate_monitor_overrides(name: str, scratch_config: dict, errors: list[st
         errors.extend(_validate_against_schema(override_config, prefix, _MONITOR_OVERRIDE_SCHEMA))
 
 
-def validate_scratchpad_config(name: str, scratch_config: dict) -> list[str]:
+def validate_scratchpad_config(name: str, scratch_config: dict, *, is_template: bool = False) -> list[str]:
     """Validate a single scratchpad's configuration.
 
     Args:
         name: The scratchpad name (for error messages)
         scratch_config: The scratchpad's config dict
+        is_template: If True, this is a template section (referenced via 'use'),
+            so 'command' is not required and cross-field checks are relaxed.
 
     Returns:
         List of error messages (empty if valid)
@@ -145,18 +153,22 @@ def validate_scratchpad_config(name: str, scratch_config: dict) -> list[str]:
     errors: list[str] = []
     prefix = f"scratchpads.{name}"
 
+    # Use relaxed schema for templates (command not required)
+    schema = _TEMPLATE_SCHEMA if is_template else SCRATCHPAD_SCHEMA
+
     # Standard schema validation via ConfigValidator
-    errors.extend(_validate_against_schema(scratch_config, prefix, SCRATCHPAD_SCHEMA))
+    errors.extend(_validate_against_schema(scratch_config, prefix, schema))
 
-    # Cross-field validations (scratchpad-specific)
-    # Note: Using inline default because we're validating raw user config before schema is applied
-    match_by = scratch_config.get("match_by", "pid")
-    if match_by != "pid" and match_by not in scratch_config:
-        errors.append(f"[{prefix}] match_by='{match_by}' requires '{match_by}' to be defined")
+    # Cross-field validations (scratchpad-specific, skip for templates)
+    if not is_template:
+        # Note: Using inline default because we're validating raw user config before schema is applied
+        match_by = scratch_config.get("match_by", "pid")
+        if match_by != "pid" and match_by not in scratch_config:
+            errors.append(f"[{prefix}] match_by='{match_by}' requires '{match_by}' to be defined")
 
-    # Validate unmanaged scratchpads (no command) require class for matching
-    if not scratch_config.get("command") and not scratch_config.get("class"):
-        errors.append(f"[{prefix}] unmanaged scratchpads (no command) require 'class' to be defined")
+        # Validate unmanaged scratchpads (no command) require class for matching
+        if not scratch_config.get("command") and not scratch_config.get("class"):
+            errors.append(f"[{prefix}] unmanaged scratchpads (no command) require 'class' to be defined")
 
     _validate_monitor_overrides(name, scratch_config, errors)
 
