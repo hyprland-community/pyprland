@@ -50,13 +50,11 @@ async def test_get_files_with_ext():
 
         mock_ailistdir.side_effect = ailistdir_side_effect
 
-        # Mock Path.is_dir() to return True for paths ending with "sub"
-        original_is_dir = Path.is_dir
+        # Mock aiisdir to return True for paths ending with "sub"
+        async def mock_aiisdir(path):
+            return str(path).endswith("sub")
 
-        def mock_is_dir(self):
-            return str(self).endswith("sub")
-
-        with patch.object(Path, "is_dir", mock_is_dir):
+        with patch("pyprland.plugins.wallpapers.imageutils.aiisdir", side_effect=mock_aiisdir):
             # Test non-recursive
             files = []
             async for f in get_files_with_ext("/root", ["jpg"], recurse=False):
