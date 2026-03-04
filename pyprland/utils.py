@@ -8,12 +8,12 @@ Provides:
 - notify_send(): Send desktop notifications via notify-send
 """
 
-import asyncio
 import contextlib
 import re
 from typing import Any
 
 from .models import MonitorInfo
+from .process import create_subprocess
 
 __all__ = [
     "apply_filter",
@@ -139,4 +139,4 @@ async def notify_send(text: str, duration: int = 3000, color: str | None = None,
 
     with contextlib.suppress(FileNotFoundError):
         # We don't care about the output
-        await asyncio.create_subprocess_exec(*args)
+        await create_subprocess(*args, shell=False)

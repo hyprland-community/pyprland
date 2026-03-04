@@ -4,6 +4,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from ...aioops import is_process_running
+from ...process import create_subprocess
 
 if TYPE_CHECKING:
     import logging
@@ -36,11 +37,7 @@ class HyprpaperManager:
             return True
 
         self.log.info("Hyprpaper not running, starting it...")
-        await asyncio.create_subprocess_exec(
-            "hyprpaper",
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
+        await create_subprocess("hyprpaper", shell=False)
 
         # Wait for hyprpaper to start (up to 3 seconds)
         for _ in range(30):
@@ -72,5 +69,5 @@ class HyprpaperManager:
 
     async def stop(self) -> None:
         """Stop hyprpaper process."""
-        proc = await asyncio.create_subprocess_shell("pkill hyprpaper")
+        proc = await create_subprocess("pkill hyprpaper")
         await proc.wait()

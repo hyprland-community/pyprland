@@ -6,6 +6,7 @@ from typing import Any
 from ...adapters.niri import niri_output_to_monitor_info
 from ...aioops import DebouncedTask
 from ...models import Environment, MonitorInfo, ReloadReason
+from ...process import create_subprocess
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .commands import (
@@ -110,7 +111,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
         if not await self._run_relayout(monitors):
             default_command = self.get_config_str("unknown")
             if default_command:
-                await asyncio.create_subprocess_shell(default_command)
+                await create_subprocess(default_command)
 
     async def niri_outputschanged(self, _data: dict) -> None:
         """Handle Niri output changes.
@@ -374,11 +375,11 @@ class Extension(Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
         for descr, command in self.get_config_dict("hotplug_commands").items():
             mon = get_monitor_by_pattern(descr, monitors_by_descr, monitors_by_name, self._mon_by_pat_cache)
             if mon and mon["name"] == name:
-                await asyncio.create_subprocess_shell(command)
+                await create_subprocess(command)
                 break
         single_command = self.get_config_str("hotplug_command")
         if single_command:
-            await asyncio.create_subprocess_shell(single_command)
+            await create_subprocess(single_command)
 
     def _clear_mon_by_pat_cache(self) -> None:
         """Clear the cache."""

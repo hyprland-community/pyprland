@@ -21,7 +21,7 @@ from ...constants import (
     SECONDS_PER_DAY,
 )
 from ...models import Environment, ReloadReason
-from ...process import ManagedProcess
+from ...process import ManagedProcess, create_subprocess
 from ...validation import ConfigField, ConfigItems
 from ..interface import Plugin
 from .cache import ImageCache
@@ -792,7 +792,7 @@ class Extension(Plugin):
         post_command = self.get_config_str("post_command")
         if post_command:
             command = apply_variables(post_command, variables)
-            post_proc = await asyncio.create_subprocess_shell(command)
+            post_proc = await create_subprocess(command)
             if await post_proc.wait() != 0:
                 await self.backend.notify_error("wallpaper post_command failed")
 
@@ -847,7 +847,7 @@ class Extension(Plugin):
             await self._hyprpaper.stop()
         clear_command = self.get_config_str("clear_command")
         if clear_command:
-            clear_proc = await asyncio.create_subprocess_shell(clear_command)
+            clear_proc = await create_subprocess(clear_command)
             await clear_proc.wait()
 
     async def run_color(self, arg: str) -> None:

@@ -5,6 +5,7 @@ from typing import cast
 
 from ..adapters.menus import MenuMixin
 from ..common import apply_filter, apply_variables
+from ..process import create_subprocess
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
@@ -86,7 +87,7 @@ class Extension(MenuMixin, Plugin):
                 choices = []
                 var_name = option["name"]
                 if option.get("command"):  # use the option to select some variable
-                    proc = await asyncio.create_subprocess_shell(option["command"], stdout=asyncio.subprocess.PIPE)
+                    proc = await create_subprocess(option["command"], stdout=asyncio.subprocess.PIPE)
                     assert proc.stdout
                     await proc.wait()
                     option_array = (await proc.stdout.read()).decode().split("\n")
@@ -115,4 +116,4 @@ class Extension(MenuMixin, Plugin):
         """
         final_command = apply_variables(command, variables)
         self.log.info("Executing %s", final_command)
-        await asyncio.create_subprocess_shell(final_command)
+        await create_subprocess(final_command)

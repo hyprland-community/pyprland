@@ -9,12 +9,43 @@ SupervisedProcess:
     periods to prevent restart loops, and crash event callbacks.
 """
 
-__all__ = ["ManagedProcess", "SupervisedProcess"]
+__all__ = ["ManagedProcess", "SupervisedProcess", "create_subprocess"]
 
 import asyncio
 import contextlib
 from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any
+
+from .debug import is_debug
+
+
+async def create_subprocess(
+    *args: str,
+    shell: bool = True,
+    **kwargs: Any,
+) -> asyncio.subprocess.Process:
+    """Create a subprocess with default output suppression.
+
+    Unless ``--debug`` is active, stdout and stderr default to
+    :data:`~asyncio.subprocess.DEVNULL`.  Callers can override by
+    passing ``stdout`` / ``stderr`` explicitly (e.g. ``stdout=PIPE``).
+
+    Args:
+        *args: Command string (shell=True) or program + args (shell=False).
+        shell: If True, use create_subprocess_shell (default).
+               If False, use create_subprocess_exec.
+        **kwargs: Forwarded to the underlying asyncio call.
+
+    Returns:
+        The created subprocess.
+    """
+    if not is_debug():
+        kwargs.setdefault("stdout", asyncio.subprocess.DEVNULL)
+        kwargs.setdefault("stderr", asyncio.subprocess.DEVNULL)
+
+    if shell:
+        return await asyncio.create_subprocess_shell(args[0], **kwargs)
+    return await asyncio.create_subprocess_exec(*args, **kwargs)
 
 
 class ManagedProcess:
@@ -88,7 +119,7 @@ class ManagedProcess:
 
         self._command = command
         self._subprocess_kwargs = subprocess_kwargs
-        self._proc = await asyncio.create_subprocess_shell(command, **subprocess_kwargs)
+        self._proc = await create_subprocess(command, **subprocess_kwargs)
 
     async def stop(self) -> int | None:
         """Stop the process gracefully.
@@ -249,7 +280,7 @@ class SupervisedProcess(ManagedProcess):
             start_time = asyncio.get_event_loop().time()
 
             # Start the process
-            self._proc = await asyncio.create_subprocess_shell(
+            self._proc = await create_subprocess(
                 self._command,
                 **self._subprocess_kwargs,
             )

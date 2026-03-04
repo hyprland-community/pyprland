@@ -7,6 +7,7 @@ import contextlib
 from typing import TYPE_CHECKING, cast
 
 from ...common import apply_variables
+from ...process import create_subprocess
 
 if TYPE_CHECKING:
     import logging
@@ -157,7 +158,7 @@ class LifecycleMixin:
         self.scratches.set_state(scratch, "respawned")
         old_pid = self.procs[name].pid if name in self.procs else 0
         command = apply_variables(scratch.conf.get_str("command"), self.state.variables)
-        proc = await asyncio.create_subprocess_shell(command)
+        proc = await create_subprocess(command)
         self.procs[name] = proc
         pid = proc.pid
         scratch.reset(pid)
