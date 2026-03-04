@@ -116,7 +116,10 @@ class TransitionsMixin:
             addresses.append(scratch.full_address)
         off_x, off_y = offset
 
-        x, y = scratch.client_info["at"]
+        if scratch.client_info:
+            x, y = scratch.client_info.get("at", (0, 0))
+        else:
+            x, y = 0, 0
 
         animation_actions = {
             "fromright": f"movewindowpixel exact {x + off_x} {y}",
