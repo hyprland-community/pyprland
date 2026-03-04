@@ -18,7 +18,6 @@ import subprocess
 import sys
 from collections.abc import Callable
 from functools import partial
-from pathlib import Path
 from typing import Any, cast
 
 from .adapters.backend import EnvironmentBackend
@@ -27,7 +26,7 @@ from .adapters.niri import NiriBackend
 from .adapters.proxy import BackendProxy
 from .adapters.wayland import WaylandBackend
 from .adapters.xorg import XorgBackend
-from .aioops import graceful_cancel_tasks
+from .aioops import aiexists, aiunlink, graceful_cancel_tasks
 from .ansi import HandlerStyles, colorize
 from .common import SharedState, get_logger
 from .config import Configuration
@@ -497,9 +496,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
         self.server.close()
         # Ensure the process exits
         await asyncio.sleep(1)
-        control_path = Path(CONTROL)
-        if control_path.exists():
-            control_path.unlink()
+        if await aiexists(CONTROL):
+            await aiunlink(CONTROL)
         os._exit(0)
 
     def _has_handler(self, handler_name: str) -> bool:

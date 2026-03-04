@@ -1,11 +1,10 @@
 """Run a bar."""
 
 import contextlib
-from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING, cast
 
-from ..aioops import TaskManager
+from ..aioops import TaskManager, aiexists
 from ..common import apply_variables
 from ..models import Environment, ReloadReason
 from ..process import ManagedProcess
@@ -64,7 +63,7 @@ async def is_bar_alive(
         environment: Current environment ("hyprland" or "niri")
     """
     # First check /proc - works for any spawned process
-    is_running = Path(f"/proc/{pid}").exists()
+    is_running = await aiexists(f"/proc/{pid}")
     if is_running:
         return pid
 

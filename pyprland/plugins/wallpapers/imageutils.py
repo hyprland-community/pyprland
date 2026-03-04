@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from ...aioops import ailistdir
+from ...aioops import aiisdir, ailistdir
 from .cache import ImageCache
 from .colorutils import Image, ImageDraw, ImageOps
 
@@ -43,7 +43,7 @@ async def get_files_with_ext(
         full_path = f"{path}/{fname}"
         if ext.lower() in extensions:
             yield full_path
-        elif recurse and Path(full_path).is_dir() and fname not in exclude:
+        elif recurse and await aiisdir(full_path) and fname not in exclude:
             async for v in get_files_with_ext(full_path, extensions, True, exclude_dirs):
                 yield v
 

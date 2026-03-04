@@ -53,7 +53,7 @@ def _classify_arg(
         return ("choices", KNOWN_COMPLETIONS[arg_value])
 
     # Check for literal values (like "json")
-    if arg_value in ("json",):
+    if arg_value == "json":
         return ("literal", [arg_value])
 
     # Check for hint args

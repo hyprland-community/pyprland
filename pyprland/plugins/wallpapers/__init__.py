@@ -625,8 +625,8 @@ class Extension(Plugin):
         # Gather information
         source_image = self.cur_image or ""
         display_image = self.cur_display_image or source_image
-        source_exists = Path(source_image).exists() if source_image else False
-        display_exists = Path(display_image).exists() if display_image else False
+        source_exists = await aiexists(source_image) if source_image else False
+        display_exists = await aiexists(display_image) if display_image else False
 
         # Determine location
         location = "unknown"

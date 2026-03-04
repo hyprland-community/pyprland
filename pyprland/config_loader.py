@@ -11,6 +11,7 @@ import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from .aioops import aiisdir
 from .constants import CONFIG_FILE, LEGACY_CONFIG_FILE, MIGRATION_NOTIFICATION_DURATION_MS, OLD_CONFIG_FILE
 from .models import PyprError
 from .utils import merge
@@ -74,7 +75,7 @@ class ConfigLoader:
         """
         if config_filename:
             fname = Path(os.path.expandvars(config_filename)).expanduser()
-            if fname.is_dir():
+            if await aiisdir(fname):
                 return self._load_config_directory(fname)
             return self._load_config_file(fname)
 

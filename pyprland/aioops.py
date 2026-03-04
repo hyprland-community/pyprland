@@ -8,11 +8,13 @@ __all__ = [
     "DebouncedTask",
     "TaskManager",
     "aiexists",
+    "aiisdir",
     "ailistdir",
     "aiopen",
     "aioremove",
     "airmdir",
     "airmtree",
+    "aiunlink",
     "graceful_cancel_tasks",
     "is_process_running",
 ]
@@ -30,8 +32,10 @@ try:
     import aiofiles.os
     from aiofiles import open as aiopen
     from aiofiles.os import listdir as ailistdir
+    from aiofiles.os import unlink as aiunlink
 
     aiexists = aiofiles.os.path.exists
+    aiisdir = aiofiles.os.path.isdir
 except ImportError:
 
     class AsyncFile:
@@ -73,9 +77,17 @@ except ImportError:
         """Async > sync wrapper."""
         return os.path.exists(*args, **kwargs)
 
+    async def aiisdir(*args, **kwargs) -> bool:
+        """Async > sync wrapper."""
+        return os.path.isdir(*args, **kwargs)
+
     async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef, unused-ignore]
         """Async > sync wrapper."""
         return os.listdir(*args, **kwargs)  # noqa: PTH208
+
+    async def aiunlink(*args, **kwargs) -> None:  # type: ignore[no-redef, misc, unused-ignore]
+        """Async > sync wrapper."""
+        os.unlink(*args, **kwargs)
 
 
 async def airmtree(path: str) -> None:
