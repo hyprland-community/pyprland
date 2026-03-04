@@ -4,6 +4,7 @@ __all__ = ["Scratch"]
 
 import asyncio
 from dataclasses import dataclass, field
+from itertools import count
 from typing import TYPE_CHECKING, Any, Protocol
 
 from ...aioops import aiexists, aiopen
@@ -28,6 +29,9 @@ if TYPE_CHECKING:
             **kw: Any,
         ) -> ClientInfo | None:
             pass
+
+
+CLIENT_INFO_RETRY_COUNT = 5
 
 
 @dataclass
@@ -245,10 +249,15 @@ class Scratch:  # {{{
             clients: The list of clients
         """
         if client_info is None:
-            if self.have_command:
-                client_info = await self.ctx.backend.get_client_props(addr=self.full_address, clients=clients)
-            else:
-                client_info = await self.fetch_matching_client(clients=clients)
+            counter = count(0)
+            while next(counter) < CLIENT_INFO_RETRY_COUNT:
+                if self.have_command:
+                    client_info = await self.ctx.backend.get_client_props(addr=self.full_address, clients=clients)
+                else:
+                    client_info = await self.fetch_matching_client(clients=clients)
+                if client_info and client_info["mapped"]:
+                    break
+                await asyncio.sleep(0.1)  # wait a bit before retrying
 
         if client_info is None:
             self.ctx.log.error("The client window %s vanished", self.full_address)

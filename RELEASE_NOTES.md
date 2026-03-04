@@ -1,1 +1,2 @@
-- `scratchpads`: add `show_delay` option to control the pre-show positioning delay
+- `scratchpads`: Fix initial display (requires using a delay, set to `0` to have no forced delay on first display)
+    - add `show_delay` option to control the pre-show positioning delay
