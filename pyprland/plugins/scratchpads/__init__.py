@@ -506,7 +506,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         await self._pin_scratch(scratch)
 
         if scratch.conf.get_bool("close_on_hide"):
-            await self.backend.close_window(scratch.full_address, silent=True)
+            await self.backend.close_window(scratch.full_address)
 
             for addr in scratch.extra_addr:
                 await self.backend.close_window(addr)
