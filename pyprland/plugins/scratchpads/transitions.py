@@ -275,7 +275,7 @@ class TransitionsMixin:
                 self.log.error("Cannot animate show: client_info is None for %s", scratch.uid)
                 return
 
-            if relative_animation:
+            if relative_animation and scratch.address in scratch.meta.extra_positions:
                 main_win_position = apply_offset((monitor["x"], monitor["y"]), scratch.meta.extra_positions[scratch.address])
             else:
                 main_win_position = Placement.get(
