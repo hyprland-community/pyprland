@@ -1,4 +1,6 @@
+- avoid logging when no flag is passed (only most important logs remains, use `--debug` to get the logs)
 - `scratchpads`: Fix initial display
     - add `show_delay` option to control the pre-show positioning delay
     - set to `0` to have no forced delay on first display (but leads to unpredictable animations)
+    - needs to match your animations speed! Increase/decrease accordingly (default = 0.3s)
 - misc fixes and improvements
