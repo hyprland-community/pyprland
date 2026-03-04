@@ -27,6 +27,7 @@ async def test_load_config_toml(pyprland_app):
     mock_toml = {"pyprland": {"plugins": ["test_plug"]}}
 
     with (
+        patch("pyprland.config_loader.aiexists", AsyncMock(return_value=True)),
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.open", new_callable=MagicMock),
         patch("tomllib.load", return_value=mock_toml),
@@ -60,6 +61,7 @@ async def test_load_config_toml_with_notify(pyprland_app):
     mock_toml = {"pyprland": {"plugins": ["test_plug"]}}
 
     with (
+        patch("pyprland.config_loader.aiexists", AsyncMock(return_value=True)),
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.open", new_callable=MagicMock),
         patch("tomllib.load", return_value=mock_toml),
@@ -88,16 +90,20 @@ async def test_load_config_json_fallback(pyprland_app):
     """Test fallback to JSON if TOML doesn't exist."""
     mock_json = {"pyprland": {"plugins": []}}
 
-    # Sequence of exists checks in new flow:
-    # 1. _open_config: CONFIG_FILE exists? -> False
-    # 2. _open_config: LEGACY_CONFIG_FILE exists? -> False
-    # 3. _open_config: OLD_CONFIG_FILE exists? -> True (triggers warning)
-    # 4. _load_config_file: fname (CONFIG_FILE) exists? -> False
-    # 5. _load_config_file: OLD_CONFIG_FILE exists? -> True
-    side_effects = [False, False, True, False, True]
+    # Async exists checks in _open_config:
+    # 1. CONFIG_FILE exists? -> False
+    # 2. LEGACY_CONFIG_FILE exists? -> False
+    # 3. OLD_CONFIG_FILE exists? -> True (triggers warning)
+    async_side_effects = [False, False, True]
+
+    # Sync exists checks in _load_config_file:
+    # 4. fname (CONFIG_FILE) exists? -> False
+    # 5. OLD_CONFIG_FILE exists? -> True
+    sync_side_effects = [False, True]
 
     with (
-        patch.object(Path, "exists", side_effect=side_effects),
+        patch("pyprland.config_loader.aiexists", AsyncMock(side_effect=async_side_effects)),
+        patch.object(Path, "exists", side_effect=sync_side_effects),
         patch.object(Path, "open", new_callable=MagicMock),
         patch("json.loads", return_value=mock_json),
     ):
@@ -119,7 +125,10 @@ async def test_load_config_json_fallback(pyprland_app):
 @pytest.mark.asyncio
 async def test_load_config_missing(pyprland_app):
     """Test error raised when no config found."""
-    with patch.object(Path, "exists", return_value=False):
+    with (
+        patch("pyprland.config_loader.aiexists", AsyncMock(return_value=False)),
+        patch.object(Path, "exists", return_value=False),
+    ):
         with pytest.raises(PyprError):
             await pyprland_app.load_config()
 

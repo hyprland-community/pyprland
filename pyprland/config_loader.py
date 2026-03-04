@@ -11,7 +11,7 @@ import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from .aioops import aiisdir
+from .aioops import aiexists, aiisdir
 from .constants import CONFIG_FILE, LEGACY_CONFIG_FILE, MIGRATION_NOTIFICATION_DURATION_MS, OLD_CONFIG_FILE
 from .models import PyprError
 from .utils import merge
@@ -96,10 +96,10 @@ class ConfigLoader:
         legacy_path = LEGACY_CONFIG_FILE
         old_json_path = OLD_CONFIG_FILE
 
-        if config_path.exists():
+        if await aiexists(config_path):
             # New canonical location
             fname = config_path
-        elif legacy_path.exists():
+        elif await aiexists(legacy_path):
             # Legacy TOML location - use it but warn user
             fname = legacy_path
             self.log.warning("Using legacy config path: %s", legacy_path)
@@ -110,7 +110,7 @@ class ConfigLoader:
                     MIGRATION_NOTIFICATION_DURATION_MS,
                 )
             )
-        elif old_json_path.exists():
+        elif await aiexists(old_json_path):
             # Very old JSON format - will be loaded via fallback in _load_config_file
             self.log.warning("Using deprecated JSON config: %s", old_json_path)
             self.log.warning("Please migrate to TOML format at: %s", config_path)

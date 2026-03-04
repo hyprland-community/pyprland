@@ -9,9 +9,9 @@ __all__ = [
     "TaskManager",
     "aiexists",
     "aiisdir",
+    "aiisfile",
     "ailistdir",
     "aiopen",
-    "aioremove",
     "airmdir",
     "airmtree",
     "aiunlink",
@@ -36,6 +36,7 @@ try:
 
     aiexists = aiofiles.os.path.exists
     aiisdir = aiofiles.os.path.isdir
+    aiisfile = aiofiles.os.path.isfile
 except ImportError:
 
     class AsyncFile:
@@ -81,13 +82,17 @@ except ImportError:
         """Async > sync wrapper."""
         return os.path.isdir(*args, **kwargs)  # noqa: ASYNC240
 
+    async def aiisfile(*args, **kwargs) -> bool:
+        """Async > sync wrapper."""
+        return await asyncio.to_thread(os.path.isfile, *args, **kwargs)
+
     async def ailistdir(*args, **kwargs) -> list[str]:  # type: ignore[no-redef, unused-ignore]
         """Async > sync wrapper."""
-        return os.listdir(*args, **kwargs)  # noqa: PTH208
+        return await asyncio.to_thread(os.listdir, *args, **kwargs)
 
     async def aiunlink(*args, **kwargs) -> None:  # type: ignore[no-redef, misc, unused-ignore]
         """Async > sync wrapper."""
-        os.unlink(*args, **kwargs)
+        await asyncio.to_thread(os.unlink, *args, **kwargs)
 
 
 async def airmtree(path: str) -> None:
@@ -110,17 +115,6 @@ async def airmdir(path: str) -> None:
         path: Empty directory to remove.
     """
     await asyncio.to_thread(os.rmdir, path)
-
-
-async def aioremove(path: str | os.PathLike) -> None:
-    """Async wrapper for os.remove.
-
-    Removes a file.
-
-    Args:
-        path: File to remove.
-    """
-    await asyncio.to_thread(os.remove, path)
 
 
 async def is_process_running(name: str) -> bool:

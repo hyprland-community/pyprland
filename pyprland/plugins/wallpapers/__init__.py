@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ...aioops import TaskManager, aiexists, aioremove, airmdir, airmtree
+from ...aioops import TaskManager, aiexists, aiisfile, airmdir, airmtree, aiunlink
 from ...common import apply_variables
 from ...constants import (
     DEFAULT_PALETTE_COLOR_RGB,
@@ -499,7 +499,7 @@ class Extension(Plugin):
 
         # Delete the file
         try:
-            await aioremove(cur_path)
+            await aiunlink(cur_path)
             self.log.info("Removed wallpaper: %s", cur_path)
         except OSError as e:
             self.log.exception("Failed to remove wallpaper %s", cur_path)
@@ -514,7 +514,7 @@ class Extension(Plugin):
                 rounded_path = self.rounded_manager.cache.get_path(key, "jpg")
                 if await aiexists(rounded_path):
                     try:
-                        await aioremove(rounded_path)
+                        await aiunlink(rounded_path)
                         self.log.debug("Removed rounded version: %s", rounded_path)
                     except OSError:
                         pass  # Non-critical
@@ -564,8 +564,8 @@ class Extension(Plugin):
 
         removed = 0
         for cached_file in self.rounded_manager.cache.cache_dir.iterdir():
-            if cached_file.is_file():
-                await aioremove(cached_file)
+            if await aiisfile(cached_file):
+                await aiunlink(cached_file)
                 removed += 1
                 await asyncio.sleep(0.01)  # 10ms throttle to avoid IO saturation
         return removed
@@ -592,19 +592,19 @@ class Extension(Plugin):
         removed_old = 0
 
         for cached_file in cache_dir.iterdir():
-            if not cached_file.is_file():
+            if not await aiisfile(cached_file):
                 continue
 
             if "_" not in cached_file.stem:
                 # Old format file (single hash), remove it
-                await aioremove(cached_file)
+                await aiunlink(cached_file)
                 removed_old += 1
                 await asyncio.sleep(0.01)  # 10ms throttle
                 continue
 
             source_hash = cached_file.stem.split("_")[0]
             if source_hash not in valid_source_hashes:
-                await aioremove(cached_file)
+                await aiunlink(cached_file)
                 removed_orphans += 1
                 await asyncio.sleep(0.01)  # 10ms throttle
 
