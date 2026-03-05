@@ -159,7 +159,7 @@ class TransitionsMixin:
         animation_type = scratch.animation_type
         is_first_show = animation_type and not scratch.meta.extra_positions
         monitor_changed = was_alive and scratch.monitor and scratch.monitor != monitor["name"]
-        needs_offscreen_preposition = is_first_show or monitor_changed
+        needs_offscreen_preposition = (is_first_show or monitor_changed) and bool(animation_type)
 
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
