@@ -7,7 +7,7 @@
 
 Advanced configuration options
 
-<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['use', 'pinned', 'excludes', 'restore_excluded', 'unfocus', 'hysteresis', 'preserve_aspect', 'offset', 'hide_delay', 'show_delay', 'force_monitor', 'alt_toggle', 'allow_special_workspaces', 'smart_focus', 'close_on_hide', 'monitor']" />
+<PluginConfig plugin="scratchpads" linkPrefix="config-" :filter="['use', 'pinned', 'excludes', 'restore_excluded', 'unfocus', 'hysteresis', 'preserve_aspect', 'offset', 'hide_delay', 'force_monitor', 'alt_toggle', 'allow_special_workspaces', 'smart_focus', 'close_on_hide', 'monitor']" />
 
 ### `use` <ConfigBadges plugin="scratchpads" option="use" /> {#config-use}
 
@@ -77,13 +77,6 @@ Rule of thumb, if you have an animation with speed "7", as in:
     animation = windowsOut, 1, 7, easeInOut, popin 80%
 ```
 You can divide the value by two and round to the lowest value, here `3`, then divide by 10, leading to `hide_delay = 0.3`.
-
-### `show_delay` <ConfigBadges plugin="scratchpads" option="show_delay" /> {#config-show-delay}
-
-Delay (in seconds) to wait for the initial positioning animation to complete before showing the scratchpad.
-This only affects the first time a scratchpad is displayed (or after its window is respawned) and when it moves across monitors.
-Increase the value if the scratchpad appears to slide diagonally on first show; decrease it for faster response.
-Set to `0` to disable the delay entirely.
 
 ### `force_monitor` <ConfigBadges plugin="scratchpads" option="force_monitor" /> {#config-force-monitor}
 

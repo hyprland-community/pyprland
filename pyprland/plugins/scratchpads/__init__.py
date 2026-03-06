@@ -158,6 +158,11 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 if not is_lazy:
                     scratches_to_spawn.add(name)
 
+        # Register a noanim windowrule for the pypr_noanim tag.
+        # This is used to skip Hyprland's window animation during offscreen pre-positioning
+        # so that the show transition is instant (no need for show_delay).
+        await self.backend.execute("windowrule no_anim on, match:tag pypr_noanim", base_command="keyword")
+
         for name in scratches_to_spawn:
             if await self.ensure_alive(name):
                 scratch = self.scratches.get(name)

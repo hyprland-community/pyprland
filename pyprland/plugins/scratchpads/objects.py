@@ -165,7 +165,6 @@ class Scratch:  # {{{
                 raise RuntimeError(msg)
             self.client_info = m_client
         await ex.backend.execute(f"movetoworkspacesilent {mk_scratch_name(self.uid)},address:{self.full_address}")
-        await asyncio.sleep(0.05)  # workaround
         self.meta.initialized = True
 
     async def is_alive(self) -> bool:

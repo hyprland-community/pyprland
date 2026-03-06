@@ -168,18 +168,24 @@ class TransitionsMixin:
         await self._handle_multiwindow(scratch, clients)
 
         # FIX: initial animation
-        if needs_offscreen_preposition:
-            await self._update_infos(scratch, clients)
-
-            if scratch.client_info is not None and "size" in scratch.client_info:
-                off_x, off_y = Placement.get_offscreen(
-                    animation_type,
-                    monitor,
-                    scratch.client_info,
-                    scratch.conf.get_int("margin"),
-                )
-                await self.backend.execute(f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}")
-                await asyncio.sleep(scratch.conf.get_float("show_delay"))
+        # Tag the window with pypr_noanim to disable Hyprland's animation
+        # during the offscreen pre-positioning move, then untag so the real
+        # slide-in animation plays normally.
+        if needs_offscreen_preposition and scratch.client_info is not None and "size" in scratch.client_info:
+            off_x, off_y = Placement.get_offscreen(
+                animation_type,
+                monitor,
+                scratch.client_info,
+                scratch.conf.get_int("margin"),
+            )
+            await self.backend.execute(
+                [
+                    f"tagwindow +pypr_noanim address:{scratch.full_address}",
+                    f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}",
+                ]
+            )
+            await asyncio.sleep(0.001)  # NOTE: let some time to process
+            await self.backend.execute(f"tagwindow -pypr_noanim address:{scratch.full_address}")
 
         # move
         move_commands: list[str] = []

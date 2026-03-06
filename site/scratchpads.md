@@ -84,11 +84,13 @@ Check your window's class with: `hyprctl clients | grep class`
 
 Type of animation to use:
 
-- `null` / `""` (no animation)
-- `fromTop` (stays close to upper screen border)
-- `fromBottom` (stays close to lower screen border)
-- `fromLeft` (stays close to left screen border)
-- `fromRight` (stays close to right screen border)
+- `fromTop` (default) stays close to upper screen border
+- `fromBottom` stays close to lower screen border
+- `fromLeft` stays close to left screen border
+- `fromRight` stays close to right screen border
+- `null` / `""` no sliding animation - also disables positioning relative to the border
+
+It is recommended to set [position](#config-position) when disabling this configuration option.
 
 ### `size` <ConfigBadges plugin="scratchpads" option="size" /> {#config-size}
 
