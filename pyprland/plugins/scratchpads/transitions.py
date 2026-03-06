@@ -184,7 +184,7 @@ class TransitionsMixin:
                     f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}",
                 ]
             )
-            await asyncio.sleep(0.001)  # NOTE: let some time to process
+            await asyncio.sleep(0.01)  # NOTE: let some time to process
             await self.backend.execute(f"tagwindow -pypr_noanim address:{scratch.full_address}")
 
         # move
