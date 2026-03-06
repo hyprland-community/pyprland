@@ -496,6 +496,12 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         if monitor_info is None:
             self.log.error("Cannot hide %s: no monitor_info available", scratch.uid)
             return
+
+        configured_position = scratch.conf.get_str("position")
+        if configured_position:
+            pos_x, pos_y = convert_coords(configured_position, monitor_info)
+            ref_position = (pos_x + monitor_info["x"], pos_y + monitor_info["y"])
+
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # collects window which have been created by the app
         if scratch.conf.get_bool("multi"):
