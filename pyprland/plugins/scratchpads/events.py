@@ -102,6 +102,7 @@ class EventsMixin:
         Args:
             monitor_name: The monitor name
         """
+        await asyncio.sleep(1)
         for scratch in self.scratches.values():
             if scratch.monitor == monitor_name:
                 try:
