@@ -128,7 +128,6 @@ class = "term_quake"
 > If `position` is not provided, the window is placed according to `margin` on one axis and centered on the other.
 >
 > Hide animations then slide away from the configured coordinates — not from wherever the window was last manually moved or tiled.
-> This ensures consistent hide/show animations regardless of any manual positioning of the window.
 
 ### `margin` <ConfigBadges plugin="scratchpads" option="margin" /> {#config-margin}
 
