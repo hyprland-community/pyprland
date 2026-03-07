@@ -175,10 +175,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             assert scratch
             self.scratches.clear_state(scratch, "configured")
 
-        # Mark scratchpad special workspaces as persistent so Hyprland keeps them
-        # alive across display power transitions (DPMS off/on, monitor disconnect/reconnect).
-        # Without this, Hyprland may improperly re-parent windows from special workspaces
-        # during output re-enable, causing hidden scratchpads to "peek" on screen.
+        # Mark scratchpad special workspaces as persistent
         persistent_commands = [f"workspace {mk_scratch_name(s.uid)}, persistent:true" for s in self.scratches.values()]
         if persistent_commands:
             await self.backend.execute(persistent_commands, base_command="keyword")
