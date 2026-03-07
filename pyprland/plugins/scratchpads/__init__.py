@@ -129,19 +129,19 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         _ = reason  # unused
         # Sanity checks
         _scratch_classes: dict[str, str] = {}
-        for uid, scratch in self.config.items():
-            _klass = scratch.get("class")
-            if _klass:
-                if _klass in _scratch_classes:
-                    text = "Scratch class %s is duplicated (in %s and %s)"
-                    args = (
-                        scratch["class"],
-                        uid,
-                        _scratch_classes[_klass],
-                    )
-                    self.log.error(text, *args)
-                    await self.backend.notify_error(text % args)
-                _scratch_classes[_klass] = uid
+
+        for uid, scratch in filter(lambda x: x[1].get("class"), self.config.items()):
+            _klass = scratch["class"]
+            if _klass in _scratch_classes:
+                text = "Scratch class %s is duplicated (in %s and %s)"
+                args = (
+                    _klass,
+                    uid,
+                    _scratch_classes[_klass],
+                )
+                self.log.error(text, *args)
+                await self.backend.notify_error(text % args)
+            _scratch_classes[_klass] = uid
 
         # Create new scratches with fresh config items
         scratches = {name: Scratch(name, self.config, self) for name, options in self.config.iter_subsections()}
@@ -174,6 +174,14 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         for scratch in list(self.scratches.get_by_state("configured")):
             assert scratch
             self.scratches.clear_state(scratch, "configured")
+
+        # Mark scratchpad special workspaces as persistent so Hyprland keeps them
+        # alive across display power transitions (DPMS off/on, monitor disconnect/reconnect).
+        # Without this, Hyprland may improperly re-parent windows from special workspaces
+        # during output re-enable, causing hidden scratchpads to "peek" on screen.
+        persistent_commands = [f"workspace {mk_scratch_name(s.uid)}, persistent:true" for s in self.scratches.values()]
+        if persistent_commands:
+            await self.backend.execute(persistent_commands, base_command="keyword")
 
     async def _unset_windowrules(self, scratch: Scratch) -> None:
         """Unset the windowrules.
