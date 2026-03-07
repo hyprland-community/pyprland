@@ -532,8 +532,8 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
 
             for addr in scratch.extra_addr:
                 await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
-                await asyncio.sleep(ONE_FRAME)
 
+            await asyncio.sleep(ONE_FRAME)
             await self._hide_transition(scratch, monitor_info)
 
         for e_uid in scratch.excluded_scratches:

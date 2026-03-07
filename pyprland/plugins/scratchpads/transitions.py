@@ -142,9 +142,7 @@ class TransitionsMixin:
         forbid_special = not scratch.conf.get_bool("allow_special_workspaces")
         wrkspc = (
             monitor["activeWorkspace"]["name"]
-            if forbid_special
-            or not monitor["specialWorkspace"]["name"]
-            or monitor["specialWorkspace"]["name"].startswith("special:scratch")
+            if forbid_special or not monitor["specialWorkspace"]["name"] or monitor["specialWorkspace"]["name"].startswith("special:S-")
             else monitor["specialWorkspace"]["name"]
         )
         if self.previously_focused_window:
