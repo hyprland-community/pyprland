@@ -10,7 +10,7 @@ from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
 from ...models import ClientInfo, Environment, ReloadReason, VersionInfo
 from ..interface import Plugin
-from .common import FocusTracker, HideFlavors
+from .common import ONE_FRAME, FocusTracker, HideFlavors
 from .events import EventsMixin
 from .helpers import (
     compute_offset,
@@ -521,13 +521,13 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
 
             for addr in scratch.extra_addr:
                 await self.backend.close_window(addr)
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(ONE_FRAME)
         else:
             await self.backend.move_window_to_workspace(scratch.full_address, mk_scratch_name(scratch.uid), silent=True)
 
             for addr in scratch.extra_addr:
                 await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(ONE_FRAME)
 
             await self._hide_transition(scratch, monitor_info)
 

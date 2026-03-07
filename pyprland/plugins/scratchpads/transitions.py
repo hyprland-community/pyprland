@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import is_rotated
 from .animations import AnimationTarget, Placement
-from .common import FocusTracker
+from .common import ONE_FRAME, FocusTracker
 from .helpers import apply_offset, mk_scratch_name
 
 if TYPE_CHECKING:
@@ -184,7 +184,7 @@ class TransitionsMixin:
                     f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}",
                 ]
             )
-            await asyncio.sleep(0.01)  # NOTE: let some time to process
+            await asyncio.sleep(ONE_FRAME)  # NOTE: let some time to process
             await self.backend.execute(f"tagwindow -pypr_noanim address:{scratch.full_address}")
 
         # move

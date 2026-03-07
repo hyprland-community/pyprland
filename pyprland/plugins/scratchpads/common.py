@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from enum import Flag, auto
 
+ONE_FRAME = 1 / 50  # minimum delay to let the backend process commands
+
 
 class HideFlavors(Flag):
     """Flags for different hide behavior."""
