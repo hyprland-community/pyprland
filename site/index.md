@@ -38,6 +38,8 @@ To understand the potential of Pyprland, you can check the [plugins](./Plugins) 
 
 # Major recent changes
 
+- The [Scratchpads](/monitors) got reworked to better satisfy current Hyprland version
+- New [Stash](/stash) plugin, allowing to park windows and show/hide them easily
 - Major rewrite of the [Monitors plugin](/monitors) delivers improved stability and functionality.
 - The [Wallpapers plugin](/wallpapers) now applies [rounded corners](/wallpapers#radius) per display and derives cohesive [color schemes from the background](/wallpapers#templates) (Matugen/Pywal-inspired).
 
