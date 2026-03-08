@@ -319,10 +319,7 @@ async def test_on_reload_clears_old_rules_and_registers_new(styled_extension):
     await styled_extension.on_reload()
 
     styled_extension.backend.execute.assert_any_call(
-        [
-            "windowrule unset, match:tag stashed",
-            "windowrule tag -stashed",
-        ],
+        "windowrule tag -stashed",
         base_command="keyword",
     )
     styled_extension.backend.execute.assert_any_call(
@@ -340,10 +337,7 @@ async def test_on_reload_clears_rules_even_when_style_empty(extension):
     await extension.on_reload()
 
     extension.backend.execute.assert_called_once_with(
-        [
-            "windowrule unset, match:tag stashed",
-            "windowrule tag -stashed",
-        ],
+        "windowrule tag -stashed",
         base_command="keyword",
     )
 
