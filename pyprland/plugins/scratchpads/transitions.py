@@ -168,7 +168,7 @@ class TransitionsMixin:
         # Tag the window with pypr_noanim to disable Hyprland's animation
         # during the offscreen pre-positioning move, then untag so the real
         # slide-in animation plays normally.
-        if scratch.client_info is not None and "size" in scratch.client_info:
+        if animation_type and scratch.client_info is not None and "size" in scratch.client_info:
             off_x, off_y = Placement.get_offscreen(
                 animation_type,
                 monitor,
