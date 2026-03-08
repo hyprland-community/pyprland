@@ -211,6 +211,175 @@ def test_nicify_oklab():
     assert 0 <= res[2] <= 255
 
 
+# --- OkLab Logical / Property Tests ---
+
+
+def _oklab_hue(rgb: tuple[int, int, int]) -> float:
+    """Helper: compute the OkLab hue angle (degrees) for an sRGB color."""
+    SRGB_LINEAR_CUTOFF = 0.04045
+
+    def to_linear(val: float) -> float:
+        val = val / 255.0
+        return val / 12.92 if val <= SRGB_LINEAR_CUTOFF else pow((val + 0.055) / 1.055, 2.4)
+
+    r_lin = to_linear(rgb[0])
+    g_lin = to_linear(rgb[1])
+    b_lin = to_linear(rgb[2])
+
+    l_val = 0.4122214708 * r_lin + 0.5363325363 * g_lin + 0.0514459929 * b_lin
+    m_val = 0.2119034982 * r_lin + 0.6806995451 * g_lin + 0.1073969566 * b_lin
+    s_val = 0.0883024619 * r_lin + 0.0853627803 * g_lin + 0.8301696993 * b_lin
+
+    l_ = pow(l_val, 1 / 3)
+    m_ = pow(m_val, 1 / 3)
+    s_ = pow(s_val, 1 / 3)
+
+    a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_
+    b_v = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+
+    return math.degrees(math.atan2(b_v, a))
+
+
+def _hls_saturation(rgb: tuple[int, int, int]) -> float:
+    """Helper: return HLS saturation (0.0-1.0) for an sRGB color."""
+    _, _, s = colorsys.rgb_to_hls(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+    return s
+
+
+def _hue_distance(h1: float, h2: float) -> float:
+    """Shortest angular distance between two hue angles in degrees."""
+    diff = abs(h1 - h2) % 360
+    return min(diff, 360 - diff)
+
+
+def test_nicify_oklab_hue_preservation():
+    """nicify_oklab should preserve the perceptual hue of the input color.
+
+    #556677 is blue-ish and should produce a blue-ish output.
+    #557766 is green-ish and should produce a green-ish output.
+    The output hues should not converge or collapse.
+    """
+    blue_ish = (0x55, 0x66, 0x77)  # #556677
+    green_ish = (0x55, 0x77, 0x66)  # #557766
+
+    result_blue = nicify_oklab(blue_ish)
+    result_green = nicify_oklab(green_ish)
+
+    input_hue_blue = _oklab_hue(blue_ish)
+    input_hue_green = _oklab_hue(green_ish)
+    output_hue_blue = _oklab_hue(result_blue)
+    output_hue_green = _oklab_hue(result_green)
+
+    # Hue should be approximately preserved (within 30 degrees)
+    assert _hue_distance(input_hue_blue, output_hue_blue) < 30, (
+        f"Blue-ish hue shifted too much: input={input_hue_blue:.1f}° -> output={output_hue_blue:.1f}°"
+    )
+    assert _hue_distance(input_hue_green, output_hue_green) < 30, (
+        f"Green-ish hue shifted too much: input={input_hue_green:.1f}° -> output={output_hue_green:.1f}°"
+    )
+
+
+def test_nicify_oklab_distinct_outputs_for_distinct_inputs():
+    """Two colors with clearly different dominant channels should produce
+    clearly different outputs, not collapse to similar-looking colors."""
+    blue_ish = (0x55, 0x66, 0x77)  # #556677 - dominant blue channel
+    green_ish = (0x55, 0x77, 0x66)  # #557766 - dominant green channel
+
+    result_blue = nicify_oklab(blue_ish)
+    result_green = nicify_oklab(green_ish)
+
+    # Outputs must be different
+    assert result_blue != result_green, "Distinct inputs should produce distinct outputs"
+
+    # The output hues should be far apart (these colors differ by ~105° in OkLab hue)
+    output_hue_blue = _oklab_hue(result_blue)
+    output_hue_green = _oklab_hue(result_green)
+    hue_diff = _hue_distance(output_hue_blue, output_hue_green)
+    assert hue_diff > 60, f"Output hues should remain well-separated, got only {hue_diff:.1f}° apart"
+
+
+def test_nicify_oklab_muted_input_not_oversaturated():
+    """A muted/desaturated input should not become maximally saturated.
+
+    #556677 has very low saturation (~0.17 in HLS). After nicification with
+    default params, it should remain moderate — not become fully saturated.
+    """
+    muted_color = (0x55, 0x66, 0x77)  # Low saturation input
+    result = nicify_oklab(muted_color)
+
+    sat = _hls_saturation(result)
+    # A muted input should not become fully saturated
+    assert sat < 0.95, f"Muted input ({muted_color}) became oversaturated: HLS S={sat:.3f}"
+
+
+def test_nicify_oklab_saturation_params_are_effective():
+    """The min_sat/max_sat parameters should meaningfully affect the output.
+
+    With low max_sat (neutral scheme), output should be less saturated than
+    with high min_sat (fluorescent scheme).
+    """
+    color = (200, 50, 50)  # A vivid red
+
+    result_neutral = nicify_oklab(color, min_sat=0.05, max_sat=0.1)
+    result_fluorescent = nicify_oklab(color, min_sat=0.7, max_sat=1.0)
+
+    sat_neutral = _hls_saturation(result_neutral)
+    sat_fluorescent = _hls_saturation(result_fluorescent)
+
+    # Neutral should be significantly less saturated
+    assert sat_neutral < sat_fluorescent, f"Neutral ({sat_neutral:.3f}) should be less saturated than fluorescent ({sat_fluorescent:.3f})"
+    # And the difference should be meaningful (not just rounding)
+    assert sat_fluorescent - sat_neutral > 0.15, (
+        f"Saturation difference too small: neutral={sat_neutral:.3f}, fluorescent={sat_fluorescent:.3f}"
+    )
+
+
+def test_nicify_oklab_chroma_not_always_capped():
+    """The output chroma should vary with input — not always be the same fixed value.
+
+    A nearly-grey input and a vivid input should produce different chroma levels.
+    """
+    grey_ish = (128, 128, 130)  # Almost grey
+    vivid = (255, 0, 0)  # Pure red
+
+    result_grey = nicify_oklab(grey_ish)
+    result_vivid = nicify_oklab(vivid)
+
+    sat_grey = _hls_saturation(result_grey)
+    sat_vivid = _hls_saturation(result_vivid)
+
+    # Both should be valid
+    assert 0 <= sat_grey <= 1.0
+    assert 0 <= sat_vivid <= 1.0
+
+    # The vivid input should produce higher saturation than the grey one
+    assert sat_vivid > sat_grey, f"Vivid input should be more saturated than grey: vivid={sat_vivid:.3f}, grey={sat_grey:.3f}"
+
+
+def test_nicify_oklab_user_reported_bug():
+    """Regression test for user-reported issue: pypr color #556677 and
+    pypr color #557766 should produce visually distinct palettes.
+
+    #556677 is blue-dominant and should yield a blue-ish primary.
+    #557766 is green-dominant and should yield a green-ish primary.
+    """
+    blue_ish = (0x55, 0x66, 0x77)
+    green_ish = (0x55, 0x77, 0x66)
+
+    result_blue = nicify_oklab(blue_ish)
+    result_green = nicify_oklab(green_ish)
+
+    # Blue-ish: the blue channel should be dominant in output
+    assert result_blue[2] > result_blue[1], (
+        f"#556677 output should have B > G: got RGB({result_blue[0]}, {result_blue[1]}, {result_blue[2]})"
+    )
+
+    # Green-ish: the green channel should be dominant in output
+    assert result_green[1] > result_green[2], (
+        f"#557766 output should have G > B: got RGB({result_green[0]}, {result_green[1]}, {result_green[2]})"
+    )
+
+
 # --- Theme / Existing Tests Preserved Below ---
 
 

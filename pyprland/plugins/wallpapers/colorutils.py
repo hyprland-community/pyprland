@@ -276,8 +276,12 @@ def nicify_oklab(
     hue = math.atan2(b_val, a)
 
     # Scale chroma based on saturation constraints
-    target_chroma = (chroma / 0.4) * (max_sat - min_sat) + min_sat
-    clamped_chroma = min(target_chroma, 0.3)
+    # Map min_sat/max_sat (0-1 conceptual) to OkLab chroma range (~0-0.4)
+    max_oklab_chroma = 0.4
+    chroma_low = min_sat * max_oklab_chroma
+    chroma_high = max_sat * max_oklab_chroma
+    normalized = min(chroma / max_oklab_chroma, 1.0)
+    clamped_chroma = chroma_low + normalized * (chroma_high - chroma_low)
 
     # Clamp lightness
     clamped_l = max(min_light, min(max_light, l_cap))
