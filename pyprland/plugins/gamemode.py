@@ -13,7 +13,7 @@ from .interface import Plugin
 
 
 class Extension(Plugin, environments=[Environment.HYPRLAND]):
-    """Toggle game mode for improved performance.
+    """Toggle game mode (automatically) for improved performance.
 
     When enabled, disables animations, blur, shadows, gaps, and rounding
     for maximum performance. When disabled, reloads the hyprland config

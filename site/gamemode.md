@@ -3,7 +3,7 @@
 
 # gamemode
 
-Toggle game mode for improved performance. When enabled, disables animations, blur, shadows, gaps, and rounding. When disabled, reloads the Hyprland config to restore original settings.
+Toggle game mode (automatically) for improved performance. When enabled, disables animations, blur, shadows, gaps, and rounding. When disabled, reloads the Hyprland config to restore original settings.
 
 This is useful when gaming or running performance-intensive applications where visual effects may cause frame drops or input lag.
 
