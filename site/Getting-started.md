@@ -19,7 +19,17 @@ Check your OS package manager first:
 - **Arch Linux**: Available on AUR, e.g., with [yay](https://github.com/Jguer/yay): `yay pyprland`
 - **NixOS**: See the [Nix](./Nix) page for instructions
 
-Otherwise, install via pip (preferably in a [virtual environment](./InstallVirtualEnvironment)):
+Otherwise, you may prefer using the `uv` way:
+
+```sh
+# Install and run pypr
+uvx --from pyprland pypr
+# To run the fast client program:
+uvx --from pyprland pypr-client
+```
+
+
+else, install via pip (in a [virtual environment](./InstallVirtualEnvironment)):
 
 ```sh
 pip install pyprland
