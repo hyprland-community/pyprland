@@ -107,6 +107,10 @@
         "link": "./shortcuts_menu"
       },
       {
+        "text": "Stash",
+        "link": "./stash"
+      },
+      {
         "text": "System notifier",
         "link": "./system_notifier"
       },
