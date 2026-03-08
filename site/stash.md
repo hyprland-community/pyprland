@@ -38,7 +38,6 @@ bind = $mainMod SHIFT, W, exec, pypr stash_toggle work
 style = [
     "border_color rgb(ec8800)",
     "border_size 3",
-    "dim_around yes",
 ]
 ```
 
