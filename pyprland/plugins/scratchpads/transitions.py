@@ -157,9 +157,6 @@ class TransitionsMixin:
             not (preserve_aspect and was_alive) or scratch.monitor != self.state.active_monitor
         )  # Not aspect preserving or it's newly spawned
         animation_type = scratch.animation_type
-        is_first_show = animation_type and not scratch.meta.extra_positions
-        monitor_changed = was_alive and scratch.monitor and scratch.monitor != monitor["name"]
-        needs_offscreen_preposition = (is_first_show or monitor_changed) and bool(animation_type)
 
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
@@ -167,11 +164,11 @@ class TransitionsMixin:
         clients = await self.backend.execute_json("clients")
         await self._handle_multiwindow(scratch, clients)
 
-        # FIX: initial animation
+        # FIX: initial position
         # Tag the window with pypr_noanim to disable Hyprland's animation
         # during the offscreen pre-positioning move, then untag so the real
         # slide-in animation plays normally.
-        if needs_offscreen_preposition and scratch.client_info is not None and "size" in scratch.client_info:
+        if scratch.client_info is not None and "size" in scratch.client_info:
             off_x, off_y = Placement.get_offscreen(
                 animation_type,
                 monitor,
