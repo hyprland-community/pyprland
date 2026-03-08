@@ -93,25 +93,36 @@ function buildVersionedConfig() {
 
 const { sidebar, nav } = buildVersionedConfig()
 
-export default withMermaid(defineConfig({
-  title: 'Pyprland web',
-  base: '/pyprland/',
-  description: 'The official Pyprland website',
-  themeConfig: {
-    nav,
-    logo: '/icon.png',
-    search: {
-      provider: 'local',
-      options: {
-        _render(src, env, md) {
-          const html = md.render(src, env)
-          // Exclude versioned pages from search index
-          if (env.relativePath.startsWith('versions/')) return ''
-          // Also respect frontmatter search: false
-          if (env.frontmatter?.search === false) return ''
-          return html
-        }
-      }
+export default withMermaid(
+  defineConfig({
+    title: "Pyprland docs",
+    base: "/pyprland/",
+    description: "The official Pyprland website",
+    themeConfig: {
+      nav,
+      logo: "/icon.png",
+      search: {
+        provider: "local",
+        options: {
+          _render(src, env, md) {
+            const html = md.render(src, env);
+            // Exclude versioned pages from search index
+            if (env.relativePath.startsWith("versions/")) return "";
+            // Also respect frontmatter search: false
+            if (env.frontmatter?.search === false) return "";
+            return html;
+          },
+        },
+      },
+      outline: { level: [2, 3] },
+      sidebar,
+      socialLinks: [
+        { icon: "github", link: "https://github.com/fdev31/pyprland" },
+        {
+          icon: "discord",
+          link: "https://discord.com/channels/1055990214411169892/1230972154330218526",
+        },
+      ],
     },
     outline: { level: [2, 3] },
     sidebar,
