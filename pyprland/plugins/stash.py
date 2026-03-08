@@ -89,6 +89,22 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         if self.get_config_list("style"):
             await self.backend.execute(f"tagwindow -{STASH_TAG} address:{addr}")
 
+    async def event_closewindow(self, addr: str) -> None:
+        """Remove a closed window from stash tracking.
+
+        Args:
+            addr: Window address as hex string (without 0x prefix)
+        """
+        addr = "0x" + addr
+        self._was_floating.pop(addr, None)
+        for group in list(self._shown_addresses):
+            addresses = self._shown_addresses[group]
+            if addr in addresses:
+                addresses.remove(addr)
+                if not addresses:
+                    del self._shown_addresses[group]
+                    self._visible[group] = False
+
     async def run_stash_toggle(self, name: str = "default") -> None:
         """[name] Show or hide stash "name" as floating windows on the active workspace (default: "default").
 

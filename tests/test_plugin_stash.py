@@ -408,3 +408,69 @@ async def test_stash_on_shown_window_untags_when_style_configured(styled_extensi
     await styled_extension.run_stash()
 
     styled_extension.backend.execute.assert_called_once_with("tagwindow -stashed address:0xaaa")
+
+
+# -- event_closewindow --
+
+
+@pytest.mark.asyncio
+async def test_closewindow_removes_from_was_floating(extension):
+    """Closing a stashed window removes it from floating state tracking."""
+    extension._was_floating["0xabc"] = False
+
+    await extension.event_closewindow("abc")
+
+    assert "0xabc" not in extension._was_floating
+
+
+@pytest.mark.asyncio
+async def test_closewindow_removes_from_shown_addresses(extension):
+    """Closing a shown window removes it from the group but keeps the group alive."""
+    extension._shown_addresses["default"] = ["0xaaa", "0xbbb"]
+    extension._visible["default"] = True
+
+    await extension.event_closewindow("aaa")
+
+    assert "0xaaa" not in extension._shown_addresses["default"]
+    assert "0xbbb" in extension._shown_addresses["default"]
+    assert extension._visible["default"] is True
+
+
+@pytest.mark.asyncio
+async def test_closewindow_clears_group_when_last_shown_window_closed(extension):
+    """Closing the last shown window in a group clears the group and visibility."""
+    extension._shown_addresses["default"] = ["0xaaa"]
+    extension._visible["default"] = True
+
+    await extension.event_closewindow("aaa")
+
+    assert "default" not in extension._shown_addresses
+    assert extension._visible["default"] is False
+
+
+@pytest.mark.asyncio
+async def test_closewindow_noop_for_unknown_window(extension):
+    """Closing an untracked window does not error or change state."""
+    extension._was_floating["0xother"] = True
+    extension._shown_addresses["default"] = ["0xother"]
+    extension._visible["default"] = True
+
+    await extension.event_closewindow("unknown")
+
+    assert extension._was_floating == {"0xother": True}
+    assert extension._shown_addresses == {"default": ["0xother"]}
+    assert extension._visible["default"] is True
+
+
+@pytest.mark.asyncio
+async def test_closewindow_cleans_both_was_floating_and_shown(extension):
+    """Closing a shown window cleans up both _was_floating and _shown_addresses."""
+    extension._was_floating["0xaaa"] = False
+    extension._shown_addresses["default"] = ["0xaaa"]
+    extension._visible["default"] = True
+
+    await extension.event_closewindow("aaa")
+
+    assert "0xaaa" not in extension._was_floating
+    assert "default" not in extension._shown_addresses
+    assert extension._visible["default"] is False
