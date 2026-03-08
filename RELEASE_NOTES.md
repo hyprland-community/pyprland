@@ -1,7 +1,1 @@
-- `wallpapers` use a wider range of colors when generating template colors, should feel less repetitive
-- `scratchpads`
-    - revamped the show/hide sequences to better fit recent Hyprland
-    - added protections against some corner case scenarios
-    - `smart_focus` is disabled by default
-- `compgen`: better handles overlapping commands (eg: toggle *scratch* vs toggle_dpms vs toggle_special)
-- `stash`: a simpler alternative to `scratchpads` for those just wanting to stash windows quickly
+

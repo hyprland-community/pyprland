@@ -73,6 +73,7 @@ pushd ../aurPkgs/pyprland/
 echo $version | bumpAurPkg.sh
 popd
 
+echo "" >RELEASE_NOTES.md
 exit 0
 # Upload the standalone version
 
