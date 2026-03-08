@@ -8,7 +8,7 @@ from typing import cast
 from ...adapters.units import convert_coords
 from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
-from ...models import ClientInfo, Environment, ReloadReason, VersionInfo
+from ...models import ClientInfo, Environment, MonitorInfo, ReloadReason, VersionInfo
 from ..interface import Plugin
 from .common import ONE_FRAME, FocusTracker, HideFlavors
 from .events import EventsMixin
@@ -526,21 +526,33 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
 
             for addr in scratch.extra_addr:
                 await self.backend.close_window(addr)
-                await asyncio.sleep(ONE_FRAME)
         else:
-            await self.backend.move_window_to_workspace(scratch.full_address, mk_scratch_name(scratch.uid), silent=True)
-
-            for addr in scratch.extra_addr:
-                await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
-
-            # NOTE: Hide after moving to avoid bogus animation
-            await asyncio.sleep(ONE_FRAME)
-            await self._hide_transition(scratch, monitor_info)
+            await self._move_clients_out(scratch, monitor_info)
 
         for e_uid in scratch.excluded_scratches:
             await self.run_show(e_uid)
         scratch.excluded_scratches.clear()
         await self._handle_focus_tracking(scratch, active_window, active_workspace, clients)
+
+    async def _move_clients_out(self, scratch: Scratch, monitor: MonitorInfo) -> None:
+        """Move all clients of a scratchpad out of its workspace.
+
+        Args:
+            scratch: The scratchpad object
+            monitor: The active monitor info
+        """
+        clients_addr = [scratch.full_address, *scratch.extra_addr]
+        have_animation = bool(scratch.animation_type)
+        if have_animation:
+            await self._hide_transition(scratch, monitor)
+            await self.backend.execute([f"tagwindow +pypr_noanim address:{addr}" for addr in clients_addr])
+
+        for addr in clients_addr:
+            await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
+
+        if have_animation:
+            await asyncio.sleep(ONE_FRAME)  # Ensure the windows are on the new workspace before unsetting noanim
+            await self.backend.execute([f"tagwindow -pypr_noanim address:{addr}" for addr in clients_addr])
 
     async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str, clients: ClientInfo | dict) -> None:
         """Handle focus tracking.
