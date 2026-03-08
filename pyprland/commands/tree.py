@@ -89,7 +89,7 @@ def build_command_tree(commands: dict[str, CommandInfo]) -> dict[str, CommandNod
     """
     # Normalize names to internal format (underscore) for tree building
     normalized_commands = {normalize_command_name(name): info for name, info in commands.items()}
-    parent_prefixes = get_parent_prefixes(normalized_commands.keys())
+    parent_prefixes = get_parent_prefixes({name: info.source for name, info in normalized_commands.items()})
 
     # Build the tree
     roots: dict[str, CommandNode] = {}

@@ -5,6 +5,7 @@ import pytest
 from pyprland.commands.discovery import extract_commands_from_object, get_client_commands
 from pyprland.commands.models import CommandArg, CommandInfo
 from pyprland.commands.parsing import parse_docstring
+from pyprland.commands.tree import build_command_tree, get_display_name, get_parent_prefixes
 
 
 class TestParseDocstring:
@@ -219,3 +220,164 @@ class TestCommandArgDataclass:
         arg = CommandArg(value="option", required=False)
         assert arg.value == "option"
         assert arg.required is False
+
+
+def _make_cmd(name: str, source: str) -> CommandInfo:
+    """Helper to create a minimal CommandInfo for tree tests."""
+    return CommandInfo(
+        name=name,
+        args=[],
+        short_description=f"{name} command",
+        full_description=f"{name} command",
+        source=source,
+    )
+
+
+class TestGetParentPrefixes:
+    """Tests for get_parent_prefixes function."""
+
+    def test_same_source_groups(self):
+        """Commands from the same source sharing a prefix are grouped."""
+        commands = {
+            "wall_next": "wallpapers",
+            "wall_pause": "wallpapers",
+            "wall_clear": "wallpapers",
+        }
+        prefixes = get_parent_prefixes(commands)
+        assert "wall" in prefixes
+
+    def test_different_sources_not_grouped(self):
+        """Commands from different sources sharing a prefix are NOT grouped."""
+        commands = {
+            "toggle": "scratchpads",
+            "toggle_dpms": "toggle_dpms",
+            "toggle_special": "toggle_special",
+        }
+        prefixes = get_parent_prefixes(commands)
+        assert "toggle" not in prefixes
+
+    def test_mixed_same_and_different_sources(self):
+        """Only same-source prefixes are grouped; cross-plugin ones are not."""
+        commands = {
+            "wall_next": "wallpapers",
+            "wall_pause": "wallpapers",
+            "toggle": "scratchpads",
+            "toggle_dpms": "toggle_dpms",
+        }
+        prefixes = get_parent_prefixes(commands)
+        assert "wall" in prefixes
+        assert "toggle" not in prefixes
+
+    def test_single_command_no_grouping(self):
+        """A lone command with underscores does not create a parent prefix."""
+        commands = {
+            "layout_center": "layout_center",
+        }
+        prefixes = get_parent_prefixes(commands)
+        assert "layout" not in prefixes
+
+    def test_legacy_iterable_groups_all(self):
+        """Legacy iterable input (no source info) groups by prefix count only."""
+        commands = ["toggle_dpms", "toggle_special"]
+        prefixes = get_parent_prefixes(commands)
+        # Without source info, both share empty source, so "toggle" is grouped
+        assert "toggle" in prefixes
+
+
+class TestBuildCommandTree:
+    """Tests for build_command_tree function."""
+
+    def test_cross_plugin_commands_stay_flat(self):
+        """Commands from different plugins with shared prefix remain separate root entries."""
+        commands = {
+            "toggle": _make_cmd("toggle", "scratchpads"),
+            "toggle_dpms": _make_cmd("toggle_dpms", "toggle_dpms"),
+            "toggle_special": _make_cmd("toggle_special", "toggle_special"),
+        }
+        tree = build_command_tree(commands)
+
+        # Each command should be its own root node, not nested
+        assert "toggle" in tree
+        assert "toggle_dpms" in tree
+        assert "toggle_special" in tree
+
+        # toggle should have no children
+        assert tree["toggle"].children == {}
+        assert tree["toggle_dpms"].children == {}
+        assert tree["toggle_special"].children == {}
+
+    def test_same_plugin_commands_grouped(self):
+        """Commands from the same plugin with shared prefix are grouped."""
+        commands = {
+            "wall_next": _make_cmd("wall_next", "wallpapers"),
+            "wall_pause": _make_cmd("wall_pause", "wallpapers"),
+            "wall_clear": _make_cmd("wall_clear", "wallpapers"),
+        }
+        tree = build_command_tree(commands)
+
+        # Should have a single root "wall" with children
+        assert "wall" in tree
+        assert "wall_next" not in tree
+        assert "wall_pause" not in tree
+        assert "wall_clear" not in tree
+
+        wall = tree["wall"]
+        assert "next" in wall.children
+        assert "pause" in wall.children
+        assert "clear" in wall.children
+
+    def test_mixed_plugins_correct_grouping(self):
+        """Same-plugin commands group while cross-plugin ones stay flat."""
+        commands = {
+            "wall_next": _make_cmd("wall_next", "wallpapers"),
+            "wall_pause": _make_cmd("wall_pause", "wallpapers"),
+            "toggle": _make_cmd("toggle", "scratchpads"),
+            "toggle_dpms": _make_cmd("toggle_dpms", "toggle_dpms"),
+        }
+        tree = build_command_tree(commands)
+
+        # wall commands grouped
+        assert "wall" in tree
+        assert "next" in tree["wall"].children
+        assert "pause" in tree["wall"].children
+
+        # toggle commands NOT grouped
+        assert "toggle" in tree
+        assert "toggle_dpms" in tree
+        assert tree["toggle"].children == {}
+
+    def test_root_command_with_same_source_children(self):
+        """A root command that is also a prefix keeps its info and gets children."""
+        commands = {
+            "wall": _make_cmd("wall", "wallpapers"),
+            "wall_next": _make_cmd("wall_next", "wallpapers"),
+            "wall_pause": _make_cmd("wall_pause", "wallpapers"),
+        }
+        tree = build_command_tree(commands)
+
+        assert "wall" in tree
+        wall = tree["wall"]
+        assert wall.info is not None
+        assert wall.info.source == "wallpapers"
+        assert "next" in wall.children
+        assert "pause" in wall.children
+
+
+class TestGetDisplayName:
+    """Tests for get_display_name function."""
+
+    def test_hierarchical_command(self):
+        """Hierarchical command gets space-separated display name."""
+        parent_prefixes = {"wall"}
+        assert get_display_name("wall_next", parent_prefixes) == "wall next"
+
+    def test_non_hierarchical_command(self):
+        """Non-hierarchical command keeps underscore name."""
+        parent_prefixes = {"wall"}
+        assert get_display_name("toggle_dpms", parent_prefixes) == "toggle_dpms"
+
+    def test_no_parent_prefixes(self):
+        """With no parent prefixes, all commands keep underscore names."""
+        parent_prefixes: set[str] = set()
+        assert get_display_name("toggle_dpms", parent_prefixes) == "toggle_dpms"
+        assert get_display_name("wall_next", parent_prefixes) == "wall_next"

@@ -114,7 +114,7 @@ def get_command_help(manager: Pyprland, command: str) -> str:
     command = normalize_command_name(command)
     all_commands = get_all_commands(manager)
     command_tree = build_command_tree(all_commands)
-    parent_prefixes = get_parent_prefixes(all_commands.keys())
+    parent_prefixes = get_parent_prefixes({name: info.source for name, info in all_commands.items()})
 
     # Try direct lookup first (e.g., "wall_next" or "toggle")
     if command in all_commands:
