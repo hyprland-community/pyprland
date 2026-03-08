@@ -27,10 +27,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:  # noqa: ARG002
         """Clear old tag rules and re-register window rules for stash styling."""
         await self.backend.execute(
-            [
-                f"windowrule unset, match:tag {STASH_TAG}",
-                f"windowrule tag -{STASH_TAG}",
-            ],
+            f"windowrule tag -{STASH_TAG}",
             base_command="keyword",
         )
         style = self.get_config_list("style")
