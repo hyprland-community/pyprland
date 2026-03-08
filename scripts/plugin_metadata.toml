@@ -43,7 +43,7 @@ demoVideoId = "ce5HQZ3na8M"
 stars = 1
 
 [toggle_dpms]
-stars = 0
+stars = 1
 
 [workspaces_follow_focus]
 stars = 3
@@ -57,7 +57,7 @@ multimon = true
 stars = 3
 
 [fcitx5_switcher]
-stars = 0
+stars = 1
 
 [gamemode]
 stars = 2
