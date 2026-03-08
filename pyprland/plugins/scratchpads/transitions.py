@@ -61,19 +61,21 @@ class TransitionsMixin:
         rotated = is_rotated(monitor)
         aspect = reversed(scratch.client_info["size"]) if rotated else scratch.client_info["size"]
 
+        margin = scratch.conf.get_int("margin")
+
         if offset:
             offset_str = str(offset)
             aspect_tuple = tuple(aspect)
             return (
-                convert_monitor_dimension(offset_str, aspect_tuple[0], monitor),
-                convert_monitor_dimension(offset_str, aspect_tuple[1], monitor),
+                convert_monitor_dimension(offset_str, aspect_tuple[0], monitor) + margin,
+                convert_monitor_dimension(offset_str, aspect_tuple[1], monitor) + margin,
             )
 
         mon_size = (monitor["height"], monitor["width"]) if rotated else (monitor["width"], monitor["height"])
 
         return (
-            convert_monitor_dimension("100%", mon_size[0], monitor),
-            convert_monitor_dimension("100%", mon_size[1], monitor),
+            convert_monitor_dimension("100%", mon_size[0], monitor) + margin,
+            convert_monitor_dimension("100%", mon_size[1], monitor) + margin,
         )
 
     async def _hide_transition(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
