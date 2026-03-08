@@ -74,7 +74,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
         description="Allow over special workspaces",
         category="behavior",
     ),
-    ConfigField("smart_focus", bool, default=True, description="Restore focus on hide", category="behavior"),
+    ConfigField("smart_focus", bool, default=False, description="Restore focus on hide", category="behavior"),
     ConfigField("close_on_hide", bool, default=False, description="Close instead of hide", category="behavior"),
     # Non-standard/troubleshooting
     ConfigField(
