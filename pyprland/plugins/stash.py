@@ -1,13 +1,14 @@
 """stash allows stashing and showing windows in named groups."""
 
+import asyncio
 from typing import cast
 
 from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
-STASH_PREFIX = "stash-"
-STASH_TAG = "stash"
+STASH_PREFIX = "st-"
+STASH_TAG = "stashed"
 
 
 class Extension(Plugin, environments=[Environment.HYPRLAND]):
@@ -37,13 +38,6 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             commands = [f"windowrule {rule}, match:tag {STASH_TAG}" for rule in style]
             await self.backend.execute(commands, base_command="keyword")
 
-    async def _restore_window(self, addr: str) -> None:
-        """Restore the original floating state and remove the stash tag."""
-        if not self._was_floating.pop(addr, True):
-            await self.backend.toggle_floating(addr)
-        if self.get_config_list("style"):
-            await self.backend.execute(f"tagwindow -{STASH_TAG} address:{addr}")
-
     async def run_stash(self, name: str = "default") -> None:
         """[name] Toggle stashing the focused window (default stash: "default").
 
@@ -59,28 +53,41 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         for group, addresses in self._shown_addresses.items():
             if addr in addresses:
                 addresses.remove(addr)
-                await self._restore_window(addr)
+                await self._restore_floating(addr)
                 if not addresses:
                     self._shown_addresses.pop(group)
                     self._visible[group] = False
                 return
 
         ws_name = aw["workspace"]["name"]
+        await asyncio.sleep(0.1)
 
         if ws_name.startswith(f"special:{STASH_PREFIX}"):
             # Window is stashed → unstash it to current workspace
-            await self.backend.move_window_to_workspace(addr, self.state.active_workspace)
+            await self.backend.move_window_to_workspace(addr, self.state.active_workspace, silent=True)
             await self.backend.focus_window(addr)
-            await self._restore_window(addr)
+
+            await asyncio.sleep(0.1)
+            await self._restore_floating(addr)
         else:
             # Window is not stashed → stash it
             was_floating = aw.get("floating", False)
             self._was_floating[addr] = was_floating
-            await self.backend.move_window_to_workspace(addr, f"special:{STASH_PREFIX}{name}")
+            await self.backend.move_window_to_workspace(addr, f"special:{STASH_PREFIX}{name}", silent=True)
+            await asyncio.sleep(0.1)
             if not was_floating:
                 await self.backend.toggle_floating(addr)
+            await asyncio.sleep(0.1)
             if self.get_config_list("style"):
                 await self.backend.execute(f"tagwindow +{STASH_TAG} address:{addr}")
+
+    async def _restore_floating(self, addr: str) -> None:
+        """Restore a window's original floating state and remove stash tag."""
+        if not self._was_floating.pop(addr, True):
+            await self.backend.toggle_floating(addr)
+            await asyncio.sleep(0.1)
+        if self.get_config_list("style"):
+            await self.backend.execute(f"tagwindow -{STASH_TAG} address:{addr}")
 
     async def run_stash_toggle(self, name: str = "default") -> None:
         """[name] Show or hide stash "name" as floating windows on the active workspace (default: "default").
@@ -104,11 +111,10 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             return
 
         addresses: list[str] = []
-        last_idx = len(clients) - 1
-        for i, client in enumerate(clients):
+        for client in clients:
             addr = client["address"]
             addresses.append(addr)
-            await self.backend.move_window_to_workspace(addr, self.state.active_workspace, silent=(i != last_idx))
+            await self.backend.move_window_to_workspace(addr, self.state.active_workspace, silent=True)
 
         self._shown_addresses[name] = addresses
         self._visible[name] = True

@@ -19,7 +19,7 @@ def styled_extension():
 
 @pytest.mark.asyncio
 async def test_stash_moves_window_to_special_workspace(extension):
-    """Stashing a tiled window moves it to special:stash-default and makes it floating."""
+    """Stashing a tiled window moves it to special:st-default and makes it floating."""
     extension.backend.execute_json.return_value = {
         "address": "0xabc",
         "floating": False,
@@ -28,7 +28,7 @@ async def test_stash_moves_window_to_special_workspace(extension):
 
     await extension.run_stash()
 
-    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:stash-default")
+    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:st-default", silent=True)
     extension.backend.toggle_floating.assert_called_once_with("0xabc")
     assert extension._was_floating["0xabc"] is False
 
@@ -44,7 +44,7 @@ async def test_stash_custom_name(extension):
 
     await extension.run_stash("work")
 
-    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:stash-work")
+    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:st-work", silent=True)
 
 
 @pytest.mark.asyncio
@@ -58,7 +58,7 @@ async def test_stash_already_floating_no_toggle(extension):
 
     await extension.run_stash()
 
-    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:stash-default")
+    extension.backend.move_window_to_workspace.assert_called_with("0xabc", "special:st-default", silent=True)
     extension.backend.toggle_floating.assert_not_called()
     assert extension._was_floating["0xabc"] is True
 
@@ -72,12 +72,12 @@ async def test_unstash_moves_window_back(extension):
     extension._was_floating["0xabc"] = False
     extension.backend.execute_json.return_value = {
         "address": "0xabc",
-        "workspace": {"id": -99, "name": "special:stash-default"},
+        "workspace": {"id": -99, "name": "special:st-default"},
     }
 
     await extension.run_stash()
 
-    extension.backend.move_window_to_workspace.assert_called_with("0xabc", extension.state.active_workspace)
+    extension.backend.move_window_to_workspace.assert_called_with("0xabc", extension.state.active_workspace, silent=True)
     extension.backend.focus_window.assert_called_with("0xabc")
     extension.backend.toggle_floating.assert_called_once_with("0xabc")
     assert "0xabc" not in extension._was_floating
@@ -89,13 +89,13 @@ async def test_unstash_from_different_stash(extension):
     extension._was_floating["0xdef"] = False
     extension.backend.execute_json.return_value = {
         "address": "0xdef",
-        "workspace": {"id": -42, "name": "special:stash-work"},
+        "workspace": {"id": -42, "name": "special:st-work"},
     }
 
     # Called without arguments (name="default"), but window is in stash-work
     await extension.run_stash()
 
-    extension.backend.move_window_to_workspace.assert_called_with("0xdef", extension.state.active_workspace)
+    extension.backend.move_window_to_workspace.assert_called_with("0xdef", extension.state.active_workspace, silent=True)
     extension.backend.focus_window.assert_called_with("0xdef")
 
 
@@ -105,7 +105,7 @@ async def test_unstash_originally_floating_stays_floating(extension):
     extension._was_floating["0xabc"] = True
     extension.backend.execute_json.return_value = {
         "address": "0xabc",
-        "workspace": {"id": -99, "name": "special:stash-default"},
+        "workspace": {"id": -99, "name": "special:st-default"},
     }
 
     await extension.run_stash()
@@ -218,14 +218,14 @@ async def test_stash_toggle_show_moves_windows_to_active_workspace(extension):
 
     await extension.run_stash_toggle()
 
-    extension.get_clients.assert_called_with(workspace="special:stash-default")
+    extension.get_clients.assert_called_with(workspace="special:st-default")
     extension.backend.move_window_to_workspace.assert_any_call("0xaaa", "1", silent=True)
-    extension.backend.move_window_to_workspace.assert_any_call("0xbbb", "1", silent=False)
+    extension.backend.move_window_to_workspace.assert_any_call("0xbbb", "1", silent=True)
 
 
 @pytest.mark.asyncio
-async def test_stash_toggle_show_last_move_is_not_silent(extension):
-    """The last window move uses movetoworkspace (not silent) so Hyprland focuses it."""
+async def test_stash_toggle_show_all_moves_are_silent(extension):
+    """All window moves use movetoworkspacesilent."""
     extension.get_clients.return_value = [
         {"address": "0xaaa"},
         {"address": "0xbbb"},
@@ -237,7 +237,7 @@ async def test_stash_toggle_show_last_move_is_not_silent(extension):
     assert calls[0].args == ("0xaaa", "1")
     assert calls[0].kwargs == {"silent": True}
     assert calls[1].args == ("0xbbb", "1")
-    assert calls[1].kwargs == {"silent": False}
+    assert calls[1].kwargs == {"silent": True}
     extension.backend.focus_window.assert_not_called()
 
 
@@ -272,8 +272,8 @@ async def test_stash_toggle_show_custom_name(extension):
 
     await extension.run_stash_toggle("music")
 
-    extension.get_clients.assert_called_with(workspace="special:stash-music")
-    extension.backend.move_window_to_workspace.assert_called_with("0xaaa", "1", silent=False)
+    extension.get_clients.assert_called_with(workspace="special:st-music")
+    extension.backend.move_window_to_workspace.assert_called_with("0xaaa", "1", silent=True)
 
 
 @pytest.mark.asyncio
@@ -291,8 +291,8 @@ async def test_stash_toggle_hide_moves_windows_back(extension):
     # Then hide
     await extension.run_stash_toggle()
 
-    extension.backend.move_window_to_workspace.assert_any_call("0xaaa", "special:stash-default")
-    extension.backend.move_window_to_workspace.assert_any_call("0xbbb", "special:stash-default")
+    extension.backend.move_window_to_workspace.assert_any_call("0xaaa", "special:st-default")
+    extension.backend.move_window_to_workspace.assert_any_call("0xbbb", "special:st-default")
 
 
 @pytest.mark.asyncio
@@ -320,15 +320,15 @@ async def test_on_reload_clears_old_rules_and_registers_new(styled_extension):
 
     styled_extension.backend.execute.assert_any_call(
         [
-            "windowrule unset, match:tag stash",
-            "windowrule tag -stash",
+            "windowrule unset, match:tag stashed",
+            "windowrule tag -stashed",
         ],
         base_command="keyword",
     )
     styled_extension.backend.execute.assert_any_call(
         [
-            "windowrule border_color rgb(ec8800), match:tag stash",
-            "windowrule border_size 3, match:tag stash",
+            "windowrule border_color rgb(ec8800), match:tag stashed",
+            "windowrule border_size 3, match:tag stashed",
         ],
         base_command="keyword",
     )
@@ -341,8 +341,8 @@ async def test_on_reload_clears_rules_even_when_style_empty(extension):
 
     extension.backend.execute.assert_called_once_with(
         [
-            "windowrule unset, match:tag stash",
-            "windowrule tag -stash",
+            "windowrule unset, match:tag stashed",
+            "windowrule tag -stashed",
         ],
         base_command="keyword",
     )
@@ -359,7 +359,7 @@ async def test_stash_tags_window_when_style_configured(styled_extension):
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow +stash address:0xabc")
+    styled_extension.backend.execute.assert_called_once_with("tagwindow +stashed address:0xabc")
 
 
 @pytest.mark.asyncio
@@ -382,12 +382,12 @@ async def test_unstash_untags_window_when_style_configured(styled_extension):
     """Unstashing a window from special workspace untags it."""
     styled_extension.backend.execute_json.return_value = {
         "address": "0xabc",
-        "workspace": {"id": -99, "name": "special:stash-default"},
+        "workspace": {"id": -99, "name": "special:st-default"},
     }
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow -stash address:0xabc")
+    styled_extension.backend.execute.assert_called_once_with("tagwindow -stashed address:0xabc")
 
 
 @pytest.mark.asyncio
@@ -407,4 +407,4 @@ async def test_stash_on_shown_window_untags_when_style_configured(styled_extensi
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow -stash address:0xaaa")
+    styled_extension.backend.execute.assert_called_once_with("tagwindow -stashed address:0xaaa")

@@ -1,4 +1,7 @@
-- avoid logging when no flag is passed (only most important logs remains, use `--debug` to get the logs)
-- `scratchpads`: Fix initial display and remove some old workaround
-- fix some async operations usage
-- misc fixes and improvements
+- `wallpapers` use a wider range of colors when generating template colors, should feel less repetitive
+- `scratchpads`
+    - revamped the show/hide sequences
+    - added some protections against corner case scenarios
+    - `smart_focus` is disabled by default
+- `compgen`: better handles overlapping commands (eg: toggle *scratch* vs toggle_dpms vs toggle_special)
+- `stash`: WIP/TODO
