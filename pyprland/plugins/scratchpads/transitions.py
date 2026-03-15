@@ -209,14 +209,21 @@ class TransitionsMixin:
         await self.backend.execute(move_commands, weak=True)
         await self._update_infos(scratch, clients)
 
-        position_fixed = False
-        if should_set_aspect:
-            position_fixed = await self._fix_position(scratch, monitor)
+        # Always apply explicit position config, regardless of should_set_aspect.
+        # The position config is an explicit user intent that should always be honored.
+        position_fixed = await self._fix_position(scratch, monitor)
 
         if not position_fixed:
             relative_animation = preserve_aspect and was_alive and not should_set_aspect
             await self._animate_show(scratch, monitor, relative_animation)
         await self.backend.focus_window(scratch.full_address)
+
+        # Re-apply position after a settle delay to handle apps that resize
+        # themselves after being shown (which causes Hyprland to shift the
+        # window position).
+        if position_fixed:
+            await asyncio.sleep(ONE_FRAME)
+            await self._fix_position(scratch, monitor)
 
         if scratch.client_info is None or not scratch.client_info["pinned"]:
             await self._pin_scratch(scratch)
