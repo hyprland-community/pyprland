@@ -19,13 +19,11 @@ Check your OS package manager first:
 - **Arch Linux**: Available on AUR, e.g., with [yay](https://github.com/Jguer/yay): `yay pyprland`
 - **NixOS**: See the [Nix](./Nix) page for instructions
 
-Otherwise, you may prefer using the `uv` way:
+Otherwise, you may want using the [uv](https://docs.astral.sh/uv/) way:
 
 ```sh
-# Install and run pypr
-uvx --from pyprland pypr
-# To run the fast client program:
-uvx --from pyprland pypr-client
+# Install pyprland
+uv tool install pyprland
 ```
 
 
