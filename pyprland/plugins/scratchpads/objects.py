@@ -223,6 +223,11 @@ class Scratch:  # {{{
         self.meta.extra_positions.clear()
 
     @property
+    def client_ready(self) -> bool:
+        """Check if the client info is available and contains size information."""
+        return bool(self.client_info is not None and "size" in self.client_info)
+
+    @property
     def address(self) -> str:
         """Return the client address (without 0x prefix)."""
         if self.client_info is None:

@@ -10,6 +10,7 @@ from ...aioops import TaskManager
 from ...common import MINIMUM_FULL_ADDR_LEN, is_rotated
 from ...models import ClientInfo, Environment, MonitorInfo, ReloadReason, VersionInfo
 from ..interface import Plugin
+from .animations import Placement
 from .common import ONE_FRAME, FocusTracker, HideFlavors
 from .events import EventsMixin
 from .helpers import (
@@ -545,7 +546,21 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         have_animation = bool(scratch.animation_type)
         if have_animation:
             await self._hide_transition(scratch, monitor)
-            await self.backend.execute([f"tagwindow +pypr_noanim address:{addr}" for addr in clients_addr])
+            # Batch noanim tag + far off-screen reposition in a single IPC call.
+            # This prevents ghost frames when hide_delay is shorter than the
+            # actual Hyprland animation: even if the slide-off is still in
+            # progress, the window jumps instantly (noanim) to a position far
+            # beyond any visible monitor, so no flicker is visible.
+            noanim_commands: list[str] = [f"tagwindow +pypr_noanim address:{addr}" for addr in clients_addr]
+            if scratch.client_ready:
+                off_x, off_y = Placement.get_offscreen(
+                    scratch.animation_type,
+                    monitor,
+                    scratch.client_info,
+                    scratch.conf.get_int("margin"),
+                )
+                noanim_commands.extend(f"movewindowpixel exact {off_x} {off_y},address:{addr}" for addr in clients_addr)
+            await self.backend.execute(noanim_commands)
 
         for addr in clients_addr:
             await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)

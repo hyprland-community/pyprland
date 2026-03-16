@@ -53,8 +53,9 @@ class TransitionsMixin:
             scratch: The scratchpad object
             monitor: The monitor info
         """
-        if scratch.client_info is None:
+        if not scratch.client_ready:
             return (0, 0)
+        assert scratch.client_info
         offset = scratch.conf.get("offset")
         if monitor is None:
             monitor = await self.backend.get_monitor_props(name=scratch.forced_monitor)
@@ -168,7 +169,7 @@ class TransitionsMixin:
         # Tag the window with pypr_noanim to disable Hyprland's animation
         # during the offscreen pre-positioning move, then untag so the real
         # slide-in animation plays normally.
-        if animation_type and scratch.client_info is not None and "size" in scratch.client_info:
+        if animation_type and scratch.client_ready:
             off_x, off_y = Placement.get_offscreen(
                 animation_type,
                 monitor,
