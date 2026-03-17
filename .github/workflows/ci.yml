@@ -23,10 +23,10 @@ jobs:
         run: uv sync --all-groups
       - name: Run tests
         run: |
-          ./scripts/generate_plugin_docs.py
+          uv run ./scripts/generate_plugin_docs.py
           uv run pytest -q tests
       - name: Check wiki docs
         if: matrix.python-version == '3.14'
         run: |
-          ./scripts/generate_plugin_docs.py
-          ./scripts/check_plugin_docs.py
+          uv run ./scripts/generate_plugin_docs.py
+          uv run ./scripts/check_plugin_docs.py
