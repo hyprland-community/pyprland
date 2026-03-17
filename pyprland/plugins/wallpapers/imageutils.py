@@ -1,15 +1,21 @@
 """Image utilities for the wallpapers plugin."""
 
+from __future__ import annotations
+
 import colorsys
 import hashlib
 import os
-from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...aioops import aiisdir, ailistdir
-from .cache import ImageCache
 from .colorutils import Image, ImageDraw, ImageOps
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from .cache import ImageCache
 
 IMAGE_FORMAT = "jpg"
 

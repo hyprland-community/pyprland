@@ -38,5 +38,6 @@ jobs:
           # Verify entry point is on PATH
           which pypr
           # Verify the package is importable and the entry point module loads
-          python -c "from pyprland.command import main; print('pypr entry point OK')"
-          python -c "from pyprland.version import VERSION; print('pyprland', VERSION)"
+          # (use uv run to execute within the tool's isolated environment)
+          uv run --from pyprland python -c "from pyprland.command import main; print('pypr entry point OK')"
+          uv run --from pyprland python -c "from pyprland.version import VERSION; print('pyprland', VERSION)"
