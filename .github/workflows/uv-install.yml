@@ -34,4 +34,9 @@ jobs:
         run: uv tool install .
 
       - name: Smoke test
-        run: pypr --help
+        run: |
+          # Verify entry point is on PATH
+          which pypr
+          # Verify the package is importable and the entry point module loads
+          python -c "from pyprland.command import main; print('pypr entry point OK')"
+          python -c "from pyprland.version import VERSION; print('pyprland', VERSION)"

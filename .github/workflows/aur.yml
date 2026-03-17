@@ -57,4 +57,10 @@ jobs:
           su builder -c "makepkg -si --noconfirm"
 
       - name: Smoke test
-        run: pypr --help
+        run: |
+          # Verify entry points are on PATH
+          which pypr
+          which pypr-client
+          # Verify the package is importable and the entry point module loads
+          python -c "from pyprland.command import main; print('pypr entry point OK')"
+          python -c "from pyprland.version import VERSION; print('pyprland', VERSION)"
