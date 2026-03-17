@@ -1,0 +1,32 @@
+---
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Finish environment setup
+        run: |
+          mkdir ~/.config/hypr/
+          touch ~/.config/hypr/pyprland.toml
+      - name: Install dependencies
+        run: uv sync --all-groups
+      - name: Run tests
+        run: |
+          ./scripts/generate_plugin_docs.py
+          uv run pytest -q tests
+      - name: Check wiki docs
+        if: matrix.python-version == '3.14'
+        run: |
+          ./scripts/generate_plugin_docs.py
+          ./scripts/check_plugin_docs.py
