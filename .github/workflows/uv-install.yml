@@ -1,0 +1,37 @@
+name: uv tool install Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "pyprland/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/uv-install.yml"
+  push:
+    paths:
+      - "pyprland/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/uv-install.yml"
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install with uv tool install
+        run: uv tool install .
+
+      - name: Smoke test
+        run: pypr --help

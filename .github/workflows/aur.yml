@@ -1,0 +1,60 @@
+name: AUR Package Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "pyprland/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "client/**"
+      - ".github/workflows/aur.yml"
+  push:
+    paths:
+      - "pyprland/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "client/**"
+      - ".github/workflows/aur.yml"
+
+jobs:
+  makepkg:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install base dependencies
+        run: pacman -Syu --noconfirm base-devel git python python-build python-installer python-hatchling python-aiofiles python-aiohttp python-pillow gcc
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch PKGBUILD from AUR
+        run: |
+          mkdir -p /tmp/build
+          curl -sL "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pyprland-git" -o /tmp/build/PKGBUILD
+
+      - name: Patch PKGBUILD to use local source
+        run: |
+          # Point the PKGBUILD source at the checked-out repo instead of remote
+          sed -i "s|source=(git+https://github.com/fdev31/pyprland#branch=main)|source=(\"git+file://${GITHUB_WORKSPACE}\")|" /tmp/build/PKGBUILD
+          # Show the patched PKGBUILD for debugging
+          cat /tmp/build/PKGBUILD
+
+      - name: Build and install with makepkg
+        run: |
+          # makepkg refuses to run as root, create a builder user
+          useradd -m builder
+          chown -R builder:builder /tmp/build
+          # Allow builder to install packages via pacman
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          # git needs to trust the workspace
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          su builder -c "git config --global --add safe.directory '${GITHUB_WORKSPACE}'"
+          cd /tmp/build
+          su builder -c "makepkg -si --noconfirm"
+
+      - name: Smoke test
+        run: pypr --help
