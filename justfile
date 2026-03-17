@@ -1,13 +1,10 @@
-lintenv := ".tox/py314-linting"
-testenv := ".tox/py314-unit"
-
-
+# Run tests quickly
 quicktest:
-    {{testenv}}/bin/pytest -q tests
+    uv run pytest -q tests
 
 # Run pytest with optional parameters
 debug *params='tests':
-    {{testenv}}/bin/pytest --pdb -s {{params}}
+    uv run pytest --pdb -s {{params}}
 
 # Start the documentation website in dev mode
 website: gendoc
@@ -16,19 +13,25 @@ website: gendoc
 
 # Run linting and dead code detection
 lint:
-    tox run -e linting,deadcode
+    uv run mypy --install-types --non-interactive --check-untyped-defs pyprland
+    uv run ruff format pyprland
+    uv run ruff check --fix pyprland
+    uv run pylint -E pyprland
+    uv run flake8 pyprland
+    uv run vulture --ignore-names 'event_*,run_*,fromtop,frombottom,fromleft,fromright,instance' pyprland scripts/v_whitelist.py
 
 # Run version registry checks
 vreg:
-    tox run -e vreg
+    uv run --group vreg ./tests/vreg/run_tests.sh
 
 # Build documentation
 doc:
-    tox run -e doc
+    uv run pdoc --docformat google ./pyprland
 
 # Generate wiki pages
 wiki:
-    tox run -e wiki
+    ./scripts/generate_plugin_docs.py
+    ./scripts/check_plugin_docs.py
 
 # Generate plugin documentation from source
 gendoc:
@@ -51,12 +54,14 @@ release:
 
 # Generate and open HTML coverage report
 htmlcov:
-    tox run -e coverage
+    uv run coverage run --source=pyprland -m pytest tests -q
+    uv run coverage html
+    uv run coverage report
     xdg-open ./htmlcov/index.html
 
 # Run mypy type checks on pyprland
 types:
-    {{lintenv}}/bin/mypy --check-untyped-defs pyprland
+    uv run mypy --check-untyped-defs pyprland
 
 # Build C client - release (~17K)
 compile-c-client:

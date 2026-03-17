@@ -42,6 +42,9 @@ dev = [
 quickstart = [
     "questionary>=2.1.1",
 ]
+vreg = [
+    "pyglet",
+]
 
 [tool.ruff]
 line-length = 140
