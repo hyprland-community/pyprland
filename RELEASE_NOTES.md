@@ -1,1 +1,4 @@
-
+- `scratchpads` minor improvements
+    - force window off-screen after hide_delay to prevent ghost frames during animation
+    - additional safety calls to ensure correct positioning
+- `wallpapers` make PIL/Pillow optional at import time (no longer crashes if not installed)
