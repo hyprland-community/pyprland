@@ -120,7 +120,27 @@ class TransitionsMixin:
         off_x, off_y = offset
 
         if scratch.client_info:
-            x, y = scratch.client_info.get("at", (0, 0))
+            # Use the canonical (calculated) position instead of the live
+            # Hyprland-reported position.  Some apps resize themselves after
+            # being shown, which causes Hyprland to shift the window away from
+            # where pyprland originally placed it.  Reading the live "at"
+            # position in that case produces a different slide-off destination
+            # on every toggle, making the window appear to cycle through
+            # multiple positions.
+            monitor_info = scratch.meta.monitor_info
+            configured_position = scratch.conf.get_str("position")
+            if configured_position and monitor_info:
+                px, py = convert_coords(configured_position, monitor_info)
+                x, y = px + monitor_info["x"], py + monitor_info["y"]
+            elif monitor_info and animation_type:
+                x, y = Placement.get(
+                    animation_type,
+                    monitor_info,
+                    scratch.client_info,
+                    scratch.conf.get_int("margin"),
+                )
+            else:
+                x, y = scratch.client_info.get("at", (0, 0))
         else:
             x, y = 0, 0
 
