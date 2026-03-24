@@ -385,6 +385,63 @@ async def test_excluded_scratches_isolation(exclude_scratchpads, subprocess_shel
     assert browser_scratch.excluded_scratches == [], "browser.excluded_scratches should be cleared after hide"
 
 
+@fixture
+def exclude_wildcard_scratchpads(monkeypatch, mocker):
+    """Config with two scratchpads where one uses excludes = ["*"] wildcard."""
+    d = {
+        "pyprland": {"plugins": ["scratchpads"]},
+        "scratchpads": {
+            "term": {
+                "command": "ls",
+                "lazy": True,
+                "class": "kitty-dropterm",
+            },
+            "browser": {
+                "command": "ls",
+                "lazy": True,
+                "class": "firefox",
+                "excludes": ["*"],
+                "restore_excluded": True,
+            },
+        },
+    }
+    monkeypatch.setattr("tomllib.load", lambda x: d)
+
+
+@pytest.mark.asyncio
+async def test_excluded_wildcard_list(exclude_wildcard_scratchpads, subprocess_shell_mock, server_fixture):
+    """Verify excludes = ["*"] expands to all other scratchpads, same as excludes = "*"."""
+    mocks.json_commands_result["clients"] = CLIENT_CONFIG + [BROWSER_CLIENT]
+
+    # 1. Show term scratchpad first
+    await mocks.pypr("toggle term")
+    await _send_window_events()
+    await asyncio.sleep(0.1)
+
+    # 2. Show browser scratchpad (excludes=["*"] should hide term)
+    await mocks.pypr("toggle browser")
+    await _send_window_events(address="BROWSER123", klass="firefox", title="Firefox")
+    await asyncio.sleep(0.1)
+
+    # 3. Verify internal state
+    plugin = mocks.pyprland_instance.plugins["scratchpads"]
+    term_scratch = plugin.scratches.get("term")
+    browser_scratch = plugin.scratches.get("browser")
+
+    # browser should have excluded term (wildcard expanded to all others)
+    assert "term" in browser_scratch.excluded_scratches, 'browser with excludes=["*"] should track that it excluded term'
+
+    # term should have empty excluded list
+    assert term_scratch.excluded_scratches == [], "term should have its own empty excluded_scratches list"
+
+    # 4. Hide browser - should restore term
+    mocks.hyprctl.reset_mock()
+    await mocks.pypr("toggle browser")
+    await asyncio.sleep(0.2)
+
+    assert browser_scratch.excluded_scratches == [], "browser.excluded_scratches should be cleared after hide"
+
+
 @pytest.mark.asyncio
 async def test_command_serialization(scratchpads, subprocess_shell_mock, server_fixture):
     """Verify rapid commands are serialized through the queue (not interleaved)."""

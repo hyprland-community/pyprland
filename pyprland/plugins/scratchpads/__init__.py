@@ -399,7 +399,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
 
         excluded_ids = scratch.conf.get("excludes")
         restore_excluded = scratch.conf.get_bool("restore_excluded")
-        if excluded_ids == "*":
+        if excluded_ids in ("*", ["*"]):
             excluded_ids = [excluded.uid for excluded in self.scratches.values() if excluded.uid != scratch.uid]
         elif excluded_ids is None:
             excluded_ids = []

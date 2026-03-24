@@ -61,7 +61,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
     ConfigField("multi", bool, default=True, description="Allow multiple windows", category="behavior"),
     ConfigField("unfocus", str, default="", description="Action on unfocus ('hide' or empty)", category="behavior"),
     ConfigField("hysteresis", float, default=0.4, description="Delay before unfocus hide", category="behavior"),
-    ConfigField("excludes", list, default=[], description="Scratches to hide when shown", category="behavior"),
+    ConfigField("excludes", (list, str), default=[], description='Scratches to hide when shown (use "*" for all)', category="behavior"),
     ConfigField("restore_excluded", bool, default=False, description="Restore excluded on hide", category="behavior"),
     ConfigField("preserve_aspect", bool, default=False, description="Keep size/position across shows", category="behavior"),
     ConfigField("hide_delay", float, default=0.2, description="Delay before hide animation", category="behavior"),
