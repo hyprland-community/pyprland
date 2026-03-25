@@ -5,8 +5,10 @@ When game mode is enabled, disables animations, blur, shadows, gaps,
 and rounding for maximum performance.
 """
 
+import asyncio
 import fnmatch
 
+from ..aioops import TaskManager
 from ..models import Environment, ReloadReason
 from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
@@ -36,15 +38,19 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             description="Glob patterns to match window class for auto mode",
             category="basic",
         ),
+        ConfigField("hysteresis", float, default=1.0, description="Debounce delay in seconds before toggling game mode", category="basic"),
     )
 
     _enabled: bool = False
     _game_windows: set[str]
+    _tasks: TaskManager
 
     def __init__(self, name: str) -> None:
         """Initialize plugin state."""
         super().__init__(name)
         self._game_windows = set()
+        self._tasks = TaskManager()
+        self._tasks.start()
 
     def _matches_pattern(self, window_class: str) -> bool:
         """Check if window class matches any configured pattern.
@@ -57,6 +63,39 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         """
         patterns = self.get_config_list("patterns")
         return any(fnmatch.fnmatch(window_class, pattern) for pattern in patterns)
+
+    async def exit(self) -> None:
+        """Stop pending tasks on plugin shutdown."""
+        await self._tasks.stop()
+
+    async def _update_gamemode(self) -> None:
+        """Debounce game mode transitions using hysteresis.
+
+        Determines the desired state from _game_windows and schedules a
+        delayed transition if it differs from the current state.
+        If the desired state already matches, cancels any pending transition.
+        """
+        should_enable = bool(self._game_windows)
+        if should_enable == self._enabled:
+            self._tasks.cancel_keyed("gamemode")
+            return
+
+        hysteresis = self.get_config_float("hysteresis")
+        if hysteresis:
+            self._tasks.cancel_keyed("gamemode")
+
+            async def _task(enable: bool, delay: float) -> None:
+                await asyncio.sleep(delay)
+                if enable:
+                    await self._enable_gamemode()
+                else:
+                    await self._disable_gamemode()
+
+            self._tasks.create(_task(should_enable, hysteresis), key="gamemode")
+        elif should_enable:
+            await self._enable_gamemode()
+        else:
+            await self._disable_gamemode()
 
     async def _enable_gamemode(self, notify: bool = True) -> None:
         """Enable game mode (disable visual effects).
@@ -147,7 +186,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
 
         if self._matches_pattern(window_class):
             self._game_windows.add(addr)
-            await self._enable_gamemode()
+            await self._update_gamemode()
 
     async def event_closewindow(self, addr: str) -> None:
         """Handle window close - disable game mode if no games left.
@@ -161,4 +200,4 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         self._game_windows.discard(addr)
 
         if not self._game_windows:
-            await self._disable_gamemode()
+            await self._update_gamemode()
