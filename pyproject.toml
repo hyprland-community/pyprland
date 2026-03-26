@@ -176,8 +176,12 @@ requires = [
 ]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.hooks.custom]
+
 [tool.hatch.build.targets.sdist]
 only-include = [
     "pyprland",
+    "client/pypr-client.c",
+    "hatch_build.py",
 ]
 
