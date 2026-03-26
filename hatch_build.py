@@ -92,9 +92,9 @@ class NativeClientBuildHook(BuildHookInterface):
 
         self.app.display_success("Native pypr-client compiled successfully")
 
-        # Files in <package>.data/scripts/ are installed to the bin/ directory
-        # by pip/uv, alongside Python entry points.
-        build_data["force_include"][str(output)] = "pyprland.data/scripts/pypr-client"
+        # Use shared_scripts so hatchling generates the correct
+        # {name}-{version}.data/scripts/ path in the wheel (PEP 427).
+        build_data["shared_scripts"][str(output)] = "pypr-client"
 
         # Mark the wheel as platform-specific since it contains a native binary
         build_data["pure_python"] = False
