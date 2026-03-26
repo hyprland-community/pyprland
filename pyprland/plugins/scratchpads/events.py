@@ -95,6 +95,11 @@ class EventsMixin:
                 scratch.extra_addr.remove(addr)
             if addr in scratch.meta.extra_positions:
                 del scratch.meta.extra_positions[addr]
+            # Reset state when the primary window is closed
+            if scratch.full_address == addr:
+                scratch.visible = False
+                scratch.client_info = None
+                scratch.meta.initialized = False
 
     async def event_monitorremoved(self, monitor_name: str) -> None:
         """Hides scratchpads on the removed screen.
@@ -113,7 +118,7 @@ class EventsMixin:
                 if scratch.monitor == monitor:
                     try:
                         await self.run_hide(scratch.uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE)
-                    except (RuntimeError, OSError, ConnectionError) as e:
+                    except (RuntimeError, OSError, ConnectionError, KeyError) as e:
                         self.log.exception("Failed to hide %s", scratch.uid)
                         await self.backend.notify_info(f"Failed to hide {scratch.uid}: {e}")
 

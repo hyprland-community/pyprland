@@ -404,13 +404,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         elif excluded_ids is None:
             excluded_ids = []
 
-        for e_uid in cast("list[str]", excluded_ids):
-            excluded = self.scratches.get(e_uid)
-            assert excluded
-            if excluded.visible:
-                await self.run_hide(e_uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE | HideFlavors.IGNORE_TILED)
-                if restore_excluded:
-                    scratch.excluded_scratches.append(e_uid)
+        await self._hide_excluded(scratch, cast("list[str]", excluded_ids), restore_excluded)
 
         await scratch.initialize(self)
 
@@ -423,6 +417,19 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
 
         await self._show_transition(scratch, monitor, was_alive)
         scratch.monitor = monitor["name"]
+
+    async def _hide_excluded(self, scratch: Scratch, excluded_ids: list[str], restore_excluded: bool) -> None:
+        """Hide excluded scratchpads before showing the requested one."""
+        for e_uid in excluded_ids:
+            excluded = self.scratches.get(e_uid)
+            assert excluded
+            if excluded.visible:
+                try:
+                    await self.run_hide(e_uid, flavor=HideFlavors.TRIGGERED_BY_AUTOHIDE | HideFlavors.IGNORE_TILED)
+                except (KeyError, RuntimeError):
+                    self.log.warning("Failed to hide excluded scratchpad %s, continuing", e_uid)
+                if restore_excluded:
+                    scratch.excluded_scratches.append(e_uid)
 
     async def _handle_multiwindow(self, scratch: Scratch, clients: list[ClientInfo]) -> bool:
         """Collect every matching client for the scratchpad and add them to extra_addr if needed.
@@ -470,6 +477,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             return
 
         if not await scratch.is_alive():
+            scratch.visible = False  # self-correct stale state
             return
 
         if scratch.client_info is not None and flavor & HideFlavors.IGNORE_TILED and not scratch.client_info["floating"]:
@@ -494,8 +502,13 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             active_workspace: The active workspace name
         """
         clients = await self.backend.execute_json("clients")
-        await scratch.update_client_info(clients=clients)
-        # After update_client_info, client_info is guaranteed to be set (or KeyError raised)
+        try:
+            await scratch.update_client_info(clients=clients)
+        except KeyError:
+            self.log.warning("Client window for %s vanished during hide, resetting state", scratch.uid)
+            scratch.visible = False
+            scratch.client_info = None
+            return
         assert scratch.client_info is not None
         ref_position = scratch.client_info["at"]
         monitor_info = scratch.meta.monitor_info
