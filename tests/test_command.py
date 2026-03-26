@@ -5,7 +5,7 @@ import sys
 import os
 import tempfile
 from pathlib import Path
-from pyprland.command import Pyprland
+from pyprland.manager import Pyprland
 from pyprland.models import ExitCode, PyprError
 from pyprland.validate_cli import run_validate, _load_plugin_module
 

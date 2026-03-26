@@ -9,7 +9,6 @@ from . import constants as pyprland_constants
 from .commands.parsing import normalize_command_name
 from .common import get_logger, notify_send, run_interactive_program
 from .models import ExitCode, ResponsePrefix
-from .validate_cli import run_validate
 
 __all__ = ["run_client"]
 
@@ -42,6 +41,8 @@ async def run_client() -> None:
 
     elif sys.argv[1] == "validate":
         # Validate doesn't require daemon - run locally and exit
+        from .validate_cli import run_validate  # noqa: PLC0415
+
         run_validate()
         return
 

@@ -7,15 +7,12 @@ from pathlib import Path
 from typing import Literal, overload
 
 from . import constants as pyprland_constants
-from .client import run_client
 from .common import get_logger, init_logger
 from .constants import CONTROL
 from .ipc import init as ipc_init
-from .manager import Pyprland
 from .models import PyprError
-from .pypr_daemon import run_daemon
 
-__all__: list[str] = ["Pyprland", "main"]
+__all__: list[str] = ["main"]
 
 
 @overload
@@ -53,6 +50,31 @@ def use_param(txt: str, optional_value: bool = False) -> str | bool:
     return v
 
 
+def _run(invoke_daemon: bool) -> None:
+    """Run the daemon or client, handling errors."""
+    log = get_logger("startup")
+    try:
+        if invoke_daemon:
+            from .pypr_daemon import run_daemon  # noqa: PLC0415
+
+            asyncio.run(run_daemon())
+        else:
+            from .client import run_client  # noqa: PLC0415
+
+            asyncio.run(run_client())
+    except KeyboardInterrupt:
+        pass
+    except PyprError:
+        log.critical("Command failed.")
+    except json.decoder.JSONDecodeError as e:
+        log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
+    except Exception:  # pylint: disable=W0718
+        log.critical("Unhandled exception:", exc_info=True)
+    finally:
+        if invoke_daemon and Path(CONTROL).exists():
+            Path(CONTROL).unlink()
+
+
 def main() -> None:
     """Run the command."""
     debug_flag = use_param("--debug", optional_value=True)
@@ -62,7 +84,6 @@ def main() -> None:
     else:
         init_logger()
     ipc_init()
-    log = get_logger("startup")
 
     config_override = use_param("--config")
     if config_override:
@@ -70,26 +91,14 @@ def main() -> None:
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and Path(CONTROL).exists():
-        log.critical(
+        get_logger("startup").critical(
             """%s exists,
 is pypr already running ?
 If that's not the case, delete this file and run again.""",
             CONTROL,
         )
     else:
-        try:
-            asyncio.run(run_daemon() if invoke_daemon else run_client())
-        except KeyboardInterrupt:
-            pass
-        except PyprError:
-            log.critical("Command failed.")
-        except json.decoder.JSONDecodeError as e:
-            log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
-        except Exception:  # pylint: disable=W0718
-            log.critical("Unhandled exception:", exc_info=True)
-        finally:
-            if invoke_daemon and Path(CONTROL).exists():
-                Path(CONTROL).unlink()
+        _run(invoke_daemon)
 
 
 if __name__ == "__main__":
