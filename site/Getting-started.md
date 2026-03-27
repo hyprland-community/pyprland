@@ -12,6 +12,9 @@ Pypr consists of two things:
 > [!tip]
 > For keybindings, use `pypr-client` instead of `pypr` for faster response (~1ms vs ~50ms). See [Commands: pypr-client](./Commands#pypr-client) for details.
 
+> [!tip]
+> Prefer a visual editor? Run `pypr-gui` to configure pyprland from your browser. See [Commands: pypr-gui](./Commands#pypr-gui) for details.
+
 ## Installation
 
 Check your OS package manager first:

@@ -131,6 +131,9 @@ pypr validate
 
 This checks your config against plugin schemas and reports any errors.
 
+> [!tip]
+> You can also use [`pypr-gui`](./Commands#pypr-gui) to browse available plugins, edit options with schema-aware forms, and validate interactively.
+
 ## Tips
 
 - See [Examples](./Examples) for complete configuration samples

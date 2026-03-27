@@ -120,6 +120,31 @@ bind = $mainMod SHIFT, Z, exec, $pypr zoom
 
 For technical details about the client-daemon protocol, see [Architecture: Socket Protocol](./Architecture_core#pyprland-socket-protocol).
 
+## pypr-gui {#pypr-gui}
+
+`pypr-gui` is a web-based configuration editor. It starts a local HTTP server and opens a browser interface for viewing and editing your pyprland configuration.
+
+### Features
+
+- **Plugin browser**: enable/disable plugins with checkboxes
+- **Schema-driven forms**: each plugin's options are presented with types, defaults, descriptions, and validation
+- **Validate / Save / Apply**: check your config for errors, save to disk, or save and live-reload the running daemon in one click
+- **Multi-file support**: saves per-plugin files under `conf.d/`, keeping your configuration tidy (see [Multiple Configuration Files](./MultipleConfigurationFiles))
+
+### Usage
+
+```sh
+pypr-gui              # Start server and open browser
+pypr-gui --port 8080  # Use a specific port
+pypr-gui --no-browser # Start server without opening a browser
+```
+
+The server listens on `127.0.0.1` only (not exposed to the network).
+If an instance is already running, `pypr-gui` will open the existing session instead of starting a new one.
+
+> [!note]
+> The pyprland daemon does **not** need to be running to edit and validate your configuration. However, the **Apply** action (save + reload) requires a running daemon.
+
 ## Debugging
 
 To run the daemon with debug logging:

@@ -61,12 +61,27 @@ async def handle_apply(request: web.Request) -> web.Response:
 
 
 # ---------------------------------------------------------------------------
-#  SPA fallback: serve index.html for any non-API, non-asset route
+#  SPA fallback: serve static files or index.html
 # ---------------------------------------------------------------------------
 
+# Resolved once so path traversal checks are reliable
+_STATIC_DIR_RESOLVED = STATIC_DIR.resolve()
 
-async def handle_index(_request: web.Request) -> web.FileResponse:
-    """Serve the Vue SPA index.html."""
+
+async def handle_spa_fallback(request: web.Request) -> web.FileResponse:
+    """Serve a static file if it exists, otherwise fall back to index.html.
+
+    This is the standard pattern for single-page applications: real files
+    (icon.png, robots.txt, etc.) are served directly, while unknown paths
+    return the SPA entry point so client-side routing can take over.
+    """
+    tail = request.match_info.get("tail", "")
+    if tail:
+        candidate = (STATIC_DIR / tail).resolve()
+        # Only serve if the file exists and stays inside STATIC_DIR (prevent traversal)
+        if candidate.is_file() and _STATIC_DIR_RESOLVED in candidate.parents:
+            return web.FileResponse(candidate)
+
     index = STATIC_DIR / "index.html"
     if not index.exists():
         raise web.HTTPNotFound(text="Frontend not built. Run the Vue build first.")
@@ -93,7 +108,7 @@ def create_app() -> web.Application:
     if STATIC_DIR.exists() and (STATIC_DIR / "assets").exists():
         app.router.add_static("/assets", STATIC_DIR / "assets")
 
-    # SPA fallback — serve index.html for everything else
-    app.router.add_get("/{tail:.*}", handle_index)
+    # SPA fallback - serve static files or index.html for everything else
+    app.router.add_get("/{tail:.*}", handle_spa_fallback)
 
     return app
