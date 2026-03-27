@@ -566,6 +566,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             # beyond any visible monitor, so no flicker is visible.
             noanim_commands: list[str] = [f"tagwindow +pypr_noanim address:{addr}" for addr in clients_addr]
             if scratch.client_ready:
+                assert scratch.client_info is not None
                 off_x, off_y = Placement.get_offscreen(
                     scratch.animation_type,
                     monitor,

@@ -160,6 +160,10 @@ convention = "google"
 indent-style = "space"
 line-ending = "auto"
 
+[[tool.mypy.overrides]]
+module = "questionary"
+ignore_missing_imports = true
+
 [tool.pylsp-mypy]
 enabled = true
 live_mode = true

@@ -170,6 +170,7 @@ class TransitionsMixin:
         # during the offscreen pre-positioning move, then untag so the real
         # slide-in animation plays normally.
         if animation_type and scratch.client_ready:
+            assert scratch.client_info is not None
             off_x, off_y = Placement.get_offscreen(
                 animation_type,
                 monitor,
