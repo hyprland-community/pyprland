@@ -25,9 +25,15 @@ version="${1:-}"
 dest="versions/$version"
 echo "Archiving version $version to $dest..."
 
-# Regenerate JSON to ensure it matches current code
-echo "Regenerating plugin documentation..."
-python ../scripts/generate_plugin_docs.py
+# Regenerate JSON from the tagged version's source code
+echo "Regenerating plugin documentation from tag $version..."
+tmp=$(mktemp -d)
+trap 'git -C .. worktree remove --force "$tmp" 2>/dev/null; rm -rf "$tmp"' EXIT
+git -C .. worktree add "$tmp" "$version" --detach
+uv run --directory "$tmp" python "$tmp/scripts/generate_plugin_docs.py"
+cp "$tmp/site/generated/"*.json generated/
+git -C .. worktree remove --force "$tmp"
+trap - EXIT
 
 # Create destination
 mkdir -p "$dest"

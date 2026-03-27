@@ -43,7 +43,6 @@ overview:
 
 # Archive documentation for a specific version (creates static snapshot)
 archive-docs version:
-    just gendoc
     cd site && ./make_version.sh {{version}}
 
 # Create a new release
