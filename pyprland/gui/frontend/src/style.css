@@ -156,6 +156,19 @@ body {
   font-size: 0.9rem;
 }
 
+.docs-link {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.docs-link:hover {
+  color: var(--accent);
+}
+
 .plugin-envs {
   display: flex;
   gap: 6px;

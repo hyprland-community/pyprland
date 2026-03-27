@@ -68,6 +68,7 @@
           <PluginEditor
             :plugin="currentPluginInfo"
             :config="getPluginConfig(activeView)"
+            :docs-base="DOCS_BASE"
             @update:config="setPluginConfig(activeView, $event)"
           />
         </template>
@@ -89,6 +90,8 @@
 import { ref, computed, onMounted } from 'vue'
 import PluginEditor from './components/PluginEditor.vue'
 import DictEditor from './components/DictEditor.vue'
+
+const DOCS_BASE = 'https://hyprland-community.github.io/pyprland/'
 
 const loading = ref(true)
 const saving = ref(false)

@@ -1,6 +1,6 @@
 <template>
   <div class="plugin-header">
-    <h2>{{ plugin.name }}</h2>
+    <h2>{{ plugin.name }} <a :href="docsBase + plugin.name + '.html'" target="_blank" rel="noopener" class="docs-link">docs &#8599;</a></h2>
     <p>{{ plugin.description }}</p>
     <div v-if="plugin.environments.length" class="plugin-envs">
       <span v-for="env in plugin.environments" :key="env" class="env-badge">{{ env }}</span>
@@ -113,6 +113,7 @@ import { isObject, groupFields } from '../utils.js'
 const props = defineProps({
   plugin: { type: Object, required: true },
   config: { type: Object, required: true },
+  docsBase: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:config'])
