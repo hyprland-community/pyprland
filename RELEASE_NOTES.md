@@ -1,1 +1,6 @@
-
+- `scratchpads`
+  - fix ghost state after window close causing potential ~500ms delays (#222)
+  - fix `excludes = ["*"]` wildcard handling (#223)
+- `gamemode` add hysteresis (debounce) to game mode switching, with configurable `hysteresis` delay
+- defer heavy imports in client path to reduce startup latency (~120ms) (#222)
+- add optional native C client build via hatchling build hook (requires having a C compiler installed) (#222)
