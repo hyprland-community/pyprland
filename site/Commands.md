@@ -135,12 +135,14 @@ For technical details about the client-daemon protocol, see [Architecture: Socke
 
 ```sh
 pypr-gui              # Start server and open browser
-pypr-gui --port 8080  # Use a specific port
-pypr-gui --no-browser # Start server without opening a browser
+pypr-gui -s           # Print URL (start server in background if needed)
+pypr-gui -w           # Open browser (explicit, same as default)
+pypr-gui --no-browser # Start server without opening browser
+pypr-gui --port 9000  # Use a specific port (default: 18099)
 ```
 
-The server listens on `127.0.0.1` only (not exposed to the network).
-If an instance is already running, `pypr-gui` will open the existing session instead of starting a new one.
+The server listens on `127.0.0.1:18099` by default (not exposed to the network).
+If an instance is already running, `pypr-gui` will reuse it instead of starting a new one.
 
 > [!note]
 > The pyprland daemon does **not** need to be running to edit and validate your configuration. However, the **Apply** action (save + reload) requires a running daemon.
