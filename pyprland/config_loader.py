@@ -1,37 +1,110 @@
 """Configuration file loading utilities.
 
 This module handles loading, parsing, and merging TOML/JSON configuration files.
+
+The module-level functions :func:`resolve_config_path`, :func:`load_toml`,
+:func:`load_toml_directory`, and :func:`load_config` are the shared
+primitives used by both the daemon (``ConfigLoader``) and the GUI
+(``pyprland.gui.api``).
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from .aioops import aiexists, aiisdir
 from .constants import CONFIG_FILE, LEGACY_CONFIG_FILE, MIGRATION_NOTIFICATION_DURATION_MS, OLD_CONFIG_FILE
 from .models import PyprError
 from .utils import merge
 
-if TYPE_CHECKING:
-    import logging
+__all__ = [
+    "ConfigLoader",
+    "load_config",
+    "load_toml",
+    "load_toml_directory",
+    "resolve_config_path",
+]
 
-__all__ = ["ConfigLoader"]
+_log = logging.getLogger(__name__)
 
 
-def _resolve_config_path(config_filename: str) -> Path:
+# ---------------------------------------------------------------------------
+#  Shared primitives (used by both the daemon and the GUI)
+# ---------------------------------------------------------------------------
+
+
+def resolve_config_path(config_filename: str) -> Path:
     """Resolve a config filename with variable and user expansion.
 
     Args:
-        config_filename: Raw config file path (may contain $VARS or ~)
+        config_filename: Raw config file path (may contain ``$VARS`` or ``~``)
 
     Returns:
         Resolved Path object
     """
     return Path(os.path.expandvars(config_filename)).expanduser()
+
+
+def load_toml(path: Path) -> dict[str, Any]:
+    """Load a single TOML file, returning ``{}`` on error.
+
+    Unlike :meth:`ConfigLoader._load_config_file` this never raises and
+    has no legacy JSON fallback — it is meant for best-effort loading.
+    """
+    try:
+        with path.open("rb") as fh:
+            return tomllib.load(fh)
+    except Exception:  # noqa: BLE001
+        _log.warning("Failed to load %s", path, exc_info=True)
+        return {}
+
+
+def load_toml_directory(directory: Path) -> dict[str, Any]:
+    """Load and merge all ``.toml`` files in *directory* (sorted)."""
+    config: dict[str, Any] = {}
+    if not directory.is_dir():
+        return config
+    for name in sorted(f.name for f in directory.iterdir() if f.suffix == ".toml"):
+        merge(config, load_toml(directory / name))
+    return config
+
+
+def load_config(config_filename: str | None = None) -> dict[str, Any]:
+    """Synchronously load config, recursively resolving includes.
+
+    Mirrors the daemon's :meth:`ConfigLoader._open_config` logic so that
+    any caller gets the same merged result as ``pypr dumpjson``.
+
+    When *config_filename* is given it is treated as an include path (may
+    be a file or a directory).  When ``None`` the default config path is
+    used and its ``pyprland.include`` entries are resolved recursively.
+    """
+    if config_filename is not None:
+        resolved = resolve_config_path(config_filename)
+        if resolved.is_dir():
+            return load_toml_directory(resolved)
+        return load_toml(resolved)
+
+    # Default: load the main config and recursively resolve includes
+    from .quickstart.generator import get_config_path  # noqa: PLC0415
+
+    config_path = get_config_path()
+    config = load_toml(config_path) if config_path.exists() else {}
+
+    for extra in list(config.get("pyprland", {}).get("include", [])):
+        merge(config, load_config(extra))
+
+    return config
+
+
+# ---------------------------------------------------------------------------
+#  ConfigLoader — daemon-specific wrapper with async, logging, legacy fallback
+# ---------------------------------------------------------------------------
 
 
 class ConfigLoader:
@@ -86,7 +159,7 @@ class ConfigLoader:
             The loaded configuration dictionary
         """
         if config_filename:
-            fname = _resolve_config_path(config_filename)
+            fname = resolve_config_path(config_filename)
             if await aiisdir(str(fname)):
                 return self._load_config_directory(fname)
             return self._load_config_file(fname)
@@ -135,11 +208,8 @@ class ConfigLoader:
     def _load_config_directory(self, directory: Path) -> dict[str, Any]:
         """Load and merge all .toml files from a directory.
 
-        Args:
-            directory: Path to directory containing .toml files
-
-        Returns:
-            Merged configuration from all files
+        Delegates to :func:`load_toml_directory` but uses
+        :meth:`_load_config_file` (which raises on errors) for each file.
         """
         config: dict[str, Any] = {}
         for toml_file in sorted(f.name for f in directory.iterdir()):

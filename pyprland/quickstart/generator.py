@@ -71,6 +71,9 @@ def format_toml_value(value: Any, indent: int = 0) -> str:  # noqa: PLR0911
     if isinstance(value, str):
         # Escape special characters and wrap in quotes
         escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+        if "\n" in escaped:
+            # Use TOML multiline basic string for values containing newlines
+            return f'"""\n{escaped}"""'
         return f'"{escaped}"'
 
     if isinstance(value, list):

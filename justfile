@@ -87,3 +87,16 @@ compile-rust-client-simple:
 # Build Rust client via rustc - debug
 compile-rust-client-simple-debug:
     rustc client/pypr-client.rs -o client/pypr-client
+
+# Build GUI frontend static assets
+gui-build:
+    cd pyprland/gui/frontend && npm install && npm run build
+
+# Start GUI frontend dev server (hot-reload) + backend API server
+gui-dev:
+    cd pyprland/gui/frontend && npm install && npm run dev &
+    uv run pypr-gui --port 8099 --no-browser
+
+# Launch the GUI (production mode — serves pre-built frontend)
+gui *args='':
+    uv run pypr-gui {{args}}
