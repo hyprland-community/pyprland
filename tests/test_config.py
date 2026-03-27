@@ -468,3 +468,121 @@ def test_config_validator_nested_children_schema(test_logger):
     assert len(errors) == 1
     assert "int" in errors[0]
     assert "sub1" in errors[0]  # Error path includes nested key
+
+
+# ---------------------------------------------------------------------------
+#  Scratchpad template detection helpers
+# ---------------------------------------------------------------------------
+
+from pyprland.plugins.scratchpads.schema import (
+    get_template_names,
+    is_pure_template,
+    validate_scratchpad_config,
+)
+
+
+def test_get_template_names_single_use():
+    config = {
+        "common": {"animation": "fromTop", "size": "80% 80%"},
+        "term": {"command": "kitty", "use": "common"},
+    }
+    assert get_template_names(config) == {"common"}
+
+
+def test_get_template_names_list_use():
+    config = {
+        "base": {"lazy": True},
+        "style": {"animation": "fromTop"},
+        "term": {"command": "kitty", "use": ["base", "style"]},
+    }
+    assert get_template_names(config) == {"base", "style"}
+
+
+def test_get_template_names_no_use():
+    config = {
+        "term": {"command": "kitty"},
+        "music": {"command": "spotify", "class": "spotify"},
+    }
+    assert get_template_names(config) == set()
+
+
+def test_get_template_names_skips_non_dict_and_dotted():
+    config = {
+        "common": {"animation": "fromTop"},
+        "term": {"command": "kitty", "use": "common"},
+        "term.monitor.DP-1": {"size": "50% 50%"},  # dotted key, should be skipped
+        "scalar_value": "not a dict",  # non-dict, should be skipped
+    }
+    assert get_template_names(config) == {"common"}
+
+
+def test_is_pure_template_true():
+    config = {
+        "common": {"animation": "fromTop"},
+        "term": {"command": "kitty", "use": "common"},
+    }
+    templates = get_template_names(config)
+    assert is_pure_template("common", config, templates) is True
+
+
+def test_is_pure_template_false_when_has_command():
+    """A section with a command is a real scratchpad even if referenced by use."""
+    config = {
+        "base_term": {"command": "kitty", "animation": "fromTop"},
+        "term": {"command": "kitty --class drop", "use": "base_term"},
+    }
+    templates = get_template_names(config)
+    assert is_pure_template("base_term", config, templates) is False
+
+
+def test_is_pure_template_false_when_not_referenced():
+    """A section without command that is NOT referenced by use is not a template."""
+    config = {
+        "orphan": {"animation": "fromTop"},
+        "term": {"command": "kitty"},
+    }
+    templates = get_template_names(config)
+    assert is_pure_template("orphan", config, templates) is False
+
+
+def test_is_pure_template_false_for_nonexistent():
+    config = {"term": {"command": "kitty"}}
+    assert is_pure_template("missing", config, set()) is False
+
+
+def test_validate_pure_template_no_errors():
+    """A pure template (no command, referenced via use) should validate without errors."""
+    config = {
+        "common": {"animation": "fromTop", "size": "80% 80%"},
+        "term": {"command": "kitty", "class": "kitty-drop", "use": "common"},
+    }
+    templates = get_template_names(config)
+
+    # Validate the template section -- should produce no errors
+    errors = validate_scratchpad_config("common", config["common"], is_template=is_pure_template("common", config, templates))
+    assert errors == []
+
+
+def test_validate_real_scratchpad_without_command_errors():
+    """A section without command that is NOT a template should still error."""
+    config = {
+        "orphan": {"animation": "fromTop"},
+        "term": {"command": "kitty"},
+    }
+    templates = get_template_names(config)
+
+    errors = validate_scratchpad_config("orphan", config["orphan"], is_template=is_pure_template("orphan", config, templates))
+    # Should require 'command' (missing required field)
+    assert any("command" in e.lower() or "required" in e.lower() for e in errors)
+
+
+def test_validate_static_with_templates():
+    """End-to-end: validate_config_static should not error on pure templates."""
+    from pyprland.plugins.scratchpads import Extension
+
+    config = {
+        "common": {"animation": "fromTop", "size": "80% 80%", "margin": 50},
+        "term": {"command": "kitty --class kitty-drop", "class": "kitty-drop", "use": "common"},
+    }
+    errors = Extension.validate_config_static("scratchpads", config)
+    assert errors == []

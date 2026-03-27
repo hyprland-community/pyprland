@@ -162,12 +162,23 @@ def validate_config(config: dict[str, Any]) -> list[str]:
 
     if "scratchpads" in enabled:
         try:
-            from ..plugins.scratchpads.schema import validate_scratchpad_config  # noqa: PLC0415
+            from ..plugins.scratchpads.schema import (  # noqa: PLC0415
+                get_template_names,
+                is_pure_template,
+                validate_scratchpad_config,
+            )
 
             scratch_section = config.get("scratchpads", {})
+            template_names = get_template_names(scratch_section)
             for name, scratch_conf in scratch_section.items():
                 if isinstance(scratch_conf, dict):
-                    errors.extend(validate_scratchpad_config(name, scratch_conf))
+                    errors.extend(
+                        validate_scratchpad_config(
+                            name,
+                            scratch_conf,
+                            is_template=is_pure_template(name, scratch_section, template_names),
+                        )
+                    )
         except ImportError:
             pass
 

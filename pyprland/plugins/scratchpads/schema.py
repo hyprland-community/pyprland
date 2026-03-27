@@ -137,6 +137,49 @@ def _validate_monitor_overrides(name: str, scratch_config: dict, errors: list[st
         errors.extend(_validate_against_schema(override_config, prefix, _MONITOR_OVERRIDE_SCHEMA))
 
 
+def get_template_names(config: dict) -> set[str]:
+    """Collect names of sections referenced via ``use`` by other sections.
+
+    Works with both raw ``dict`` (static / GUI validation) and
+    :class:`Configuration` objects (runtime validation).
+
+    Args:
+        config: The full scratchpads configuration dictionary.
+
+    Returns:
+        Set of section names that are referenced as templates.
+    """
+    template_names: set[str] = set()
+    for name, section in config.items():
+        if not isinstance(section, dict) or "." in name:
+            continue
+        use = section.get("use")
+        if use:
+            if isinstance(use, str):
+                template_names.add(use)
+            elif isinstance(use, list):
+                template_names.update(use)
+    return template_names
+
+
+def is_pure_template(name: str, config: dict, template_names: set[str]) -> bool:
+    """Return ``True`` if *name* is a pure template (not a real scratchpad).
+
+    A section is considered a pure template when it is referenced by at least
+    one other section via ``use`` **and** it does not define a ``command``
+    of its own.
+
+    Args:
+        name: Section name to check.
+        config: The full scratchpads configuration dictionary.
+        template_names: Pre-computed set from :func:`get_template_names`.
+    """
+    section = config.get(name)
+    if not isinstance(section, dict):
+        return False
+    return name in template_names and not section.get("command")
+
+
 def validate_scratchpad_config(name: str, scratch_config: dict, *, is_template: bool = False) -> list[str]:
     """Validate a single scratchpad's configuration.
 

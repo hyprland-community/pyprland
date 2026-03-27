@@ -23,7 +23,7 @@ from .helpers import (
 from .lifecycle import LifecycleMixin
 from .lookup import ScratchDB
 from .objects import Scratch
-from .schema import validate_scratchpad_config
+from .schema import get_template_names, is_pure_template, validate_scratchpad_config
 from .transitions import TransitionsMixin
 from .windowruleset import WindowRuleSet
 
@@ -79,25 +79,14 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         """Validate scratchpads configuration."""
         errors: list[str] = []
 
-        # Collect template names: sections referenced via 'use'
-        template_names: set[str] = set()
-        for name, scratch_config in self.config.iter_subsections():
-            if "." in name:
-                continue
-            use = scratch_config.get("use")
-            if use:
-                if isinstance(use, str):
-                    template_names.add(use)
-                elif isinstance(use, list):
-                    template_names.update(use)
+        template_names = get_template_names(self.config)
 
         for name, scratch_config in self.config.iter_subsections():
             # Skip per-monitor subsections (e.g. "term.monitor.DP-1") - validated within schema
             if "." in name:
                 continue
 
-            is_template = name in template_names and not scratch_config.get("command")
-            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_template))
+            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_pure_template(name, self.config, template_names)))
 
         return errors
 
@@ -106,23 +95,12 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         """Validate scratchpads configuration without instantiation."""
         errors: list[str] = []
 
-        # Collect template names: sections referenced via 'use' but not used as scratchpads
-        template_names: set[str] = set()
-        for name, scratch_config in config.items():
-            if not isinstance(scratch_config, dict) or "." in name:
-                continue
-            use = scratch_config.get("use")
-            if use:
-                if isinstance(use, str):
-                    template_names.add(use)
-                elif isinstance(use, list):
-                    template_names.update(use)
+        template_names = get_template_names(config)
 
         for name, scratch_config in config.items():
             if not isinstance(scratch_config, dict) or "." in name:
                 continue
-            is_template = name in template_names and not scratch_config.get("command")
-            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_template))
+            errors.extend(validate_scratchpad_config(name, scratch_config, is_template=is_pure_template(name, config, template_names)))
         return errors
 
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
@@ -144,8 +122,18 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 await self.backend.notify_error(text % args)
             _scratch_classes[_klass] = uid
 
+        # Skip pure templates - they only provide defaults to other scratchpads
+        # via "use" and should not be registered as togglable scratchpads.
+        # Their config data stays in self.config so _make_initial_config() can
+        # still resolve inheritance.
+        template_names = get_template_names(self.config)
+
         # Create new scratches with fresh config items
-        scratches = {name: Scratch(name, self.config, self) for name, options in self.config.iter_subsections()}
+        scratches = {
+            name: Scratch(name, self.config, self)
+            for name, options in self.config.iter_subsections()
+            if not is_pure_template(name, self.config, template_names)
+        }
 
         scratches_to_spawn = set()
         for name, new_scratch in scratches.items():
