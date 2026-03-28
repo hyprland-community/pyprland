@@ -49,6 +49,7 @@
             // {
               nativeBuildInputs = (attrs.nativeBuildInputs or [ ]) ++ [
                 python.pkgs.hatchling
+                pkgs.stdenv.cc
               ];
             }
           );
