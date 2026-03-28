@@ -1,4 +1,4 @@
-- New: add a `pypr-gui` command with a browser-based GUI
+- **New**: add a `pypr-gui` command with a browser-based GUI to edit the settings, considered it an early release, it will get more polish if there is some demand
 - `scratchpads`
   - fix ghost state after window close causing potential ~500ms delays (#222)
   - fix `excludes = ["*"]` wildcard handling (#223)
