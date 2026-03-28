@@ -14,7 +14,6 @@ Usage:
 
 from __future__ import annotations
 
-import asyncio
 import atexit
 import json
 import logging
@@ -198,7 +197,8 @@ def main() -> None:
     # Foreground mode: start server and optionally open browser
     print(f"Starting pypr-gui at {url}")
     if open_browser:
-        loop = asyncio.new_event_loop()
-        loop.call_later(0.5, webbrowser.open, url)
+        from threading import Timer  # noqa: PLC0415
+
+        Timer(0.5, webbrowser.open, args=(url,)).start()
 
     _start_server(port)
