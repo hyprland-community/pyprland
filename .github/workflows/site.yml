@@ -46,7 +46,7 @@ jobs:
       - name: Install Python dependencies
         run: pip install .
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Install dependencies
         run: npm ci # or pnpm install / yarn install / bun install
       - name: Generate plugin documentation JSON
