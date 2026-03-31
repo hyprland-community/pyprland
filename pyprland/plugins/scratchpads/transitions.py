@@ -311,12 +311,19 @@ class TransitionsMixin:
             await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
 
     async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
-        """Apply the size from config.
+        """Apply the size from config or restore saved per-monitor size.
 
         Args:
             scratch: The scratchpad object
             monitor: The monitor info
         """
+        # Check if we have a stored size for this window when preserve_aspect is enabled
+        if scratch.conf.get_bool("preserve_aspect") and scratch.address in scratch.meta.extra_sizes:
+            width, height = scratch.meta.extra_sizes[scratch.address]
+            self.log.debug("Restoring saved size for %s: %dx%d", scratch.uid, width, height)
+            await self.backend.resize_window(scratch.full_address, width, height)
+            return
+
         size = scratch.conf.get_str("size")
         if size:
             width, height = convert_coords(size, monitor)

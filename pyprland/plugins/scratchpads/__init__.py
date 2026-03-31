@@ -510,6 +510,9 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             ref_position = (pos_x + monitor_info["x"], pos_y + monitor_info["y"])
 
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
+        # Store current window size per-monitor for preserve_aspect
+        if scratch.conf.get_bool("preserve_aspect") and "size" in scratch.client_info:
+            scratch.meta.extra_sizes[scratch.address] = tuple(scratch.client_info["size"])
         # collects window which have been created by the app
         if scratch.conf.get_bool("multi"):
             await self._handle_multiwindow(scratch, clients)
@@ -518,6 +521,13 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 if sub_client["address"] in scratch.extra_addr:
                     positions[sub_client["address"]] = compute_offset(sub_client["at"], ref_position)
             scratch.meta.extra_positions.update(positions)
+            # Store sizes for multi-window scratchpads
+            if scratch.conf.get_bool("preserve_aspect"):
+                sizes = {}
+                for sub_client in clients:
+                    if sub_client["address"] in scratch.extra_addr and "size" in sub_client:
+                        sizes[sub_client["address"]] = tuple(sub_client["size"])
+                scratch.meta.extra_sizes.update(sizes)
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", scratch.uid)
