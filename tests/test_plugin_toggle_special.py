@@ -28,10 +28,10 @@ async def test_run_toggle_special_restore(extension):
 
     await extension.run_toggle_special("minimized")
 
-    expected_calls = [
-        "togglespecialworkspace minimized",
-        f"movetoworkspacesilent {extension.state.active_workspace},address:0x123",
-        "focuswindow address:0x123",
-    ]
-
-    extension.backend.execute.assert_called_with(expected_calls)
+    extension.backend.execute.assert_any_call("togglespecialworkspace minimized")
+    extension.backend.execute.assert_called_with(
+        [
+            f"movetoworkspacesilent {extension.state.active_workspace},address:0x123",
+            "focuswindow address:0x123",
+        ]
+    )
