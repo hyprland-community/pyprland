@@ -95,8 +95,6 @@ class EventsMixin:
                 scratch.extra_addr.remove(addr)
             if addr in scratch.meta.extra_positions:
                 del scratch.meta.extra_positions[addr]
-            if addr in scratch.meta.extra_sizes:
-                del scratch.meta.extra_sizes[addr]
             # Reset state when the primary window is closed
             if scratch.full_address == addr:
                 scratch.visible = False

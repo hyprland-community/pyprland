@@ -45,7 +45,7 @@ class MetaInfo:
     space_identifier: tuple[str, str] = ("", "")
     monitor_info: MonitorInfo | None = None
     extra_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
-    extra_sizes: dict[str, tuple[int, int]] = field(default_factory=dict)
+    saved_size: dict[str, tuple[int, int]] = field(default_factory=dict)
 
 
 class Scratch:  # {{{
@@ -222,7 +222,7 @@ class Scratch:  # {{{
         self.client_info = None
         self.meta.initialized = False
         self.meta.extra_positions.clear()
-        self.meta.extra_sizes.clear()
+        self.meta.saved_size.clear()
 
     @property
     def client_ready(self) -> bool:

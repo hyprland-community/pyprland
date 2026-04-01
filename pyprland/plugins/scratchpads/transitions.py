@@ -154,13 +154,16 @@ class TransitionsMixin:
         scratch.meta.last_shown = time.time()
         # Start the transition
         preserve_aspect = scratch.conf.get_bool("preserve_aspect")
-        should_set_aspect = (
-            not (preserve_aspect and was_alive) or scratch.monitor != self.state.active_monitor
-        )  # Not aspect preserving or it's newly spawned
+        should_set_aspect = not (preserve_aspect and was_alive)
+        # Not aspect preserving or it's newly spawned
         animation_type = scratch.animation_type
 
         if should_set_aspect:
             await self._fix_size(scratch, monitor)
+        elif scratch.address in scratch.meta.saved_size:
+            # Restore the saved pixel size (preserve_aspect enabled)
+            saved_w, saved_h = scratch.meta.saved_size[scratch.address]
+            await self.backend.resize_window(scratch.full_address, saved_w, saved_h)
 
         clients = await self.backend.execute_json("clients")
         await self._handle_multiwindow(scratch, clients)
@@ -216,7 +219,8 @@ class TransitionsMixin:
         position_fixed = await self._fix_position(scratch, monitor)
 
         if not position_fixed:
-            relative_animation = preserve_aspect and was_alive and not should_set_aspect
+            monitor_changed = scratch.monitor != self.state.active_monitor
+            relative_animation = preserve_aspect and was_alive and not monitor_changed
             await self._animate_show(scratch, monitor, relative_animation)
         await self.backend.focus_window(scratch.full_address)
 
@@ -311,19 +315,12 @@ class TransitionsMixin:
             await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
 
     async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
-        """Apply the size from config or restore saved per-monitor size.
+        """Apply the size from config.
 
         Args:
             scratch: The scratchpad object
             monitor: The monitor info
         """
-        # Check if we have a stored size for this window when preserve_aspect is enabled
-        if scratch.conf.get_bool("preserve_aspect") and scratch.address in scratch.meta.extra_sizes:
-            width, height = scratch.meta.extra_sizes[scratch.address]
-            self.log.debug("Restoring saved size for %s: %dx%d", scratch.uid, width, height)
-            await self.backend.resize_window(scratch.full_address, width, height)
-            return
-
         size = scratch.conf.get_str("size")
         if size:
             width, height = convert_coords(size, monitor)

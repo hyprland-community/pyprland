@@ -76,7 +76,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         await asyncio.gather(*(die_in_piece(scratch) for scratch in self.scratches.values()))
 
     def validate_config(self) -> list[str]:
-        """Validate scratchpads configuration."""
+        """Validate tcratchpads configuration."""
         errors: list[str] = []
 
         template_names = get_template_names(self.config)
@@ -512,22 +512,10 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         scratch.meta.extra_positions[scratch.address] = compute_offset(ref_position, (monitor_info["x"], monitor_info["y"]))
         # Store current window size per-monitor for preserve_aspect
         if scratch.conf.get_bool("preserve_aspect") and "size" in scratch.client_info:
-            scratch.meta.extra_sizes[scratch.address] = tuple(scratch.client_info["size"])
+            scratch.meta.saved_size[scratch.address] = (scratch.client_info["size"][0], scratch.client_info["size"][1])
         # collects window which have been created by the app
         if scratch.conf.get_bool("multi"):
-            await self._handle_multiwindow(scratch, clients)
-            positions = {}
-            for sub_client in clients:
-                if sub_client["address"] in scratch.extra_addr:
-                    positions[sub_client["address"]] = compute_offset(sub_client["at"], ref_position)
-            scratch.meta.extra_positions.update(positions)
-            # Store sizes for multi-window scratchpads
-            if scratch.conf.get_bool("preserve_aspect"):
-                sizes = {}
-                for sub_client in clients:
-                    if sub_client["address"] in scratch.extra_addr and "size" in sub_client:
-                        sizes[sub_client["address"]] = tuple(sub_client["size"])
-                scratch.meta.extra_sizes.update(sizes)
+            await self._save_multiwindow_state(scratch, clients, ref_position)
         scratch.visible = False
         scratch.meta.should_hide = False
         self.log.info("Hiding %s", scratch.uid)
@@ -545,6 +533,25 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             await self.run_show(e_uid)
         scratch.excluded_scratches.clear()
         await self._handle_focus_tracking(scratch, active_window, active_workspace, clients)
+
+    async def _save_multiwindow_state(self, scratch: Scratch, clients: list[ClientInfo], ref_position: tuple[int, int]) -> None:
+        """Save positions (and sizes when preserve_aspect is on) for multi-window scratchpads.
+
+        Args:
+            scratch: The scratchpad object
+            clients: Full list of Hyprland clients
+            ref_position: Reference position used to compute offsets
+        """
+        await self._handle_multiwindow(scratch, clients)
+        positions = {}
+        for sub_client in clients:
+            if sub_client["address"] in scratch.extra_addr:
+                positions[sub_client["address"]] = compute_offset(sub_client["at"], ref_position)
+        scratch.meta.extra_positions.update(positions)
+        if scratch.conf.get_bool("preserve_aspect"):
+            for sub_client in clients:
+                if sub_client["address"] in scratch.extra_addr and "size" in sub_client:
+                    scratch.meta.saved_size[sub_client["address"]] = (sub_client["size"][0], sub_client["size"][1])
 
     async def _move_clients_out(self, scratch: Scratch, monitor: MonitorInfo) -> None:
         """Move all clients of a scratchpad out of its workspace.
