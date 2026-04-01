@@ -32,7 +32,10 @@ git tag $version
 git push
 
 rm -fr dist
+# Build sdist + pure Python wheel
 uv build
+# Build platform-specific wheel with statically compiled C client
+PYPRLAND_BUILD_NATIVE=1 uv build --wheel
 uv publish -u $PYPI_USERNAME -p $PYPI_PASSWORD
 # }}}
 

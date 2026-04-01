@@ -51,6 +51,9 @@
                 python.pkgs.hatchling
                 pkgs.stdenv.cc
               ];
+              postInstall = ''
+                $CC -O2 -o $out/bin/pypr-client $src/client/pypr-client.c
+              '';
             }
           );
         }

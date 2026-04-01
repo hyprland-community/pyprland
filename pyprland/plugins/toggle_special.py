@@ -23,9 +23,9 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         aw = cast("dict", await self.backend.execute_json("activewindow"))
         wid = aw["workspace"]["id"]
         if wid < 1:  # special workspace
+            await self.backend.execute(f"togglespecialworkspace {special_workspace}")
             await self.backend.execute(
                 [
-                    f"togglespecialworkspace {special_workspace}",
                     f"movetoworkspacesilent {self.state.active_workspace},address:{aw['address']}",
                     f"focuswindow address:{aw['address']}",
                 ]

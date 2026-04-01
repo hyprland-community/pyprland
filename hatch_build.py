@@ -1,16 +1,24 @@
 """Custom hatch build hook to compile the optional C client.
 
-Attempts to compile client/pypr-client.c into a native binary.
-If compilation fails (e.g., no C compiler available), the build
-continues without the native client -- it is purely optional.
+When the PYPRLAND_BUILD_NATIVE environment variable is set to "1", compiles
+client/pypr-client.c into a statically-linked native binary and includes it
+in a platform-specific wheel tagged for manylinux_2_17_x86_64.
+
+Without the env var the hook does nothing and the wheel stays pure-python.
 """
 
+import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+
+# The manylinux tag to use for the platform-specific wheel.
+# 2.17 corresponds to glibc 2.17 (CentOS 7) — effectively all modern Linux.
+# With static linking the binary has *no* glibc dependency, so this is safe.
+MANYLINUX_TAG = "cp3-none-manylinux_2_17_x86_64"
 
 
 def _find_compiler() -> str:
@@ -19,8 +27,6 @@ def _find_compiler() -> str:
     Returns:
         The compiler command string, or empty string if none found.
     """
-    import os  # noqa: PLC0415
-
     cc = os.environ.get("CC", "")
     if cc:
         return cc
@@ -30,19 +36,23 @@ def _find_compiler() -> str:
     return ""
 
 
-def _try_compile(cc: str, source: Path) -> tuple[Path | None, str]:
+def _try_compile(cc: str, source: Path, *, static: bool = False) -> tuple[Path | None, str]:
     """Attempt to compile the C client.
 
     Args:
         cc: C compiler command.
         source: Path to the C source file.
+        static: Whether to produce a statically-linked binary.
 
     Returns:
         Tuple of (output_path or None, warning message if failed).
     """
     tmpdir = Path(tempfile.mkdtemp(prefix="pypr-build-"))
     output = tmpdir / "pypr-client"
-    cmd = [cc, "-O2", "-o", str(output), str(source)]
+    cmd = [cc, "-O2"]
+    if static:
+        cmd.append("-static")
+    cmd.extend(["-o", str(output), str(source)])
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, check=False)  # noqa: S603
@@ -69,8 +79,16 @@ class NativeClientBuildHook(BuildHookInterface):
     PLUGIN_NAME = "native-client"
 
     def initialize(self, version: str, build_data: dict) -> None:  # noqa: ARG002
-        """Compile the C client and include it in the wheel if successful."""
+        """Compile the C client and include it in the wheel if successful.
+
+        Only runs when PYPRLAND_BUILD_NATIVE=1 is set and the build target
+        is a wheel.  The resulting wheel is tagged as manylinux so it can be
+        uploaded to PyPI.
+        """
         if self.target_name != "wheel":
+            return
+
+        if os.environ.get("PYPRLAND_BUILD_NATIVE") != "1":
             return
 
         source = Path(self.root) / "client" / "pypr-client.c"
@@ -83,8 +101,8 @@ class NativeClientBuildHook(BuildHookInterface):
             self.app.display_warning("No C compiler found (set CC env var or install gcc/clang). Skipping native pypr-client build.")
             return
 
-        self.app.display_info(f"Compiling native client with {cc}")
-        output, warning = _try_compile(cc, source)
+        self.app.display_info(f"Compiling native client with {cc} (static)")
+        output, warning = _try_compile(cc, source, static=True)
 
         if output is None:
             self.app.display_warning(warning)
@@ -96,6 +114,6 @@ class NativeClientBuildHook(BuildHookInterface):
         # {name}-{version}.data/scripts/ path in the wheel (PEP 427).
         build_data["shared_scripts"][str(output)] = "pypr-client"
 
-        # Mark the wheel as platform-specific since it contains a native binary
+        # Mark the wheel as platform-specific with an explicit manylinux tag.
         build_data["pure_python"] = False
-        build_data["infer_tag"] = True
+        build_data["tag"] = MANYLINUX_TAG
