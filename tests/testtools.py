@@ -15,6 +15,29 @@ async def wait_called(fn, timeout=1.0, count=1):
             raise TimeoutError()
 
 
+def get_executed_commands(mock):
+    """Flatten all execute() calls into an ordered list of (command, kwargs) tuples.
+
+    Handles both single-string and list-of-strings calls transparently,
+    so tests don't break when batching strategy changes.
+
+    Args:
+        mock: The AsyncMock used for backend.execute
+
+    Returns:
+        A list of ``(command_string, kwargs_dict)`` in call order.
+    """
+    result = []
+    for c in mock.call_args_list:
+        args, kwargs = c
+        cmd = args[0] if args else None
+        if isinstance(cmd, list):
+            result.extend((item, kwargs) for item in cmd)
+        elif cmd is not None:
+            result.append((cmd, kwargs))
+    return result
+
+
 class MockReader:
     """A StreamReader mock."""
 

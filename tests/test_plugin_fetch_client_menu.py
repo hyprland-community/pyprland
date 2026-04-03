@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock
 from pyprland.plugins.fetch_client_menu import Extension
 from tests.conftest import make_extension
+from tests.testtools import get_executed_commands
 
 
 @pytest.fixture
@@ -35,7 +36,7 @@ async def test_run_unfetch_client_unknown(extension):
     await extension.run_unfetch_client()
 
     extension.backend.notify_error.assert_called_with("unknown window origin")
-    extension.backend.execute.assert_not_called()
+    assert get_executed_commands(extension.backend.execute) == []
 
 
 @pytest.mark.asyncio

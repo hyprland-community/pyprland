@@ -2,6 +2,7 @@ import pytest
 
 from pyprland.plugins.toggle_special import Extension
 from tests.conftest import make_extension
+from tests.testtools import get_executed_commands
 
 
 @pytest.fixture
@@ -28,10 +29,10 @@ async def test_run_toggle_special_restore(extension):
 
     await extension.run_toggle_special("minimized")
 
-    extension.backend.execute.assert_called_with(
-        [
-            f"movetoworkspacesilent {extension.state.active_workspace},address:0x123",
-            "togglespecialworkspace minimized",
-            "focuswindow address:0x123",
-        ]
-    )
+    commands = get_executed_commands(extension.backend.execute)
+    cmd_strings = [c for c, _ in commands]
+    assert cmd_strings == [
+        f"movetoworkspacesilent {extension.state.active_workspace},address:0x123",
+        "togglespecialworkspace minimized",
+        "focuswindow address:0x123",
+    ]

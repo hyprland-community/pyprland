@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 from pyprland.plugins.toggle_dpms import Extension
 from tests.conftest import make_extension
+from tests.testtools import get_executed_commands
 
 
 @pytest.fixture
@@ -17,14 +18,16 @@ def extension():
 async def test_run_toggle_dpms_off(extension):
     # Initial state: monitors are on (dpmsStatus: True)
     await extension.run_toggle_dpms()
-    extension.backend.execute.assert_called_with("dpms off")
+    commands = get_executed_commands(extension.backend.execute)
+    assert ("dpms off", {}) in commands
 
 
 @pytest.mark.asyncio
 async def test_run_toggle_dpms_on(extension):
     # First call: monitors are ON, should turn OFF
     await extension.run_toggle_dpms()
-    extension.backend.execute.assert_called_with("dpms off")
+    commands = get_executed_commands(extension.backend.execute)
+    assert ("dpms off", {}) in commands
 
     extension.backend.execute.reset_mock()
 
@@ -33,4 +36,5 @@ async def test_run_toggle_dpms_on(extension):
 
     # Second toggle should turn it on
     await extension.run_toggle_dpms()
-    extension.backend.execute.assert_called_with("dpms on")
+    commands = get_executed_commands(extension.backend.execute)
+    assert ("dpms on", {}) in commands

@@ -1,8 +1,9 @@
 import pytest
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 from pyprland.plugins.shift_monitors import Extension
 from tests.conftest import make_extension
+from tests.testtools import get_executed_commands
 
 
 @pytest.fixture
@@ -30,9 +31,10 @@ async def test_shift_positive(extension):
 
     await extension.run_shift_monitors("1")
 
-    assert extension.backend.execute.call_count == 2
+    commands = get_executed_commands(extension.backend.execute)
+    cmd_strings = [c for c, _ in commands]
     # Verify order matters
-    extension.backend.execute.assert_has_calls([call("swapactiveworkspaces M3 M2"), call("swapactiveworkspaces M2 M1")])
+    assert cmd_strings == ["swapactiveworkspaces M3 M2", "swapactiveworkspaces M2 M1"]
 
 
 @pytest.mark.asyncio
@@ -42,8 +44,9 @@ async def test_shift_negative(extension):
 
     await extension.run_shift_monitors("-1")
 
-    assert extension.backend.execute.call_count == 2
-    extension.backend.execute.assert_has_calls([call("swapactiveworkspaces M1 M2"), call("swapactiveworkspaces M2 M3")])
+    commands = get_executed_commands(extension.backend.execute)
+    cmd_strings = [c for c, _ in commands]
+    assert cmd_strings == ["swapactiveworkspaces M1 M2", "swapactiveworkspaces M2 M3"]
 
 
 @pytest.mark.asyncio

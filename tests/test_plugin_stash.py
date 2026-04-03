@@ -2,6 +2,7 @@ import pytest
 
 from pyprland.plugins.stash import Extension
 from tests.conftest import make_extension
+from tests.testtools import get_executed_commands
 
 
 @pytest.fixture
@@ -128,7 +129,7 @@ async def test_stash_no_active_window(extension):
     await extension.run_stash()
 
     extension.backend.move_window_to_workspace.assert_not_called()
-    extension.backend.execute.assert_not_called()
+    assert get_executed_commands(extension.backend.execute) == []
 
 
 @pytest.mark.asyncio
@@ -318,17 +319,10 @@ async def test_on_reload_clears_old_rules_and_registers_new(styled_extension):
     """on_reload clears old rules then registers tag-matched window rules."""
     await styled_extension.on_reload()
 
-    styled_extension.backend.execute.assert_any_call(
-        "windowrule tag -stashed",
-        base_command="keyword",
-    )
-    styled_extension.backend.execute.assert_any_call(
-        [
-            "windowrule border_color rgb(ec8800), match:tag stashed",
-            "windowrule border_size 3, match:tag stashed",
-        ],
-        base_command="keyword",
-    )
+    commands = get_executed_commands(styled_extension.backend.execute)
+    assert ("windowrule tag -stashed", {"base_command": "keyword"}) in commands
+    assert ("windowrule border_color rgb(ec8800), match:tag stashed", {"base_command": "keyword"}) in commands
+    assert ("windowrule border_size 3, match:tag stashed", {"base_command": "keyword"}) in commands
 
 
 @pytest.mark.asyncio
@@ -336,10 +330,8 @@ async def test_on_reload_clears_rules_even_when_style_empty(extension):
     """on_reload clears old rules even when style config is empty."""
     await extension.on_reload()
 
-    extension.backend.execute.assert_called_once_with(
-        "windowrule tag -stashed",
-        base_command="keyword",
-    )
+    commands = get_executed_commands(extension.backend.execute)
+    assert commands == [("windowrule tag -stashed", {"base_command": "keyword"})]
 
 
 @pytest.mark.asyncio
@@ -353,7 +345,8 @@ async def test_stash_tags_window_when_style_configured(styled_extension):
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow +stashed address:0xabc")
+    commands = get_executed_commands(styled_extension.backend.execute)
+    assert commands == [("tagwindow +stashed address:0xabc", {})]
 
 
 @pytest.mark.asyncio
@@ -367,8 +360,8 @@ async def test_stash_does_not_tag_without_style(extension):
 
     await extension.run_stash()
 
-    for call in extension.backend.execute.call_args_list:
-        assert "tagwindow" not in str(call)
+    commands = get_executed_commands(extension.backend.execute)
+    assert all("tagwindow" not in cmd for cmd, _ in commands)
 
 
 @pytest.mark.asyncio
@@ -381,7 +374,8 @@ async def test_unstash_untags_window_when_style_configured(styled_extension):
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow -stashed address:0xabc")
+    commands = get_executed_commands(styled_extension.backend.execute)
+    assert commands == [("tagwindow -stashed address:0xabc", {})]
 
 
 @pytest.mark.asyncio
@@ -401,7 +395,8 @@ async def test_stash_on_shown_window_untags_when_style_configured(styled_extensi
 
     await styled_extension.run_stash()
 
-    styled_extension.backend.execute.assert_called_once_with("tagwindow -stashed address:0xaaa")
+    commands = get_executed_commands(styled_extension.backend.execute)
+    assert commands == [("tagwindow -stashed address:0xaaa", {})]
 
 
 # -- event_closewindow --
