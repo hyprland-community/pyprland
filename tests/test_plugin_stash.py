@@ -7,12 +7,17 @@ from tests.testtools import get_executed_commands
 
 @pytest.fixture
 def extension():
-    return make_extension(Extension)
+    return make_extension(Extension, config={})
 
 
 @pytest.fixture
 def styled_extension():
     return make_extension(Extension, config={"style": ["border_color rgb(ec8800)", "border_size 3"]})
+
+
+@pytest.fixture
+def overlay_extension():
+    return make_extension(Extension, config={"restore_floating": False})
 
 
 # -- run_stash: stashing --
@@ -134,7 +139,11 @@ async def test_stash_no_active_window(extension):
 
 @pytest.mark.asyncio
 async def test_stash_on_shown_window_removes_from_stash(extension):
-    """Calling stash on a shown window removes it from the stash and restores tiled state."""
+    """Calling stash on a shown window removes it from the stash without re-toggling floating.
+
+    With restore_floating=True (default), the window was already restored to
+    tiled by _show_stash, so no additional toggle is needed.
+    """
     extension._was_floating["0xaaa"] = False
     extension._was_floating["0xbbb"] = False
     extension.get_clients.return_value = [
@@ -154,8 +163,8 @@ async def test_stash_on_shown_window_removes_from_stash(extension):
 
     # Window stays on the active workspace — no move commands
     extension.backend.move_window_to_workspace.assert_not_called()
-    # Floating was restored (was originally tiled)
-    extension.backend.toggle_floating.assert_called_once_with("0xaaa")
+    # Floating was already restored by _show_stash — no toggle after removal
+    extension.backend.toggle_floating.assert_not_called()
     # Removed from tracking, but stash is still visible (0xbbb remains)
     assert "0xaaa" not in extension._shown_addresses["default"]
     assert "0xbbb" in extension._shown_addresses["default"]
@@ -243,8 +252,11 @@ async def test_stash_toggle_show_all_moves_are_silent(extension):
 
 
 @pytest.mark.asyncio
-async def test_stash_toggle_show_does_not_toggle_floating(extension):
-    """Showing a stash does not toggle floating — floating is set at stash time."""
+async def test_stash_toggle_show_does_not_toggle_floating_for_untracked_windows(extension):
+    """Showing a stash does not toggle floating for windows without tracked floating state.
+
+    Windows not in _was_floating default to 'was floating', so no toggle occurs.
+    """
     extension.get_clients.return_value = [
         {"address": "0xaaa"},
     ]
@@ -463,3 +475,171 @@ async def test_closewindow_cleans_both_was_floating_and_shown(extension):
     assert "0xaaa" not in extension._was_floating
     assert "default" not in extension._shown_addresses
     assert extension._visible["default"] is False
+
+
+# -- restore_floating=True (default): stash_toggle restores tiling --
+
+
+@pytest.mark.asyncio
+async def test_stash_toggle_show_restores_tiled_windows(extension):
+    """With restore_floating=True, showing a stash toggles originally-tiled windows back to tiled."""
+    extension._was_floating["0xaaa"] = False
+    extension._was_floating["0xbbb"] = True
+    extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+        {"address": "0xbbb"},
+    ]
+
+    await extension.run_stash_toggle()
+
+    # 0xaaa was tiled → toggled back to tiled
+    extension.backend.toggle_floating.assert_called_once_with("0xaaa")
+    # 0xbbb was floating → stays floating, no toggle
+
+
+@pytest.mark.asyncio
+async def test_stash_toggle_hide_refloats_tiled_windows(extension):
+    """With restore_floating=True, hiding re-floats originally-tiled windows before moving back."""
+    extension._was_floating["0xaaa"] = False
+    extension._was_floating["0xbbb"] = True
+    extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+        {"address": "0xbbb"},
+    ]
+
+    await extension.run_stash_toggle()  # show
+    extension.backend.reset_mock()
+
+    await extension.run_stash_toggle()  # hide
+
+    # 0xaaa was restored to tiled → re-floated before moving back
+    extension.backend.toggle_floating.assert_called_once_with("0xaaa")
+    # Both moved back to special workspace
+    extension.backend.move_window_to_workspace.assert_any_call("0xaaa", "special:st-default")
+    extension.backend.move_window_to_workspace.assert_any_call("0xbbb", "special:st-default")
+
+
+@pytest.mark.asyncio
+async def test_stash_toggle_show_hide_cycle_preserves_was_floating(extension):
+    """A show/hide cycle preserves _was_floating so the next toggle still works."""
+    extension._was_floating["0xaaa"] = False
+    extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+
+    # First cycle
+    await extension.run_stash_toggle()  # show
+    await extension.run_stash_toggle()  # hide
+    extension.backend.reset_mock()
+
+    # Second cycle — _was_floating should still have the entry
+    await extension.run_stash_toggle()  # show again
+
+    # Should still toggle floating for the tiled window
+    extension.backend.toggle_floating.assert_called_once_with("0xaaa")
+    assert extension._was_floating["0xaaa"] is False
+
+
+@pytest.mark.asyncio
+async def test_stash_on_shown_tiled_window_clears_tracking(extension):
+    """Calling stash on a shown tiled window (with restore_floating=True) clears tracking cleanly."""
+    extension._was_floating["0xaaa"] = False
+    extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+    await extension.run_stash_toggle()  # show — restores to tiled
+    extension.backend.reset_mock()
+
+    extension.backend.execute_json.return_value = {
+        "address": "0xaaa",
+        "workspace": {"id": 1, "name": "1"},
+    }
+
+    await extension.run_stash()
+
+    # No toggle (already restored to tiled by _show_stash)
+    extension.backend.toggle_floating.assert_not_called()
+    # Tracking fully cleared
+    assert "0xaaa" not in extension._was_floating
+    assert extension._visible.get("default", False) is False
+
+
+# -- restore_floating=False (overlay mode): stash_toggle keeps floating --
+
+
+@pytest.mark.asyncio
+async def test_overlay_show_does_not_toggle_floating(overlay_extension):
+    """With restore_floating=False, showing does not toggle floating for tiled windows."""
+    overlay_extension._was_floating["0xaaa"] = False
+    overlay_extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+
+    await overlay_extension.run_stash_toggle()
+
+    overlay_extension.backend.toggle_floating.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_overlay_hide_does_not_toggle_floating(overlay_extension):
+    """With restore_floating=False, hiding does not toggle floating before moving back."""
+    overlay_extension._was_floating["0xaaa"] = False
+    overlay_extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+
+    await overlay_extension.run_stash_toggle()  # show
+    overlay_extension.backend.reset_mock()
+
+    await overlay_extension.run_stash_toggle()  # hide
+
+    overlay_extension.backend.toggle_floating.assert_not_called()
+    overlay_extension.backend.move_window_to_workspace.assert_called_with("0xaaa", "special:st-default")
+
+
+@pytest.mark.asyncio
+async def test_overlay_stash_on_shown_tiled_window_restores_tiling(overlay_extension):
+    """With restore_floating=False, calling stash on a shown tiled window toggles it back to tiled.
+
+    In overlay mode, _show_stash does not restore tiling. So when the user calls
+    stash to permanently remove the window from the stash, _restore_floating
+    (already_restored=False) toggles it back.
+    """
+    overlay_extension._was_floating["0xaaa"] = False
+    overlay_extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+    await overlay_extension.run_stash_toggle()  # show — stays floating
+    overlay_extension.backend.reset_mock()
+
+    overlay_extension.backend.execute_json.return_value = {
+        "address": "0xaaa",
+        "workspace": {"id": 1, "name": "1"},
+    }
+
+    await overlay_extension.run_stash()
+
+    # Restores tiling since it wasn't restored by _show_stash
+    overlay_extension.backend.toggle_floating.assert_called_once_with("0xaaa")
+    assert "0xaaa" not in overlay_extension._was_floating
+
+
+@pytest.mark.asyncio
+async def test_overlay_stash_on_shown_floating_window_no_toggle(overlay_extension):
+    """With restore_floating=False, calling stash on a shown floating window does not toggle."""
+    overlay_extension._was_floating["0xaaa"] = True
+    overlay_extension.get_clients.return_value = [
+        {"address": "0xaaa"},
+    ]
+    await overlay_extension.run_stash_toggle()  # show
+    overlay_extension.backend.reset_mock()
+
+    overlay_extension.backend.execute_json.return_value = {
+        "address": "0xaaa",
+        "workspace": {"id": 1, "name": "1"},
+    }
+
+    await overlay_extension.run_stash()
+
+    overlay_extension.backend.toggle_floating.assert_not_called()
+    assert "0xaaa" not in overlay_extension._was_floating

@@ -43,3 +43,12 @@ style = [
 
 When `style` is set, shown stash windows are tagged with `stash` and the listed [window rules](https://wiki.hyprland.org/Configuring/Window-Rules/) are applied.
 The tag is removed when windows are hidden or removed from the stash.
+
+### Overlay mode
+
+By default, `stash_toggle` restores windows to their original floating/tiled state (e.g. a tiled window will return as tiled). Set `restore_floating` to `false` to keep shown windows floating as overlays instead:
+
+```toml
+[stash]
+restore_floating = false
+```
