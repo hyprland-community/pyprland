@@ -15,7 +15,7 @@ set -e
 cd "$(dirname "$0")"
 
 echo -n "Current is: "
-pypr version
+cat ../pyprland/version.py
 echo -n "Available: "
 ls versions
 
