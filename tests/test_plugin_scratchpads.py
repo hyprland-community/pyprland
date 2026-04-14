@@ -40,6 +40,23 @@ def animated_scratchpads(request, monkeypatch, mocker):
     return request.param
 
 
+@fixture(params=["fromTopLeft", "fromTopRight", "fromBottomLeft", "fromBottomRight"])
+def diagonal_scratchpads(request, monkeypatch, mocker):
+    d = {
+        "pyprland": {"plugins": ["scratchpads"]},
+        "scratchpads": {
+            "term": {
+                "command": "ls",
+                "lazy": True,
+                "class": "kitty-dropterm",
+                "animation": request.param,
+            }
+        },
+    }
+    monkeypatch.setattr("tomllib.load", lambda x: d)
+    return request.param
+
+
 @fixture
 def no_proc_scratchpads(request, monkeypatch, mocker):
     d = {
@@ -160,6 +177,25 @@ async def test_animated(animated_scratchpads, subprocess_shell_mock, server_fixt
     mocks.hyprctl.reset_mock()
     await mocks.pypr("toggle term")
     await wait_called(mocks.hyprctl, count=2)
+
+
+@pytest.mark.asyncio
+async def test_diagonal(diagonal_scratchpads, subprocess_shell_mock, server_fixture):
+    """Smoke test: diagonal animation scratchpads (all 4 corners) issue movewindowpixel on hide."""
+    mocks.json_commands_result["clients"] = CLIENT_CONFIG
+    mocks.hyprctl.reset_mock()
+    await mocks.pypr("toggle term")
+    await wait_called(mocks.hyprctl, count=2)
+    await _send_window_events()
+    await wait_called(mocks.hyprctl, count=4)
+    mocks.hyprctl.reset_mock()
+    await asyncio.sleep(0.2)
+    await mocks.pypr("toggle term")
+    await wait_called(mocks.hyprctl, count=2)
+    await asyncio.sleep(0.2)
+    call_set = gen_call_set(mocks.hyprctl.call_args_list)
+    call_set.remove("movetoworkspacesilent special:S-term,address:0x12345677890")
+    assert any(x.startswith("movewindowpixel") for x in call_set), f"animation={diagonal_scratchpads}: no movewindowpixel in {call_set}"
 
 
 @pytest.mark.asyncio

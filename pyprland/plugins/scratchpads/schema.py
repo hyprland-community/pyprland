@@ -26,11 +26,32 @@ def _validate_against_schema(config: dict, prefix: str, schema: ConfigItems) -> 
     return errors
 
 
+# Single source of truth for valid animation values (camelCase for user-facing display)
+ANIMATION_CHOICES: tuple[str, ...] = (
+    "",
+    "fromTop",
+    "fromBottom",
+    "fromLeft",
+    "fromRight",
+    "fromTopLeft",
+    "fromTopRight",
+    "fromBottomLeft",
+    "fromBottomRight",
+)
+
+_ANIMATION_VALID = {v.lower() for v in ANIMATION_CHOICES}
+
+
+def normalize_animation(value: str) -> str:
+    """Normalize an animation value: lowercase and strip '-', '_', spaces."""
+    return value.lower().replace("-", "").replace("_", "").replace(" ", "")
+
+
 def _validate_animation(value: str) -> list[str]:
-    """Case-insensitive animation validation."""
-    valid = {"", "fromtop", "frombottom", "fromleft", "fromright"}
-    if not isinstance(value, str) or value.lower() not in valid:
-        return [f"invalid value '{value}' -> Valid: '', 'fromTop', 'fromBottom', 'fromLeft', 'fromRight'"]
+    """Case-insensitive animation validation (ignores '-', '_' and spaces)."""
+    if not isinstance(value, str) or normalize_animation(value) not in _ANIMATION_VALID:
+        opts = ", ".join(repr(v) for v in ANIMATION_CHOICES if v)
+        return [f"invalid value '{value}' -> Valid: '', {opts}"]
     return []
 
 
@@ -45,7 +66,7 @@ SCRATCHPAD_SCHEMA = ConfigItems(
         str,
         default="fromTop",
         description="Animation type",
-        choices=["", "fromTop", "fromBottom", "fromLeft", "fromRight"],
+        choices=list(ANIMATION_CHOICES),
         validator=_validate_animation,
         category="basic",
     ),

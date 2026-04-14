@@ -586,3 +586,33 @@ def test_validate_static_with_templates():
     }
     errors = Extension.validate_config_static("scratchpads", config)
     assert errors == []
+
+
+# ===========================================================================
+# Diagonal animation config field validation
+# ===========================================================================
+
+
+def test_validate_diagonal_animation_valid_values():
+    """Valid diagonal animation values should pass validation."""
+    for anim in ("fromTopLeft", "fromTopRight", "fromBottomLeft", "fromBottomRight", "FROMTOPLEFT", "fromtopleft"):
+        config = {"command": "ls", "animation": anim}
+        errors = validate_scratchpad_config("test", config)
+        assert not errors, f"animation='{anim}' should be valid, got: {errors}"
+
+
+def test_validate_animation_with_separators():
+    """Animation values with '-', '_', or spaces should be accepted."""
+    for anim in ("from-top", "from_top", "from top", "from-Top-Right", "from_bottom_left", "from bottom right"):
+        config = {"command": "ls", "animation": anim}
+        errors = validate_scratchpad_config("test", config)
+        assert not errors, f"animation='{anim}' should be valid, got: {errors}"
+
+
+def test_validate_diagonal_animation_invalid_values():
+    """Invalid diagonal animation values should produce errors."""
+    for anim in ("topLeft", "top-right", "fromDiagonal", "topleft"):
+        config = {"command": "ls", "animation": anim}
+        errors = validate_scratchpad_config("test", config)
+        anim_errors = [e for e in errors if "animation" in e.lower() or "invalid" in e.lower()]
+        assert anim_errors, f"animation='{anim}' should be invalid"

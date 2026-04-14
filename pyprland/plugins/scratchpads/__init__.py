@@ -218,10 +218,10 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 "frombottom": f"{margin_x} 200%",
                 "fromright": f"200% {margin_y}",
                 "fromleft": f"-200% {margin_y}",
-                "topleft": "-200% -200%",
-                "topright": "200% -200%",
-                "bottomleft": "-200% 200%",
-                "bottomright": "200% 200%",
+                "fromtopleft": "-200% -200%",
+                "fromtopright": "200% -200%",
+                "frombottomleft": "-200% 200%",
+                "frombottomright": "200% 200%",
             }[scratch.animation_type]
             wr.set("move", t_pos)
         wr.set("size", f"{width} {height}")

@@ -129,6 +129,10 @@ class TransitionsMixin:
             "fromleft": f"movewindowpixel exact {x - off_x} {y}",
             "frombottom": f"movewindowpixel exact {x} {y + off_y}",
             "fromtop": f"movewindowpixel exact {x} {y - off_y}",
+            "fromtopright": f"movewindowpixel exact {x + off_x} {y - off_y}",
+            "fromtopleft": f"movewindowpixel exact {x - off_x} {y - off_y}",
+            "frombottomright": f"movewindowpixel exact {x + off_x} {y + off_y}",
+            "frombottomleft": f"movewindowpixel exact {x - off_x} {y + off_y}",
         }
         await self.backend.execute(
             [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]

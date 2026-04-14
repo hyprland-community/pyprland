@@ -11,7 +11,7 @@ from ...aioops import aiexists, aiopen
 from ...models import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import PluginContext
 from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
-from .schema import SCRATCHPAD_SCHEMA
+from .schema import SCRATCHPAD_SCHEMA, normalize_animation
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -85,8 +85,8 @@ class Scratch:  # {{{
 
     @property
     def animation_type(self) -> str:
-        """Returns the configured animation (forced lowercase)."""
-        return self.conf.get_str("animation").lower()
+        """Returns the configured animation (normalized: lowercase, separators stripped)."""
+        return normalize_animation(self.conf.get_str("animation"))
 
     def _make_initial_config(self, config: dict) -> dict:
         """Return configuration for the scratchpad.
