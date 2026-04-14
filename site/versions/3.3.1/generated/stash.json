@@ -1,0 +1,45 @@
+{
+  "name": "stash",
+  "description": "Stash and show windows in named groups using special workspaces.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "stash",
+      "args": [
+        {
+          "value": "name",
+          "required": false
+        }
+      ],
+      "short_description": "Toggle stashing the focused window (default stash: \"default\").",
+      "full_description": "[name] Toggle stashing the focused window (default stash: \"default\").\n\nArgs:\n    name: The stash group name"
+    },
+    {
+      "name": "stash_toggle",
+      "args": [
+        {
+          "value": "name",
+          "required": false
+        }
+      ],
+      "short_description": "Show or hide stash \"name\" as floating windows on the active workspace (default: \"default\").",
+      "full_description": "[name] Show or hide stash \"name\" as floating windows on the active workspace (default: \"default\").\n\nWhen showing, windows are moved from the hidden stash workspace to the\nactive workspace and made floating.  When hiding, they are moved back.\n\nArgs:\n    name: The stash group name"
+    }
+  ],
+  "config": [
+    {
+      "name": "style",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [],
+      "description": "Window rules to apply to shown stash windows",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "name": "gamemode",
+  "description": "Toggle game mode (automatically) for improved performance.",
+  "environments": [
+    "hyprland"
+  ],
+  "commands": [
+    {
+      "name": "gamemode",
+      "args": [],
+      "short_description": "Toggle game mode (disables animations, blur, shadows, gaps, rounding).",
+      "full_description": "Toggle game mode (disables animations, blur, shadows, gaps, rounding)."
+    }
+  ],
+  "config": [
+    {
+      "name": "border_size",
+      "type": "int",
+      "required": false,
+      "recommended": false,
+      "default": 1,
+      "description": "Border size when game mode is enabled",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "notify",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Show notification when toggling",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "auto",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": true,
+      "description": "Automatically enable game mode when matching windows are detected",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "patterns",
+      "type": "list",
+      "required": false,
+      "recommended": false,
+      "default": [
+        "steam_app_*"
+      ],
+      "description": "Glob patterns to match window class for auto mode",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "hysteresis",
+      "type": "float",
+      "required": false,
+      "recommended": false,
+      "default": 1.0,
+      "description": "Debounce delay in seconds before toggling game mode",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    }
+  ]
+}

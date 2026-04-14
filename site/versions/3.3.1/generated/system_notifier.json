@@ -1,0 +1,92 @@
+{
+  "name": "system_notifier",
+  "description": "Opens streams (eg: journal logs) and triggers notifications.",
+  "environments": [],
+  "commands": [],
+  "config": [
+    {
+      "name": "command",
+      "type": "dict",
+      "required": false,
+      "recommended": true,
+      "default": {},
+      "description": "This is the long-running command (eg: `tail -f <filename>`) returning the stream of text that will be updated.\n            A common option is the system journal output (eg: `journalctl -u nginx`)",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "parser",
+      "type": "dict",
+      "required": false,
+      "recommended": false,
+      "default": {},
+      "description": "Sets the list of rules / parser to be used to extract lines of interest\n            Must match a list of rules defined as `system_notifier.parsers.<parser_name>`.",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "parsers",
+      "type": "dict",
+      "required": false,
+      "recommended": true,
+      "default": {},
+      "description": "Custom parser definitions (name -> list of rules).\n            Each rule has: pattern (required), filter, color (defaults to default_color), duration (defaults to 3 seconds)",
+      "choices": null,
+      "children": null,
+      "category": "parsers",
+      "is_directory": false
+    },
+    {
+      "name": "sources",
+      "type": "list",
+      "required": false,
+      "recommended": true,
+      "default": [],
+      "description": "Source definitions with command and parser",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "pattern",
+      "type": "str",
+      "required": false,
+      "recommended": true,
+      "default": "",
+      "description": "The pattern is any regular expression that should trigger a match.",
+      "choices": null,
+      "children": null,
+      "category": "basic",
+      "is_directory": false
+    },
+    {
+      "name": "default_color",
+      "type": "str",
+      "required": false,
+      "recommended": false,
+      "default": "#5555AA",
+      "description": "Default notification color",
+      "choices": null,
+      "children": null,
+      "category": "appearance",
+      "is_directory": false
+    },
+    {
+      "name": "use_notify_send",
+      "type": "bool",
+      "required": false,
+      "recommended": false,
+      "default": false,
+      "description": "Use notify-send instead of Hyprland notifications",
+      "choices": null,
+      "children": null,
+      "category": "behavior",
+      "is_directory": false
+    }
+  ]
+}
