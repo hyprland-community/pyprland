@@ -69,7 +69,6 @@ fixable = [
 ignore = [
     "ANN002",
     "ANN003",
-    "RUF100",
     "ANN204",
     "ANN401",
     "D105",
@@ -77,6 +76,7 @@ ignore = [
     "E203",
     "ISC001",
     "RET503",
+    "RUF100",
     "S101",
     "S311",
     "S404",
@@ -89,8 +89,10 @@ ignore = [
 select = [
     "A",
     "AIR",
+    "ANN",
     "ARG",
     "ASYNC",
+    "ASYNC1",
     "B",
     "BLE",
     "C",
@@ -136,8 +138,6 @@ select = [
     "UP",
     "W",
     "YTT",
-    "ANN",
-    "ASYNC1",
 ]
 
 [tool.ruff.lint.pydocstyle]

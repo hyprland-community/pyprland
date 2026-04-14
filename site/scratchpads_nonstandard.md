@@ -88,6 +88,7 @@ Available rules are:
 
 - "aspect" controlling size and position
 - "float" controlling the floating state
+- "group" controlling window grouping
 - "workspace" which moves the window to its own workspace
 
 If you are using an application which can spawn multiple windows and you can't see them, you can skip rules made to improve the initial display of the window.

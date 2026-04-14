@@ -49,15 +49,22 @@ export function formatDefault(value) {
 /**
  * Render description text with markdown support.
  * Transforms <opt1|opt2|...> patterns to styled inline code blocks.
+ * When choices are provided, appends them as inline code after the description.
  * @param {string} text - Description text
+ * @param {Array|null} choices - Optional list of valid values
  * @returns {string} - HTML string
  */
-export function renderDescription(text) {
+export function renderDescription(text, choices) {
   if (!text) return ''
   // Transform <opt1|opt2|...> patterns to styled inline code blocks
-  text = text.replace(/<([^>|]+(?:\|[^>|]+)+)>/g, (match, choices) => {
-    return choices.split('|').map(c => `\`${c}\``).join(' | ')
+  text = text.replace(/<([^>|]+(?:\|[^>|]+)+)>/g, (match, opts) => {
+    return opts.split('|').map(c => `\`${c}\``).join(' | ')
   })
+  // Append choices from schema if available
+  if (choices && choices.length > 0) {
+    const choiceStr = choices.map(c => `\`${c}\``).join(', ')
+    text += `. Values: ${choiceStr}`
+  }
   // Use render() to support links, then strip wrapping <p> tags
   const html = md.render(text)
   return html.replace(/^<p>/, '').replace(/<\/p>\n?$/, '')

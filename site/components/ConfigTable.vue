@@ -37,7 +37,7 @@
                 <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
                 <div v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></div>
               </td>
-              <td class="config-description" v-html="renderDescription(item.description)" />
+              <td class="config-description" v-html="renderDescription(item.description, item.choices)" />
             </tr>
             <!-- Children row (recursive) -->
             <tr v-if="hasChildren(item)" class="config-children-row">
@@ -85,7 +85,7 @@
             <Badge v-else-if="item.recommended" type="warning">recommended</Badge>
             <div v-if="hasDefault(item.default)" type="tip">=<code>{{ formatDefault(item.default) }}</code></div>
           </td>
-          <td class="config-description" v-html="renderDescription(item.description)" />
+          <td class="config-description" v-html="renderDescription(item.description, item.choices)" />
         </tr>
         <!-- Children row (recursive) -->
         <tr v-if="hasChildren(item)" class="config-children-row">
