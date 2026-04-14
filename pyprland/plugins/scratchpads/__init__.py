@@ -185,6 +185,47 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             else:
                 await self.backend.set_keyword(f"windowrule[{scratch.uid}]:enable false")
 
+    async def _wr_float(self, wr: WindowRuleSet, _: Scratch) -> None:
+        if self.state.hyprland_version < VersionInfo(0, 53, 0):
+            wr.set("float", "")
+        else:
+            wr.set("float", "on")
+
+    async def _wr_workspace(self, wr: WindowRuleSet, scratch: Scratch) -> None:
+        wr.set("workspace", f"{mk_scratch_name(scratch.uid)} silent")
+
+    async def _wr_group(self, wr: WindowRuleSet, _: Scratch) -> None:
+        wr.set("group", "deny")
+
+    async def _wr_aspect(self, wr: WindowRuleSet, scratch: Scratch) -> None:
+        forced_monitor = scratch.conf.get("force_monitor")
+        if forced_monitor and forced_monitor not in self.state.active_monitors:
+            self.log.error("forced monitor %s doesn't exist", forced_monitor)
+            await self.backend.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
+            forced_monitor = None
+        monitor = await self.backend.get_monitor_props(name=cast("str | None", forced_monitor))
+
+        width, height = convert_coords(scratch.conf.get_str("size"), monitor)
+        if scratch.animation_type:
+            margin_x = (monitor["width"] - width) // 2
+            margin_y = (monitor["height"] - height) // 2
+
+            if is_rotated(monitor):
+                margin_x, margin_y = margin_y, margin_x
+
+            t_pos = {
+                "fromtop": f"{margin_x} -200%",
+                "frombottom": f"{margin_x} 200%",
+                "fromright": f"200% {margin_y}",
+                "fromleft": f"-200% {margin_y}",
+                "topleft": "-200% -200%",
+                "topright": "200% -200%",
+                "bottomleft": "-200% 200%",
+                "bottomright": "200% 200%",
+            }[scratch.animation_type]
+            wr.set("move", t_pos)
+        wr.set("size", f"{width} {height}")
+
     async def _configure_windowrules(self, scratch: Scratch) -> None:
         """Set initial client window state (sets windowrules).
 
@@ -192,7 +233,6 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             scratch: The scratchpad object
         """
         self.scratches.set_state(scratch, "configured")
-        animation_type: str = scratch.conf.get_str("animation").lower()
         defined_class: str = scratch.conf.get_str("class")
         skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules"))
         wr = WindowRuleSet(self.state)
@@ -204,36 +244,10 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 self.log.error("forced monitor %s doesn't exist", forced_monitor)
                 await self.backend.notify_error(f"Monitor '{forced_monitor}' doesn't exist, check {scratch.uid}'s scratch configuration")
                 forced_monitor = None
-            monitor = await self.backend.get_monitor_props(name=cast("str | None", forced_monitor))
-            width, height = convert_coords(scratch.conf.get_str("size"), monitor)
 
-            if "float" not in skipped_windowrules:
-                if self.state.hyprland_version < VersionInfo(0, 53, 0):
-                    wr.set("float", "")
-                else:
-                    wr.set("float", "on")
-            if "workspace" not in skipped_windowrules:
-                wr.set("workspace", f"{mk_scratch_name(scratch.uid)} silent")
-            set_aspect = "aspect" not in skipped_windowrules
-
-            if animation_type:
-                margin_x = (monitor["width"] - width) // 2
-                margin_y = (monitor["height"] - height) // 2
-
-                if is_rotated(monitor):
-                    margin_x, margin_y = margin_y, margin_x
-
-                t_pos = {
-                    "fromtop": f"{margin_x} -200%",
-                    "frombottom": f"{margin_x} 200%",
-                    "fromright": f"200% {margin_y}",
-                    "fromleft": f"-200% {margin_y}",
-                }[animation_type]
-                if set_aspect:
-                    wr.set("move", t_pos)
-
-            if set_aspect:
-                wr.set("size", f"{width} {height}")
+            for wr_name in ("float", "workspace", "aspect", "group"):
+                if wr_name not in skipped_windowrules:
+                    await getattr(self, f"_wr_{wr_name}")(wr, scratch)
 
             await self.backend.execute(wr.get_content(), base_command="keyword")
 

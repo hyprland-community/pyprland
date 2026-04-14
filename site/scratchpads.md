@@ -53,6 +53,11 @@ bind = $mainMod,Y,exec,pypr attach
 - When you create a scratchpad called "name", it will be hidden in `special:scratch_<name>`.
 - Providing `class` allows a glitch free experience, mostly noticeable when using animations
 
+> [!note]
+> Post 3.3.1 scratchpads are denying groups
+> windows that deny grouping have different border colour settings.
+> If you want the scratchpad border to look the same (or different) than other windows, you can configure this with:
+> `general:col.nogroup_border` and `general:col.nogroup_border_active` (you can for instance copy `general:col.inactive_border` and `general:col.active_border` respectively).
 
 ## Commands
 
