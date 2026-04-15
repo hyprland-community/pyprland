@@ -89,7 +89,11 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
 
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:  # noqa: ARG002
         """Refresh configured stash definitions."""
+        previous_slots = self._slots
         self._load_stash_definitions()
+        for stash_name, slot in previous_slots.items():
+            if stash_name not in self._slots and slot.occupied:
+                await self._release_slot(slot, workspace=self.state.active_workspace, focus=False)
 
     async def exit(self) -> None:
         """Best-effort release of stashed windows during clean shutdown."""
@@ -121,13 +125,19 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             await self._release_slot(slot, workspace=self.state.active_workspace)
             return
 
+        original_was_floating: bool | None = None
         if current_stash:
-            await self._detach_from_stash(self._slots[current_stash], keep_floating=True)
+            current_slot = self._slots.get(current_stash)
+            if current_slot is not None:
+                original_was_floating = current_slot.was_floating
+                await self._detach_from_stash(current_slot, keep_floating=True)
+            else:
+                self._addr_to_stash.pop(addr, None)
 
         if slot.occupied:
             await self._release_slot(slot, workspace=self.state.active_workspace, focus=False)
 
-        await self._stash_window(slot, active)
+        await self._stash_window(slot, active, was_floating=original_was_floating)
 
     async def run_stash_toggle(self, name: str) -> None:
         """<name> Show or hide the named stash overlay."""
@@ -170,15 +180,16 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
     async def _get_active_window(self) -> dict[str, Any]:
         return cast("dict[str, Any]", await self.backend.execute_json("activewindow"))
 
-    async def _stash_window(self, slot: StashSlot, active: dict[str, Any]) -> None:
+    async def _stash_window(self, slot: StashSlot, active: dict[str, Any], *, was_floating: bool | None = None) -> None:
         addr = cast("str", active["address"])
+        is_currently_floating = bool(active.get("floating", False))
         slot.address = addr
-        slot.was_floating = bool(active.get("floating", False))
+        slot.was_floating = is_currently_floating if was_floating is None else was_floating
         slot.visible = False
         self._addr_to_stash[addr] = slot.definition.name
 
         await self.backend.move_window_to_workspace(addr, slot.workspace, silent=True)
-        if not slot.was_floating:
+        if not is_currently_floating:
             await self.backend.toggle_floating(addr)
 
     async def _show_slot(self, slot: StashSlot) -> None:
@@ -260,8 +271,8 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             slot.saved_offset = (int(position[0]), int(position[1]))
             return
 
-        base_x = int(monitor["x"] / monitor["scale"])
-        base_y = int(monitor["y"] / monitor["scale"])
+        base_x = int(monitor["x"])
+        base_y = int(monitor["y"])
         slot.saved_offset = (int(position[0]) - base_x, int(position[1]) - base_y)
 
     async def _apply_geometry(self, slot: StashSlot) -> None:
@@ -269,8 +280,8 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         if monitor is None:
             return
 
-        base_x = int(monitor["x"] / monitor["scale"])
-        base_y = int(monitor["y"] / monitor["scale"])
+        base_x = int(monitor["x"])
+        base_y = int(monitor["y"])
 
         if slot.definition.preserve_aspect and slot.saved_size and slot.saved_offset:
             width, height = slot.saved_size
