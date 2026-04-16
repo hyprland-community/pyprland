@@ -86,10 +86,7 @@ process_tracking = false
 Allows you to skip the window rules for a specific scratchpad.
 Available rules are:
 
-- "aspect" controlling size and position
-- "float" controlling the floating state
-- "group" controlling window grouping
-- "workspace" which moves the window to its own workspace
+<ConfigChoices plugin="scratchpads" option="skip_windowrules" />
 
 If you are using an application which can spawn multiple windows and you can't see them, you can skip rules made to improve the initial display of the window.
 

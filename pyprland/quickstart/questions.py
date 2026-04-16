@@ -53,7 +53,7 @@ def field_to_question(field: ConfigField, current_value: Any = None) -> Any | No
     result: Any | None = None
 
     if field.choices:
-        result = _ask_choice(question_text, field.choices, default)
+        result = _ask_choice(question_text, field.choice_values, default)
     elif field.field_type is bool:
         result = _ask_bool(question_text, default)
     elif field.field_type is int:

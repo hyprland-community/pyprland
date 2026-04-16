@@ -54,14 +54,9 @@ post_hook = "sh /tmp/hyprlandcolors.sh"
 
 ### `color_scheme` <ConfigBadges plugin="wallpapers" option="color_scheme" /> {#config-color-scheme}
 
-Optional modification of the base color used in the templates. One of:
+Optional modification of the base color used in the templates:
 
-- **pastel** - a bit more washed colors
-- **fluo** or **fluorescent** - for high color saturation
-- **neutral** - for low color saturation
-- **earth** - a bit more dark, a bit less blue
-- **vibrant** - for moderate to high saturation
-- **mellow** - for lower saturation
+<ConfigChoices plugin="wallpapers" option="color_scheme" />
 
 ### `variant` <ConfigBadges plugin="wallpapers" option="variant" /> {#config-variant}
 

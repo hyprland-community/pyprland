@@ -65,9 +65,7 @@ style = ["opacity 1", "bordercolor rgb(FFFF00)"]
 
 Behavior when a new window opens while layout is active:
 
-- `"focus"` (or `"foreground"`) - make the new window the main window
-- `"background"` - make the new window appear in the background  
-- `"close"` - stop the centered layout when a new window opens
+<ConfigChoices plugin="layout_center" option="on_new_client" />
 
 ### `next` / `prev` <ConfigBadges plugin="layout_center" option="next" /> {#config-next}
 

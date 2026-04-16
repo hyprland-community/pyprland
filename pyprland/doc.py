@@ -206,8 +206,13 @@ def _format_field_choices(field: ConfigField) -> list[str]:
         return []
     lines = [f"\n{_c('Choices:', BOLD)}"]
     for choice in field.choices:
-        choice_str = f'"{choice}"' if isinstance(choice, str) else str(choice)
-        lines.append(f"  - {choice_str}")
+        if isinstance(choice, dict):
+            choice_str = f'"{choice["name"]}"'
+            desc = choice.get("desc", "")
+            lines.append(f"  - {choice_str} — {desc}" if desc else f"  - {choice_str}")
+        else:
+            choice_str = f'"{choice}"' if isinstance(choice, str) else str(choice)
+            lines.append(f"  - {choice_str}")
     return lines
 
 

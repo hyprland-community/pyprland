@@ -32,7 +32,11 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             "on_new_client",
             str,
             default="focus",
-            choices=["focus", "background", "close"],
+            choices=[
+                {"name": "focus", "desc": "Make the new window the main window"},
+                {"name": "background", "desc": "Make the new window appear in the background"},
+                {"name": "close", "desc": "Stop the centered layout when a new window opens"},
+            ],
             description="Behavior when a new window opens",
             category="behavior",
         ),

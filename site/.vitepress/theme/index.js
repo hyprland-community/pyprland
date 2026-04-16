@@ -3,6 +3,7 @@ import DefaultTheme from 'vitepress/theme'
 
 import CommandList from "/components/CommandList.vue";
 import ConfigBadges from "/components/ConfigBadges.vue";
+import ConfigChoices from "/components/ConfigChoices.vue";
 import EngineDefaults from "/components/EngineDefaults.vue";
 import EngineList from "/components/EngineList.vue";
 import PluginCommands from '/components/PluginCommands.vue'
@@ -20,6 +21,7 @@ export default {
         app.component("PluginConfig", PluginConfig);
         app.component("PluginList", PluginList);
         app.component("ConfigBadges", ConfigBadges);
+        app.component("ConfigChoices", ConfigChoices);
         app.component("EngineDefaults", EngineDefaults);
         app.component("EngineList", EngineList);
 

@@ -33,6 +33,27 @@ class ColorScheme(StrEnum):
     NEUTRAL = "neutral"  # Minimal saturation (near grayscale)
     EARTH = "earth"  # Natural, earthy tones (lower lightness)
 
+    @classmethod
+    def as_choices(cls) -> list[dict[str, str]]:
+        """Return choices in {name, desc} format for schema and documentation."""
+        descs: dict[ColorScheme, str] = {
+            cls.PASTEL: "Soft, muted colors (high lightness, low saturation)",
+            cls.VIBRANT: "Rich, saturated colors",
+            cls.MELLOW: "Subdued, gentle colors",
+            cls.NEUTRAL: "Minimal saturation (near grayscale)",
+            cls.EARTH: "Natural, earthy tones (lower lightness)",
+        }
+        choices = []
+        for c in cls:
+            if not c.value:
+                continue
+            if c == cls.FLUORESCENT:
+                choices.append({"name": c.value, "desc": "Alias for fluorescent"})
+            else:
+                choices.append({"name": c.value, "desc": descs.get(c, "")})
+        choices.append({"name": "fluorescent", "desc": "Bright, vivid colors (high saturation)"})
+        return choices
+
 
 @dataclass
 class MaterialColors:

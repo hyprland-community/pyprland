@@ -126,7 +126,12 @@ SCRATCHPAD_SCHEMA = ConfigItems(
         list,
         default=[],
         description="Rules to skip",
-        choices=["aspect", "float", "group", "workspace"],
+        choices=[
+            {"name": "aspect", "desc": "Avoid windowrules controlling the aspect"},
+            {"name": "float", "desc": "Avoid windowrules controlling the floating state"},
+            {"name": "group", "desc": "Avoid windowrules controlling group avoidance"},
+            {"name": "workspace", "desc": "Avoid windowrules controlling the workspace"},
+        ],
         category="advanced",
     ),
     # Template/inheritance

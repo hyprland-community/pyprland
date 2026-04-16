@@ -100,16 +100,7 @@ Controls UI element size. Higher values make the UI larger (zoomed in), showing 
 
 Rotates and optionally flips the monitor.
 
-| Value | Rotation | Description |
-|-------|----------|-------------|
-| 0 | Normal | No rotation (landscape) |
-| 1 | 90° | Portrait (rotated right) |
-| 2 | 180° | Upside down |
-| 3 | 270° | Portrait (rotated left) |
-| 4 | Flipped | Mirrored horizontally |
-| 5 | Flipped 90° | Mirrored + 90° |
-| 6 | Flipped 180° | Mirrored + 180° |
-| 7 | Flipped 270° | Mirrored + 270° |
+<ConfigChoices plugin="monitors" option="placement.transform" />
 
 ##### `rate` {#placement-rate}
 

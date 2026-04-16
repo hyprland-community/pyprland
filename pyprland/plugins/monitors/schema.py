@@ -23,7 +23,16 @@ MONITOR_PROPS_SCHEMA = ConfigItems(
     ConfigField(
         "transform",
         int,
-        choices=[0, 1, 2, 3, 4, 5, 6, 7],
+        choices=[
+            {"name": 0, "desc": "Normal (landscape)"},
+            {"name": 1, "desc": "90° (portrait, rotated right)"},
+            {"name": 2, "desc": "180° (upside down)"},
+            {"name": 3, "desc": "270° (portrait, rotated left)"},
+            {"name": 4, "desc": "Flipped (mirrored horizontally)"},
+            {"name": 5, "desc": "Flipped 90°"},
+            {"name": 6, "desc": "Flipped 180°"},
+            {"name": 7, "desc": "Flipped 270°"},
+        ],
         description="Rotation/flip transform",
         category="display",
     ),

@@ -62,7 +62,9 @@ export function renderDescription(text, choices) {
   })
   // Append choices from schema if available
   if (choices && choices.length > 0) {
-    const choiceStr = choices.map(c => `\`${c}\``).join(', ')
+    const choiceStr = choices.map(c =>
+      typeof c === 'object' ? `\`${c.name}\`` : `\`${c}\``
+    ).join(', ')
     text += `. Values: ${choiceStr}`
   }
   // Use render() to support links, then strip wrapping <p> tags

@@ -102,7 +102,7 @@ class Extension(Plugin):
             str,
             default="",
             description="Color scheme for palette generation",
-            choices=[c.value for c in ColorScheme] + ["fluorescent"],
+            choices=ColorScheme.as_choices(),
             category="templating",
         ),
         ConfigField("variant", str, description="Color variant type for palette", category="templating"),

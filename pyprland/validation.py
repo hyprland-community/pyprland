@@ -52,12 +52,19 @@ class ConfigField:  # pylint: disable=too-many-instance-attributes
     recommended: bool = False
     default: Any = None
     description: str = ""
-    choices: list | None = None
+    choices: list[Any | dict[str, Any]] | None = None
     validator: Callable[[Any], list[str]] | None = None
     children: "ConfigItems | None" = None
     children_allow_extra: bool = False
     category: str = ""  # UI grouping category (e.g., "basic", "positioning", "behavior")
     is_directory: bool = False  # For Path types: True = directory, False = file
+
+    @property
+    def choice_values(self) -> list:
+        """Return plain choice values, extracting 'name' from dict choices."""
+        if not self.choices:
+            return []
+        return [c["name"] if isinstance(c, dict) else c for c in self.choices]
 
     @property
     def type_name(self) -> str:
@@ -191,8 +198,8 @@ class ConfigValidator:
                 continue
 
             # Check choices (skip if custom validator handles validation)
-            if field_def.choices is not None and field_def.validator is None and value not in field_def.choices:
-                choices_str = ", ".join(repr(c) for c in field_def.choices)
+            if field_def.choices is not None and field_def.validator is None and value not in field_def.choice_values:
+                choices_str = ", ".join(repr(c) for c in field_def.choice_values)
                 errors.append(
                     format_config_error(
                         self.plugin_name,
