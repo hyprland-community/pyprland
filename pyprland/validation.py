@@ -198,7 +198,12 @@ class ConfigValidator:
                 continue
 
             # Check choices (skip if custom validator handles validation)
-            if field_def.choices is not None and field_def.validator is None and value not in field_def.choice_values:
+            if (
+                field_def.choices is not None
+                and field_def.validator is None
+                and value not in field_def.choice_values
+                and value != field_def.default
+            ):
                 choices_str = ", ".join(repr(c) for c in field_def.choice_values)
                 errors.append(
                     format_config_error(
