@@ -4,8 +4,11 @@ EnvironmentBackend defines the contract for all compositor backends:
 - Window operations (get_clients, focus, move, resize, close)
 - Monitor queries (get_monitors, get_monitor_props)
 - Command execution (execute, execute_batch, execute_json)
-- Notifications (notify, notify_info, notify_error)
 - Event parsing (parse_event)
+
+Notifications are handled separately by the Notifier abstraction
+(see adapters/notifier.py). Each backend provides its preferred
+notifier via get_default_notifier().
 
 All methods accept a 'log' parameter for traceability via BackendProxy.
 """
@@ -17,6 +20,7 @@ from typing import Any
 
 from ..common import MINIMUM_ADDR_LEN, SharedState
 from ..models import ClientInfo, MonitorInfo
+from .notifier import Notifier
 
 
 class EnvironmentBackend(ABC):
@@ -127,35 +131,13 @@ class EnvironmentBackend(ABC):
         """
 
     @abstractmethod
-    async def notify(self, message: str, duration: int, color: str, *, log: Logger) -> None:
-        """Send a notification.
+    def get_default_notifier(self) -> Notifier:
+        """Return the default notifier for this backend.
 
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            color: Hex color code
-            log: Logger to use for this operation
+        Each backend provides its preferred notification mechanism
+        (e.g. Hyprland uses native IPC, Niri uses notify-send).
+        This can be overridden by user config at the manager level.
         """
-
-    async def notify_info(self, message: str, duration: int = 5000, *, log: Logger) -> None:
-        """Send an info notification (default: blue color).
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            log: Logger to use for this operation
-        """
-        await self.notify(message, duration, "0000ff", log=log)
-
-    async def notify_error(self, message: str, duration: int = 5000, *, log: Logger) -> None:
-        """Send an error notification (default: red color).
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            log: Logger to use for this operation
-        """
-        await self.notify(message, duration, "ff0000", log=log)
 
     async def get_client_props(
         self,

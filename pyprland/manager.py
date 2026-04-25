@@ -23,6 +23,7 @@ from typing import Any, cast
 from .adapters.backend import EnvironmentBackend
 from .adapters.hyprland import HyprlandBackend
 from .adapters.niri import NiriBackend
+from .adapters.notifier import Notifier, resolve_notifier
 from .adapters.proxy import BackendProxy
 from .adapters.wayland import WaylandBackend
 from .adapters.xorg import XorgBackend
@@ -38,7 +39,6 @@ from .constants import (
     PYPR_DEMO,
     TASK_TIMEOUT,
 )
-from .ipc import set_notify_method
 from .models import Environment, PyprError, ReloadReason, ResponsePrefix
 from .plugins.interface import Plugin
 from .plugins.pyprland.schema import PYPRLAND_CONFIG_SCHEMA
@@ -118,8 +118,10 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
         # Manager's own proxy for notifications and event parsing
         # Will be updated in initialize() if fallback backend is selected
+        # Starts with the backend's default notifier; may be overridden by config later
         if self._shared_backend:
-            self.backend: BackendProxy = BackendProxy(self._shared_backend, self.log)
+            self._notifier: Notifier = self._shared_backend.get_default_notifier()
+            self.backend: BackendProxy = BackendProxy(self._shared_backend, self.log, self._notifier)
         signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
     async def initialize(self) -> None:
@@ -159,7 +161,8 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             raise RuntimeError(msg)
 
         self._backend_selected = True
-        self.backend = BackendProxy(self._shared_backend, self.log)
+        self._notifier = self._shared_backend.get_default_notifier()
+        self.backend = BackendProxy(self._shared_backend, self.log, self._notifier)
 
     async def _load_single_plugin(self, name: str, init: bool) -> bool:
         """Load a single plugin, optionally calling `init`.
@@ -183,7 +186,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             plug.state = self.state
             # Each plugin gets its own BackendProxy with its own logger
             assert self._shared_backend is not None, "Backend not initialized"
-            plug.backend = BackendProxy(self._shared_backend, plug.log)
+            plug.backend = BackendProxy(self._shared_backend, plug.log, self._notifier)
             if init:
                 await plug.init()
                 self.queues[name] = asyncio.Queue()
@@ -279,7 +282,9 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
 
         notification_type = self._pyprland_conf.get_str("notification_type")
         if notification_type and notification_type != "auto":
-            set_notify_method(notification_type)
+            assert self._shared_backend is not None
+            self._notifier = resolve_notifier(notification_type, self._shared_backend)
+            self.backend.notifier = self._notifier
 
         await self.__load_plugins_config(init=init)
 

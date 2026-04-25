@@ -9,11 +9,11 @@ import json
 from logging import Logger
 from typing import Any, cast
 
-from ..common import notify_send
-from ..constants import DEFAULT_NOTIFICATION_DURATION_MS, DEFAULT_REFRESH_RATE_HZ
+from ..constants import DEFAULT_REFRESH_RATE_HZ
 from ..ipc import niri_request
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
+from .notifier import Notifier, NotifySendNotifier
 
 # Niri transform string to Hyprland-compatible integer mapping
 # Keys are lowercase for case-insensitive lookup
@@ -269,26 +269,9 @@ class NiriBackend(EnvironmentBackend):
             # Placeholder implementation:
             await self.execute(["action", cmd], log=log)
 
-    async def notify(
-        self,
-        message: str,
-        duration: int = DEFAULT_NOTIFICATION_DURATION_MS,
-        color: str = "ff0000",
-        *,
-        log: Logger,
-    ) -> None:
-        """Send a notification.
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            color: Hex color code
-            log: Logger to use for this operation (unused - notify_send doesn't log)
-        """
-        # Niri doesn't have a built-in notification system exposed via IPC like Hyprland's `notify`
-        # We rely on `notify-send` via the common utility
-
-        await notify_send(message, duration, color)
+    def get_default_notifier(self) -> Notifier:
+        """Return notify-send notifier (Niri has no native notification IPC)."""
+        return NotifySendNotifier()
 
     # ─── Window Operation Helpers (Niri overrides) ────────────────────────────
 

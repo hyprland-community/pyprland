@@ -36,7 +36,6 @@ class _IpcState:
     """Module-level state container to avoid global statements."""
 
     log: Logger | None = None
-    notify_method: str = "auto"
 
 
 _state = _IpcState()
@@ -88,24 +87,6 @@ async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Stream
     finally:
         writer.close()
         await writer.wait_closed()
-
-
-def set_notify_method(method: str) -> None:
-    """Set the notification method.
-
-    Args:
-        method: The method to use ("auto", "native", "notify-send")
-    """
-    _state.notify_method = method
-
-
-def get_notify_method() -> str:
-    """Get the notification method.
-
-    Returns:
-        str: "auto", "native", "notify-send"
-    """
-    return _state.notify_method
 
 
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:

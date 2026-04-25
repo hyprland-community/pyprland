@@ -6,9 +6,10 @@ from collections.abc import Callable
 from logging import Logger
 from typing import Any
 
-from ..constants import DEFAULT_NOTIFICATION_DURATION_MS, DEFAULT_REFRESH_RATE_HZ
+from ..constants import DEFAULT_REFRESH_RATE_HZ
 from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
+from .notifier import Notifier, NotifySendNotifier
 
 
 def make_monitor_info(  # noqa: PLR0913  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -152,33 +153,9 @@ class FallbackBackend(EnvironmentBackend):
         log.debug("execute_json() not supported in fallback backend")
         return {}
 
-    async def notify(
-        self,
-        message: str,
-        duration: int = DEFAULT_NOTIFICATION_DURATION_MS,
-        color: str = "ff0000",
-        *,
-        log: Logger,
-    ) -> None:
-        """Send notification via notify-send.
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            color: Ignored (notify-send doesn't support colors)
-            log: Logger to use for this operation
-        """
-        log.info("Notification: %s", message)
-        try:
-            # Convert duration from ms to ms (notify-send uses ms)
-            proc = await asyncio.create_subprocess_shell(
-                f'notify-send -t {duration} "Pyprland" "{message}"',
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL,
-            )
-            await proc.wait()
-        except OSError as e:
-            log.debug("notify-send failed: %s", e)
+    def get_default_notifier(self) -> Notifier:
+        """Return notify-send notifier (fallback backends have no native notification IPC)."""
+        return NotifySendNotifier()
 
     @classmethod
     @abstractmethod

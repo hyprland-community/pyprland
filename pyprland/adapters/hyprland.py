@@ -2,17 +2,16 @@
 
 Primary backend for Hyprland, using its Unix socket IPC protocol.
 Provides full functionality including batched commands, JSON queries,
-native notifications, and Hyprland-specific event parsing.
+and Hyprland-specific event parsing.
 """
 
 from logging import Logger
 from typing import Any, cast
 
-from ..constants import DEFAULT_NOTIFICATION_DURATION_MS
-from ..ipc import get_notify_method, get_response, hyprctl_connection, retry_on_reset
+from ..ipc import get_response, hyprctl_connection, retry_on_reset
 from ..models import ClientInfo, MonitorInfo
-from ..utils import notify_send
 from .backend import EnvironmentBackend
+from .notifier import HyprlandNotifier, Notifier
 
 
 class HyprlandBackend(EnvironmentBackend):
@@ -147,52 +146,6 @@ class HyprlandBackend(EnvironmentBackend):
         cmd, params = raw_data.split(">>", 1)
         return f"event_{cmd}", params.rstrip("\n")
 
-    async def notify(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, color: str = "ff1010", *, log: Logger) -> None:
-        """Send a notification.
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            color: Hex color code
-            log: Logger to use for this operation
-        """
-        # Using icon -1 for default/generic
-        await self._notify_impl(message, duration, color, -1, log=log)
-
-    async def notify_info(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, *, log: Logger) -> None:
-        """Send an info notification.
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            log: Logger to use for this operation
-        """
-        # Using icon 1 for info
-        await self._notify_impl(message, duration, "1010ff", 1, log=log)
-
-    async def notify_error(self, message: str, duration: int = DEFAULT_NOTIFICATION_DURATION_MS, *, log: Logger) -> None:
-        """Send an error notification.
-
-        Args:
-            message: The notification message
-            duration: Duration in milliseconds
-            log: Logger to use for this operation
-        """
-        # Using icon 0 for error
-        await self._notify_impl(message, duration, "ff1010", 0, log=log)
-
-    async def _notify_impl(self, text: str, duration: int, color: str, icon: int, *, log: Logger) -> None:
-        """Internal notify implementation.
-
-        Args:
-            text: The notification text
-            duration: Duration in milliseconds
-            color: Hex color code
-            icon: Icon code (-1 default, 0 error, 1 info)
-            log: Logger to use for this operation
-        """
-        if get_notify_method() == "notify-send":
-            await notify_send(text, duration, color)
-        else:
-            # This mirrors ipc.notify logic for Hyprland
-            await self.execute(f"{icon} {duration} rgb({color})  {text}", log=log, base_command="notify")
+    def get_default_notifier(self) -> Notifier:
+        """Return Hyprland's native notifier using hyprctl notify."""
+        return HyprlandNotifier(self.execute)

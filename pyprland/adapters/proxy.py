@@ -4,6 +4,9 @@ This module provides a BackendProxy class that wraps an EnvironmentBackend
 and automatically passes the plugin's logger to all backend method calls.
 This allows backend operations to be logged under the calling plugin's
 logger for better traceability.
+
+Notifications are delegated to a Notifier instance, which is resolved
+once at startup (either the backend's default or a user-configured override).
 """
 
 from collections.abc import Callable
@@ -14,6 +17,7 @@ from ..models import ClientInfo, MonitorInfo
 
 if TYPE_CHECKING:
     from .backend import EnvironmentBackend
+    from .notifier import Notifier
 
 
 class BackendProxy:
@@ -28,16 +32,31 @@ class BackendProxy:
         state: Reference to the shared state (from the underlying backend)
     """
 
-    def __init__(self, backend: "EnvironmentBackend", log: Logger) -> None:
+    def __init__(self, backend: "EnvironmentBackend", log: Logger, notifier: "Notifier") -> None:
         """Initialize the proxy.
 
         Args:
             backend: The underlying backend to delegate calls to
             log: The logger to inject into all backend calls
+            notifier: The notification backend to use
         """
         self._backend = backend
         self.log = log
         self.state = backend.state
+        self._notifier = notifier
+
+    @property
+    def notifier(self) -> "Notifier":
+        """Return the current notifier."""
+        return self._notifier
+
+    @notifier.setter
+    def notifier(self, notifier: "Notifier") -> None:
+        """Update the notification backend.
+
+        Used when the user's config overrides the default notification method.
+        """
+        self._notifier = notifier
 
     # === Core execution methods ===
 
@@ -148,7 +167,7 @@ class BackendProxy:
             duration: Duration in milliseconds
             color: Hex color code
         """
-        return await self._backend.notify(message, duration, color, log=self.log)
+        return await self._notifier.notify(message, duration, color, log=self.log)
 
     async def notify_info(self, message: str, duration: int = 5000) -> None:
         """Send an info notification (blue color).
@@ -157,7 +176,7 @@ class BackendProxy:
             message: The notification message
             duration: Duration in milliseconds
         """
-        return await self._backend.notify_info(message, duration, log=self.log)
+        return await self._notifier.notify_info(message, duration, log=self.log)
 
     async def notify_error(self, message: str, duration: int = 5000) -> None:
         """Send an error notification (red color).
@@ -166,7 +185,7 @@ class BackendProxy:
             message: The notification message
             duration: Duration in milliseconds
         """
-        return await self._backend.notify_error(message, duration, log=self.log)
+        return await self._notifier.notify_error(message, duration, log=self.log)
 
     # === Window operation helpers ===
 
