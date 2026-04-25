@@ -99,6 +99,15 @@ def set_notify_method(method: str) -> None:
     _state.notify_method = method
 
 
+def get_notify_method() -> str:
+    """Get the notification method.
+
+    Returns:
+        str: "auto", "native", "notify-send"
+    """
+    return _state.notify_method
+
+
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
     if NIRI_SOCKET:
