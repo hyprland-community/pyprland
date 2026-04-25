@@ -9,8 +9,9 @@ from logging import Logger
 from typing import Any, cast
 
 from ..constants import DEFAULT_NOTIFICATION_DURATION_MS
-from ..ipc import get_response, hyprctl_connection, retry_on_reset
+from ..ipc import get_notify_method, get_response, hyprctl_connection, retry_on_reset
 from ..models import ClientInfo, MonitorInfo
+from ..utils import notify_send
 from .backend import EnvironmentBackend
 
 
@@ -190,5 +191,8 @@ class HyprlandBackend(EnvironmentBackend):
             icon: Icon code (-1 default, 0 error, 1 info)
             log: Logger to use for this operation
         """
-        # This mirrors ipc.notify logic for Hyprland
-        await self.execute(f"{icon} {duration} rgb({color})  {text}", log=log, base_command="notify")
+        if get_notify_method() == "notify-send":
+            await notify_send(text, duration, color)
+        else:
+            # This mirrors ipc.notify logic for Hyprland
+            await self.execute(f"{icon} {duration} rgb({color})  {text}", log=log, base_command="notify")
