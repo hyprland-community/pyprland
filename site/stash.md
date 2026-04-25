@@ -3,25 +3,31 @@
 
 # stash
 
-Stash and show windows in named groups using special workspaces.
+Store single-window overlays in named stashes.
 
-Unlike `toggle_special` which uses a single special workspace, `stash` supports multiple named stash groups. Windows can be quickly stashed away and retrieved later, appearing on whichever workspace you are currently on.
+Each stash name is a single slot. A stashed window can be shown as a pinned overlay on top of your current workspace and stays visible while you switch workspaces, including special workspaces.
 
 ## Usage
 
 ```bash
-bind = $mainMod, S, exec, pypr stash          # toggle stash the focused window
-bind = $mainMod SHIFT, S, exec, pypr stash_toggle # show/hide stashed windows
+bind = $mainMod,       S, exec, pypr stash_toggle S
+bind = $mainMod SHIFT, S, exec, pypr stash_send   S
+bind = $mainMod,       C, exec, pypr stash_toggle C
+bind = $mainMod SHIFT, C, exec, pypr stash_send   C
 ```
 
-For multiple stash groups:
+`stash_send <name>`:
 
-```bash
-bind = $mainMod, S, exec, pypr stash default
-bind = $mainMod, W, exec, pypr stash work
-bind = $mainMod SHIFT, S, exec, pypr stash_toggle default
-bind = $mainMod SHIFT, W, exec, pypr stash_toggle work
-```
+- sends the focused window into stash `<name>`
+- if `<name>` is already occupied, releases the old window to the current workspace and replaces it
+- if the focused window is already the shown stash window, releases it back to the current workspace
+
+`stash_toggle <name>`:
+
+- shows the named stash as a pinned floating overlay
+- hides it back into its hidden special workspace
+
+The first show uses the configured `size` and `position`. If `preserve_aspect = true`, later hide/show cycles keep the live size and position you last left the stash at.
 
 ## Commands
 
@@ -34,12 +40,24 @@ bind = $mainMod SHIFT, W, exec, pypr stash_toggle work
 ### Example
 
 ```toml
-[stash]
-style = [
-    "border_color rgb(ec8800)",
-    "border_size 3",
-]
+[pyprland]
+plugins = ["stash"]
+
+[stash.S]
+animation = ""
+size = "24% 54%"
+position = "76% 22%"
+preserve_aspect = true
+
+[stash.C]
+animation = ""
+size = "24% 54%"
+position = "76% 22%"
+preserve_aspect = true
 ```
 
-When `style` is set, shown stash windows are tagged with `stash` and the listed [window rules](https://wiki.hyprland.org/Configuring/Window-Rules/) are applied.
-The tag is removed when windows are hidden or removed from the stash.
+## Notes
+
+- `animation` is currently reserved and does not change behavior yet.
+- Stash windows are backed by hidden `special:st-<name>` workspaces when not shown.
+- During a clean `pypr` shutdown, stash windows are released back to the active workspace as a best effort cleanup.
