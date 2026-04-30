@@ -63,7 +63,7 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
             self.log.warning("Fail to parse version information: %s - using default", version_info)
             self.state.hyprland_version = DEFAULT_VERSION
 
-        self.state.hyprland_config_lua = await self._detect_lua_config()
+        self.state.hyprland_config_legacy = await self._detect_legacy_config()
 
         try:
             self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]
@@ -78,20 +78,20 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
             self.state.set_disabled_monitors(set())
             self.state.active_monitor = "unknown"
 
-    async def _detect_lua_config(self) -> bool:
-        """Detect whether Hyprland is using Lua config syntax.
+    async def _detect_legacy_config(self) -> bool:
+        """Detect whether Hyprland is using legacy hyprlang config syntax.
 
         Primary: check the ``configProvider`` field returned by ``hyprctl status``.
         Fallback: look for ``hyprland.lua`` / ``hyprland.conf`` on disk so the
         check works even when the IPC is not yet available or the Hyprland build
         predates the ``configProvider`` field.
 
-        Returns True for Lua config, False for legacy hyprlang.
+        Returns True for legacy hyprlang, False when Lua config is in use.
         """
         try:
             status = await self.backend.execute_json("status")
             if isinstance(status, dict) and "configProvider" in status:
-                return status["configProvider"] == "lua"
+                return status["configProvider"] != "lua"
         except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
             pass
 
@@ -101,9 +101,9 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
         has_lua = (hypr_dir / "hyprland.lua").exists()
         has_conf = (hypr_dir / "hyprland.conf").exists()
 
-        if has_lua and not has_conf:
+        if has_conf and not has_lua:
             return True
-        # has_conf, both, or neither → treat as legacy
+        # lua-only or neither → assume Lua (default)
         return False
 
     async def event_configreloaded(self, _: str = "") -> None:
@@ -114,7 +114,7 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
         re-detects the config syntax in case the user switched between
         Lua and legacy hyprlang configs.
         """
-        self.state.hyprland_config_lua = await self._detect_lua_config()
+        self.state.hyprland_config_legacy = await self._detect_legacy_config()
         try:
             monitors = await self.backend.get_monitors(include_disabled=True)
             self.state.monitors = [mon["name"] for mon in monitors]

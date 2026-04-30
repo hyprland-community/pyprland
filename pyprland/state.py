@@ -30,7 +30,7 @@ class SharedState:
     monitors: list[str] = field(default_factory=list)  # ALL monitors (source of truth)
     _disabled_monitors: set[str] = field(default_factory=set)  # Disabled monitor names
     hyprland_version: VersionInfo = field(default_factory=VersionInfo)
-    hyprland_config_lua: bool = False  # True when Hyprland uses Lua config (>= 0.54.0)
+    hyprland_config_legacy: bool = False  # True when Hyprland uses legacy hyprlang config; default assumes Lua
 
     @property
     def active_monitors(self) -> list[str]:

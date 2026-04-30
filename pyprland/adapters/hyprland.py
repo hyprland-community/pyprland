@@ -378,8 +378,8 @@ class HyprlandBackend(EnvironmentBackend):
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)
 
-        # Lua config dropped support for `keyword` and changed `dispatch` syntax — translate both.
-        if self.state.hyprland_config_lua and base_command in ("keyword", "dispatch"):
+        # Legacy hyprlang doesn't understand Lua dispatch/keyword syntax — skip translation for it.
+        if not self.state.hyprland_config_legacy and base_command in ("keyword", "dispatch"):
             command, base_command = self._translate_commands(command, base_command, log)
 
         if not command:
