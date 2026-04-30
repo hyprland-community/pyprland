@@ -1,6 +1,8 @@
 """Hyprland-specific state management."""
 
 import json
+import os
+from pathlib import Path
 from typing import Any, cast
 
 from ...models import PyprError, VersionInfo
@@ -61,12 +63,7 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
             self.log.warning("Fail to parse version information: %s - using default", version_info)
             self.state.hyprland_version = DEFAULT_VERSION
 
-        try:
-            status = await self.backend.execute_json("status")
-            if isinstance(status, dict):
-                self.state.hyprland_config_lua = status.get("configProvider") == "lua"
-        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
-            self.state.hyprland_config_lua = False
+        self.state.hyprland_config_lua = await self._detect_lua_config()
 
         try:
             self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]
@@ -81,12 +78,43 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
             self.state.set_disabled_monitors(set())
             self.state.active_monitor = "unknown"
 
+    async def _detect_lua_config(self) -> bool:
+        """Detect whether Hyprland is using Lua config syntax.
+
+        Primary: check the ``configProvider`` field returned by ``hyprctl status``.
+        Fallback: look for ``hyprland.lua`` / ``hyprland.conf`` on disk so the
+        check works even when the IPC is not yet available or the Hyprland build
+        predates the ``configProvider`` field.
+
+        Returns True for Lua config, False for legacy hyprlang.
+        """
+        try:
+            status = await self.backend.execute_json("status")
+            if isinstance(status, dict) and "configProvider" in status:
+                return status["configProvider"] == "lua"
+        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+            pass
+
+        # Filesystem fallback
+        xdg_config = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+        hypr_dir = Path(xdg_config) / "hypr"
+        has_lua = (hypr_dir / "hyprland.lua").exists()
+        has_conf = (hypr_dir / "hyprland.conf").exists()
+
+        if has_lua and not has_conf:
+            return True
+        # has_conf, both, or neither → treat as legacy
+        return False
+
     async def event_configreloaded(self, _: str = "") -> None:
         """Reconcile monitor state after config reload.
 
         Re-fetches all monitors to update the disabled monitors set,
-        since monitor enable/disable happens via config changes.
+        since monitor enable/disable happens via config changes.  Also
+        re-detects the config syntax in case the user switched between
+        Lua and legacy hyprlang configs.
         """
+        self.state.hyprland_config_lua = await self._detect_lua_config()
         try:
             monitors = await self.backend.get_monitors(include_disabled=True)
             self.state.monitors = [mon["name"] for mon in monitors]
