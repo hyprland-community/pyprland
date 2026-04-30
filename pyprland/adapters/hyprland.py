@@ -9,8 +9,9 @@ from logging import Logger
 from typing import Any, cast
 
 from ..ipc import get_response, hyprctl_connection, retry_on_reset
-from ..models import ClientInfo, MonitorInfo
+from ..models import ClientInfo, MonitorInfo, VersionInfo
 from .backend import EnvironmentBackend
+from .lua_translate import dispatch_to_lua_call, keyword_to_lua_code
 from .notifier import HyprlandNotifier, Notifier
 
 
@@ -27,6 +28,41 @@ class HyprlandBackend(EnvironmentBackend):
                 result.append(f"{command[1]} {command[0]}")
         return result
 
+    def _translate_commands(self, command: str | list[str], base_command: str, log: Logger) -> tuple[str | list[str], str]:
+        """Translate legacy IPC commands to Lua equivalents for the Lua config parser.
+
+        keyword → eval with hl.config/hl.window_rule/etc.
+        dispatch → dispatch with hl.dsp.*({}) (Hyprland wraps these in hl.dispatch() internally)
+        """
+        if base_command == "keyword":
+            translator = keyword_to_lua_code
+            new_base = "eval"
+            warn_label = "keyword"
+        else:
+            translator = dispatch_to_lua_call
+            new_base = "dispatch"
+            warn_label = "dispatch"
+
+        if isinstance(command, list):
+            translated = []
+            for cmd in command:
+                if isinstance(cmd, str):
+                    result = translator(cmd)
+                    if result:
+                        translated.append(result)
+                    else:
+                        log.warning("No Lua translation for %s: %s", warn_label, cmd)
+                        translated.append(cmd)
+                else:
+                    translated.append(cmd)
+            return translated, new_base
+
+        result = translator(command)
+        if result:
+            return result, new_base
+        log.warning("No Lua translation for %s: %s", warn_label, command)
+        return command, base_command
+
     @retry_on_reset
     async def execute(self, command: str | list | dict, *, log: Logger, **kwargs: Any) -> bool:
         """Execute a command (or list of commands).
@@ -38,6 +74,14 @@ class HyprlandBackend(EnvironmentBackend):
         """
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)
+
+        # Hyprland >= 0.55.0 uses Lua config syntax for dispatch/keyword commands
+        if (
+            self.state.hyprland_version > VersionInfo(0, 54, 3)
+            and base_command in ("keyword", "dispatch")
+            and isinstance(command, (str, list))
+        ):
+            command, base_command = self._translate_commands(command, base_command, log)
 
         if not command:
             log.warning("%s triggered without a command!", base_command)

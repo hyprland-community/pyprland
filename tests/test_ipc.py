@@ -4,7 +4,7 @@ import logging
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from pyprland import ipc
-from pyprland.models import PyprError
+from pyprland.models import PyprError, VersionInfo
 from pyprland.adapters.hyprland import HyprlandBackend
 
 
@@ -74,6 +74,7 @@ async def test_hyprland_backend_execute_success(mock_open_connection, test_log):
     reader.read.return_value = b"ok"
 
     state = Mock()
+    state.hyprland_version = VersionInfo(0, 40, 0)
     backend = HyprlandBackend(state)
 
     result = await backend.execute("some_command", log=test_log)
@@ -88,6 +89,7 @@ async def test_hyprland_backend_execute_failure(mock_open_connection, test_log):
     reader.read.return_value = b"err"
 
     state = Mock()
+    state.hyprland_version = VersionInfo(0, 40, 0)
     backend = HyprlandBackend(state)
 
     result = await backend.execute("some_command", log=test_log)
@@ -102,6 +104,7 @@ async def test_hyprland_backend_execute_batch(mock_open_connection, test_log):
     reader.read.return_value = b"okok"
 
     state = Mock()
+    state.hyprland_version = VersionInfo(0, 40, 0)
     backend = HyprlandBackend(state)
 
     cmds = ["cmd1", "cmd2"]

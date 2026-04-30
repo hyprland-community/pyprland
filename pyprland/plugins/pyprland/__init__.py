@@ -50,7 +50,7 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
         self.state.variables = self.get_config_dict("variables")
         version_override = self.get_config_str("hyprland_version")
         if version_override:
-            self._set_hyprland_version(version_override)
+            self.state.hyprland_version = VersionInfo.from_hyprctl({"tag": version_override})
 
     def run_version(self) -> str:
         """Show the pyprland version."""

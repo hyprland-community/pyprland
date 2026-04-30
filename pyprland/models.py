@@ -15,7 +15,7 @@ Also includes:
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum, StrEnum, auto
-from typing import TypedDict
+from typing import Any, TypedDict
 
 PlainTypes = float | str | dict[str, "PlainTypes"] | list["PlainTypes"]
 JSONResponse = dict[str, PlainTypes] | list[dict[str, PlainTypes]] | PlainTypes
@@ -101,6 +101,37 @@ class VersionInfo:
     major: int = 0
     minor: int = 0
     micro: int = 0
+
+    @classmethod
+    def from_hyprctl(cls, data: dict[str, Any]) -> "VersionInfo":
+        """Parse version from hyprctl JSON version output.
+
+        Handles both stable releases (tag: "v0.40.0") and git builds
+        (tag: "v0.40.0-127-g4e42107d"). For git builds, the micro
+        version is incremented to represent "newer than release".
+
+        Args:
+            data: Parsed JSON from ``hyprctl -j version``
+
+        Returns:
+            Parsed VersionInfo instance.
+
+        Raises:
+            ValueError: If the version string cannot be parsed.
+        """
+        tag = data.get("tag")
+        if tag and tag != "unknown":
+            tag_stripped = str(tag).removeprefix("v")
+            is_git_build = "-" in tag_stripped
+            version_str = tag_stripped.split("-", 1)[0]
+        else:
+            is_git_build = False
+            version_str = str(data.get("version", ""))
+
+        parts = [int(i) for i in version_str.split(".")[:3]]
+        if is_git_build:
+            parts[-1] += 1
+        return cls(*parts)
 
 
 class PyprError(BaseException):
