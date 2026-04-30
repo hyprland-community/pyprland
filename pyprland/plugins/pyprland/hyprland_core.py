@@ -62,6 +62,13 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
             self.state.hyprland_version = DEFAULT_VERSION
 
         try:
+            status = await self.backend.execute_json("status")
+            if isinstance(status, dict):
+                self.state.hyprland_config_lua = status.get("configProvider") == "lua"
+        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+            self.state.hyprland_config_lua = False
+
+        try:
             self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]
             monitors = await self.backend.get_monitors(include_disabled=True)
             self.state.monitors = [mon["name"] for mon in monitors]

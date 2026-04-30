@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import questionary
@@ -22,7 +26,7 @@ from .helpers.scratchpads import ask_scratchpads, scratchpad_to_dict
 from .questions import ask_plugin_options
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    pass
 
 # Max description length before truncation
 MAX_DESC_LENGTH = 60
@@ -310,6 +314,39 @@ def run_wizard(
         _show_keybind_hints(config.get("scratchpads", {}), environment)
 
 
+def _detect_hyprland_config_type() -> str:
+    """Detect Hyprland config type: 'lua', 'legacy', or 'unknown'."""
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        try:
+            result = subprocess.run(
+                ["hyprctl", "-j", "status"],
+                capture_output=True,
+                text=True,
+                timeout=3,
+                check=False,
+            )
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                provider = data.get("configProvider", "")
+                if provider == "lua":
+                    return "lua"
+                if provider == "hyprlang":
+                    return "legacy"
+        except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
+            pass
+
+    xdg_config = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+    hypr_dir = Path(xdg_config) / "hypr"
+    has_lua = (hypr_dir / "hyprland.lua").exists()
+    has_conf = (hypr_dir / "hyprland.conf").exists()
+
+    if has_lua and not has_conf:
+        return "lua"
+    if has_conf and not has_lua:
+        return "legacy"
+    return "unknown"
+
+
 def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
     """Show keybind hints for configured scratchpads.
 
@@ -323,9 +360,23 @@ def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
     questionary.print("\n── Suggested Keybindings ──", style="bold")
 
     if environment == Environment.HYPRLAND:
-        questionary.print("Add to ~/.config/hypr/hyprland.conf:", style="fg:gray")
-        for name in scratchpads_config:
-            questionary.print(f"  bind = $mainMod, KEY, exec, pypr toggle {name}", style="fg:cyan")
+        config_type = _detect_hyprland_config_type()
+
+        if config_type in ("lua", "unknown"):
+            questionary.print("Lua config (~/.config/hypr/hyprland.lua):", style="fg:gray")
+            for name in scratchpads_config:
+                questionary.print(
+                    f'  hl.bind(mainMod .. " + KEY", hl.dsp.exec_cmd("pypr toggle {name}"))',
+                    style="fg:cyan",
+                )
+            if config_type == "unknown":
+                questionary.print("")
+
+        if config_type in ("legacy", "unknown"):
+            questionary.print("Legacy config (~/.config/hypr/hyprland.conf):", style="fg:gray")
+            for name in scratchpads_config:
+                questionary.print(f"  bind = $mainMod, KEY, exec, pypr toggle {name}", style="fg:cyan")
+
     elif environment == Environment.NIRI:
         questionary.print("Add to ~/.config/niri/config.kdl:", style="fg:gray")
         for name in scratchpads_config:
