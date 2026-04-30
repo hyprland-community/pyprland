@@ -341,6 +341,8 @@ class TaskManager:
                 await self._on_error(task, e)
             else:
                 raise
+        finally:
+            coro.close()  # no-op if awaited; suppresses "never awaited" warning if cancelled before start
 
     def cancel_keyed(self, key: str) -> bool:
         """Cancel a keyed task immediately.
