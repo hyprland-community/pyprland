@@ -9,7 +9,7 @@ from logging import Logger
 from typing import Any, cast
 
 from ..ipc import get_response, hyprctl_connection, retry_on_reset
-from ..models import ClientInfo, MonitorInfo, VersionInfo
+from ..models import ClientInfo, MonitorInfo
 from .backend import EnvironmentBackend
 from .lua_translate import dispatch_to_lua_call, keyword_to_lua_code
 from .notifier import HyprlandNotifier, Notifier
@@ -75,12 +75,8 @@ class HyprlandBackend(EnvironmentBackend):
         base_command = kwargs.get("base_command", "dispatch")
         weak = kwargs.get("weak", False)
 
-        # Hyprland >= 0.55.0 uses Lua config syntax for dispatch/keyword commands
-        if (
-            self.state.hyprland_version > VersionInfo(0, 54, 3)
-            and base_command in ("keyword", "dispatch")
-            and isinstance(command, (str, list))
-        ):
+        # Lua config mode: translate dispatch/keyword commands to Lua equivalents
+        if self.state.lua_mode and base_command in ("keyword", "dispatch") and isinstance(command, (str, list)):
             command, base_command = self._translate_commands(command, base_command, log)
 
         if not command:

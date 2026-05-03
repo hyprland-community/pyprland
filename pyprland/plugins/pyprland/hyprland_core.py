@@ -1,6 +1,8 @@
 """Hyprland-specific state management."""
 
 import json
+import os
+from pathlib import Path
 from typing import Any
 
 from ...models import PyprError, VersionInfo
@@ -31,6 +33,13 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
         except (FileNotFoundError, json.JSONDecodeError, PyprError, ValueError, IndexError, AssertionError) as e:
             self.log.warning("Fail to parse version information: %s - using default", e)
             self.state.hyprland_version = DEFAULT_VERSION
+
+        # Detect Lua config mode by checking for hyprland.lua file
+        config_home = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+        lua_config = Path(config_home) / "hypr" / "hyprland.lua"
+        self.state.lua_mode = lua_config.is_file()
+        if self.state.lua_mode:
+            self.log.info("Lua config detected at %s", lua_config)
 
         try:
             self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]

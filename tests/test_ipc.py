@@ -75,6 +75,7 @@ async def test_hyprland_backend_execute_success(mock_open_connection, test_log):
 
     state = Mock()
     state.hyprland_version = VersionInfo(0, 40, 0)
+    state.lua_mode = False
     backend = HyprlandBackend(state)
 
     result = await backend.execute("some_command", log=test_log)
@@ -90,6 +91,7 @@ async def test_hyprland_backend_execute_failure(mock_open_connection, test_log):
 
     state = Mock()
     state.hyprland_version = VersionInfo(0, 40, 0)
+    state.lua_mode = False
     backend = HyprlandBackend(state)
 
     result = await backend.execute("some_command", log=test_log)
@@ -105,6 +107,7 @@ async def test_hyprland_backend_execute_batch(mock_open_connection, test_log):
 
     state = Mock()
     state.hyprland_version = VersionInfo(0, 40, 0)
+    state.lua_mode = False
     backend = HyprlandBackend(state)
 
     cmds = ["cmd1", "cmd2"]

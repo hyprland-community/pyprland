@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import os
-import subprocess
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import questionary
 from questionary import Choice
 
-from ..models import Environment, VersionInfo
+from ..models import Environment
 from .discovery import PluginInfo, discover_plugins, filter_by_environment
 from .generator import (
     backup_config,
@@ -23,9 +21,6 @@ from .helpers import detect_running_environment
 from .helpers.monitors import ask_monitor_layout, detect_monitors
 from .helpers.scratchpads import ask_scratchpads, scratchpad_to_dict
 from .questions import ask_plugin_options
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 # Max description length before truncation
 MAX_DESC_LENGTH = 60
@@ -314,23 +309,9 @@ def run_wizard(
 
 
 def _detect_hyprland_lua_support() -> bool:
-    """Check if running Hyprland supports Lua config (>0.54.3)."""
-    if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        return False
-    try:
-        result = subprocess.run(
-            ["hyprctl", "-j", "version"],
-            capture_output=True,
-            text=True,
-            timeout=3,
-            check=False,
-        )
-        if result.returncode == 0:
-            version = VersionInfo.from_hyprctl(json.loads(result.stdout))
-            return version > VersionInfo(0, 54, 3)
-    except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError, ValueError):
-        pass
-    return False
+    """Check if Hyprland is using Lua config by looking for hyprland.lua."""
+    config_home = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+    return (Path(config_home) / "hypr" / "hyprland.lua").is_file()
 
 
 def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
