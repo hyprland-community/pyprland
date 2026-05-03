@@ -165,6 +165,7 @@ async def get_response(command: bytes, logger: Logger) -> JSONResponse:
         reader_data = await reader.read()
 
     decoded_data = reader_data.decode("utf-8", errors="replace")
+    logger.debug(decoded_data)
     return cast("JSONResponse", json.loads(decoded_data))
 
 

@@ -159,6 +159,15 @@ def _workspace_to_lua(cmd: str) -> str | None:
     return f"hl.workspace_rule({{workspace={_lua_string(ws_name)}, {opts_lua}}})"
 
 
+def _animation_to_lua(cmd: str) -> str | None:
+    """Translate animations:enabled value to Lua hl.animation() call."""
+    rest = cmd[len("animations:enabled") :].strip()
+    if not rest:
+        return None
+    enabled = _lua_bool(rest)
+    return f'hl.animation({{leaf="global",enabled={enabled},speed=0,bezier="default"}})'
+
+
 def _monitor_to_lua(cmd: str) -> str | None:
     """Translate monitor name,action to Lua."""
     rest = cmd[len("monitor ") :].strip()
@@ -197,6 +206,7 @@ def _config_to_lua(cmd: str) -> str | None:
 
 # Ordered list of keyword prefix handlers (order matters for overlapping prefixes)
 _KEYWORD_HANDLERS: list[tuple[str, Callable[[str], str | None]]] = [
+    ("animations:", _animation_to_lua),
     ("windowrule[", _named_wr_to_lua),
     ("windowrule ", _anon_wr_to_lua),
     ("workspace ", _workspace_to_lua),
@@ -328,6 +338,18 @@ def _dsp_exec(rest: str) -> str:
     return f"hl.dsp.exec_cmd({_lua_string(rest)})"
 
 
+def _dsp_movefocus(rest: str) -> str:
+    return f"hl.dsp.focus({{direction={_lua_string(rest)}}})"
+
+
+def _dsp_workspace(rest: str) -> str:
+    return f"hl.dsp.focus({{workspace={_lua_string(rest)}}})"
+
+
+def _dsp_layoutmsg(rest: str) -> str:
+    return f"hl.dsp.layout({_lua_string(rest)})"
+
+
 # Dispatch table mapping command names to their Lua translators.
 # Each handler receives the argument portion (after the command name).
 _DISPATCH_HANDLERS: dict[str, Callable[[str], str | None]] = {
@@ -347,6 +369,9 @@ _DISPATCH_HANDLERS: dict[str, Callable[[str], str | None]] = {
     "dpms": _dsp_dpms,
     "execr": _dsp_execr,
     "exec": _dsp_exec,
+    "movefocus": _dsp_movefocus,
+    "workspace": _dsp_workspace,
+    "layoutmsg": _dsp_layoutmsg,
 }
 
 
@@ -358,6 +383,11 @@ def dispatch_to_lua_call(cmd: str) -> str | None:
     Returns None when the command has no known translation.
     """
     cmd = cmd.strip()
+
+    # Passthrough: if the command is already a Lua expression, return as-is
+    if cmd.startswith("hl.dsp."):
+        return cmd
+
     name, _, rest = cmd.partition(" ")
     rest = rest.strip()
 
