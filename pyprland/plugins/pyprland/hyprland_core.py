@@ -1,7 +1,9 @@
 """Hyprland-specific state management."""
 
 import json
-from typing import Any, cast
+import os
+from pathlib import Path
+from typing import Any
 
 from ...models import PyprError, VersionInfo
 from ..mixins import StateMonitorTrackingMixin
@@ -24,42 +26,20 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
 
     async def _init_hyprland(self) -> None:
         """Initialize Hyprland-specific state."""
-        # Examples:
-        # "tag": "v0.40.0-127-g4e42107d", (for git)
-        # "tag": "v0.40.0", (stable)
-        version_str = ""
-        auto_increment = False
-        version_info = {}
         try:
-            version_info = await self.backend.execute_json("version")
-            assert isinstance(version_info, dict)
-        except (FileNotFoundError, json.JSONDecodeError, PyprError):
-            self.log.warning("Fail to parse hyprctl version")
-        else:
-            _tag = version_info.get("tag")
-
-            if _tag and _tag != "unknown":
-                assert isinstance(_tag, str)
-                version_str = _tag.split("-", 1)[0]
-                if len(version_str) < len(_tag):
-                    auto_increment = True
-            else:
-                version_str = cast("str", version_info.get("version"))
-
-        if version_str:
-            try:
-                self._set_hyprland_version(
-                    version_str.removeprefix("v"),
-                    auto_increment,
-                )
-            except (ValueError, IndexError):
-                self.log.exception('Fail to parse version tag "%s"', version_str)
-                await self.backend.notify_error(f"Failed to parse hyprctl version tag: {version_str}")
-                version_str = ""
-
-        if not version_str:
-            self.log.warning("Fail to parse version information: %s - using default", version_info)
+            version_data = await self.backend.execute_json("version")
+            assert isinstance(version_data, dict)
+            self.state.hyprland_version = VersionInfo.from_hyprctl(version_data)
+        except (FileNotFoundError, json.JSONDecodeError, PyprError, ValueError, IndexError, AssertionError) as e:
+            self.log.warning("Fail to parse version information: %s - using default", e)
             self.state.hyprland_version = DEFAULT_VERSION
+
+        # Detect Lua config mode by checking for hyprland.lua file
+        config_home = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+        lua_config = Path(config_home) / "hypr" / "hyprland.lua"
+        self.state.lua_mode = lua_config.is_file()
+        if self.state.lua_mode:
+            self.log.info("Lua config detected at %s", lua_config)
 
         try:
             self.state.active_workspace = (await self.backend.execute_json("activeworkspace"))["name"]
@@ -117,15 +97,3 @@ class HyprlandStateMixin(StateMonitorTrackingMixin):
         """
         self.state.active_monitor, self.state.active_workspace = mon.rsplit(",", 1)
         self.log.debug("active_monitor = %s", self.state.active_monitor)
-
-    def _set_hyprland_version(self, version_str: str, auto_increment: bool = False) -> None:
-        """Set the hyprland version.
-
-        Args:
-            version_str: The version string
-            auto_increment: Whether to auto-increment the version
-        """
-        split_version = [int(i) for i in version_str.split(".")[:3]]
-        if auto_increment:
-            split_version[-1] += 1
-        self.state.hyprland_version = VersionInfo(*split_version)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import os
+from pathlib import Path
 
 import questionary
 from questionary import Choice
@@ -20,9 +21,6 @@ from .helpers import detect_running_environment
 from .helpers.monitors import ask_monitor_layout, detect_monitors
 from .helpers.scratchpads import ask_scratchpads, scratchpad_to_dict
 from .questions import ask_plugin_options
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 # Max description length before truncation
 MAX_DESC_LENGTH = 60
@@ -310,6 +308,12 @@ def run_wizard(
         _show_keybind_hints(config.get("scratchpads", {}), environment)
 
 
+def _detect_hyprland_lua_support() -> bool:
+    """Check if Hyprland is using Lua config by looking for hyprland.lua."""
+    config_home = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+    return (Path(config_home) / "hypr" / "hyprland.lua").is_file()
+
+
 def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
     """Show keybind hints for configured scratchpads.
 
@@ -323,9 +327,18 @@ def _show_keybind_hints(scratchpads_config: dict, environment: str) -> None:
     questionary.print("\n── Suggested Keybindings ──", style="bold")
 
     if environment == Environment.HYPRLAND:
-        questionary.print("Add to ~/.config/hypr/hyprland.conf:", style="fg:gray")
-        for name in scratchpads_config:
-            questionary.print(f"  bind = $mainMod, KEY, exec, pypr toggle {name}", style="fg:cyan")
+        if _detect_hyprland_lua_support():
+            questionary.print("Lua config (~/.config/hypr/hyprland.lua):", style="fg:gray")
+            for name in scratchpads_config:
+                questionary.print(
+                    f'  hl.bind(mainMod .. " + KEY", hl.dsp.exec_cmd("pypr toggle {name}"))',
+                    style="fg:cyan",
+                )
+        else:
+            questionary.print("Legacy config (~/.config/hypr/hyprland.conf):", style="fg:gray")
+            for name in scratchpads_config:
+                questionary.print(f"  bind = $mainMod, KEY, exec, pypr toggle {name}", style="fg:cyan")
+
     elif environment == Environment.NIRI:
         questionary.print("Add to ~/.config/niri/config.kdl:", style="fg:gray")
         for name in scratchpads_config:

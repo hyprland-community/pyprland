@@ -146,8 +146,9 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             return
 
         # Check current animations state to determine if game mode is already on
-        option = await self.backend.execute_json("getoption animations:enabled")
-        self._enabled = option.get("int", 1) == 0
+        animations = await self.backend.execute_json("animations")
+        global_anim = next((a for a in animations[0] if a["name"] == "global"), None)
+        self._enabled = global_anim is not None and not global_anim.get("enabled", True)
 
         # Scan existing clients for game windows if auto is enabled
         if self.get_config_bool("auto"):
