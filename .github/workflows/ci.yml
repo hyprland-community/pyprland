@@ -22,6 +22,8 @@ jobs:
         run: |
           mkdir ~/.config/hypr/
           touch ~/.config/hypr/pyprland.toml
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y lua5.4
       - name: Install dependencies
         run: uv sync --all-groups
       - name: Run tests
