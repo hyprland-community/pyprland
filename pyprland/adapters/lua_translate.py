@@ -66,6 +66,8 @@ def _effect_lua(key: str, value: str) -> str:
     if key in _BOOL_EFFECTS:
         return f"{key}={_lua_bool(value) if value else 'true'}"
     if value:
+        if _is_number(value):
+            return f"{key}={value}"
         return f"{key}={_lua_string(value)}"
     return f"{key}=true"
 
@@ -173,11 +175,19 @@ def _monitor_to_lua(cmd: str) -> str | None:
     rest = cmd[len("monitor ") :].strip()
     if "," not in rest:
         return None
-    comma = rest.find(",")
-    name = rest[:comma].strip()
-    action = rest[comma + 1 :].strip()
-    if action == "disable":
+    parts = rest.split(",")
+    name = parts[0].strip()
+    if len(parts) == 2 and parts[1].strip() == "disable":  # noqa: PLR2004
         return f"hl.monitor({{output={_lua_string(name)}, disabled=true}})"
+    if len(parts) >= 4:  # noqa: PLR2004
+        # Format: name,RES@RATE,POSxPOS,SCALE[,transform,VALUE]
+        mode = parts[1].strip()
+        position = parts[2].strip()
+        scale = parts[3].strip()
+        fields = f"output={_lua_string(name)}, mode={_lua_string(mode)}, position={_lua_string(position)}, scale={scale}"
+        if len(parts) >= 6 and parts[4].strip() == "transform":  # noqa: PLR2004
+            fields += f", transform={parts[5].strip()}"
+        return f"hl.monitor({{{fields}}})"
     return None
 
 

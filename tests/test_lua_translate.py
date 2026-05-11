@@ -106,7 +106,7 @@ class TestKeywordToLua:
             # Named: string effect
             (
                 "windowrule[myrule]:opacity 0.8",
-                'hl.window_rule({name="myrule", opacity="0.8"})',
+                'hl.window_rule({name="myrule", opacity=0.8})',
             ),
         ],
         ids=[
@@ -144,7 +144,12 @@ class TestKeywordToLua:
             # Anonymous: non-bool effect with match
             (
                 "windowrule opacity 0.9, class:Alacritty",
-                'hl.window_rule({opacity="0.9", match={class="Alacritty"}})',
+                'hl.window_rule({opacity=0.9, match={class="Alacritty"}})',
+            ),
+            # Anonymous: numeric effect with match (tag)
+            (
+                "windowrule border_size 3, match:tag layout_center",
+                'hl.window_rule({border_size=3, match={tag="layout_center"}})',
             ),
         ],
         ids=[
@@ -152,6 +157,7 @@ class TestKeywordToLua:
             "anon-with-class-match",
             "anon-with-match-prefix",
             "anon-string-effect-with-match",
+            "anon-numeric-effect-with-tag",
         ],
     )
     def test_anonymous_window_rules(self, cmd: str, expected: str) -> None:
@@ -196,8 +202,20 @@ class TestKeywordToLua:
                 "monitor HDMI-A-1,disable",
                 'hl.monitor({output="HDMI-A-1", disabled=true})',
             ),
+            (
+                "monitor DP-1,1920x1080@60,0x0,1.0,transform,0",
+                'hl.monitor({output="DP-1", mode="1920x1080@60", position="0x0", scale=1.0, transform=0})',
+            ),
+            (
+                "monitor HDMI-A-1,3440x1440@59.999,1920x0,2.0,transform,1",
+                'hl.monitor({output="HDMI-A-1", mode="3440x1440@59.999", position="1920x0", scale=2.0, transform=1})',
+            ),
+            (
+                "monitor eDP-1,1920x1080@60,0x0,1.5",
+                'hl.monitor({output="eDP-1", mode="1920x1080@60", position="0x0", scale=1.5})',
+            ),
         ],
-        ids=["monitor-disable"],
+        ids=["monitor-disable", "monitor-full", "monitor-full-transform", "monitor-no-transform"],
     )
     def test_monitor(self, cmd: str, expected: str) -> None:
         result = keyword_to_lua_code(cmd)
@@ -205,7 +223,7 @@ class TestKeywordToLua:
         validate_lua(result)
 
     def test_monitor_unknown_action_returns_none(self) -> None:
-        # Non-disable monitor actions aren't translated
+        # Incomplete monitor commands aren't translated
         assert keyword_to_lua_code("monitor HDMI-A-1,1920x1080@60") is None
 
     def test_unknown_keyword_returns_none(self) -> None:
