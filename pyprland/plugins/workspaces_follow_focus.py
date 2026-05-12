@@ -16,6 +16,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
     )
 
     workspace_list: list[int]
+    _pending_task: asyncio.Task | None = None
 
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Rebuild workspaces list."""
@@ -23,7 +24,17 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         self.workspace_list = list(range(1, self.get_config_int("max_workspaces") + 1))
 
     async def event_focusedmon(self, screenid_name: str) -> None:
-        """Reacts to monitor changes.
+        """Reacts to monitor changes (debounced).
+
+        Args:
+            screenid_name: The screen ID and name
+        """
+        if self._pending_task and not self._pending_task.done():
+            self._pending_task.cancel()
+        self._pending_task = asyncio.create_task(self._handle_focusedmon(screenid_name))
+
+    async def _handle_focusedmon(self, screenid_name: str) -> None:
+        """Moves free workspaces to the focused monitor.
 
         Args:
             screenid_name: The screen ID and name
