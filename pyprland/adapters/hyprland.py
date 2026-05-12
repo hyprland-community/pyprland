@@ -32,16 +32,17 @@ class HyprlandBackend(EnvironmentBackend):
         """Translate legacy IPC commands to Lua equivalents for the Lua config parser.
 
         keyword → eval with hl.config/hl.window_rule/etc.
-        dispatch → dispatch with hl.dsp.*({}) (Hyprland wraps these in hl.dispatch() internally)
+        dispatch → eval with hl.dispatch(hl.dsp.*({...}))
         """
         if base_command == "keyword":
             translator = keyword_to_lua_code
-            new_base = "eval"
+            wrap_dispatch = False
             warn_label = "keyword"
         else:
             translator = dispatch_to_lua_call
-            new_base = "dispatch"
+            wrap_dispatch = True
             warn_label = "dispatch"
+        new_base = "eval"
 
         if isinstance(command, list):
             translated = []
@@ -49,7 +50,7 @@ class HyprlandBackend(EnvironmentBackend):
                 if isinstance(cmd, str):
                     result = translator(cmd)
                     if result:
-                        translated.append(result)
+                        translated.append(f"hl.dispatch({result})" if wrap_dispatch else result)
                     else:
                         log.warning("No Lua translation for %s: %s", warn_label, cmd)
                         translated.append(cmd)
@@ -59,7 +60,7 @@ class HyprlandBackend(EnvironmentBackend):
 
         result = translator(command)
         if result:
-            return result, new_base
+            return f"hl.dispatch({result})" if wrap_dispatch else result, new_base
         log.warning("No Lua translation for %s: %s", warn_label, command)
         return command, base_command
 
@@ -92,12 +93,12 @@ class HyprlandBackend(EnvironmentBackend):
                 nb_cmds = 1
                 ctl_writer.write(f"/{base_command} {command}".encode())
             await ctl_writer.drain()
-            resp = await ctl_reader.read(100)
+            resp = await ctl_reader.read(4096)
 
         # remove "\n" from the response
         resp = b"".join(resp.split(b"\n"))
 
-        r: bool = resp == b"ok" * nb_cmds
+        r: bool = resp == b"ok" * nb_cmds if base_command != "eval" else not resp.startswith(b"error:")
         if not r:
             if weak:
                 log.warning("FAILED %s", resp)

@@ -315,7 +315,7 @@ class TestDispatchToLua:
             # moveworkspacetomonitor
             (
                 "moveworkspacetomonitor 1 HDMI-A-1",
-                'hl.dsp.workspace.move({id="1", monitor="HDMI-A-1"})',
+                'hl.dsp.workspace.move({workspace="1", monitor="HDMI-A-1"})',
             ),
             # swapactiveworkspaces
             (

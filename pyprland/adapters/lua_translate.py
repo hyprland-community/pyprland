@@ -316,7 +316,7 @@ def _dsp_alterzorder(rest: str) -> str | None:
 def _dsp_moveworkspacetomonitor(rest: str) -> str | None:
     ws, sep, mon = rest.partition(" ")
     if sep:
-        return f"hl.dsp.workspace.move({{id={_lua_string(ws.strip())}, monitor={_lua_string(mon.strip())}}})"
+        return f"hl.dsp.workspace.move({{workspace={_lua_string(ws.strip())}, monitor={_lua_string(mon.strip())}}})"
     return None
 
 
