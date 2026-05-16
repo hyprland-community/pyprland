@@ -98,6 +98,7 @@ class EventsMixin:
             # Reset state when the primary window is closed
             if scratch.full_address == addr:
                 scratch.visible = False
+                self.scratches.reset(scratch)  # remove stale addr from registry before clearing client_info
                 scratch.client_info = None
                 scratch.meta.initialized = False
 
