@@ -728,6 +728,12 @@ class Extension(Plugin):
             if color_scheme == ColorScheme.EARTH:
                 rgb = (rgb[0], rgb[1], int(rgb[2] * 0.7))
 
+            # For default scheme (no color adjustment), skip nicify_oklab()
+            # to preserve original image colors. nicify_oklab() applies
+            # restrictive clamping that makes all palettes look identical.
+            if color_scheme == ColorScheme.DEFAULT or not color_scheme:
+                return colorsys.rgb_to_hls(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0)
+
             r, g, b = nicify_oklab(rgb, **get_color_scheme_props(color_scheme))
             return colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
 
