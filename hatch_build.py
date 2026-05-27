@@ -1,10 +1,18 @@
-"""Custom hatch build hook to compile the optional C client.
+"""Custom hatch build hook to compile the optional native C client.
 
-When the PYPRLAND_BUILD_NATIVE environment variable is set to "1", compiles
-client/pypr-client.c into a statically-linked native binary and includes it
-in a platform-specific wheel tagged for manylinux_2_17_x86_64.
+The ``pypr-client`` binary is a fast, dependency free drop in for the ``pypr``
+command. Whether it gets compiled and bundled into the wheel depends on the
+``PYPRLAND_BUILD_NATIVE`` environment variable:
 
-Without the env var the hook does nothing and the wheel stays pure-python.
+- unset (the default): best effort build. When a C compiler is available the
+  client is compiled (dynamically linked) and the wheel is tagged for the
+  building platform. With no compiler the build quietly falls back to a pure
+  python wheel. This is what source installs get (``pip`` or ``uv`` from an
+  sdist or a git checkout). See issue #236.
+- ``"1"``: force a statically linked binary in a wheel tagged
+  ``manylinux_2_17_x86_64``, suitable for publishing to PyPI.
+- ``"0"``: never compile, always produce a pure python wheel. Used to publish
+  the cross platform PyPI wheel, and as an escape hatch.
 """
 
 import os
@@ -79,17 +87,26 @@ class NativeClientBuildHook(BuildHookInterface):
     PLUGIN_NAME = "native-client"
 
     def initialize(self, version: str, build_data: dict) -> None:  # noqa: ARG002
-        """Compile the C client and include it in the wheel if successful.
+        """Compile the C client and include it in the wheel if appropriate.
 
-        Only runs when PYPRLAND_BUILD_NATIVE=1 is set and the build target
-        is a wheel.  The resulting wheel is tagged as manylinux so it can be
-        uploaded to PyPI.
+        Runs for every wheel build unless ``PYPRLAND_BUILD_NATIVE=0`` opts out.
+        With ``PYPRLAND_BUILD_NATIVE=1`` the binary is statically linked and the
+        wheel is tagged ``manylinux_2_17_x86_64`` for PyPI. Otherwise (the
+        default, for example source installs) it is a best effort, dynamically
+        linked build tagged for the running platform.
         """
         if self.target_name != "wheel":
             return
 
-        if os.environ.get("PYPRLAND_BUILD_NATIVE") != "1":
+        mode = os.environ.get("PYPRLAND_BUILD_NATIVE", "")
+        if mode == "0":  # explicit opt out, keep the wheel pure python
             return
+
+        # PYPRLAND_BUILD_NATIVE=1 produces a portable, statically linked binary
+        # for the published manylinux wheel. Any other value (including unset)
+        # does a best effort dynamic build so that source installs still ship
+        # the client (see issue #236).
+        static = mode == "1"
 
         source = Path(self.root) / "client" / "pypr-client.c"
         if not source.exists():
@@ -101,8 +118,8 @@ class NativeClientBuildHook(BuildHookInterface):
             self.app.display_warning("No C compiler found (set CC env var or install gcc/clang). Skipping native pypr-client build.")
             return
 
-        self.app.display_info(f"Compiling native client with {cc} (static)")
-        output, warning = _try_compile(cc, source, static=True)
+        self.app.display_info(f"Compiling native client with {cc}" + (" (static)" if static else ""))
+        output, warning = _try_compile(cc, source, static=static)
 
         if output is None:
             self.app.display_warning(warning)
@@ -114,6 +131,11 @@ class NativeClientBuildHook(BuildHookInterface):
         # {name}-{version}.data/scripts/ path in the wheel (PEP 427).
         build_data["shared_scripts"][str(output)] = "pypr-client"
 
-        # Mark the wheel as platform-specific with an explicit manylinux tag.
+        # The wheel now carries a native binary, so it is no longer pure python.
         build_data["pure_python"] = False
-        build_data["tag"] = MANYLINUX_TAG
+        if static:
+            # Portable binary, tag explicitly so it can be uploaded to PyPI.
+            build_data["tag"] = MANYLINUX_TAG
+        else:
+            # Built for this machine, let hatchling infer the platform tag.
+            build_data["infer_tag"] = True
