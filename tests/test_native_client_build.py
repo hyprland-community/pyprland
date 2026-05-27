@@ -37,7 +37,12 @@ def _ensure_hatchling_importable() -> None:
     parts = path.split(".")
     for i in range(1, len(parts) + 1):
         name = ".".join(parts[:i])
-        sys.modules.setdefault(name, types.ModuleType(name))
+        module = sys.modules.get(name)
+        if module is None:
+            module = types.ModuleType(name)
+            sys.modules[name] = module
+        if i < len(parts):
+            module.__path__ = []
     sys.modules[path].BuildHookInterface = type("BuildHookInterface", (), {})
 
 
