@@ -246,6 +246,15 @@ class EventsMixin:
         """
         addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
+        if item is not None and not item.have_address("0x" + addr):
+            # Hyprland recycles the window handle address of a destroyed window.
+            # A freshly opened, unrelated window can therefore reuse the address
+            # of a scratchpad that no longer owns it, leaving a stale entry in
+            # the address registry. Drop it and treat the window as unrelated
+            # instead of trying (and failing) to initialize it as a scratchpad.
+            self.log.debug("Dropping stale registry entry for 0x%s (was scratch %r)", addr, item.uid)
+            self.scratches.clear(addr=addr)
+            item = None
         respawned = list(self.scratches.get_by_state("respawned"))
 
         if item:

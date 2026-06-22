@@ -537,3 +537,50 @@ async def test_command_serialization(scratchpads, subprocess_shell_mock, server_
         # First end should come before second start
         assert ends[0] < starts[1], f"Commands interleaved! Order: {execution_order}"
     # If less than 4 entries, second command may have been a no-op (already hidden) - that's fine
+
+
+@pytest.mark.asyncio
+async def test_openwindow_recycled_address(scratchpads, subprocess_shell_mock, server_fixture):
+    """A window reusing a destroyed scratchpad's recycled address must be ignored.
+
+    Hyprland reuses the window-handle address of a destroyed window. If a
+    scratchpad window is gone but a stale entry still lingers in the address
+    registry (e.g. cleared during a respawn before the close event is handled),
+    an unrelated window opening with that recycled address must not be mistaken
+    for the scratchpad. Regression test for the
+    ``scratchpads::event_openwindow: 'Client window  not found'`` error.
+    """
+    mocks.json_commands_result["clients"] = CLIENT_CONFIG
+
+    # Spawn and map the scratchpad so it gets registered by its address.
+    await mocks.pypr("toggle term")
+    await wait_called(mocks.hyprctl, count=2)
+    await _send_window_events()
+    await asyncio.sleep(0.1)
+    await mocks.wait_queues()
+
+    plugin = mocks.pyprland_instance.plugins["scratchpads"]
+    term = plugin.scratches.get("term")
+    assert term is not None
+    assert plugin.scratches.get(addr="12345677890") is term
+
+    # Simulate the race: the scratchpad window is gone (client info cleared, as
+    # happens on respawn/reset) while its address still lingers in the registry.
+    term.client_info = None
+    term.meta.initialized = False
+    assert plugin.scratches.get(addr="12345677890") is term
+
+    mocks.hyprctl.reset_mock()
+
+    # An unrelated window opens reusing the recycled address.
+    # Real Hyprland sends the bare hex address (no "0x"/"address:" prefix).
+    await mocks.send_event("openwindow>>12345677890,1,firefox,Mozilla Firefox")
+    await asyncio.sleep(0.1)
+    await mocks.wait_queues()
+
+    # No error notification must be emitted ...
+    notifies = [c for c in mocks.hyprctl.call_args_list if c.kwargs.get("base_command") == "notify"]
+    assert not notifies, f"unexpected notification(s): {notifies}"
+
+    # ... and the stale registry entry must have been purged.
+    assert plugin.scratches.get(addr="12345677890") is None
