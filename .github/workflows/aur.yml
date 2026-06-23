@@ -27,7 +27,7 @@ jobs:
         run: pacman -Syu --noconfirm base-devel git python python-build python-installer python-hatchling python-aiofiles python-aiohttp python-pillow gcc
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
