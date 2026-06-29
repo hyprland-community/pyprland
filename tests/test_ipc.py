@@ -94,7 +94,7 @@ async def test_hyprland_backend_execute_failure(mock_open_connection, test_log):
     state.lua_mode = False
     backend = HyprlandBackend(state)
 
-    result = await backend.execute("some_command", log=test_log)
+    result = await backend.execute("some_command", log=test_log, weak=True)
 
     assert result is False
     # Check if logged error? Need to spy on logger or check side effects if implemented

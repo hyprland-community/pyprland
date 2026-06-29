@@ -418,10 +418,16 @@ interval = 10
             assert exc_info.value.code == ExitCode.USAGE_ERROR
 
 
-def test_run_validate_config_not_found():
+def test_run_validate_config_not_found(caplog):
     """Test validate command when config file doesn't exist."""
+    import logging
+
     with tempfile.TemporaryDirectory() as tmpdir:
         # Patch the constants to use non-existent paths in temp directory
+        validate_logger = logging.getLogger("validate")
+        validate_logger.handlers.clear()
+        validate_logger.addHandler(logging.NullHandler())
+        validate_logger.propagate = False
         with (
             patch("pyprland.validate_cli.CONFIG_FILE", Path(tmpdir) / "pypr" / "config.toml"),
             patch("pyprland.validate_cli.LEGACY_CONFIG_FILE", Path(tmpdir) / "hypr" / "pyprland.toml"),
