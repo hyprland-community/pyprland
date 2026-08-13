@@ -7,6 +7,7 @@ animation directions, monitor offsets, margins, HiDPI scaling, and rotation.
 
 import pytest
 
+from pyprland.adapters.units import convert_monitor_dimension
 from pyprland.plugins.scratchpads.animations import Placement
 from pyprland.plugins.scratchpads.helpers import apply_offset, compute_offset, get_size
 
@@ -106,6 +107,44 @@ class TestGetSize:
     def test_rotated_with_scale(self):
         mon = _make_monitor(width=3840, height=2160, scale=2.0, transform=3)
         assert get_size(mon) == (1080, 1920)
+
+
+# ===========================================================================
+# convert_monitor_dimension
+# ===========================================================================
+
+
+class TestConvertMonitorDimension:
+    """Tests for adapters.units.convert_monitor_dimension."""
+
+    def test_physical_ref_divides_by_scale(self):
+        """Physical monitor dimensions are divided by scale for percentages."""
+        mon = _make_monitor(width=3840, height=2160, scale=2.0)
+        assert convert_monitor_dimension("50%", 3840, mon) == 960  # 3840 / 2.0 * 50 / 100
+        assert convert_monitor_dimension("25%", 2160, mon) == 270  # 2160 / 2.0 * 25 / 100
+
+    def test_logical_ref_skips_scale_division(self):
+        """Logical ref values are not divided by scale."""
+        mon = _make_monitor(width=3840, height=2160, scale=2.0)
+        assert convert_monitor_dimension("50%", 1920, mon, logical_ref=True) == 960  # 1920 * 50 / 100
+        assert convert_monitor_dimension("100%", 960, mon, logical_ref=True) == 960  # 960 * 100 / 100
+
+    def test_pixel_suffix_unchanged(self):
+        """Pixel values bypass all scale logic."""
+        mon = _make_monitor(width=3840, height=2160, scale=2.0)
+        assert convert_monitor_dimension("100px", 3840, mon) == 100
+        assert convert_monitor_dimension("100px", 3840, mon, logical_ref=True) == 100
+
+    def test_int_passthrough(self):
+        """Integer values are returned as-is."""
+        mon = _make_monitor(width=3840, height=2160, scale=2.0)
+        assert convert_monitor_dimension(50, 3840, mon) == 50
+        assert convert_monitor_dimension(50, 3840, mon, logical_ref=True) == 50
+
+    def test_logical_ref_matches_physical_at_scale_1(self):
+        """At scale=1, logical and physical refs produce identical results."""
+        mon = _make_monitor(width=1920, height=1080, scale=1.0)
+        assert convert_monitor_dimension("50%", 1920, mon) == convert_monitor_dimension("50%", 1920, mon, logical_ref=True)
 
 
 # ===========================================================================
@@ -563,16 +602,16 @@ class TestPlacementEdgeCases:
         assert y == 30
 
     def test_percentage_margin_with_scale(self):
-        """Percentage margin respects HiDPI scale.
+        """Percentage margin uses logical monitor size, not physical.
 
         fromtop passes get_size(monitor)[1] as ref_value to convert_monitor_dimension.
-        get_size already divides by scale: 2160/2.0 = 1080.
-        Then convert_monitor_dimension does: int(1080 / 2.0 * 10 / 100) = 54.
+        get_size already divides by scale: 2160/2.0 = 1080 (logical).
+        convert_monitor_dimension with logical_ref=True does: int(1080 * 10 / 100) = 108.
         """
         mon = _make_monitor(width=3840, height=2160, scale=2.0)
         client = _make_client(width=800, height=600)
         x, y = Placement.get("fromtop", mon, client, "10%")
-        assert y == 54
+        assert y == 108
 
     def test_margin_direction_consistency(self):
         """Margin pushes inward from the animation edge for all directions."""

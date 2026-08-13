@@ -93,8 +93,8 @@ class Placement:
         mon_x, mon_y = monitor["x"], monitor["y"]
         mon_w, mon_h = get_size(monitor)
         client_w, client_h = client["size"]
-        margin_w = convert_monitor_dimension(margin, mon_w, monitor)
-        margin_h = convert_monitor_dimension(margin, mon_h, monitor)
+        margin_w = convert_monitor_dimension(margin, mon_w, monitor, logical_ref=True)
+        margin_h = convert_monitor_dimension(margin, mon_h, monitor, logical_ref=True)
         return (
             x_fn(mon_x, mon_w, client_w, margin_w),
             y_fn(mon_y, mon_h, client_h, margin_h),

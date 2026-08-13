@@ -8,7 +8,7 @@ from ..models import MonitorInfo
 MonitorDimension = Literal["width", "height"]
 
 
-def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorInfo) -> int:
+def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorInfo, logical_ref: bool = False) -> int:
     """Convert `size` into pixels (given a reference value applied to a `monitor`).
 
     if size is an integer, assumed pixels & return it
@@ -19,6 +19,9 @@ def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorI
         size: The size to convert (int or string with unit)
         ref_value: Reference value for percentage calculations
         monitor: Monitor information
+        logical_ref: If True, ref_value is already in logical pixels and the
+            monitor scale is not applied. Use this when ref_value comes from
+            a source that already reports logical pixels (e.g. client size).
     """
     if isinstance(size, int):
         return size
@@ -26,6 +29,8 @@ def convert_monitor_dimension(size: int | str, ref_value: int, monitor: MonitorI
     if isinstance(size, str):
         if size.endswith("%"):
             p = int(size[:-1])
+            if logical_ref:
+                return int(ref_value * p / 100)
             return int(ref_value / monitor["scale"] * p / 100)
         if size.endswith("px"):
             return int(size[:-2])

@@ -68,8 +68,8 @@ class TransitionsMixin:
             offset_str = str(offset)
             aspect_tuple = tuple(aspect)
             return (
-                convert_monitor_dimension(offset_str, aspect_tuple[0], monitor) + margin,
-                convert_monitor_dimension(offset_str, aspect_tuple[1], monitor) + margin,
+                convert_monitor_dimension(offset_str, aspect_tuple[0], monitor, logical_ref=True) + margin,
+                convert_monitor_dimension(offset_str, aspect_tuple[1], monitor, logical_ref=True) + margin,
             )
 
         mon_size = (monitor["height"], monitor["width"]) if rotated else (monitor["width"], monitor["height"])
