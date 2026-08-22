@@ -134,10 +134,12 @@ bind = $mainMod SHIFT, Z, exec, $pypr zoom ++0.5
 
 </details>
 
-<a href="https://star-history.dera.page/#fdev31/pyprland&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=fdev31/pyprland&type=Timeline&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=fdev31/pyprland&type=Timeline" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=hyprland-community/pyprland&type=Timeline" />
-  </picture>
+## Star History
+
+<a href="https://star-history.dera.page/#hyprland-community/pyprland">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=hyprland-community/pyprland&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=hyprland-community/pyprland" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=hyprland-community/pyprland" />
+ </picture>
 </a>
