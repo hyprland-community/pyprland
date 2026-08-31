@@ -59,6 +59,10 @@ class EventsMixin:
         _ = scratch, clients
         return False  # stub, overridden by composed class
 
+    async def event_configreloaded(self, _: str) -> None:
+        """Hyprland config reload hook."""
+        await self.on_reload()
+
     async def event_changefloatingmode(self, args: str) -> None:
         """Update the floating mode of scratchpads.
 
