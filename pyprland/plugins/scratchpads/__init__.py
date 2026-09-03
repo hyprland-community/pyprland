@@ -513,10 +513,15 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             return
         assert scratch.client_info is not None
         ref_position = scratch.client_info["at"]
-        monitor_info = scratch.meta.monitor_info
-        if monitor_info is None:
-            self.log.error("Cannot hide %s: no monitor_info available", scratch.uid)
-            return
+        try:
+            monitor_info = await self.backend.get_monitor_props(name=scratch.monitor, include_disabled=True)
+            scratch.meta.monitor_info = monitor_info
+        except RuntimeError:
+            cached = scratch.meta.monitor_info
+            if cached is None:
+                self.log.exception("Cannot hide %s: no monitor_info available", scratch.uid)
+                return
+            monitor_info = cached
 
         configured_position = scratch.conf.get_str("position")
         if configured_position:
