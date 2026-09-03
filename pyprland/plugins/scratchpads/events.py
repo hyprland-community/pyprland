@@ -59,7 +59,7 @@ class EventsMixin:
         _ = scratch, clients
         return False  # stub, overridden by composed class
 
-    async def event_configreloaded(self, _: str) -> None:
+    async def event_configreloaded(self, _: str = "") -> None:
         """Hyprland config reload hook."""
         await self.on_reload()
 

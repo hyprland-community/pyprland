@@ -70,9 +70,18 @@ class _FakeApp:
 def _make_hook() -> hatch_build.NativeClientBuildHook:
     """Build a hook instance without invoking hatchling's real __init__."""
     hook = hatch_build.NativeClientBuildHook.__new__(hatch_build.NativeClientBuildHook)
-    hook.root = str(ROOT)
-    hook.target_name = "wheel"
-    hook.app = _FakeApp()
+    # Set both mangled private attrs (read by real hatchling properties) and
+    # plain attrs (used when the stub base class has no properties).
+    app = _FakeApp()
+    for attr, value in [
+        ("_BuildHookInterface__root", str(ROOT)),
+        ("_BuildHookInterface__target_name", "wheel"),
+        ("_BuildHookInterface__app", app),
+        ("root", str(ROOT)),
+        ("target_name", "wheel"),
+        ("app", app),
+    ]:
+        hook.__dict__[attr] = value
     return hook
 
 
@@ -154,7 +163,8 @@ def test_non_wheel_target_is_noop(monkeypatch) -> None:
     """The hook must do nothing for non-wheel targets (e.g. sdist)."""
     monkeypatch.delenv("PYPRLAND_BUILD_NATIVE", raising=False)
     hook = _make_hook()
-    hook.target_name = "sdist"
+    hook.__dict__["_BuildHookInterface__target_name"] = "sdist"
+    hook.__dict__["target_name"] = "sdist"
     build_data: dict = {"shared_scripts": {}}
     hook.initialize("0", build_data)
     assert _scripts(build_data) == {}
