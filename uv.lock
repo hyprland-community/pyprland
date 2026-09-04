@@ -1504,7 +1504,7 @@ wheels = [
 
 [[package]]
 name = "pyprland"
-version = "3.4.3"
+version = "3.4.4"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
