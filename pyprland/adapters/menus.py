@@ -98,6 +98,7 @@ def _menu(proc: str, params: str) -> type[MenuEngine]:
     )
 
 
+NoctaliaMenu = _menu("noctalia", "dmenu")
 TofiMenu = _menu("tofi", "--prompt-text '[prompt]'")
 RofiMenu = _menu("rofi", "-dmenu -i -p '[prompt]'")
 WofiMenu = _menu("wofi", "-dmenu -i -p '[prompt]'")
@@ -108,7 +109,7 @@ WalkerMenu = _menu("walker", "-d -k -p '[prompt]'")
 AnyrunMenu = _menu("anyrun", "--plugins libstdin.so --show-results-immediately true")
 VicinaeMenu = _menu("vicinae", "dmenu --no-quick-look")
 
-every_menu_engine = [FuzzelMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu, WalkerMenu, VicinaeMenu]
+every_menu_engine = [FuzzelMenu, NoctaliaMenu, TofiMenu, RofiMenu, WofiMenu, BemenuMenu, DmenuMenu, AnyrunMenu, WalkerMenu, VicinaeMenu]
 
 MENU_ENGINE_CHOICES: list[str] = [engine.proc_name for engine in every_menu_engine]
 """List of available menu engine names, derived from every_menu_engine."""

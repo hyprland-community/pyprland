@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 58
+:total-count: 59
 
 --------------------------------------------------------------------------------
 
@@ -184,4 +184,17 @@ When "reload"ing, improve the merge algorithm of the config
 
 - delete missing keys in src
 - replace content of lists and dicts recursively (keeping references intact)
-use clear + update / extend etc...
+- use clear + update / extend etc...
+
+--------------------------------------------------------------------------------
+
+Create new plugin deprecating bar plugin
+========================================
+
+:bugid: 59
+:created: 2026-09-06T00:34:18
+:priority: 0
+
+- manages processes
+- can also run arbitrary commands
+- triggers (restart) on monitor status change (with hysteresis)
