@@ -174,7 +174,7 @@ Re-introduce focus tracking with a twist
 :fixed: 2024-05-01T23:42:00
 :priority: 0
 
-Only enable it if the focuse changed the active workspace
+Only enable it if the focus changed the active workspace
 
 --------------------------------------------------------------------------------
 
@@ -335,7 +335,7 @@ set preserve_aspect=true by default
 :priority: 0
 
 also add a command "scratch reset <uid>" to set active scratch position and size according to the rules.
-Can support ommitting the <uid>, requires tracking of the currently active scratch (or just check focused window)
+Can support omitting the <uid>, requires tracking of the currently active scratch (or just check focused window)
 
 --------------------------------------------------------------------------------
 
