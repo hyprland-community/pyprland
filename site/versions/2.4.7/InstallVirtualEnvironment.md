@@ -35,7 +35,7 @@ cd ~/pypr-env
 git pull -r
 ```
 
-# Troubelshooting
+# Troubleshooting
 
 If things go wrong, try (eg: after a system upgrade where Python got updated):
 
