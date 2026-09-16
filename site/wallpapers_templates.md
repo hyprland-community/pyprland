@@ -281,17 +281,11 @@ post_hook = "sh /tmp/hyprlandcolors.sh"
 
 Template (`~/color_configs/hyprlandcolors.sh`):
 ```txt
-hyprctl keyword general:col.active_border "rgb({{colors.primary.default.hex_stripped}}) rgb({{colors.tertiary.default.hex_stripped}}) 30deg"
-hyprctl keyword general:col.inactive_border "rgb({{colors.surface_variant.default.hex_stripped}})"
-hyprctl keyword decoration:shadow:color "rgba({{colors.shadow.default.hex_stripped}}ee)"
+COLOR='{angle=130, colors={"rgb({{colors.primary.default.hex_stripped}})" , "rgb({{colors.secondary.default.hex_stripped}})"}}'
+hyprctl eval "hl.config({general={col={active_border=$COLOR, nogroup_border_active=$COLOR}}})"
+hyprctl eval 'hl.config({decoration={shadow={color="rgba({{colors.on_primary.default.hex_stripped | set_lightness: -12 }}A0)"}}})'
 ```
 
-Output (after processing with a blue-toned wallpaper):
-```sh
-hyprctl keyword general:col.active_border "rgb(6495ED) rgb(ED6495) 30deg"
-hyprctl keyword general:col.inactive_border "rgb(3D3D3D)"
-hyprctl keyword decoration:shadow:color "rgba(000000ee)"
-```
 
 **Kitty Terminal Theme**
 
