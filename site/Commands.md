@@ -84,7 +84,7 @@ pypr compgen zsh /etc/zsh/completions/_pypr
 
 ### When to Use It
 
-- In `hyprland.conf` key bindings where startup time matters
+- In `hyprland.lua` key bindings where startup time matters
 - When you need minimal latency (e.g., toggling scratchpads)
 
 ### Limitations
@@ -101,21 +101,23 @@ Depending on your installation method, `pypr-client` may already be available. I
 
 Rust and Go versions are also available in the same directory.
 
-### Usage in hyprland.conf
+### Usage in hyprland.lua
 
-```ini
-# Use pypr-client for faster key bindings
-$pypr = /usr/bin/pypr-client
+```lua
+--Use pypr-client for faster key bindings
+local pypr = "/usr/bin/pypr-client"
 
-bind = $mainMod, A, exec, $pypr toggle term
-bind = $mainMod, B, exec, $pypr expose
-bind = $mainMod SHIFT, Z, exec, $pypr zoom
+--example bindings
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(pypr .. " expose"))
+hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(pypr .. " zoom"))
 ```
 
 > [!tip]
 > If using [uwsm](https://github.com/Vladimir-csp/uwsm), wrap the command:
-> ```ini
-> $pypr = uwsm-app -- /usr/bin/pypr-client
+
+> ```lua
+> local pypr = "uwsm-app -- /usr/bin/pypr-client"
 > ```
 
 For technical details about the client-daemon protocol, see [Architecture: Socket Protocol](./Architecture_core#pyprland-socket-protocol).

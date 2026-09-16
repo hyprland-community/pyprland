@@ -7,14 +7,20 @@ Implements the "expose" effect, showing every client window on the focused scree
 
 For a similar feature using a menu, try the [fetch_client_menu](./fetch_client_menu) plugin (less intrusive).
 
-Sample `hyprland.conf`:
+Sample `hyprland.lua`:
 
-```bash
-# Setup the key binding
-bind = $mainMod, B, exec, pypr expose
+```lua
+--Setup the key binding
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(pypr .. " expose"))
 
-# Add some style to the "exposed" workspace
-workspace = special:exposed,gapsout:60,gapsin:30,bordersize:5,border:true,shadow:false
+--Add some style to the "exposed" workspace
+hl.workspace_rule({
+	workspace = "special:exposed",
+	gaps_out = 60,
+	gaps_in = 30,
+	border_size = 5,
+	no_shadow = true,
+})
 ```
 
 `MOD+B` will bring every client to the focused workspace, pressed again it will go to this workspace.

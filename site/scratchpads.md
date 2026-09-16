@@ -42,10 +42,10 @@ lazy = true
 
 Shortcuts are generally needed:
 
-```ini
-bind = $mainMod,V,exec,pypr toggle volume
-bind = $mainMod,A,exec,pypr toggle term
-bind = $mainMod,Y,exec,pypr attach
+```lua
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(pypr .. " toggle volume"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd(pypr .. " attach"))
 ```
 </details>
 

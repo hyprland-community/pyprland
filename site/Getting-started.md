@@ -58,22 +58,28 @@ This enables only few plugins. See the [Plugins](./Plugins) page for the full li
 
 ### Option 1: Hyprland exec-once
 
-Add to your `hyprland.conf`:
+Add to your `hyprland.lua`:
 
-```ini
-exec-once = /usr/bin/pypr
+```lua
+hl.on("pyprland.start", function()
+  hl.exec_cmd("/usr/bin/pypr")
+end)
 ```
 
 For debugging, use:
 
-```ini
-exec-once = /usr/bin/pypr --debug
+```lua
+hl.on("pyprland.start", function()
+  hl.exec_cmd("/usr/bin/pypr --debug")
+end)
 ```
 
 Or to also save logs to a file:
 
-```ini
-exec-once = /usr/bin/pypr --debug $HOME/pypr.log
+```lua
+hl.on("pyprland.start", function()
+  hl.exec_cmd("/usr/bin/pypr --debug $HOME/pypr.log")
+end)
 ```
 
 ### Option 2: Systemd User Service

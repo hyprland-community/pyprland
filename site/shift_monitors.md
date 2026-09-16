@@ -12,11 +12,11 @@ Swaps the workspaces of every screen in the given direction.
 > [!Tip]
 > On Niri, this plugin moves the active workspace to the adjacent monitor instead of swapping workspaces, as Niri workspaces are dynamic.
 
-Example usage in `hyprland.conf`:
+Example usage in `hyprland.lua`:
 
-```sh
-bind = $mainMod, O, exec, pypr shift_monitors +1
-bind = $mainMod SHIFT, O, exec, pypr shift_monitors -1
+```lua
+hl.bind(mainMod .. " + O", hl.dsp.exec_cmd(pypr .. " shift_monitors +1"))
+hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd(pypr .. " shift_monitors -1"))
 ```
 
 ## Commands

@@ -18,8 +18,10 @@ If you run pyprland via [exec-once](./Getting-started#option-1-hyprland-exec-onc
 
 To enable debug logging, add `--debug` to your exec-once command. Optionally specify a file path to also save logs to a file:
 
-```ini
-exec-once = /usr/bin/pypr --debug $HOME/pypr.log
+```lua
+hl.on("pyprland.start", function()
+  hl.exec_cmd("/usr/bin/pypr --debug $HOME/pypr.log")
+end)
 ```
 
 Then check the log file:

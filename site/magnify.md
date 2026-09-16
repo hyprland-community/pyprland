@@ -17,9 +17,9 @@ pypr zoom 1 # will (also) set zoom to 1x - effectively doing nothing
 
 Sample `hyprland.conf`:
 
-```sh
-bind = $mainMod , Z, exec, pypr zoom ++0.5
-bind = $mainMod SHIFT, Z, exec, pypr zoom
+```lua
+hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(pypr .. " pypr zoom ++0.5"))
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(pypr .. " pypr zoom"))
 ```
 
 </details>

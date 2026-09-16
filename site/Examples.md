@@ -30,15 +30,19 @@ animation = "fromRight"
 lazy = true
 ```
 
-### hyprland.conf
+### hyprland.lua
 
-```ini
-$pypr = /usr/bin/pypr
+```lua
+--Define pypr command (adjust path as needed)
+local pypr = "/usr/bin/pypr-client"
 
-bind = $mainMod, A, exec, $pypr toggle term
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
 bind = $mainMod, V, exec, $pypr toggle volume
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(pypr .. " toggle volume"))
 bind = $mainMod, B, exec, $pypr expose
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(pypr .. " expose"))
 bind = $mainMod SHIFT, Z, exec, $pypr zoom
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(pypr .. " zoom"))
 ```
 
 ## Full-Featured Setup
@@ -98,22 +102,22 @@ size = "40% 90%"
 unfocus = "hide"
 ```
 
-### hyprland.conf
+### hyprland.lua
 
 ```ini
-# Use pypr-client for faster response in key bindings
-$pypr = uwsm-app -- /usr/local/bin/pypr-client
+--Use pypr-client for faster response in key bindings
+local pypr = "/usr/bin/pypr-client"
 
-bind = $mainMod SHIFT,  Z, exec, $pypr zoom
-bind = $mainMod ALT,    P, exec, $pypr toggle_dpms
-bind = $mainMod SHIFT,  O, exec, $pypr shift_monitors +1
-bind = $mainMod,        B, exec, $pypr expose
-bind = $mainMod,        K, exec, $pypr change_workspace +1
-bind = $mainMod,        J, exec, $pypr change_workspace -1
-bind = $mainMod,        L, exec, $pypr toggle_dpms
-bind = $mainMod  SHIFT, M, exec, $pypr toggle stb stb-logs
-bind = $mainMod,        A, exec, $pypr toggle term
-bind = $mainMod,        V, exec, $pypr toggle volume
+hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(pypr .. " zoom"))
+hl.bind(mainMod .. " + ALT   + P", hl.dsp.exec_cmd(pypr .. " toggle_dpms"))
+hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd(pypr .. " shift_monitors +1"))
+hl.bind(mainMod .. "         + B", hl.dsp.exec_cmd(pypr .. " expose"))
+hl.bind(mainMod .. "         + K", hl.dsp.exec_cmd(pypr .. " change_workspace +1"))
+hl.bind(mainMod .. "         + J", hl.dsp.exec_cmd(pypr .. " change_workspace -1"))
+hl.bind(mainMod .. "         + L", hl.dsp.exec_cmd(pypr .. " toggle_dpms"))
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(pypr .. " toggle stb stb-logs"))
+hl.bind(mainMod .. "         + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
+hl.bind(mainMod .. "         + V", hl.dsp.exec_cmd(pypr .. " toggle volume"))
 ```
 
 > [!note]

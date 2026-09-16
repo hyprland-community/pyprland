@@ -9,9 +9,9 @@ It's a companion of the `togglespecialworkspace` Hyprland's command which toggle
 
 You most likely will need to configure the two commands for a complete user experience, eg:
 
-```bash
-bind = $mainMod SHIFT, N, togglespecialworkspace, stash # toggles "stash" special workspace visibility
-bind = $mainMod, N, exec, pypr toggle_special stash # moves window to/from the "stash" workspace
+```lua
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.workspace.toggle_special("stash")) --toggles "stash" special workspace visibility
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(pypr .. " toggle_special stash") --moves window to/from the "stash" workspace
 ```
 
 No other configuration needed, here `MOD+SHIFT+N` will show every window in "stash" while `MOD+N` will move the focused window out of it/ to it.

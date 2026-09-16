@@ -5,7 +5,7 @@
 
 Runs your favorite bar app (gbar, ags / hyprpanel, waybar, ...) with option to pass the "best" monitor from a list of monitors.
 
-- Will take care of starting the command on startup (you must not run it from another source like `hyprland.conf`).
+- Will take care of starting the command on startup (you must not run it from another source like `hyprland.lua`).
 - Automatically restarts the menu bar on crash
 - Checks which monitors are on and take the best one from a provided list
 
