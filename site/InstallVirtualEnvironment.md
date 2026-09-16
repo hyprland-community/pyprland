@@ -15,8 +15,14 @@ python -m venv ~/pypr-env
 The only extra care to take is to use `pypr` from the virtual environment, eg:
 
 - adding the environment's "bin" folder to the `PATH` (using `export PATH="$PATH:~/pypr-env/bin/"` in your shell configuration file)
-- always using the full path to the pypr command (in `hyprland.conf`: `exec-once = ~/pypr-env/bin/pypr` or with debug logging: `exec-once = ~/pypr-env/bin/pypr --debug $HOME/pypr.log`)
+- always using the full path to the pypr command, e.g. in hyprland.lua (for debug options check [exec-once](./Getting-started#option-1-hyprland-exec-once)):
 
+```lua
+hl.on("pyprland.start", function()
+  hl.exec_cmd("~/pypr-env/bin/pypr")
+end)
+
+```
 # Going bleeding edge!
 
 If you would rather like to use the latest version available (not released yet), then you can clone the git repository and install from it:

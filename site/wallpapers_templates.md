@@ -12,6 +12,9 @@ The templates feature provides automatic theming for your desktop applications. 
 
 This creates a unified color scheme across your terminal, window borders, GTK apps, and other tools - all derived from your wallpaper.
 
+> [!warning]
+> unfortunately this isn't quite as easy to do in lua, so for now this only works if you're still using hyprlang.
+
 > [!tip]
 > If you're migrating from *matugen* or *pywal*, your existing templates should work with minimal changes.
 

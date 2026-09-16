@@ -10,10 +10,10 @@ This is useful when gaming or running performance-intensive applications where v
 <details>
     <summary>Example</summary>
 
-Sample `hyprland.conf`:
+Sample `hyprland.lua`:
 
-```sh
-bind = $mainMod, G, exec, pypr gamemode
+```lua
+hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(pypr .. " gamemode"))
 ```
 
 </details>

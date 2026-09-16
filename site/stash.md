@@ -9,11 +9,11 @@ Each stash name is a single slot. A stashed window can be shown as a pinned over
 
 ## Usage
 
-```bash
-bind = $mainMod,       S, exec, pypr stash_toggle S
-bind = $mainMod SHIFT, S, exec, pypr stash_send   S
-bind = $mainMod,       C, exec, pypr stash_toggle C
-bind = $mainMod SHIFT, C, exec, pypr stash_send   C
+```lua
+hl.bind(mainMod .. " + S", hl.dsp.exec_cmd(pypr .. " stash_toggle S"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(pypr .. " stash_send S"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd(pypr .. " stash_toggle C"))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(pypr .. " stash_send C"))
 ```
 
 `stash_send <name>`:

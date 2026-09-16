@@ -11,11 +11,11 @@ Syntax:
 [workspaces_follow_focus]
 max_workspaces = 4 # number of workspaces before cycling
 ```
-Example usage in `hyprland.conf`:
+Example usage in `hyprland.lua`:
 
-```ini
-bind = $mainMod, K, exec, pypr change_workspace +1
-bind = $mainMod, J, exec, pypr change_workspace -1
+```lua
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd(pypr .. " change_workspace +1"))
+hl.bind(mainMod .. " + J", hl.dsp.exec_cmd(pypr .. " change_workspace -1"))
  ```
 
 ## Commands

@@ -102,16 +102,16 @@ See [Multiple Configuration Files](./MultipleConfigurationFiles) for details.
 
 ## Hyprland Integration
 
-Most plugins provide commands that you'll want to bind to keys. Add bindings to your `hyprland.conf`:
+Most plugins provide commands that you'll want to bind to keys. Add bindings to your `hyprland.lua`:
 
-```ini
-# Define pypr command (adjust path as needed)
-$pypr = /usr/bin/pypr
+```lua
+--Define pypr command (adjust path as needed)
+local pypr = "/usr/bin/pypr-client"
 
-# Example bindings
-bind = $mainMod, A, exec, $pypr toggle term
-bind = $mainMod, B, exec, $pypr expose
-bind = $mainMod SHIFT, Z, exec, $pypr zoom
+--example bindings
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(pypr .. " expose"))
+hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(pypr .. " zoom"))
 ```
 
 > [!tip]
