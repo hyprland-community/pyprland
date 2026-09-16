@@ -50,7 +50,7 @@ command = "swww img --outputs '[output]'  '[file]'"
 
 ```
 
-Note that for applications like `swww`, you'll need to start a daemon separately (eg: from `hyprland.conf`).
+Note that for applications like `swww`, you'll need to start a daemon separately (eg: from `hyprland.lua`).
 </details>
 
 

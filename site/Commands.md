@@ -163,10 +163,10 @@ To also save logs to a file:
 pypr --debug $HOME/pypr.log
 ```
 
-Or in `hyprland.conf`:
+Or in `hyprland.lua`:
 
 ```ini
-exec-once = /usr/bin/pypr --debug $HOME/pypr.log
+hl.exec_cmd('/usr/bin/pypr --debug $HOME/pypr.log')
 ```
 
 The log file will contain detailed information useful for troubleshooting.
