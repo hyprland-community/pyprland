@@ -118,7 +118,7 @@ class EventsMixin:
         """
 
         async def _delayed_hide(monitor: str) -> None:
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
             for scratch in self.scratches.values():
                 if scratch.monitor == monitor:
                     try:
@@ -150,7 +150,7 @@ class EventsMixin:
         async def _fixup_displaced() -> None:
             # Wait for Hyprland to finish all workspace migrations
             # (FALLBACK removal, workspace recreation, etc.)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
             clients = cast("list[dict]", await self.backend.execute_json("clients"))
             for scratch in self.scratches.values():
                 if scratch.visible or scratch.client_info is None:
