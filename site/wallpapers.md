@@ -148,7 +148,7 @@ Example for swaybg: `swaybg -o "[output]" -m fill -i "[file]"`
 
 ## Online Wallpapers
 
-Pyprland can fetch wallpapers from free online sources like Unsplash, Wallhaven, Reddit, and more. Downloaded images are stored locally and become part of your collection.
+Pyprland can fetch wallpapers from free online sources like Wallhaven, Reddit, and more. Downloaded images are stored locally and become part of your collection.
 
 See [Online Wallpapers](./wallpapers_online) for configuration options and available backends.
 

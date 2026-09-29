@@ -44,7 +44,7 @@ from .theme import detect_theme, generate_palette, get_color_scheme_props
 HEX_COLOR_LENGTH = 6
 
 # Default backends that support size filtering (excludes bing which returns fixed 1920x1080)
-DEFAULT_ONLINE_BACKENDS = ["unsplash", "picsum", "wallhaven", "reddit"]
+DEFAULT_ONLINE_BACKENDS = ["picsum", "wallhaven", "reddit"]
 
 
 @dataclass
