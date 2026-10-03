@@ -27,7 +27,7 @@ online_ratio = 0.3  # 30% chance of fetching online
 List of online backends to use. Defaults to all available backends. Set to an empty list to disable online fetching. See [Available Backends](#available-backends) for details.
 
 ```toml
-online_backends = ["unsplash", "wallhaven"]  # Use only these two
+online_backends = ["picsum", "wallhaven"]  # Use only these two
 ```
 
 ### `online_keywords` <ConfigBadges plugin="wallpapers" option="online_keywords" /> {#config-online-keywords}
@@ -78,7 +78,6 @@ cache_max_images = 100  # Keep at most 100 cached images
 
 | Backend | Keywords | Description |
 |---------|:--------:|-------------|
-| `unsplash` | ✓ | Unsplash Source - high quality photos |
 | `wallhaven` | ✓ | Wallhaven - curated wallpapers |
 | `reddit` | ✓ | Reddit - keywords map to wallpaper subreddits |
 | `picsum` | ✗ | Picsum Photos - random images |
@@ -90,6 +89,6 @@ cache_max_images = 100  # Keep at most 100 cached images
 [wallpapers]
 path = "~/Pictures/wallpapers/"
 online_ratio = 0.2  # 20% chance to fetch online
-online_backends = ["unsplash", "wallhaven"]
+online_backends = ["picsum", "wallhaven"]
 online_keywords = ["nature", "minimal"]
 ```
