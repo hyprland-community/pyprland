@@ -72,4 +72,4 @@ def get_available_backends() -> list[str]:
 # Import backends to register them
 # Cyclic import is intentional: backends import register_backend from here
 # pylint: disable=wrong-import-position,cyclic-import
-from . import bing, picsum, reddit, unsplash, wallhaven  # noqa: E402, F401
+from . import bing, picsum, reddit, wallhaven  # noqa: E402, F401

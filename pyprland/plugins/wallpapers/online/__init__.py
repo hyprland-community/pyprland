@@ -7,12 +7,11 @@ Example usage:
     from pyprland.plugins.wallpapers.online import OnlineFetcher
 
     async def main():
-        fetcher = OnlineFetcher(backends=["unsplash", "wallhaven"])
+        fetcher = OnlineFetcher(backends=["wallhaven"])
         image_path = await fetcher.get_image(min_width=1920, min_height=1080)
         print(f"Downloaded: {image_path}")
 
 Available backends:
-    - unsplash: Unsplash Source (keywords supported)
     - picsum: Picsum Photos (no keywords)
     - wallhaven: Wallhaven API (keywords supported)
     - reddit: Reddit JSON API (keywords mapped to subreddits)
