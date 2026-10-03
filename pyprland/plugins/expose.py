@@ -24,7 +24,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         """Returns the list of clients currently using exposed mode."""
         if self.get_config_bool("include_special"):
             return self.exposed
-        return [c for c in self.exposed if c["workspace"]["id"] > 0]
+        return [c for c in self.exposed if c["workspace"].get("id") is not None and c["workspace"].get("id") > 0]
 
     async def run_expose(self) -> None:
         """Expose every client on the active workspace.

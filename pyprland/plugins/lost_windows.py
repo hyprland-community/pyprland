@@ -30,7 +30,9 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         interval = focused["width"] / (1 + len(lost))
         interval_y = focused["height"] / (1 + len(lost))
         batch = []
-        workspace: int = focused["activeWorkspace"]["id"]
+        workspace: int = focused["activeWorkspace"].get("id")
+        if workspace is None:
+            return
         margin = interval // 2
         margin_y = interval_y // 2
         for i, window in enumerate(lost):

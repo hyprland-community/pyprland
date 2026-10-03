@@ -43,7 +43,11 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         await asyncio.sleep(0.1)
         # move every free workspace to the currently focused desktop
         busy_workspaces = {mon["activeWorkspace"]["name"] for mon in await self.backend.get_monitors() if mon["name"] != monitor_id}
-        workspaces = [w["name"] for w in cast("list[dict]", await self.backend.execute_json("workspaces")) if w["id"] > 0]
+        workspaces = [
+            w["name"]
+            for w in cast("list[dict]", await self.backend.execute_json("workspaces"))
+            if w.get("id") is not None and w.get("id") > 0
+        ]
 
         batch: list[str] = []
         for n in workspaces:
@@ -65,8 +69,8 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         monitor = await self.get_focused_monitor_or_warn()
         if monitor is None:
             return
-        busy_workspaces = {m["activeWorkspace"]["id"] for m in monitors if m["id"] != monitor["id"]}
-        cur_workspace = monitor["activeWorkspace"]["id"]
+        busy_workspaces = {m["activeWorkspace"].get("id") for m in monitors if m.get("id") and m.get("id") != monitor.get("id")}
+        cur_workspace = monitor["activeWorkspace"].get("id")
         available_workspaces = [i for i in self.workspace_list if i not in busy_workspaces]
         try:
             idx = available_workspaces.index(cur_workspace)

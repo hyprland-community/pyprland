@@ -21,8 +21,8 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             special_workspace: The special workspace name
         """
         aw = cast("dict", await self.backend.execute_json("activewindow"))
-        wid = aw["workspace"]["id"]
-        if wid < 1:  # special workspace
+        wid = aw["workspace"].get("id")
+        if wid is None or wid < 1:  # special workspace
             await self.backend.execute(
                 [
                     f"movetoworkspacesilent {self.state.active_workspace},address:{aw['address']}",
