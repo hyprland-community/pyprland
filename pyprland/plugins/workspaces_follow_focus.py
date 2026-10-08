@@ -3,25 +3,14 @@
 import asyncio
 from typing import cast
 
-from ..models import Environment, ReloadReason
-from ..validation import ConfigField, ConfigItems
+from ..models import Environment
 from .interface import Plugin
 
 
 class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Makes non-visible workspaces available on the currently focused screen."""
 
-    config_schema = ConfigItems(
-        ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage", category="basic"),
-    )
-
-    workspace_list: list[int]
     _pending_task: asyncio.Task | None = None
-
-    async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
-        """Rebuild workspaces list."""
-        _ = reason  # unused
-        self.workspace_list = list(range(1, self.get_config_int("max_workspaces") + 1))
 
     async def event_focusedmon(self, screenid_name: str) -> None:
         """Reacts to monitor changes (debounced).
@@ -82,7 +71,12 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             return
         busy_workspaces = await self.busy_workspaces(focused_monitor=monitor)
         cur_workspace = monitor["activeWorkspace"].get("id")
-        available_workspaces = [i for i in self.workspace_list if i not in busy_workspaces]
+        workspaces = [
+            w["id"]
+            for w in cast("list[dict]", await self.backend.execute_json("workspaces"))
+            if w.get("id") is not None and w.get("id") > 0
+        ]
+        available_workspaces = [i for i in workspaces if i not in busy_workspaces]
 
         if not available_workspaces:
             await self.logger.warning("No available workspaces to switch to.")
