@@ -59,7 +59,11 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             await self.backend.execute(batch)
 
     async def run_change_workspace(self, direction: str) -> None:
-        """<direction> Switch workspaces of current monitor, avoiding displayed workspaces.
+        """<direction> Switch workspaces of current monitor.
+
+        Navigates the range 1..highest existing workspace ID, wrapping around
+        and skipping workspaces that are displayed on other monitors. Empty
+        workspaces in the range are valid targets and get created on switch.
 
         Args:
             direction: Integer offset to move (e.g., +1 for next, -1 for previous)
@@ -76,23 +80,27 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             for w in cast("list[dict]", await self.backend.execute_json("workspaces"))
             if w.get("id") is not None and w.get("id") > 0
         ]
-        available_workspaces = [i for i in workspaces if i not in busy_workspaces]
-
-        if not available_workspaces:
-            await self.logger.warning("No available workspaces to switch to.")
+        if not workspaces:
+            self.log.warning("No workspaces found.")
             return
-
-        try:
-            idx = available_workspaces.index(cur_workspace)
-        except ValueError:
-            next_workspace = available_workspaces[0 if increment > 0 else -1]
+        # The total number of workspaces is the highest existing workspace ID:
+        # empty workspaces below it are valid targets and get created on switch.
+        max_workspace = max(workspaces)
+        # Step from the current workspace in the requested direction, wrapping
+        # around the 1..max_workspace range, skipping workspaces that are
+        # visible on other monitors.
+        for offset in range(1, max_workspace):
+            candidate = (cur_workspace - 1 + increment * offset) % max_workspace + 1
+            if candidate != cur_workspace and candidate not in busy_workspaces:
+                break
         else:
-            next_workspace = available_workspaces[(idx + increment) % len(available_workspaces)]
+            self.log.warning("No available workspaces to switch to.")
+            return
 
         await self.backend.execute(
             [
-                f"moveworkspacetomonitor {next_workspace} {monitor['name']}",
-                f"workspace {next_workspace}",
+                f"moveworkspacetomonitor {candidate} {monitor['name']}",
+                f"workspace {candidate}",
             ],
             weak=True,
         )
