@@ -27,13 +27,12 @@ prev2 = "movefocus u"
 
 using the following in `hyprland.lua`:
 ```lua
-bind = $mainMod, M, exec, pypr layout_center toggle # toggle the layout
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(pypr .. " layout_center toggle"))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(pypr .. " layout_center toggle")) --toggle the layout
 --focus change keys
 hl.bind(mainMod .. " + left", hl.dsp.exec_cmd(pypr .. " layout_center prev"))
 hl.bind(mainMod .. " + right", hl.dsp.exec_cmd(pypr .. " layout_center next"))
 hl.bind(mainMod .. " + up", hl.dsp.exec_cmd(pypr .. " layout_center prev2"))
-hl.bind(mainMod .. " + up", hl.dsp.exec_cmd(pypr .. " layout_center next2"))
+hl.bind(mainMod .. " + down", hl.dsp.exec_cmd(pypr .. " layout_center next2"))
 ```
 
 You can completely ignore `next2` and `prev2` if you are allowing focus change in a single direction (when the layout is enabled), eg:
