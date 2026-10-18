@@ -83,8 +83,10 @@ async def event_openwindow(self, params: str) -> None: ...
 async def event_closewindow(self, addr: str) -> None: ...
 async def event_workspace(self, workspace: str) -> None: ...
 
+
 # Commands: run_<command>
 async def run_toggle(self, name: str) -> str | None: ...
+
 
 # Niri events: niri_<eventtype>
 async def niri_outputschanged(self, data: dict) -> None: ...
@@ -365,12 +367,12 @@ The [`SharedState`](https://github.com/fdev31/pyprland/blob/main/pyprland/common
 ```python
 @dataclass
 class SharedState:
-    active_workspace: str    # Current workspace name
-    active_monitor: str      # Current monitor name  
-    active_window: str       # Current window address
-    environment: str         # "hyprland" or "niri"
-    variables: dict          # User-defined variables
-    monitors: list[str]      # All monitor names
+    active_workspace: str  # Current workspace name
+    active_monitor: str  # Current monitor name
+    active_window: str  # Current window address
+    environment: str  # "hyprland" or "niri"
+    variables: dict  # User-defined variables
+    monitors: list[str]  # All monitor names
     hyprland_version: VersionInfo
 ```
 
@@ -387,6 +389,7 @@ class ClientInfo(TypedDict):
     class_: str  # aliased from "class"
     title: str
     # ... more fields
+
 
 class MonitorInfo(TypedDict):
     name: str

@@ -70,7 +70,7 @@ from .interface import Plugin
 
 
 class Extension(Plugin):
-    " My plugin "
+    "My plugin"
 
     async def init(self):
         await self.notify("My plugin loaded")

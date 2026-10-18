@@ -143,6 +143,7 @@ async def event_openwindow(self, params: str) -> None:
     addr, workspace, cls, title = params.split(",", 3)
     self.log.debug(f"Window opened: {title}")
 
+
 async def event_workspace(self, workspace: str) -> None:
     """React to workspace changes."""
     self.log.info(f"Switched to workspace: {workspace}")
