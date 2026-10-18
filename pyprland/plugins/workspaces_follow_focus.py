@@ -3,6 +3,7 @@
 import asyncio
 
 from ..models import Environment
+from ..validation import ConfigField, ConfigItems
 from .interface import Plugin
 
 
@@ -10,6 +11,10 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
     """Makes non-visible workspaces available on the currently focused screen."""
 
     _pending_task: asyncio.Task | None = None
+
+    config_schema = ConfigItems(
+        ConfigField("max_workspaces", int, default=10, description="Maximum number of workspaces to manage", category="basic"),
+    )
 
     async def event_focusedmon(self, screenid_name: str) -> None:
         """Reacts to monitor changes (debounced).
@@ -43,7 +48,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         await asyncio.sleep(0.1)
         # move every free workspace to the currently focused desktop
         busy_workspaces = await self.busy_workspaces()
-        workspaces = self.get_config_int("max_workspaces") or 9
+        workspaces = self.get_config_int("max_workspaces")
 
         batch: list[str] = []
         for n in range(1, workspaces + 1):
@@ -72,7 +77,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         cur_workspace = monitor["activeWorkspace"].get("id")
         # The total number of workspaces is the highest existing workspace ID:
         # empty workspaces below it are valid targets and get created on switch.
-        max_workspace = self.get_config_int("max_workspaces") or 9
+        max_workspace = self.get_config_int("max_workspaces")
         # Step from the current workspace in the requested direction, wrapping
         # around the 1..max_workspace range, skipping workspaces that are
         # visible on other monitors.
