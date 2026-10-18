@@ -1,7 +1,6 @@
 """Force workspaces to follow the focus / mouse."""
 
 import asyncio
-from typing import cast
 
 from ..models import Environment
 from .interface import Plugin
@@ -44,14 +43,10 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         await asyncio.sleep(0.1)
         # move every free workspace to the currently focused desktop
         busy_workspaces = await self.busy_workspaces()
-        workspaces = [
-            w["id"]
-            for w in cast("list[dict]", await self.backend.execute_json("workspaces"))
-            if w.get("id") is not None and w.get("id") > 0
-        ]
+        workspaces = self.get_config_int("max_workspaces") or 9
 
         batch: list[str] = []
-        for n in workspaces:
+        for n in range(workspaces):
             if n in busy_workspaces or n == workspace_name:
                 continue
             batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
@@ -75,17 +70,9 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
             return
         busy_workspaces = await self.busy_workspaces(focused_monitor=monitor)
         cur_workspace = monitor["activeWorkspace"].get("id")
-        workspaces = [
-            w["id"]
-            for w in cast("list[dict]", await self.backend.execute_json("workspaces"))
-            if w.get("id") is not None and w.get("id") > 0
-        ]
-        if not workspaces:
-            self.log.warning("No workspaces found.")
-            return
         # The total number of workspaces is the highest existing workspace ID:
         # empty workspaces below it are valid targets and get created on switch.
-        max_workspace = max(workspaces)
+        max_workspace = self.get_config_int("max_workspaces") or 9
         # Step from the current workspace in the requested direction, wrapping
         # around the 1..max_workspace range, skipping workspaces that are
         # visible on other monitors.
