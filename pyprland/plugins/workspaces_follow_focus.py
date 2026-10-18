@@ -46,7 +46,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         workspaces = self.get_config_int("max_workspaces") or 9
 
         batch: list[str] = []
-        for n in range(workspaces):
+        for n in range(1, workspaces + 1):
             if n in busy_workspaces or n == workspace_name:
                 continue
             batch.append(f"moveworkspacetomonitor {n} {monitor_id}")
@@ -76,7 +76,7 @@ class Extension(Plugin, environments=[Environment.HYPRLAND]):
         # Step from the current workspace in the requested direction, wrapping
         # around the 1..max_workspace range, skipping workspaces that are
         # visible on other monitors.
-        for offset in range(1, max_workspace):
+        for offset in range(1, max_workspace + 1):
             candidate = (cur_workspace - 1 + increment * offset) % max_workspace + 1
             if candidate != cur_workspace and candidate not in busy_workspaces:
                 break
