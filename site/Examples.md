@@ -37,11 +37,8 @@ lazy = true
 local pypr = "/usr/bin/pypr-client"
 
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(pypr .. " toggle term"))
-bind = $mainMod, V, exec, $pypr toggle volume
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(pypr .. " toggle volume"))
-bind = $mainMod, B, exec, $pypr expose
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(pypr .. " expose"))
-bind = $mainMod SHIFT, Z, exec, $pypr zoom
 hl.bind(mainMod .. " + SHIFT + Z", hl.dsp.exec_cmd(pypr .. " zoom"))
 ```
 
