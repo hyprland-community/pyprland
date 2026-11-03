@@ -92,15 +92,6 @@ async def niri_connection(logger: Logger) -> AsyncGenerator[tuple[asyncio.Stream
 async def get_event_stream() -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """Return a new event socket connection."""
     if NIRI_SOCKET:
-        async with niri_connection(_state.log or get_logger()) as (reader, writer):
-            writer.write(b'"EventStream"')
-            await writer.drain()
-            # We must return the reader/writer, so we detach them from the context manager?
-            # actually niri_connection closes on exit.
-            # We can't use the context manager here easily if we want to return the stream.
-            # Let's just duplicate the connection logic for this specific case or adapt niri_connection
-
-    if NIRI_SOCKET:
         reader, writer = await asyncio.open_unix_connection(NIRI_SOCKET)
         writer.write(b'"EventStream"')
         await writer.drain()
@@ -143,7 +134,7 @@ def retry_on_reset(func: Callable) -> Callable:
 async def niri_request(payload: str | dict | list, logger: Logger) -> JSONResponse:
     """Send request to Niri and return response."""
     async with niri_connection(logger) as (reader, writer):
-        writer.write(json.dumps(payload).encode())
+        writer.write(json.dumps(payload).encode() + b"\n")
         await writer.drain()
         response = await reader.readline()
         if not response:

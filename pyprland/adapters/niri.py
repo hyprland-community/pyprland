@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from ..constants import DEFAULT_REFRESH_RATE_HZ
 from ..ipc import niri_request
-from ..models import ClientInfo, MonitorInfo
+from ..models import ClientInfo, JSONResponse, MonitorInfo
 from .backend import EnvironmentBackend
 from .notifier import Notifier, NotifySendNotifier
 
@@ -115,6 +115,39 @@ def niri_output_to_monitor_info(name: str, data: dict[str, Any]) -> MonitorInfo:
     )
 
 
+def niri_variant_name(command: str | dict | list) -> str | dict | list:
+    """Return the CamelCase variant name for a Niri request.
+
+    Niri request variants are CamelCase: "outputs" -> "Outputs".
+    Non-string payloads (lists/dicts) are returned unchanged.
+
+    Args:
+        command: The command or variant name to convert
+    """
+    if isinstance(command, str):
+        return command[:1].upper() + command[1:]
+    return command
+
+
+def unwrap_niri_response(response: JSONResponse, variant: str | dict | list) -> Any:
+    """Extract the payload from a Niri response, raising on failure.
+
+    Niri wraps successful results in an "Ok" envelope, and the payload is
+    further wrapped in the matching variant: {"Ok": {"Outputs": ...}}.
+
+    Args:
+        response: Raw JSON response from Niri
+        variant: The request variant used (to locate the wrapped payload)
+    """
+    if not isinstance(response, dict) or "Ok" not in response:
+        msg = f"Niri command failed: {response}"
+        raise RuntimeError(msg)
+    payload = response["Ok"]
+    if isinstance(payload, dict) and len(payload) == 1 and variant in payload:
+        return payload[variant]
+    return payload
+
+
 class NiriBackend(EnvironmentBackend):
     """Niri backend implementation."""
 
@@ -156,7 +189,7 @@ class NiriBackend(EnvironmentBackend):
         # Niri socket protocol is request-response JSON.
 
         try:
-            ret = await niri_request(command, log)
+            ret = await niri_request(command, logger=log)
             if isinstance(ret, dict) and "Ok" in ret:
                 return True
         except (OSError, ConnectionError, json.JSONDecodeError) as e:
@@ -177,11 +210,8 @@ class NiriBackend(EnvironmentBackend):
             log: Logger to use for this operation
             **kwargs: Additional arguments
         """
-        ret = await niri_request(command, log)
-        if isinstance(ret, dict) and "Ok" in ret:
-            return ret["Ok"]
-        msg = f"Niri command failed: {ret}"
-        raise RuntimeError(msg)
+        request = niri_variant_name(command)
+        return unwrap_niri_response(await niri_request(request, logger=log), request)
 
     async def get_clients(
         self,
