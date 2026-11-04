@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import Flag, auto
 
 ONE_FRAME = 1 / 50  # minimum delay to let the backend process commands
+SIZE_SETTLE_ATTEMPTS = 25  # ~0.5s, enough for a toolkit to honour a resize
+SIZE_RETRY_INTERVAL = 5  # re-issue the resize every 5th attempt if it was dropped
 
 
 class HideFlavors(Flag):

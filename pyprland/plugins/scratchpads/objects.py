@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from ...aioops import aiexists, aiopen
 from ...models import ClientInfo, MonitorInfo, VersionInfo
 from ..interface import PluginContext
-from .helpers import DynMonitorConfig, get_match_fn, mk_scratch_name
+from .helpers import DynMonitorConfig, get_match_fn
 from .schema import SCRATCHPAD_SCHEMA, normalize_animation
 
 if TYPE_CHECKING:
@@ -106,7 +106,7 @@ class Scratch:  # {{{
                     opts.update(config[source])
                 else:
                     text = f"Scratchpad {self.uid} tried to use {source}, but it doesn't exist"
-                    self.ctx.log.exception(text)
+                    self.ctx.log.error(text)
         opts.update(scratch_config)
         return opts
 
@@ -165,7 +165,8 @@ class Scratch:  # {{{
                 msg = f"No window found matching {match_by}='{match_val}' - is the application running?"
                 raise RuntimeError(msg)
             self.client_info = m_client
-        await ex.backend.execute(f"movetoworkspacesilent {mk_scratch_name(self.uid)},address:{self.full_address}")
+        await ex.backend.move_window_to_workspace(self.full_address, ex.backend.scratch_workspace(self.uid), silent=True)
+        await ex.apply_initial_state(self)
         self.meta.initialized = True
 
     async def is_alive(self) -> bool:
@@ -231,10 +232,10 @@ class Scratch:  # {{{
 
     @property
     def address(self) -> str:
-        """Return the client address (without 0x prefix)."""
+        """Return the client address in its unprefixed form."""
         if self.client_info is None:
             return ""
-        return self.client_info.get("address", "")[2:]
+        return self.ctx.backend.short_address(self.client_info.get("address", ""))
 
     @property
     def full_address(self) -> str:

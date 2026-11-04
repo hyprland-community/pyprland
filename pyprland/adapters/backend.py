@@ -14,7 +14,7 @@ All methods accept a 'log' parameter for traceability via BackendProxy.
 """
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from logging import Logger
 from typing import Any
 
@@ -31,6 +31,72 @@ class EnvironmentBackend(ABC):
     logger for traceability.
     """
 
+    address_prefix: str = "0x"
+    """Prefix the compositor uses for window addresses.
+
+    Hyprland omits it in its event stream, so plugins convert between the
+    two forms; backends with unprefixed ids (Niri) set this to "".
+    """
+
+    minimum_address_length: int = MINIMUM_ADDR_LEN
+    """Shortest plausible address, used to reject empty or truncated ones."""
+
+    scratch_workspace_prefix: str = "special:S-"
+    """Prefix for the workspaces scratchpads are parked on while hidden.
+
+    Hyprland uses dedicated "special" workspaces; backends without that
+    concept park windows on an ordinary workspace with this prefix.
+    """
+
+    scratch_workspaces_are_implicit: bool = True
+    """Whether the compositor creates the parking workspace on demand.
+
+    Niri only knows workspaces declared in its config and silently ignores
+    moves to any other name, so those must be declared ahead of time.
+    """
+
+    supports_window_rules: bool = True
+    """Whether rules can be declared at runtime for windows that don't exist yet.
+
+    Niri has no runtime config mutation, so callers must apply the state
+    reactively once the window appears, accepting a brief flash.
+    """
+
+    supports_offscreen_placement: bool = True
+    """Whether a window can be parked outside the monitor's bounds.
+
+    Niri clamps floating windows back onto the screen, so backends that
+    clamp set this to False and place the window at its final position.
+    """
+
+    def scratch_workspace(self, uid: str) -> str:
+        """Return the workspace name a scratchpad is parked on while hidden."""
+        escaped = uid.replace(":", "_").replace("/", "_").replace(" ", "_")
+        return f"{self.scratch_workspace_prefix}{escaped}"
+
+    def is_hidden_workspace(self, name: str) -> bool:
+        """Whether a workspace is one the user never sees directly.
+
+        On Hyprland that covers every special workspace, not just the ones
+        Pyprland owns. Used to avoid restoring focus onto it.
+        """
+        return name.startswith("special")
+
+    def is_scratch_workspace(self, name: str) -> bool:
+        """Whether a workspace is one Pyprland parks scratchpads on.
+
+        Narrower than `is_hidden_workspace`: only Pyprland's own workspaces.
+        """
+        return name.startswith(self.scratch_workspace_prefix)
+
+    async def missing_scratch_workspaces(self, uids: Iterable[str], *, log: Logger) -> list[str]:
+        """Return the parking workspaces the compositor doesn't know about.
+
+        Compositors that create them on demand never have any missing.
+        """
+        _ = uids, log
+        return []
+
     def __init__(self, state: SharedState) -> None:
         """Initialize the backend.
 
@@ -38,6 +104,19 @@ class EnvironmentBackend(ABC):
             state: Shared state object
         """
         self.state = state
+
+    def short_address(self, address: str) -> str:
+        """Return the address in its unprefixed form, as used by registry keys."""
+        return address.removeprefix(self.address_prefix)
+
+    def full_address(self, address: str) -> str:
+        """Return the address in its prefixed form, as used by commands.
+
+        Returns "" if the address is empty or implausibly short.
+        """
+        if not address or len(self.short_address(address)) < self.minimum_address_length:
+            return ""
+        return address if address.startswith(self.address_prefix) else self.address_prefix + address
 
     @abstractmethod
     async def get_clients(
@@ -74,6 +153,16 @@ class EnvironmentBackend(ABC):
             raw_data: Raw event string from the compositor
             log: Logger to use for this operation
         """
+
+    def parse_events(self, raw_data: str, *, log: Logger) -> list[tuple[str, Any]]:
+        """Parse a raw event string into zero or more events.
+
+        Most compositors emit one logical event per line, so the default
+        wraps `parse_event`; backends that synthesise events (see
+        NiriBackend) override this to emit several at once.
+        """
+        event = self.parse_event(raw_data, log=log)
+        return [event] if event else []
 
     async def get_monitor_props(
         self,
@@ -168,7 +257,7 @@ class EnvironmentBackend(ABC):
         klass = kw.get("cls")
 
         if addr:
-            assert len(addr) > MINIMUM_ADDR_LEN, "Client address is invalid"
+            assert len(addr) >= self.minimum_address_length, "Client address is invalid"
             prop_name = "address"
             prop_value = addr
         elif klass:
@@ -287,6 +376,23 @@ class EnvironmentBackend(ABC):
         """
         return await self.execute(f"togglefloating address:{address}", log=log)
 
+    async def set_window_floating(self, address: str, floating: bool, *, log: Logger) -> bool:
+        """Put a window in the floating or the tiled layout.
+
+        Unlike `toggle_floating` this is idempotent, so callers that need a
+        window to end up in a known state don't have to query it first.
+
+        Args:
+            address: Window address (without 'address:' prefix)
+            floating: True to float the window, False to tile it
+            log: Logger to use for this operation
+
+        Returns:
+            True if command succeeded
+        """
+        command = "setfloating" if floating else "settiled"
+        return await self.execute(f"{command} address:{address}", log=log)
+
     async def set_keyword(self, keyword_command: str, *, log: Logger) -> bool:
         """Execute a keyword/config command.
 
@@ -298,3 +404,77 @@ class EnvironmentBackend(ABC):
             True if command succeeded
         """
         return await self.execute(keyword_command, log=log, base_command="keyword")
+
+    # ─── Batch Window Operations ──────────────────────────────────────────────
+    #
+    # Scratchpad transitions move, stack and re-parent several windows at once.
+    # Hyprland accepts these as batched command strings; other backends may need
+    # one request per window, or may not support the operation at all.
+
+    async def move_windows(self, placements: Iterable[tuple[str, int, int]], *, log: Logger) -> bool:
+        """Move several windows to exact positions.
+
+        Args:
+            placements: (address, x, y) triples
+            log: Logger to use for this operation
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self.execute([f"movewindowpixel exact {x} {y},address:{addr}" for addr, x, y in placements], log=log)
+
+    async def move_windows_to_workspace(
+        self,
+        addresses: Iterable[str],
+        workspace: str,
+        *,
+        silent: bool = True,
+        log: Logger,
+    ) -> bool:
+        """Move several windows to a workspace.
+
+        Args:
+            addresses: Window addresses
+            workspace: Target workspace name or ID
+            silent: If True, don't follow the windows
+            log: Logger to use for this operation
+
+        Returns:
+            True if the commands succeeded
+        """
+        cmd = "movetoworkspacesilent" if silent else "movetoworkspace"
+        return await self.execute([f"{cmd} {workspace},address:{addr}" for addr in addresses], log=log)
+
+    async def raise_windows(self, addresses: Iterable[str], *, log: Logger) -> bool:
+        """Bring several windows to the top of the stacking order.
+
+        Args:
+            addresses: Window addresses
+            log: Logger to use for this operation
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self.execute([f"alterzorder top,address:{addr}" for addr in addresses], log=log)
+
+    async def set_window_animations(self, addresses: Iterable[str], enabled: bool, *, log: Logger) -> bool:
+        """Enable or suppress the compositor's own animations for some windows.
+
+        Used to hide the jump when a window is pre-positioned offscreen before
+        a scratchpad slides it in.
+        """
+        sign = "-" if enabled else "+"
+        return await self.execute([f"tagwindow {sign}pypr_noanim address:{addr}" for addr in addresses], log=log)
+
+    async def move_workspace_to_monitor(self, workspace: str, monitor: str, *, log: Logger) -> bool:
+        """Move a whole workspace to another monitor.
+
+        Args:
+            workspace: Workspace name or ID
+            monitor: Target monitor name
+            log: Logger to use for this operation
+
+        Returns:
+            True if command succeeded
+        """
+        return await self.execute(f"moveworkspacetomonitor {workspace} {monitor}", log=log)

@@ -6,9 +6,8 @@ import asyncio
 import time
 from typing import TYPE_CHECKING, cast
 
-from ...common import MINIMUM_ADDR_LEN
 from .common import HideFlavors
-from .helpers import get_match_fn, mk_scratch_name
+from .helpers import get_match_fn
 
 if TYPE_CHECKING:
     import logging
@@ -28,7 +27,7 @@ AFTER_SHOW_INHIBITION = 0.3  # 300ms of ignorance after a show
 class EventsMixin:
     """Mixin for scratchpad event handling.
 
-    Handles Hyprland events related to windows and workspaces.
+    Handles compositor events related to windows and workspaces.
     """
 
     # Type hints for attributes provided by the composed class
@@ -63,20 +62,53 @@ class EventsMixin:
         """Hyprland config reload hook."""
         await self.on_reload()
 
+    async def event_niri_config_loaded(self, data: dict) -> None:
+        """Niri config reload hook.
+
+        Niri also sends this on connect, reporting the last load attempt, so a
+        failed reload must not trigger a reconfiguration.
+
+        Args:
+            data: The event payload
+        """
+        if data.get("failed"):
+            self.log.warning("Niri reported a failed config load, not reloading")
+            return
+        await self.on_reload()
+
+    async def _on_floating_changed(self, short_address: str, floating: bool) -> None:
+        """Record a window's new floating state.
+
+        Args:
+            short_address: The window address, unprefixed
+            floating: The new floating state
+        """
+        for scratch in self.scratches.values():
+            if scratch.address == short_address and scratch.client_info is not None:
+                scratch.client_info["floating"] = floating
+
     async def event_changefloatingmode(self, args: str) -> None:
         """Update the floating mode of scratchpads.
 
         Args:
             args: The arguments passed to the event
         """
-        addr, _onoff = args.split(",")
-        onoff = int(_onoff)
-        for scratch in self.scratches.values():
-            if scratch.address == addr and scratch.client_info is not None:
-                scratch.client_info["floating"] = bool(onoff)
+        addr, onoff = args.split(",")
+        await self._on_floating_changed(self.backend.short_address(addr), bool(int(onoff)))
 
-    async def event_workspace(self, name: str) -> None:
-        """Workspace hook.
+    async def event_niri_window_floating_changed(self, window: dict) -> None:
+        """Update the floating mode of scratchpads.
+
+        Niri has no native floating event; this one is synthesised by the
+        backend from a change in the window's `is_floating` flag.
+
+        Args:
+            window: The updated window
+        """
+        await self._on_floating_changed(str(window["id"]), window.get("is_floating", False))
+
+    async def _on_workspace_changed(self, name: str) -> None:
+        """React to the focused workspace changing.
 
         Args:
             name: The workspace name
@@ -86,27 +118,64 @@ class EventsMixin:
 
         self.workspace = name
 
+    async def event_workspace(self, name: str) -> None:
+        """Workspace hook.
+
+        Args:
+            name: The workspace name
+        """
+        await self._on_workspace_changed(name)
+
+    async def event_niri_workspace_activated(self, data: dict) -> None:
+        """Workspace hook.
+
+        Niri activates a workspace on each output independently, so only the
+        one that also took focus corresponds to Hyprland's notion of a
+        workspace change. Niri workspaces are usually unnamed, so the id is
+        used as the name, matching how the backend maps clients.
+
+        Args:
+            data: The event payload
+        """
+        if not data.get("focused"):
+            return
+        await self._on_workspace_changed(str(data["id"]))
+
+    async def _on_window_closed(self, full_address: str) -> None:
+        """Forget a window that no longer exists.
+
+        Args:
+            full_address: The window address, prefixed
+        """
+        for scratch in self.scratches.values():
+            if full_address in scratch.extra_addr:
+                scratch.extra_addr.remove(full_address)
+            if full_address in scratch.meta.extra_positions:
+                del scratch.meta.extra_positions[full_address]
+            # Reset state when the primary window is closed
+            if scratch.full_address == full_address:
+                scratch.visible = False
+                self.scratches.reset(scratch)  # remove stale addr from registry before clearing client_info
+                scratch.client_info = None
+                scratch.meta.initialized = False
+
     async def event_closewindow(self, addr: str) -> None:
         """Close window hook.
 
         Args:
             addr: The window address
         """
-        # Removes this address from the extra_addr
-        addr = "0x" + addr
-        for scratch in self.scratches.values():
-            if addr in scratch.extra_addr:
-                scratch.extra_addr.remove(addr)
-            if addr in scratch.meta.extra_positions:
-                del scratch.meta.extra_positions[addr]
-            # Reset state when the primary window is closed
-            if scratch.full_address == addr:
-                scratch.visible = False
-                self.scratches.reset(scratch)  # remove stale addr from registry before clearing client_info
-                scratch.client_info = None
-                scratch.meta.initialized = False
+        await self._on_window_closed(self.backend.full_address(addr))
 
-    async def event_monitorremoved(self, monitor_name: str) -> None:
+    async def event_niri_window_closed(self, data: dict) -> None:
+        """Close window hook.
+
+        Args:
+            data: The event payload
+        """
+        await self._on_window_closed(self.backend.full_address(str(data["id"])))
+
+    async def _on_monitor_removed(self, monitor_name: str) -> None:
         """Hides scratchpads on the removed screen.
 
         Uses a cancellable keyed task so that if the monitor is re-added
@@ -129,7 +198,26 @@ class EventsMixin:
 
         self._tasks.create(_delayed_hide(monitor_name), key=f"monhide:{monitor_name}")
 
-    async def event_monitoradded(self, monitor_name: str) -> None:
+    async def event_monitorremoved(self, monitor_name: str) -> None:
+        """Hides scratchpads on the removed screen.
+
+        Args:
+            monitor_name: The monitor name
+        """
+        await self._on_monitor_removed(monitor_name)
+
+    async def event_niri_monitor_removed(self, data: dict) -> None:
+        """Hides scratchpads on the removed screen.
+
+        Niri has no monitor event; this one is synthesised by the backend from
+        the output set disappearing from the workspace configuration.
+
+        Args:
+            data: The event payload
+        """
+        await self._on_monitor_removed(data["output"])
+
+    async def _on_monitor_added(self, monitor_name: str) -> None:
         """Re-hides scratchpads displaced from their special workspaces during monitor changes.
 
         When a monitor is removed and re-added (e.g. display power cycle),
@@ -155,7 +243,7 @@ class EventsMixin:
             for scratch in self.scratches.values():
                 if scratch.visible or scratch.client_info is None:
                     continue
-                expected_workspace = mk_scratch_name(scratch.uid)
+                expected_workspace = self.backend.scratch_workspace(scratch.uid)
                 for client in clients:
                     if client["address"] != scratch.full_address:
                         continue
@@ -179,13 +267,31 @@ class EventsMixin:
 
         self._tasks.create(_fixup_displaced(), key=f"monadd:{monitor_name}")
 
-    async def event_activewindowv2(self, addr: str) -> None:
-        """Active windows hook.
+    async def event_monitoradded(self, monitor_name: str) -> None:
+        """Re-hides scratchpads displaced during monitor changes.
 
         Args:
-            addr: The window address
+            monitor_name: The monitor name
         """
-        full_address = "" if not addr or len(addr) < MINIMUM_ADDR_LEN else "0x" + addr
+        await self._on_monitor_added(monitor_name)
+
+    async def event_niri_monitor_added(self, data: dict) -> None:
+        """Re-hides scratchpads displaced during monitor changes.
+
+        Niri has no monitor event; this one is synthesised by the backend from
+        a new output appearing in the workspace configuration.
+
+        Args:
+            data: The event payload
+        """
+        await self._on_monitor_added(data["output"])
+
+    async def _on_focus_changed(self, full_address: str) -> None:
+        """React to the focused window changing.
+
+        Args:
+            full_address: The newly focused window address, or "" if none
+        """
         for uid, scratch in self.scratches.items():
             if scratch.client_info is None:
                 continue
@@ -204,6 +310,26 @@ class EventsMixin:
 
                 await self._hysteresis_handling(scratch)
         self.previously_focused_window = full_address
+
+    async def event_activewindowv2(self, addr: str) -> None:
+        """Active windows hook.
+
+        Args:
+            addr: The window address
+        """
+        await self._on_focus_changed(self.backend.full_address(addr))
+
+    async def event_niri_window_focus_changed(self, data: dict) -> None:
+        """Active windows hook.
+
+        Niri reports a null id when nothing is focused, which has no Hyprland
+        equivalent and is normalised to an empty address.
+
+        Args:
+            data: The event payload
+        """
+        window_id = data.get("id")
+        await self._on_focus_changed("" if window_id is None else self.backend.full_address(str(window_id)))
 
     async def _hysteresis_handling(self, scratch: Scratch) -> None:
         """Hysteresis handling.
@@ -237,26 +363,25 @@ class EventsMixin:
             match_fn = get_match_fn(match_by, match_value)
             for client in clients:
                 if match_fn(client[match_by], match_value):  # type: ignore[literal-required]
-                    self.scratches.register(pending_scratch, addr=client["address"][2:])
+                    self.scratches.register(pending_scratch, addr=self.backend.short_address(client["address"]))
                     self.log.debug("client class found: %s", client)
                     await pending_scratch.update_client_info(client)
         return True
 
-    async def event_openwindow(self, params: str) -> None:
-        """Open windows hook.
+    async def _on_window_opened(self, addr: str) -> None:
+        """Adopt a newly mapped window if a scratchpad is waiting for it.
 
         Args:
-            params: The arguments passed to the event
+            addr: The new window address, unprefixed
         """
-        addr, _wrkspc, _kls, _title = params.split(",", 3)
         item = self.scratches.get(addr=addr)
-        if item is not None and not item.have_address("0x" + addr):
+        if item is not None and not item.have_address(self.backend.full_address(addr)):
             # Hyprland recycles the window handle address of a destroyed window.
             # A freshly opened, unrelated window can therefore reuse the address
             # of a scratchpad that no longer owns it, leaving a stale entry in
             # the address registry. Drop it and treat the window as unrelated
             # instead of trying (and failing) to initialize it as a scratchpad.
-            self.log.debug("Dropping stale registry entry for 0x%s (was scratch %r)", addr, item.uid)
+            self.log.debug("Dropping stale registry entry for %s (was scratch %r)", addr, item.uid)
             self.scratches.clear(addr=addr)
             item = None
         respawned = list(self.scratches.get_by_state("respawned"))
@@ -276,3 +401,23 @@ class EventsMixin:
             for item in self.scratches.values():
                 if await self._handle_multiwindow(item, clients):
                     return
+
+    async def event_openwindow(self, params: str) -> None:
+        """Open windows hook.
+
+        Args:
+            params: The arguments passed to the event
+        """
+        addr, _wrkspc, _kls, _title = params.split(",", 3)
+        await self._on_window_opened(addr)
+
+    async def event_niri_window_opened(self, window: dict) -> None:
+        """Open windows hook.
+
+        Niri re-sends `WindowOpenedOrChanged` whenever a window changes, so the
+        backend synthesises this event only on the first sighting of a window.
+
+        Args:
+            window: The newly opened window
+        """
+        await self._on_window_opened(str(window["id"]))

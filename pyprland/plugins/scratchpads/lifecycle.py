@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ...adapters.proxy import BackendProxy
     from ...common import SharedState
     from ...models import ClientInfo
+    from . import Extension
     from .lookup import ScratchDB
     from .objects import Scratch
 
@@ -71,6 +72,14 @@ class LifecycleMixin:
                     )
                     self.scratches.register(scratch)
                     self.scratches.clear_state(scratch, "respawned")
+                    if not self.backend.supports_window_rules:
+                        # The window-open event fired before this poll
+                        # registered the scratch, so the event handler skipped
+                        # initialization. On Hyprland the windowrules had already
+                        # floated and parked the window; without them it would
+                        # stay tiled and visible, so initialize it here instead.
+                        # Idempotent.
+                        await scratch.initialize(cast("Extension", self))
                     return True
             if use_proc and not is_alive:
                 return False
@@ -182,11 +191,11 @@ class LifecycleMixin:
                 continue
             # if no address registered, register it
             # + update client info in any case
-            scratch = self.scratches.get(addr=client["address"][2:])
+            scratch = self.scratches.get(addr=self.backend.short_address(client["address"]))
             if not scratch and client["pid"]:
                 scratch = self.scratches.get(pid=client["pid"])
             if scratch:
-                self.scratches.register(scratch, addr=client["address"][2:])
+                self.scratches.register(scratch, addr=self.backend.short_address(client["address"]))
                 await scratch.update_client_info(cast("ClientInfo", client))
                 break
         else:

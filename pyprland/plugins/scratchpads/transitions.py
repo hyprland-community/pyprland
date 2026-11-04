@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 from ...adapters.units import convert_coords, convert_monitor_dimension
 from ...common import is_rotated
 from .animations import AnimationTarget, Placement
-from .common import ONE_FRAME, FocusTracker
-from .helpers import apply_offset, mk_scratch_name
+from .common import ONE_FRAME, SIZE_RETRY_INTERVAL, SIZE_SETTLE_ATTEMPTS, FocusTracker
+from .helpers import apply_offset
 
 if TYPE_CHECKING:
     import logging
@@ -88,7 +88,9 @@ class TransitionsMixin:
         """
         animation_type: str = scratch.animation_type
 
-        if not animation_type:
+        if not animation_type or not self.backend.supports_offscreen_placement:
+            # Niri clamps floating windows on-screen, so the slide-out would
+            # just jitter the window before it is parked anyway.
             return False
 
         await self._slide_animation(animation_type, scratch, await self.get_offsets(scratch, monitor))
@@ -124,19 +126,20 @@ class TransitionsMixin:
         else:
             x, y = 0, 0
 
-        animation_actions = {
-            "fromright": f"movewindowpixel exact {x + off_x} {y}",
-            "fromleft": f"movewindowpixel exact {x - off_x} {y}",
-            "frombottom": f"movewindowpixel exact {x} {y + off_y}",
-            "fromtop": f"movewindowpixel exact {x} {y - off_y}",
-            "fromtopright": f"movewindowpixel exact {x + off_x} {y - off_y}",
-            "fromtopleft": f"movewindowpixel exact {x - off_x} {y - off_y}",
-            "frombottomright": f"movewindowpixel exact {x + off_x} {y + off_y}",
-            "frombottomleft": f"movewindowpixel exact {x - off_x} {y + off_y}",
+        animation_offsets = {
+            "fromright": (off_x, 0),
+            "fromleft": (-off_x, 0),
+            "frombottom": (0, off_y),
+            "fromtop": (0, -off_y),
+            "fromtopright": (off_x, -off_y),
+            "fromtopleft": (-off_x, -off_y),
+            "frombottomright": (off_x, off_y),
+            "frombottomleft": (-off_x, off_y),
         }
-        await self.backend.execute(
-            [f"{animation_actions[animation_type]},address:{addr}" for addr in addresses if animation_type in animation_actions]
-        )
+        if animation_type not in animation_offsets:
+            return
+        dx, dy = animation_offsets[animation_type]
+        await self.backend.move_windows([(addr, x + dx, y + dy) for addr in addresses])
 
     async def _show_transition(self, scratch: Scratch, monitor: MonitorInfo, was_alive: bool) -> None:
         """Performs the transition to visible state.
@@ -149,7 +152,9 @@ class TransitionsMixin:
         forbid_special = not scratch.conf.get_bool("allow_special_workspaces")
         wrkspc = (
             monitor["activeWorkspace"]["name"]
-            if forbid_special or not monitor["specialWorkspace"]["name"] or monitor["specialWorkspace"]["name"].startswith("special:S-")
+            if forbid_special
+            or not monitor["specialWorkspace"]["name"]
+            or self.backend.is_scratch_workspace(monitor["specialWorkspace"]["name"])
             else monitor["specialWorkspace"]["name"]
         )
         if self.previously_focused_window:
@@ -162,21 +167,25 @@ class TransitionsMixin:
         # Not aspect preserving or it's newly spawned
         animation_type = scratch.animation_type
 
-        if should_set_aspect:
-            await self._fix_size(scratch, monitor)
-        elif scratch.address in scratch.meta.saved_size:
+        requested_size: tuple[int, int] | None = None
+        if should_set_aspect or scratch.address not in scratch.meta.saved_size:
+            # `preserve_aspect` needs a size recorded on a previous hide;
+            # without one, fall back to the configured size — otherwise a
+            # freshly spawned window keeps whatever size the compositor gave it.
+            requested_size = await self._fix_size(scratch, monitor)
+        else:
             # Restore the saved pixel size (preserve_aspect enabled)
-            saved_w, saved_h = scratch.meta.saved_size[scratch.address]
-            await self.backend.resize_window(scratch.full_address, saved_w, saved_h)
+            requested_size = scratch.meta.saved_size[scratch.address]
+            await self.backend.resize_window(scratch.full_address, *requested_size)
 
         clients = await self.backend.execute_json("clients")
         await self._handle_multiwindow(scratch, clients)
 
         # FIX: initial position
-        # Tag the window with pypr_noanim to disable Hyprland's animation
-        # during the offscreen pre-positioning move, then untag so the real
-        # slide-in animation plays normally.
-        if animation_type and scratch.client_ready:
+        # Suppress the compositor's own animation during the offscreen
+        # pre-positioning move, then restore it so the slide-in plays normally.
+        # Backends without per-window animation control simply show the jump.
+        if animation_type and scratch.client_ready and self.backend.supports_offscreen_placement:
             assert scratch.client_info is not None
             off_x, off_y = Placement.get_offscreen(
                 animation_type,
@@ -184,54 +193,38 @@ class TransitionsMixin:
                 scratch.client_info,
                 scratch.conf.get_int("margin"),
             )
-            await self.backend.execute(
-                [
-                    f"tagwindow +pypr_noanim address:{scratch.full_address}",
-                    f"movewindowpixel exact {off_x} {off_y},address:{scratch.full_address}",
-                ]
-            )
+            await self.backend.set_window_animations([scratch.full_address], enabled=False)
+            await self.backend.move_windows([(scratch.full_address, off_x, off_y)])
             await asyncio.sleep(ONE_FRAME)  # NOTE: let some time to process
-            await self.backend.execute(f"tagwindow -pypr_noanim address:{scratch.full_address}")
+            await self.backend.set_window_animations([scratch.full_address], enabled=True)
 
         # move
-        move_commands: list[str] = []
-
         # Only move workspace to monitor if scratchpad was already alive
         # (newly spawned windows are already on current monitor via windowrules)
         if was_alive:
-            move_commands.append(f"moveworkspacetomonitor {mk_scratch_name(scratch.uid)} {monitor['name']}")
+            await self.backend.move_workspace_to_monitor(self.backend.scratch_workspace(scratch.uid), monitor["name"])
 
-        move_commands.extend(
-            [
-                f"movetoworkspacesilent {wrkspc},address:{scratch.full_address}",
-                f"alterzorder top,address:{scratch.full_address}",
-            ]
-        )
-        for addr in scratch.extra_addr:
-            move_commands.extend(
-                [
-                    f"movetoworkspacesilent {wrkspc},address:{addr}",
-                    f"alterzorder top,address:{addr}",
-                ]
-            )
+        addresses = [scratch.full_address, *scratch.extra_addr]
+        await self.backend.move_windows_to_workspace(addresses, wrkspc, silent=True)
+        await self.backend.raise_windows(addresses)
 
-        await self.backend.execute(move_commands, weak=True)
         await self._update_infos(scratch, clients)
 
-        # Always apply explicit position config, regardless of should_set_aspect.
-        # The position config is an explicit user intent that should always be honored.
+        # Always apply an explicit `position`: it is a user intent that should
+        # always be honored, regardless of should_set_aspect.
         position_fixed = await self._fix_position(scratch, monitor)
 
+        monitor_changed = scratch.monitor != self.state.active_monitor
+        relative_animation = preserve_aspect and was_alive and not monitor_changed
         if not position_fixed:
-            monitor_changed = scratch.monitor != self.state.active_monitor
-            relative_animation = preserve_aspect and was_alive and not monitor_changed
             await self._animate_show(scratch, monitor, relative_animation)
         await self.backend.focus_window(scratch.full_address)
 
-        # Re-apply position after a settle delay to handle apps that resize
-        # themselves after being shown (which causes Hyprland to shift the
-        # window position).
-        if position_fixed:
+        # Re-apply position after a settle delay, since some apps resize
+        # themselves after being shown, which shifts the window.
+        if not self.backend.supports_offscreen_placement:
+            await self._settle_geometry(scratch, monitor, requested_size, relative_animation, position_fixed)
+        elif position_fixed:
             await asyncio.sleep(ONE_FRAME)
             await self._fix_position(scratch, monitor)
 
@@ -267,12 +260,12 @@ class TransitionsMixin:
             for alt_addr in scratch.extra_addr:
                 # Get the client info for the extra addresses
                 try:
-                    client_info = await self.backend.get_client_props(addr="0x" + alt_addr, clients=clients)
+                    client_info = await self.backend.get_client_props(addr=self.backend.full_address(alt_addr), clients=clients)
                     if not client_info:
                         continue
                     await scratch.update_client_info(clients=clients, client_info=client_info)
                 except KeyError:
-                    self.log.debug("Client info not found for address 0x%s", alt_addr)
+                    self.log.debug("Client info not found for address %s", alt_addr)
                 else:
                     break
             else:
@@ -316,14 +309,17 @@ class TransitionsMixin:
                         pos = apply_offset(main_win_position, off)
                         animation_commands.append([*pos, address])
 
-            await self.backend.execute([f"movewindowpixel exact {a[0]} {a[1]},address:{a[2]}" for a in animation_commands])
+            await self.backend.move_windows([(a[2], a[0], a[1]) for a in animation_commands])
 
-    async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> None:
+    async def _fix_size(self, scratch: Scratch, monitor: MonitorInfo) -> tuple[int, int] | None:
         """Apply the size from config.
 
         Args:
             scratch: The scratchpad object
             monitor: The monitor info
+
+        Returns:
+            The requested (width, height), or None when no size is configured.
         """
         size = scratch.conf.get_str("size")
         if size:
@@ -334,6 +330,61 @@ class TransitionsMixin:
                 width = min(max_width, width)
                 height = min(max_height, height)
             await self.backend.resize_window(scratch.full_address, width, height)
+            self.log.debug("%s size %s -> %dx%d", scratch.uid, size, width, height)
+            return (width, height)
+        return None
+
+    async def _await_size(self, scratch: Scratch, size: tuple[int, int]) -> None:
+        """Make sure the compositor really applied the configured size.
+
+        A resize is asynchronous, and on backends that place a window after
+        mapping the request can be dropped — moving the window to its workspace
+        or into the floating layer resets it to the default size. So poll until
+        it lands, re-issuing the resize periodically.
+
+        Args:
+            scratch: The scratchpad object
+            size: The requested (width, height)
+        """
+        for attempt in range(SIZE_SETTLE_ATTEMPTS):
+            await asyncio.sleep(ONE_FRAME)
+            await self.update_scratch_info(scratch)
+            if scratch.client_info and tuple(scratch.client_info.get("size", ())) == size:
+                return
+            if attempt % SIZE_RETRY_INTERVAL == SIZE_RETRY_INTERVAL - 1:
+                await self.backend.resize_window(scratch.full_address, *size)
+        self.log.debug("%s did not reach the requested size %s", scratch.uid, size)
+
+    async def _settle_geometry(
+        self,
+        scratch: Scratch,
+        monitor: MonitorInfo,
+        requested_size: tuple[int, int] | None,
+        relative_animation: bool,
+        position_fixed: bool,
+    ) -> None:
+        """Re-apply a window's geometry once its size has actually landed.
+
+        Placement used the size reported before `_fix_size` took effect,
+        leaving the window off by half the difference. Hyprland hides that
+        behind the off-screen pre-positioning; backends without it show the
+        stale geometry, so settle the size first, then place the window again.
+
+        Args:
+            scratch: The scratchpad object
+            monitor: The monitor info
+            requested_size: The size `_fix_size` asked for, if any
+            relative_animation: Whether to use relative animation
+            position_fixed: Whether an explicit `position` was configured
+        """
+        if requested_size:
+            await self._await_size(scratch, requested_size)
+        else:
+            await asyncio.sleep(ONE_FRAME)
+        if position_fixed:
+            await self._fix_position(scratch, monitor)
+        else:
+            await self._animate_show(scratch, monitor, relative_animation)
 
     async def _fix_position(self, scratch: Scratch, monitor: MonitorInfo) -> bool:
         """Apply the `position` config parameter.

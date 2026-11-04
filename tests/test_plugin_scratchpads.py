@@ -291,7 +291,7 @@ async def test_attach_workspace_sanity(scratchpads, subprocess_shell_mock, serve
     # When hiding, `_hide_scratch` calls `await scratch.update_client_info(clients=clients)`
     # AND `await self._handle_multiwindow(scratch, clients)`
     # AND loop over `extra_addr`:
-    #   await self.hyprctl(f"movetoworkspacesilent {mk_scratch_name(scratch.uid)},address:{addr}")
+    #   await self.backend.move_window_to_workspace(addr, self.backend.scratch_workspace(scratch.uid))
 
     # So we just need to verify the hyprctl call is made.
 

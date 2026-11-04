@@ -18,7 +18,6 @@ from .helpers import (
     get_active_space_identifier,
     get_all_space_identifiers,
     get_match_fn,
-    mk_scratch_name,
 )
 from .lifecycle import LifecycleMixin
 from .lookup import ScratchDB
@@ -28,7 +27,7 @@ from .transitions import TransitionsMixin
 from .windowruleset import WindowRuleSet
 
 
-class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environments=[Environment.HYPRLAND]):
+class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environments=[Environment.HYPRLAND, Environment.NIRI]):
     """Makes your applications into dropdowns & togglable popups."""
 
     procs: dict[str, asyncio.subprocess.Process]
@@ -150,7 +149,10 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         # Register a noanim windowrule for the pypr_noanim tag.
         # This is used to skip Hyprland's window animation during offscreen pre-positioning
         # so that the show transition is instant (no need for show_delay).
-        await self.backend.execute("windowrule no_anim on, match:tag pypr_noanim", base_command="keyword")
+        # Backends without runtime rules have no per-window animation control
+        # anyway (see set_window_animations), so there is nothing to register.
+        if self.backend.supports_window_rules:
+            await self.backend.execute("windowrule no_anim on, match:tag pypr_noanim", base_command="keyword")
 
         for name in scratches_to_spawn:
             if await self.ensure_alive(name):
@@ -164,10 +166,58 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             assert scratch
             self.scratches.clear_state(scratch, "configured")
 
-        # Mark scratchpad special workspaces as persistent
-        persistent_commands = [f"workspace {mk_scratch_name(s.uid)}, persistent:true" for s in self.scratches.values()]
-        if persistent_commands:
-            await self.backend.execute(persistent_commands, base_command="keyword")
+        # Mark scratchpad parking workspaces as persistent. Compositors that
+        # create them on demand accept this as a runtime keyword; the others
+        # need them declared in the config file, so check and report instead.
+        await self._register_scratch_workspaces()
+
+    async def _register_scratch_workspaces(self) -> None:
+        """Ensure every scratchpad has a workspace to hide on.
+
+        Hyprland creates special workspaces on demand and only needs them
+        marked persistent. Niri only knows the named workspaces declared in its
+        config and silently ignores moves to any other name, so a missing one
+        has to be reported rather than created.
+        """
+        uids = [s.uid for s in self.scratches.values()]
+        if not uids:
+            return
+
+        if self.backend.scratch_workspaces_are_implicit:
+            await self.backend.execute(
+                [f"workspace {self.backend.scratch_workspace(uid)}, persistent:true" for uid in uids],
+                base_command="keyword",
+            )
+            return
+
+        missing = await self.backend.missing_scratch_workspaces(uids)
+        if missing:
+            declarations = "\n".join(f'workspace "{name}"' for name in missing)
+            self.log.error(
+                "Missing scratchpad workspaces. Add the following to your compositor config:\n%s",
+                declarations,
+            )
+            await self.backend.notify_error(f"Scratchpads: {len(missing)} workspace(s) must be declared in your compositor config")
+
+    async def apply_initial_state(self, scratch: Scratch) -> None:
+        """Apply the state a windowrule would have set, for backends without them.
+
+        On Hyprland the `float` rule is applied before the window is mapped;
+        here it is applied once the window exists, causing a brief flash in
+        its default state. The other rules need no counterpart: the parking
+        workspace is set by `Scratch.initialize`, and size and position are
+        applied on every show by `_fix_size` and `_show_transition`.
+
+        Args:
+            scratch: The scratchpad object
+        """
+        if self.backend.supports_window_rules:
+            return
+        skipped = cast("list", scratch.conf.get("skip_windowrules"))
+        if "float" in skipped:
+            return
+        if not await self.backend.set_window_floating(scratch.full_address, floating=True):
+            self.log.warning("Could not float %s; it may appear tiled", scratch.uid)
 
     async def _unset_windowrules(self, scratch: Scratch) -> None:
         """Unset the windowrules.
@@ -175,6 +225,8 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         Args:
             scratch: The scratchpad object
         """
+        if not self.backend.supports_window_rules:
+            return
         defined_class = scratch.conf.get("class")
         if defined_class:
             if self.state.hyprland_version < VersionInfo(0, 53, 0):
@@ -192,7 +244,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             wr.set("float", "on")
 
     async def _wr_workspace(self, wr: WindowRuleSet, scratch: Scratch) -> None:
-        wr.set("workspace", f"{mk_scratch_name(scratch.uid)} silent")
+        wr.set("workspace", f"{self.backend.scratch_workspace(scratch.uid)} silent")
 
     async def _wr_group(self, wr: WindowRuleSet, _: Scratch) -> None:
         wr.set("group", "deny")
@@ -233,6 +285,11 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             scratch: The scratchpad object
         """
         self.scratches.set_state(scratch, "configured")
+        if not self.backend.supports_window_rules:
+            # Nothing can be declared ahead of time; apply_initial_state() does
+            # the equivalent once the window actually exists.
+            self.log.debug("Skipping windowrules for %s, applied on window open instead", scratch.uid)
+            return
         defined_class: str = scratch.conf.get_str("class")
         skipped_windowrules: list[str] = cast("list", scratch.conf.get("skip_windowrules"))
         wr = WindowRuleSet(self.state)
@@ -583,12 +640,12 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
         have_animation = bool(scratch.animation_type)
         if have_animation:
             await self._hide_transition(scratch, monitor)
-            # Batch noanim tag + far off-screen reposition in a single IPC call.
-            # This prevents ghost frames when hide_delay is shorter than the
-            # actual Hyprland animation: even if the slide-off is still in
-            # progress, the window jumps instantly (noanim) to a position far
-            # beyond any visible monitor, so no flicker is visible.
-            noanim_commands: list[str] = [f"tagwindow +pypr_noanim address:{addr}" for addr in clients_addr]
+            # Suppress animations, then move the windows far off-screen. This
+            # prevents ghost frames when hide_delay is shorter than the actual
+            # animation: even if the slide-off is still in progress, the window
+            # jumps instantly to a position beyond any visible monitor, so no
+            # flicker is visible.
+            await self.backend.set_window_animations(clients_addr, enabled=False)
             if scratch.client_ready:
                 assert scratch.client_info is not None
                 off_x, off_y = Placement.get_offscreen(
@@ -597,15 +654,14 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                     scratch.client_info,
                     scratch.conf.get_int("margin"),
                 )
-                noanim_commands.extend(f"movewindowpixel exact {off_x} {off_y},address:{addr}" for addr in clients_addr)
-            await self.backend.execute(noanim_commands)
+                await self.backend.move_windows([(addr, off_x, off_y) for addr in clients_addr])
 
         for addr in clients_addr:
-            await self.backend.move_window_to_workspace(addr, mk_scratch_name(scratch.uid), silent=True)
+            await self.backend.move_window_to_workspace(addr, self.backend.scratch_workspace(scratch.uid), silent=True)
 
         if have_animation:
             await asyncio.sleep(ONE_FRAME)  # Ensure the windows are on the new workspace before unsetting noanim
-            await self.backend.execute([f"tagwindow -pypr_noanim address:{addr}" for addr in clients_addr])
+            await self.backend.set_window_animations(clients_addr, enabled=True)
 
     async def _handle_focus_tracking(self, scratch: Scratch, active_window: str, active_workspace: str, clients: ClientInfo | dict) -> None:
         """Handle focus tracking.
@@ -622,7 +678,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
             if scratch.have_address(track.prev_focused_window):
                 track.clear()
         tracker = self.focused_window_tracking.get(scratch.uid)
-        if tracker and not tracker.prev_focused_window_wrkspc.startswith("special:"):
+        if tracker and not self.backend.is_hidden_workspace(tracker.prev_focused_window_wrkspc):
             same_workspace = tracker.prev_focused_window_wrkspc == active_workspace
             t_pfw = tracker.prev_focused_window
             client = next(filter(lambda d: d.get("address") == t_pfw, cast("list[dict]", clients)), None)
@@ -631,7 +687,7 @@ class Extension(LifecycleMixin, EventsMixin, TransitionsMixin, Plugin, environme
                 and scratch.have_address(active_window)
                 and same_workspace
                 and not scratch.have_address(tracker.prev_focused_window)
-                and not client["workspace"]["name"].startswith("special")
+                and not self.backend.is_hidden_workspace(client["workspace"]["name"])
             ):
                 self.log.debug("Previous scratch: %s", self.scratches.get(addr=tracker.prev_focused_window))
                 await self.backend.focus_window(tracker.prev_focused_window)

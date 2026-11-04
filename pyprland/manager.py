@@ -79,7 +79,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
     event_reader: asyncio.StreamReader | None = None
     stopped = False
     tasks: list[asyncio.Task]
-    tasks_group: None | asyncio.TaskGroup = None
+    tasks_group: asyncio.TaskGroup | None = None
     log_handler: Callable[[Plugin, str, tuple], None]
     dedup_last_call: dict[str, tuple[str, tuple[str, ...]]]
     _pyprland_conf: Configuration
@@ -116,9 +116,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             # Use a temporary backend for early error notifications
             self._shared_backend = None
 
-        # Manager's own proxy for notifications and event parsing
-        # Will be updated in initialize() if fallback backend is selected
-        # Starts with the backend's default notifier; may be overridden by config later
+        # Manager's own proxy; updated in initialize() if a fallback backend is selected
         if self._shared_backend:
             self._notifier: Notifier = self._shared_backend.get_default_notifier()
             self.backend: BackendProxy = BackendProxy(self._shared_backend, self.log, self._notifier)
@@ -472,8 +470,7 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
                 self.log.critical("Reader starved")
                 return
 
-            parsed_event = self.backend.parse_event(data)
-            if parsed_event:
+            for parsed_event in self.backend.parse_events(data):
                 await self._call_handler(*parsed_event)
 
     async def exit_plugins(self) -> None:

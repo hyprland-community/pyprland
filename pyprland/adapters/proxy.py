@@ -1,15 +1,11 @@
-"""Backend proxy that injects plugin logger into all calls.
+"""Backend proxy that injects the plugin logger into all calls.
 
-This module provides a BackendProxy class that wraps an EnvironmentBackend
-and automatically passes the plugin's logger to all backend method calls.
-This allows backend operations to be logged under the calling plugin's
-logger for better traceability.
-
-Notifications are delegated to a Notifier instance, which is resolved
-once at startup (either the backend's default or a user-configured override).
+Wraps an EnvironmentBackend so every backend method call is logged under
+the calling plugin's logger. Notifications are delegated to a Notifier
+resolved once at startup.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from logging import Logger
 from typing import TYPE_CHECKING, Any
 
@@ -23,9 +19,8 @@ if TYPE_CHECKING:
 class BackendProxy:
     """Proxy that injects the plugin logger into all backend calls.
 
-    This allows backend operations to be logged under the calling plugin's
-    logger for better traceability. Each plugin gets its own BackendProxy
-    instance with its own logger, while sharing the underlying backend.
+    Each plugin gets its own instance with its own logger, sharing the
+    underlying backend.
 
     Attributes:
         log: The logger to use for all backend operations
@@ -279,6 +274,18 @@ class BackendProxy:
         """
         return await self._backend.toggle_floating(address, log=self.log)
 
+    async def set_window_floating(self, address: str, floating: bool) -> bool:
+        """Put a window in the floating or the tiled layout.
+
+        Args:
+            address: Window address (without 'address:' prefix)
+            floating: True to float the window, False to tile it
+
+        Returns:
+            True if command succeeded
+        """
+        return await self._backend.set_window_floating(address, floating, log=self.log)
+
     async def set_keyword(self, keyword_command: str) -> bool:
         """Execute a keyword/config command.
 
@@ -302,3 +309,154 @@ class BackendProxy:
             Tuple of (event_name, event_data) or None if parsing failed
         """
         return self._backend.parse_event(raw_data, log=self.log)
+
+    def parse_events(self, raw_data: str) -> list[tuple[str, Any]]:
+        """Parse a raw event string into zero or more events.
+
+        Args:
+            raw_data: Raw event string from the compositor
+
+        Returns:
+            The events to dispatch, in order
+        """
+        return self._backend.parse_events(raw_data, log=self.log)
+
+    async def move_windows(self, placements: Iterable[tuple[str, int, int]]) -> bool:
+        """Move several windows to exact positions.
+
+        Args:
+            placements: (address, x, y) triples
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self._backend.move_windows(placements, log=self.log)
+
+    async def move_windows_to_workspace(self, addresses: Iterable[str], workspace: str, *, silent: bool = True) -> bool:
+        """Move several windows to a workspace.
+
+        Args:
+            addresses: Window addresses
+            workspace: Target workspace name or ID
+            silent: If True, don't follow the windows
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self._backend.move_windows_to_workspace(addresses, workspace, silent=silent, log=self.log)
+
+    async def raise_windows(self, addresses: Iterable[str]) -> bool:
+        """Bring several windows to the top of the stacking order.
+
+        Args:
+            addresses: Window addresses
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self._backend.raise_windows(addresses, log=self.log)
+
+    async def set_window_animations(self, addresses: Iterable[str], enabled: bool) -> bool:
+        """Enable or suppress the compositor's own animations for some windows.
+
+        Args:
+            addresses: Window addresses
+            enabled: False to suppress the compositor's animations
+
+        Returns:
+            True if the commands succeeded
+        """
+        return await self._backend.set_window_animations(addresses, enabled, log=self.log)
+
+    async def move_workspace_to_monitor(self, workspace: str, monitor: str) -> bool:
+        """Move a whole workspace to another monitor.
+
+        Args:
+            workspace: Workspace name or ID
+            monitor: Target monitor name
+
+        Returns:
+            True if command succeeded
+        """
+        return await self._backend.move_workspace_to_monitor(workspace, monitor, log=self.log)
+
+    def scratch_workspace(self, uid: str) -> str:
+        """Return the workspace name a scratchpad is parked on while hidden.
+
+        Args:
+            uid: Unique identifier for the scratchpad
+
+        Returns:
+            The workspace name
+        """
+        return self._backend.scratch_workspace(uid)
+
+    def is_hidden_workspace(self, name: str) -> bool:
+        """Whether a workspace is one the user never sees directly.
+
+        Args:
+            name: The workspace name
+
+        Returns:
+            True if the workspace is hidden
+        """
+        return self._backend.is_hidden_workspace(name)
+
+    def is_scratch_workspace(self, name: str) -> bool:
+        """Whether a workspace is one Pyprland parks scratchpads on.
+
+        Args:
+            name: The workspace name
+
+        Returns:
+            True if Pyprland owns the workspace
+        """
+        return self._backend.is_scratch_workspace(name)
+
+    @property
+    def supports_window_rules(self) -> bool:
+        """Whether rules can be declared for windows that don't exist yet."""
+        return self._backend.supports_window_rules
+
+    @property
+    def supports_offscreen_placement(self) -> bool:
+        """Whether a window can be parked outside the monitor's bounds."""
+        return self._backend.supports_offscreen_placement
+
+    @property
+    def scratch_workspaces_are_implicit(self) -> bool:
+        """Whether the compositor creates parking workspaces on demand."""
+        return self._backend.scratch_workspaces_are_implicit
+
+    async def missing_scratch_workspaces(self, uids: Iterable[str]) -> list[str]:
+        """Return the parking workspaces the compositor doesn't know about.
+
+        Args:
+            uids: Scratchpad identifiers
+
+        Returns:
+            The names that still have to be declared, in order
+        """
+        return await self._backend.missing_scratch_workspaces(uids, log=self.log)
+
+    def short_address(self, address: str) -> str:
+        """Return the address in its unprefixed form, as used by registry keys.
+
+        Args:
+            address: An address in either form
+
+        Returns:
+            The address without the compositor's prefix
+        """
+        return self._backend.short_address(address)
+
+    def full_address(self, address: str) -> str:
+        """Return the address in its prefixed form, as used by commands.
+
+        Args:
+            address: An address in either form
+
+        Returns:
+            The address with the compositor's prefix, or "" if implausible
+        """
+        return self._backend.full_address(address)

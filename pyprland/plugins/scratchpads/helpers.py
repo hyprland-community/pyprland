@@ -21,16 +21,6 @@ from ...models import MonitorInfo
 from ...validation import ConfigItems
 
 
-def mk_scratch_name(uid: str) -> str:
-    """Return scratchpad name as register in Hyprland.
-
-    Args:
-        uid: Unique identifier for the scratchpad
-    """
-    escaped = uid.replace(":", "_").replace("/", "_").replace(" ", "_")
-    return f"special:S-{escaped}"
-
-
 def compute_offset(pos1: tuple[int, int] | None, pos2: tuple[int, int] | None) -> tuple[int, int]:
     """Compute the offset between two positions.
 
