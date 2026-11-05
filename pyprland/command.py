@@ -2,13 +2,14 @@
 
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Literal, overload
 
 from . import constants as pyprland_constants
 from .common import get_logger, init_logger
-from .constants import CONTROL
+from .constants import CONTROL, LOCK
 from .ipc import init as ipc_init
 from .models import PyprError
 
@@ -50,6 +51,24 @@ def use_param(txt: str, optional_value: bool = False) -> str | bool:
     return v
 
 
+def _daemon_alive() -> bool:
+    """Check if a pyprland daemon is actually running.
+
+    Uses the lock file PID if available. Returns True if a live daemon
+    is detected.
+    """
+    lock_path = Path(LOCK)
+    if lock_path.exists():
+        try:
+            pid = int(lock_path.read_text().strip())
+            os.kill(pid, 0)
+        except (ValueError, ProcessLookupError, PermissionError, OSError):
+            pass  # stale lock
+        else:
+            return True
+    return False
+
+
 def _run(invoke_daemon: bool) -> None:
     """Run the daemon or client, handling errors."""
     log = get_logger("startup")
@@ -70,9 +89,6 @@ def _run(invoke_daemon: bool) -> None:
         log.critical("Invalid JSON syntax in the config file: %s", e.args[0])
     except Exception:  # pylint: disable=W0718
         log.critical("Unhandled exception:", exc_info=True)
-    finally:
-        if invoke_daemon and Path(CONTROL).exists():
-            Path(CONTROL).unlink()
 
 
 def main() -> None:
@@ -91,12 +107,18 @@ def main() -> None:
 
     invoke_daemon = len(sys.argv) <= 1
     if invoke_daemon and Path(CONTROL).exists():
-        get_logger("startup").critical(
-            """%s exists,
+        if _daemon_alive():
+            get_logger("startup").critical(
+                """%s exists,
 is pypr already running ?
 If that's not the case, delete this file and run again.""",
-            CONTROL,
-        )
+                CONTROL,
+            )
+        else:
+            # Stale socket from a crashed daemon — clean up and proceed
+            Path(CONTROL).unlink(missing_ok=True)
+            Path(LOCK).unlink(missing_ok=True)
+            _run(invoke_daemon)
     else:
         _run(invoke_daemon)
 

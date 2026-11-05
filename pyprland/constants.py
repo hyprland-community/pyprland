@@ -26,6 +26,7 @@ __all__ = [
     "IPC_MAX_RETRIES",
     "IPC_RETRY_DELAY_MULTIPLIER",
     "LEGACY_CONFIG_FILE",
+    "LOCK",
     "MIGRATION_NOTIFICATION_DURATION_MS",
     "MIN_CLIENTS_FOR_LAYOUT",
     "OLD_CONFIG_FILE",
@@ -39,6 +40,7 @@ __all__ = [
 ]
 
 CONTROL = f"{IPC_FOLDER}/.pyprland.sock"
+LOCK = f"{IPC_FOLDER}/.pyprland.lock"
 
 # Config file paths - use XDG_CONFIG_HOME with fallback to ~/.config
 _xdg_config_home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
