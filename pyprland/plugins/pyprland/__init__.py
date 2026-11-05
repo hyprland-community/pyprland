@@ -41,8 +41,18 @@ class Extension(HyprlandStateMixin, NiriStateMixin, Plugin):
 
         if self.state.environment == Environment.NIRI:
             await self._init_niri()
-        else:
+        elif self.state.environment == Environment.HYPRLAND:
             await self._init_hyprland()
+        else:
+            # Generic Wayland / Xorg / null backend: no compositor-specific
+            # state is available. Set safe defaults so backend-less plugins
+            # (e.g. menus) can still load and function.
+            self.state.active_workspace = "unknown"
+            self.state.monitors = []
+            self.state.set_disabled_monitors(set())
+            self.state.active_monitor = "unknown"
+            self.state.hyprland_version = DEFAULT_VERSION
+            self.state.lua_mode = False
 
     async def on_reload(self, reason: ReloadReason = ReloadReason.RELOAD) -> None:
         """Reload the plugin."""

@@ -21,6 +21,7 @@ from functools import partial
 from typing import Any, cast
 
 from .adapters.backend import EnvironmentBackend
+from .adapters.fallback import NullBackend
 from .adapters.hyprland import HyprlandBackend
 from .adapters.niri import NiriBackend
 from .adapters.notifier import Notifier, resolve_notifier
@@ -153,10 +154,11 @@ class Pyprland:  # pylint: disable=too-many-instance-attributes
             self._shared_backend = XorgBackend(self.state)
             self.log.info("Using X11/Xorg backend (xrandr) - degraded mode")
         else:
-            # No backend available
-            msg = "No supported environment detected"
-            self.log.error("%s. Requires Hyprland, Niri, wlr-randr (Wayland), or xrandr (X11).", msg)
-            raise RuntimeError(msg)
+            # No real backend available - use NullBackend so that
+            # backend-less plugins (e.g. menus) can still load.
+            self.state.environment = Environment.WAYLAND
+            self._shared_backend = NullBackend(self.state)
+            self.log.warning("No supported compositor detected. Using null backend - only backend-less plugins will work.")
 
         self._backend_selected = True
         self._notifier = self._shared_backend.get_default_notifier()

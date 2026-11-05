@@ -6,6 +6,12 @@ quicktest:
 debug *params='tests':
     uv run pytest --pdb -s {{params}}
 
+# Remove compiled bytecode (__pycache__) so source edits are picked up on next run.
+# This environment uses unchecked-hash .pyc invalidation, which Python will not
+# auto-revalidate against source changes, so stale bytecode can silently run.
+clean-pyc:
+    find . -name __pycache__ -type d -not -path './.venv/*' -exec rm -rf {} +
+
 # Start the documentation website in dev mode
 website: gendoc
     npm i

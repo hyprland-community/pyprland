@@ -12,7 +12,7 @@ from .backend import EnvironmentBackend
 from .notifier import Notifier, NotifySendNotifier
 
 
-def make_monitor_info(  # noqa: PLR0913  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def make_monitor_info(  # noqa: PLR0913, PLR0917  # pylint: disable=too-many-arguments,too-many-positional-arguments
     index: int,
     name: str,
     width: int,
@@ -229,3 +229,35 @@ class FallbackBackend(EnvironmentBackend):
         except OSError as e:
             log.warning("Failed to get monitors from %s: %s", tool_name, e)
             return []
+
+
+class NullBackend(FallbackBackend):
+    """No-op backend for environments where no compositor support is available.
+
+    Used when Pyprland runs on a WM that is not Hyprland, Niri, or a
+    detectable Wayland/X11 environment. Plugins that do not require a
+    backend (e.g. menus) can still load and function; all compositor
+    operations are silently no-ops.
+    """
+
+    @classmethod
+    async def is_available(cls) -> bool:
+        """Always available - this is the ultimate fallback.
+
+        Returns:
+            True
+        """
+        return True
+
+    async def get_monitors(self, *, log: Logger, include_disabled: bool = False) -> list[MonitorInfo]:
+        """No monitors available in null mode.
+
+        Args:
+            log: Logger to use for this operation
+            include_disabled: Ignored
+
+        Returns:
+            Empty list
+        """
+        log.debug("get_monitors() not supported in null backend")
+        return []
